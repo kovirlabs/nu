@@ -105,8 +105,6 @@ def generate_session(
     mode="python",
     file_contents=None,
     envars=[["name", "value"]],
-    minify=False,
-    microbit_runtime=None,
     zoom_level=2,
     window=None,
     venv_path=None,
@@ -149,10 +147,6 @@ def generate_session(
         session_data["paths"] = list(paths)
     if envars:
         session_data["envars"] = envars
-    if minify is not None:
-        session_data["minify"] = minify
-    if microbit_runtime:
-        session_data["microbit_runtime"] = microbit_runtime
     if zoom_level:
         session_data["zoom_level"] = zoom_level
     if window:
@@ -804,8 +798,6 @@ def test_editor_init():
         assert e.mode == "python"
         assert e.modes == {}
         assert e.envars == {}
-        assert e.minify is False
-        assert e.microbit_runtime == ""
         # assert e.connected_devices == set()
         assert e.find == ""
         assert e.replace == ""
@@ -862,58 +854,6 @@ def test_editor_connect_to_status_bar():
         e.connect_to_status_bar(sb)
         # Check device_changed signal is connected to both editor and modes
         assert sb.device_selector.device_changed.connect.call_count == 3
-
-
-def test_editor_restore_session_existing_runtime():
-    """
-    A correctly specified session is restored properly.
-    """
-    mode, theme = "python", "night"
-    file_contents = ["", ""]
-    ed = mocked_editor(mode)
-    with mock.patch("os.path.isfile", return_value=True):
-        with mock.patch.object(venv, "relocate") as venv_relocate:
-            with mock.patch.object(venv, "ensure"), mock.patch.object(
-                venv, "create"
-            ):
-                with generate_session(
-                    theme,
-                    mode,
-                    file_contents,
-                    microbit_runtime="/foo",
-                    zoom_level=5,
-                    venv_path="foo",
-                ):
-                    ed.restore_session()
-
-    assert ed.theme == theme
-    assert ed._view.add_tab.call_count == len(file_contents)
-    ed._view.set_theme.assert_called_once_with(theme)
-    assert ed.envars == {"name": "value"}
-    assert ed.minify is False
-    assert ed.microbit_runtime == "/foo"
-    assert ed._view.zoom_position == 5
-    venv_relocate.assert_called_with("foo")
-
-
-def test_editor_restore_session_missing_runtime():
-    """
-    If the referenced microbit_runtime file doesn't exist, reset to '' so Mu
-    uses the built-in runtime.
-    """
-    mode, theme = "python", "night"
-    file_contents = ["", ""]
-    ed = mocked_editor(mode)
-
-    with generate_session(theme, mode, file_contents, microbit_runtime="/foo"):
-        ed.restore_session()
-
-    assert ed.theme == theme
-    assert ed._view.add_tab.call_count == len(file_contents)
-    ed._view.set_theme.assert_called_once_with(theme)
-    assert ed.envars == {"name": "value"}
-    assert ed.minify is False
-    assert ed.microbit_runtime == ""  # File does not exist so set to ''
 
 
 def test_editor_restore_session_missing_files():
@@ -2243,18 +2183,12 @@ def test_show_admin():
     ed.modes = {"python": mock.MagicMock()}
     ed.sync_package_state = mock.MagicMock()
     ed.envars = {"name": "value"}
-    ed.minify = True
-    ed.microbit_runtime = "/foo/bar"
     settings = {
         "envars": "name=value",
-        "minify": True,
-        "microbit_runtime": "/foo/bar",
         "locale": "",
     }
     new_settings = {
         "envars": "name=value",
-        "minify": True,
-        "microbit_runtime": "/foo/bar",
         "packages": "baz\n",
         "locale": "",
     }
@@ -2273,8 +2207,6 @@ def test_show_admin():
             assert view.show_admin.call_count == 1
             assert view.show_admin.call_args[0][1] == settings
             assert ed.envars == {"name": "value"}
-            assert ed.minify is True
-            assert ed.microbit_runtime == "/foo/bar"
             # Expect package names to be normalised to lowercase.
             ed.sync_package_state.assert_called_once_with(
                 ["foo", "bar"], ["baz"]
@@ -2290,8 +2222,6 @@ def test_show_admin_no_change():
     ed.modes = {"python": mock.MagicMock()}
     ed.sync_package_state = mock.MagicMock()
     ed.envars = {"name": "value"}
-    ed.minify = True
-    ed.microbit_runtime = "/foo/bar"
     new_settings = {}
     view.show_admin.return_value = new_settings
     mock_open = mock.mock_open()
@@ -2303,54 +2233,6 @@ def test_show_admin_no_change():
         ):
             ed.show_admin(None)
             assert ed.sync_package_state.call_count == 0
-
-
-def test_show_admin_missing_microbit_runtime():
-    """
-    Ensure the microbit_runtime result is '' and a warning message is displayed
-    if the specified microbit_runtime doesn't actually exist.
-    """
-    view = mock.MagicMock()
-    ed = mu.logic.Editor(view)
-    ed.modes = {"python": mock.MagicMock()}
-    ed.sync_package_state = mock.MagicMock()
-    ed.envars = {"name": "value"}
-    ed.minify = True
-    ed.microbit_runtime = "/foo/bar"
-    settings = {
-        "envars": "name=value",
-        "minify": True,
-        "microbit_runtime": "/foo/bar",
-        "locale": "",
-    }
-    new_settings = {
-        "envars": "name=value",
-        "minify": True,
-        "microbit_runtime": "/foo/bar",
-        "packages": "baz\n",
-        "locale": "",
-    }
-    view.show_admin.return_value = new_settings
-    mock_open = mock.mock_open()
-    with mock.patch.object(
-        venv, "installed_packages", return_value=([], ["Foo", "bar"])
-    ):
-        with mock.patch("builtins.open", mock_open), mock.patch(
-            "os.path.isfile", return_value=False
-        ):
-            ed.show_admin(None)
-            mock_open.assert_called_once_with(
-                mu.logic.LOG_FILE, "r", encoding="utf8"
-            )
-            assert view.show_admin.call_count == 1
-            assert view.show_admin.call_args[0][1] == settings
-            assert ed.envars == {"name": "value"}
-            assert ed.minify is True
-            assert ed.microbit_runtime == ""
-            assert view.show_message.call_count == 1
-            ed.sync_package_state.assert_called_once_with(
-                ["foo", "bar"], ["baz"]
-            )
 
 
 def test_sync_package_state():

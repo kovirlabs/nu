@@ -166,35 +166,6 @@ class EnvironmentVariablesWidget(QWidget):
         widget_layout.addWidget(self.text_area)
 
 
-class MicrobitSettingsWidget(QWidget):
-    """
-    Used for configuring how to interact with the micro:bit:
-
-    * Minification flag.
-    * Override runtime version to use.
-    """
-
-    def setup(self, minify, custom_runtime_path):
-        widget_layout = QVBoxLayout()
-        self.setLayout(widget_layout)
-        self.minify = QCheckBox(_("Minify Python code before flashing?"))
-        self.minify.setChecked(minify)
-        widget_layout.addWidget(self.minify)
-        label = QLabel(
-            _(
-                "Override the built-in MicroPython runtime with "
-                "the following hex file (empty means use the "
-                "default):"
-            )
-        )
-        label.setWordWrap(True)
-        widget_layout.addWidget(label)
-        self.runtime_path = QLineEdit()
-        self.runtime_path.setText(custom_runtime_path)
-        widget_layout.addWidget(self.runtime_path)
-        widget_layout.addStretch()
-
-
 class PackagesWidget(QWidget):
     """
     Used for editing and displaying 3rd party packages installed via pip to be
@@ -281,7 +252,6 @@ class AdminDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.microbit_widget = None
         self.package_widget = None
         self.envar_widget = None
 
@@ -306,13 +276,6 @@ class AdminDialog(QDialog):
             self.envar_widget = EnvironmentVariablesWidget(self)
             self.envar_widget.setup(settings.get("envars", ""))
             self.tabs.addTab(self.envar_widget, _("Python3 Environment"))
-        if mode.short_name == "microbit":
-            self.microbit_widget = MicrobitSettingsWidget(self)
-            self.microbit_widget.setup(
-                settings.get("minify", False),
-                settings.get("microbit_runtime", ""),
-            )
-            self.tabs.addTab(self.microbit_widget, _("BBC micro:bit Settings"))
         if mode.short_name in ["python", "pygamezero"]:
             self.package_widget = PackagesWidget(self)
             self.package_widget.setup(packages)
@@ -334,11 +297,6 @@ class AdminDialog(QDialog):
         settings = {}
         if self.envar_widget:
             settings["envars"] = self.envar_widget.text_area.toPlainText()
-        if self.microbit_widget:
-            settings["minify"] = self.microbit_widget.minify.isChecked()
-            settings[
-                "microbit_runtime"
-            ] = self.microbit_widget.runtime_path.text()
         if self.package_widget:
             settings["packages"] = self.package_widget.text_area.toPlainText()
         settings["locale"] = self.locale_widget.get_locale()

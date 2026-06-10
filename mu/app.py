@@ -50,7 +50,6 @@ from .resources import load_icon, load_movie, load_pixmap
 from .modes import (
     PythonMode,
     CircuitPythonMode,
-    MicrobitMode,
     DebugMode,
     PyGameZeroMode,
 )
@@ -248,7 +247,6 @@ def setup_modes(editor, view):
     return {
         "python": PythonMode(editor, view),
         "circuitpython": CircuitPythonMode(editor, view),
-        "microbit": MicrobitMode(editor, view),
         "debugger": DebugMode(editor, view),
         "pygamezero": PyGameZeroMode(editor, view),
     }

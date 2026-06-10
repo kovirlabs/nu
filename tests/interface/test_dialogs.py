@@ -13,7 +13,6 @@ from mu import virtual_environment
 from mu.modes import (
     PythonMode,
     CircuitPythonMode,
-    MicrobitMode,
     DebugMode,
 )
 
@@ -56,7 +55,6 @@ def test_ModeSelector_setup():
     modes = {
         "python": PythonMode(editor, view),
         "circuitpython": CircuitPythonMode(editor, view),
-        "microbit": MicrobitMode(editor, view),
         "debugger": DebugMode(editor, view),
     }
     current_mode = "python"
@@ -68,7 +66,7 @@ def test_ModeSelector_setup():
                 ms.setLayout = mock.MagicMock()
                 ms.setup(modes, current_mode)
                 assert ms.setLayout.call_count == 1
-    assert mock_item.call_count == 3
+    assert mock_item.call_count == 2
 
 
 def test_ModeSelector_select_and_accept():
@@ -123,19 +121,6 @@ def test_EnvironmentVariablesWidget_setup():
     assert not evw.text_area.isReadOnly()
 
 
-def test_MicrobitSettingsWidget_setup():
-    """
-    Ensure the widget for editing settings related to the BBC microbit
-    displays the referenced settings data in the expected way.
-    """
-    minify = True
-    custom_runtime_path = "/foo/bar"
-    mbsw = mu.interface.dialogs.MicrobitSettingsWidget()
-    mbsw.setup(minify, custom_runtime_path)
-    assert mbsw.minify.isChecked()
-    assert mbsw.runtime_path.text() == "/foo/bar"
-
-
 def test_PackagesWidget_setup():
     """
     Ensure the widget for editing settings related to third party packages
@@ -145,21 +130,6 @@ def test_PackagesWidget_setup():
     pw = mu.interface.dialogs.PackagesWidget()
     pw.setup(packages)
     assert pw.text_area.toPlainText() == packages
-
-
-@pytest.fixture
-def microbit():
-    device = mu.logic.Device(
-        0x0D28,
-        0x0204,
-        "COM1",
-        123456,
-        "ARM",
-        "BBC micro:bit",
-        "microbit",
-        None,
-    )
-    return device
 
 
 def test_AdminDialog_setup_python_mode():
@@ -185,31 +155,6 @@ def test_AdminDialog_setup_python_mode():
     s = ad.settings()
     assert s["packages"] == packages
     del s["packages"]
-    assert s == settings
-
-
-def test_AdminDialog_setup_microbit_mode():
-    """
-    Ensure the admin dialog is setup properly given the content of a log
-    file and envars when in micro:bit mode.
-    """
-    log = "this is the contents of a log file"
-    settings = {
-        "minify": True,
-        "microbit_runtime": "/foo/bar",
-        "locale": "",
-    }
-    packages = "foo\nbar\nbaz\n"
-    mock_window = QWidget()
-    mode = mock.MagicMock()
-    mode.short_name = "microbit"
-    mode.name = "BBC micro:bit"
-    modes = mock.MagicMock()
-    device_list = mu.logic.DeviceList(modes)
-    ad = mu.interface.dialogs.AdminDialog(mock_window)
-    ad.setup(log, settings, packages, mode, device_list)
-    assert ad.log_widget.log_text_area.toPlainText() == log
-    s = ad.settings()
     assert s == settings
 
 

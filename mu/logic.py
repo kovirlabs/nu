@@ -793,8 +793,6 @@ class Editor(QObject):
         self.python_extensions = [".py", ".pyw"]
         self.modes = {}
         self.envars = {}  # See restore session and show_admin
-        self.minify = False
-        self.microbit_runtime = ""
         self.user_locale = ""  # user defined language locale
         self.connected_devices = DeviceList(self.modes, parent=self)
         self.current_device = None
@@ -926,25 +924,6 @@ class Editor(QObject):
             logger.info(
                 "User defined environment variables: " "{}".format(self.envars)
             )
-        if "minify" in old_session:
-            self.minify = old_session["minify"]
-            logger.info(
-                "Minify scripts on micro:bit? " "{}".format(self.minify)
-            )
-        if "microbit_runtime" in old_session:
-            self.microbit_runtime = old_session["microbit_runtime"]
-            if self.microbit_runtime:
-                logger.info(
-                    "Custom micro:bit runtime path: "
-                    "{}".format(self.microbit_runtime)
-                )
-                if not os.path.isfile(self.microbit_runtime):
-                    self.microbit_runtime = ""
-                    logger.warning(
-                        "The specified micro:bit runtime "
-                        "does not exist. Using default "
-                        "runtime instead."
-                    )
         if "zoom_level" in old_session:
             self._view.zoom_position = old_session["zoom_level"]
             self._view.set_zoom()
@@ -1412,8 +1391,6 @@ class Editor(QObject):
             "mode": self.mode,
             "paths": paths,
             "envars": self.envars,
-            "minify": self.minify,
-            "microbit_runtime": self.microbit_runtime,
             "zoom_level": self._view.zoom_position,
             "window": {
                 "x": self._view.x(),
@@ -1442,8 +1419,6 @@ class Editor(QObject):
         )
         settings = {
             "envars": envars,
-            "minify": self.minify,
-            "microbit_runtime": self.microbit_runtime,
             "locale": self.user_locale,
         }
         baseline_packages, user_packages = venv.installed_packages()
@@ -1459,21 +1434,6 @@ class Editor(QObject):
         if new_settings:
             if "envars" in new_settings:
                 self.envars = extract_envars(new_settings["envars"])
-            if "minify" in new_settings:
-                self.minify = new_settings["minify"]
-            if "microbit_runtime" in new_settings:
-                runtime = new_settings["microbit_runtime"].strip()
-                if runtime and not os.path.isfile(runtime):
-                    self.microbit_runtime = ""
-                    message = _("Could not find MicroPython runtime.")
-                    information = _(
-                        "The micro:bit runtime you specified "
-                        "('{}') does not exist. "
-                        "Please try again."
-                    ).format(runtime)
-                    self._view.show_message(message, information)
-                else:
-                    self.microbit_runtime = runtime
             if "packages" in new_settings:
                 new_packages = [
                     p

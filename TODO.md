@@ -28,14 +28,11 @@ QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly
 | Modes to drop | ESP, Pico, Pyboard, Lego, Snek, **Web** |
 | OS targets | **Linux, Windows, macOS** (all three) |
 
-### Open decision
+### Resolved decision
 
-- [ ] **micro:bit mode — keep or drop?** Real classroom value, but its tooling
-  (`uflash` 2.0.0, `microfs` 1.4.5) is **frozen since 2021 / unmaintained**, and
-  the PyPI `uflash` wheel still bundles the 2021 firmware blob (un-vendoring just
-  relocates it). No actively-maintained desktop-Python alternative exists.
-  **Recommendation: drop unless micro:bit hardware is actually used.** Holds
-  `uflash` + `microfs` + `FileManager` (in `modes/base.py`) hostage either way.
+- [x] **micro:bit mode — DROPPED.** Its tooling (`uflash` 2.0.0, `microfs` 1.4.5)
+  is frozen since 2021 / unmaintained, with no actively-maintained desktop-Python
+  alternative. See 1e below.
 
 ---
 
@@ -68,6 +65,15 @@ QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly
 - [x] `mu/wheels/__init__.py` flask wheel entry
 - [x] Corresponding tests (test_web, test_workers deleted; test_dialogs/main/logic pruned); suite green
 - [x] Suite green: **990 passed, 20 skipped**; flake8 clean. Modes: python, circuitpython, microbit, debugger, pygamezero
+
+**1d-micro. Drop micro:bit mode** (split in two — the mode, then its orphaned subsystem):
+- [x] Mode + API stub + registration; `MicrobitSettingsWidget`, `get_microbit_path`,
+  `minify`/`microbit_runtime` session+settings handling; **vendored `uflash.py` (1.86 MB)**; tests.
+  Suite green: **932 passed, 20 skipped**; flake8 clean. Modes: python, circuitpython, debugger, pygamezero.
+- [ ] **Remove the now-orphaned serial file-transfer subsystem** (micro:bit was its last user;
+  CircuitPython uses the CIRCUITPY drive, not this): `FileManager` (`modes/base.py`),
+  `FileSystemPane` + the device/local file-list classes (`interface/panes.py`),
+  `Window.add_filesystem` (`interface/main.py`), and the **vendored `microfs.py`** + tests.
 
 **1c. Toolchain**:
 - [ ] Adopt **ruff** for dev lint+format (replaces flake8 + pycodestyle + pyflakes + black

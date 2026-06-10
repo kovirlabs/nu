@@ -2,7 +2,7 @@
 """
 Tests for the user interface elements of Mu.
 """
-from PyQt5.QtWidgets import QAction, QWidget, QFileDialog, QMessageBox, QMenu
+from PyQt5.QtWidgets import QAction, QWidget, QMessageBox, QMenu
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QIcon, QKeySequence
 from unittest import mock
@@ -662,26 +662,6 @@ def test_Window_get_save_path_for_dot_file():
     )
     assert w.previous_folder == "/foo"  # Note lack of filename.
     assert returned_path == path  # Note lack of extension
-
-
-def test_Window_get_microbit_path():
-    """
-    Ensures the QFileDialog is called with the expected arguments and the
-    resulting path is returned.
-    """
-    mock_fd = mock.MagicMock()
-    path = "/foo"
-    ShowDirsOnly = QFileDialog.ShowDirsOnly
-    mock_fd.getExistingDirectory = mock.MagicMock(return_value=path)
-    mock_fd.ShowDirsOnly = ShowDirsOnly
-    w = mu.interface.main.Window()
-    w.widget = mock.MagicMock()
-    with mock.patch("mu.interface.main.QFileDialog", mock_fd):
-        assert w.get_microbit_path("micropython") == path
-    title = "Locate BBC micro:bit"
-    mock_fd.getExistingDirectory.assert_called_once_with(
-        w.widget, title, "micropython", ShowDirsOnly
-    )
 
 
 def test_Window_add_tab():
