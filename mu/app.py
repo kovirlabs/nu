@@ -53,12 +53,7 @@ from .modes import (
     MicrobitMode,
     DebugMode,
     PyGameZeroMode,
-    ESPMode,
     WebMode,
-    PyboardMode,
-    LegoMode,
-    PicoMode,
-    SnekMode,
 )
 from .interface.themes import NIGHT_STYLE, DAY_STYLE, CONTRAST_STYLE
 from . import settings
@@ -253,16 +248,11 @@ def setup_modes(editor, view):
     """
     return {
         "python": PythonMode(editor, view),
-        "snek": SnekMode(editor, view),
         "circuitpython": CircuitPythonMode(editor, view),
         "microbit": MicrobitMode(editor, view),
-        "esp": ESPMode(editor, view),
         "web": WebMode(editor, view),
-        "pyboard": PyboardMode(editor, view),
         "debugger": DebugMode(editor, view),
         "pygamezero": PyGameZeroMode(editor, view),
-        "lego": LegoMode(editor, view),
-        "pico": PicoMode(editor, view),
     }
 
 

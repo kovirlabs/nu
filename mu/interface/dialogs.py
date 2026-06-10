@@ -16,15 +16,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import os
 import logging
-import sys
 
-from PyQt5.QtCore import QSize, QProcess, QTimer, Qt
+from PyQt5.QtCore import QSize, QTimer
 from PyQt5.QtWidgets import (
-    QHBoxLayout,
     QVBoxLayout,
-    QGridLayout,
     QListWidget,
     QLabel,
     QListWidgetItem,
@@ -35,14 +31,9 @@ from PyQt5.QtWidgets import (
     QWidget,
     QCheckBox,
     QLineEdit,
-    QPushButton,
-    QFileDialog,
-    QGroupBox,
     QComboBox,
 )
-from PyQt5.QtGui import QTextCursor
 from mu.resources import load_icon
-from mu.interface.widgets import DeviceSelector
 from ..virtual_environment import venv
 
 logger = logging.getLogger(__name__)
@@ -348,212 +339,6 @@ class LocaleWidget(QWidget):
         return self.LANGUAGES.get(self.drop_down.currentText(), "")
 
 
-class ESPFirmwareFlasherWidget(QWidget):
-    """
-    Used for configuring how to interact with the ESP:
-
-    * Override MicroPython.
-    """
-
-    def setup(self, mode, device_list):
-        widget_layout = QVBoxLayout()
-        self.setLayout(widget_layout)
-
-        # Instructions
-        grp_instructions = QGroupBox(
-            _("How to flash MicroPython to your device")
-        )
-        grp_instructions_vbox = QVBoxLayout()
-        grp_instructions.setLayout(grp_instructions_vbox)
-        # Note: we have to specify the link color here, to something
-        # that's suitable for both day/night/contrast themes, as the
-        # link color is not configurable in the Qt Stylesheets
-        instructions = _(
-            "&nbsp;1. Determine the type of device (ESP8266 or ESP32)<br />"
-            "&nbsp;2. Download firmware from the "
-            '<a href="https://micropython.org/download" '
-            'style="color:#039be5;">'
-            "https://micropython.org/download</a><br/>"
-            "&nbsp;3. Connect your device<br/>"
-            "&nbsp;4. Load the .bin file below using the 'Browse' button<br/>"
-            "&nbsp;5. Press 'Erase & write firmware'"
-            # "<br /><br />Check the current MicroPython version using the "
-            # "following commands:<br />"
-            # ">>> import sys<br />"
-            # ">>> sys.implementation"
-        )
-        label = QLabel(instructions)
-        label.setTextFormat(Qt.RichText)
-        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
-        label.setOpenExternalLinks(True)
-        label.setWordWrap(True)
-        grp_instructions_vbox.addWidget(label)
-        widget_layout.addWidget(grp_instructions)
-
-        # Device type, firmware path, flash button
-        device_selector_label = QLabel(_("Device:"))
-        self.device_selector = DeviceSelector(show_label=True, icon_first=True)
-        self.device_selector.set_device_list(device_list)
-        device_type_label = QLabel(_("Choose device type:"))
-        self.device_type = QComboBox(self)
-        self.device_type.addItem("ESP8266")
-        self.device_type.addItem("ESP32")
-        firmware_label = QLabel(_("Firmware (.bin):"))
-        self.txtFolder = QLineEdit()
-        self.btnFolder = QPushButton(_("Browse"))
-        self.btnExec = QPushButton(_("Erase && write firmware"))
-        self.btnExec.setEnabled(False)
-        form_set = QGridLayout()
-        form_set.addWidget(device_selector_label, 0, 0)
-        form_set.addWidget(self.device_selector, 0, 1, 1, 3)
-        form_set.addWidget(device_type_label, 1, 0)
-        form_set.addWidget(self.device_type, 1, 1)
-        form_set.addWidget(firmware_label, 2, 0)
-        form_set.addWidget(self.txtFolder, 2, 1)
-        form_set.addWidget(self.btnFolder, 2, 2)
-        form_set.addWidget(self.btnExec, 2, 3)
-        widget_layout.addLayout(form_set)
-
-        # Output area
-        self.log_text_area = QPlainTextEdit()
-        self.log_text_area.setReadOnly(True)
-        form_set = QHBoxLayout()
-        form_set.addWidget(self.log_text_area)
-        widget_layout.addLayout(form_set)
-
-        # Connect events
-        self.txtFolder.textChanged.connect(self.firmware_path_changed)
-        self.btnFolder.clicked.connect(self.show_folder_dialog)
-        self.btnExec.clicked.connect(self.update_firmware)
-        self.device_selector.device_changed.connect(self.toggle_exec_button)
-
-        self.mode = mode
-
-    def show_folder_dialog(self):
-        # open dialog and set to foldername
-        filename = QFileDialog.getOpenFileName(
-            self,
-            _("Select MicroPython firmware (.bin)"),
-            os.path.expanduser("."),
-            _("Firmware (*.bin)"),
-        )
-        if filename:
-            filename = filename[0].replace("/", os.sep)
-            self.txtFolder.setText(filename)
-
-    def update_firmware(self):
-        baudrate = 115200
-
-        if self.mode.repl:
-            self.mode.toggle_repl(None)
-        if self.mode.plotter:
-            self.mode.toggle_plotter(None)
-        if self.mode.fs is not None:
-            self.mode.toggle_files(None)
-
-        device = self.device_selector.selected_device()
-        if device is None:
-            return
-
-        esptool = "-mmu.contrib.esptool"
-        erase_command = '"{}" "{}" --port {} erase_flash'.format(
-            sys.executable, esptool, device.port
-        )
-
-        if self.device_type.currentText() == "ESP32":
-            write_command = (
-                '"{}" "{}" --chip esp32 --port {} --baud {} '
-                'write_flash -z 0x1000 "{}"'
-            ).format(
-                sys.executable,
-                esptool,
-                device.port,
-                baudrate,
-                self.txtFolder.text(),
-            )
-        else:
-            write_command = (
-                '"{}" "{}" --chip esp8266 --port {} --baud {} '
-                'write_flash --flash_size=detect 0 "{}"'
-            ).format(
-                sys.executable,
-                esptool,
-                device.port,
-                baudrate,
-                self.txtFolder.text(),
-            )
-
-        self.commands = [erase_command, write_command]
-        self.run_esptool()
-
-    def run_esptool(self):
-        self.process = QProcess(self)
-        self.process.setProcessChannelMode(QProcess.MergedChannels)
-        self.process.readyReadStandardError.connect(self.read_process)
-        self.process.readyReadStandardOutput.connect(self.read_process)
-        self.process.finished.connect(self.esptool_finished)
-        self.process.error.connect(self.esptool_error)
-
-        command = self.commands.pop(0)
-        self.log_text_area.appendPlainText(command + "\n")
-        self.process.start(command)
-
-    def esptool_error(self, error_num):
-        self.log_text_area.appendPlainText(
-            "Error occurred: Error {}\n".format(error_num)
-        )
-        self.process = None
-
-    def esptool_finished(self, exitCode, exitStatus):
-        """
-        Called when the subprocess that executes 'esptool.py is finished.
-        """
-        # Exit if a command fails
-        if exitCode != 0 or exitStatus == QProcess.CrashExit:
-            self.log_text_area.appendPlainText("Error on flashing. Aborting.")
-            return
-        if self.commands:
-            self.process = None
-            self.run_esptool()
-
-    def read_process(self):
-        """
-        Read data from the child process and append it to the text area. Try
-        to keep reading until there's no more data from the process.
-        """
-        msg = ""
-        data = self.process.readAll()
-        if data:
-            try:
-                msg = data.data().decode("utf-8")
-                self.append_data(msg)
-            except UnicodeDecodeError:
-                pass
-            QTimer.singleShot(2, self.read_process)
-
-    def append_data(self, msg):
-        """
-        Add data to the end of the text area.
-        """
-        cursor = self.log_text_area.textCursor()
-        cursor.movePosition(QTextCursor.End)
-        cursor.insertText(msg)
-        cursor.movePosition(QTextCursor.End)
-        self.log_text_area.setTextCursor(cursor)
-
-    def firmware_path_changed(self):
-        self.toggle_exec_button()
-
-    def toggle_exec_button(self):
-        if (
-            len(self.txtFolder.text()) > 0
-            and self.device_selector.selected_device() is not None
-        ):
-            self.btnExec.setEnabled(True)
-        else:
-            self.btnExec.setEnabled(False)
-
-
 class AdminDialog(QDialog):
     """
     Displays administrative related information and settings (logs, environment
@@ -599,10 +384,6 @@ class AdminDialog(QDialog):
             self.package_widget = PackagesWidget(self)
             self.package_widget.setup(packages)
             self.tabs.addTab(self.package_widget, _("Third Party Packages"))
-        if mode.short_name == "esp":
-            self.esp_widget = ESPFirmwareFlasherWidget(self)
-            self.esp_widget.setup(mode, device_list)
-            self.tabs.addTab(self.esp_widget, _("ESP Firmware flasher"))
         if mode.short_name == "web":
             self.python_anywhere_widget = PythonAnywhereWidget(self)
             self.python_anywhere_widget.setup(
