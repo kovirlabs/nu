@@ -70,10 +70,11 @@ QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly
 - [x] Mode + API stub + registration; `MicrobitSettingsWidget`, `get_microbit_path`,
   `minify`/`microbit_runtime` session+settings handling; **vendored `uflash.py` (1.86 MB)**; tests.
   Suite green: **932 passed, 20 skipped**; flake8 clean. Modes: python, circuitpython, debugger, pygamezero.
-- [ ] **Remove the now-orphaned serial file-transfer subsystem** (micro:bit was its last user;
-  CircuitPython uses the CIRCUITPY drive, not this): `FileManager` (`modes/base.py`),
-  `FileSystemPane` + the device/local file-list classes (`interface/panes.py`),
-  `Window.add_filesystem` (`interface/main.py`), and the **vendored `microfs.py`** + tests.
+- [x] **Removed the orphaned serial file-transfer subsystem**: `FileManager` (`modes/base.py`),
+  `FileSystemPane` + device/local file-list classes (`interface/panes.py`),
+  `Window.add_filesystem`/`remove_filesystem` (`interface/main.py`), and the **vendored
+  `microfs.py`** + tests. `mu/contrib/` is now empty (all of uflash/esptool/microfs gone).
+  Suite green: **889 passed, 20 skipped**; flake8 clean.
 
 **1c. Toolchain**:
 - [ ] Adopt **ruff** for dev lint+format (replaces flake8 + pycodestyle + pyflakes + black

@@ -970,81 +970,6 @@ def test_Window_on_stdout_write():
     w.data_received.emit.assert_called_once_with(b"hello")
 
 
-def test_Window_add_filesystem():
-    """
-    Ensure the expected settings are updated when adding a file system pane.
-    """
-    w = mu.interface.main.Window()
-    w.theme = mock.MagicMock()
-    w.splitter = mock.MagicMock()
-    w.addDockWidget = mock.MagicMock(return_value=None)
-    w.connect_zoom = mock.MagicMock(return_value=None)
-    mock_fs = mock.MagicMock()
-    mock_fs.setFocus = mock.MagicMock(return_value=None)
-    mock_fs_class = mock.MagicMock(return_value=mock_fs)
-    mock_dock = mock.MagicMock()
-    mock_dock_class = mock.MagicMock(return_value=mock_dock)
-    mock_file_manager = mock.MagicMock()
-    with mock.patch(
-        "mu.interface.main.FileSystemPane", mock_fs_class
-    ), mock.patch("mu.interface.main.QDockWidget", mock_dock_class):
-        result = w.add_filesystem("path/to/home", mock_file_manager)
-    mock_fs_class.assert_called_once_with("path/to/home")
-    assert result == mock_fs
-    assert w.fs_pane == mock_fs
-    w.addDockWidget.assert_called_once_with(Qt.BottomDockWidgetArea, mock_dock)
-    mock_fs.setFocus.assert_called_once_with()
-    mock_file_manager.on_list_files.connect.assert_called_once_with(
-        mock_fs.on_ls
-    )
-    mock_fs.list_files.connect.assert_called_once_with(mock_file_manager.ls)
-    mock_fs.microbit_fs.put.connect.assert_called_once_with(
-        mock_file_manager.put
-    )
-    mock_fs.microbit_fs.delete.connect.assert_called_once_with(
-        mock_file_manager.delete
-    )
-    mock_fs.microbit_fs.list_files.connect.assert_called_once_with(
-        mock_file_manager.ls
-    )
-    mock_fs.local_fs.get.connect.assert_called_once_with(mock_file_manager.get)
-    mock_fs.local_fs.list_files.connect.assert_called_once_with(
-        mock_file_manager.ls
-    )
-    mock_file_manager.on_put_file.connect.assert_called_once_with(
-        mock_fs.microbit_fs.on_put
-    )
-    mock_file_manager.on_delete_file.connect.assert_called_once_with(
-        mock_fs.microbit_fs.on_delete
-    )
-    mock_file_manager.on_get_file.connect.assert_called_once_with(
-        mock_fs.local_fs.on_get
-    )
-    mock_file_manager.on_list_fail.connect.assert_called_once_with(
-        mock_fs.on_ls_fail
-    )
-    mock_file_manager.on_put_fail.connect.assert_called_once_with(
-        mock_fs.on_put_fail
-    )
-    mock_file_manager.on_delete_fail.connect.assert_called_once_with(
-        mock_fs.on_delete_fail
-    )
-    mock_file_manager.on_get_fail.connect.assert_called_once_with(
-        mock_fs.on_get_fail
-    )
-    w.connect_zoom.assert_called_once_with(mock_fs)
-
-
-def test_Window_add_filesystem_open_signal():
-    w = mu.interface.main.Window()
-    w.open_file = mock.MagicMock()
-    mock_open_emit = mock.MagicMock()
-    w.open_file.emit = mock_open_emit
-    pane = w.add_filesystem("homepath", mock.MagicMock())
-    pane.open_file.emit("test")
-    mock_open_emit.assert_called_once_with("test")
-
-
 def test_Window_add_micropython_repl():
     """
     Ensure the expected object is instantiated and add_repl is called for a
@@ -1302,23 +1227,6 @@ def test_Window_update_debug_inspector_with_exception():
         w.update_debug_inspector(locals_dict)
     # You just have to believe this is correct. I checked! :-)
     assert mock_standard_item.call_count == 2
-
-
-def test_Window_remove_filesystem():
-    """
-    Check all the necessary calls to remove / reset the file system pane are
-    made.
-    """
-    w = mu.interface.main.Window()
-    mock_fs = mock.MagicMock()
-    mock_fs.setParent = mock.MagicMock(return_value=None)
-    mock_fs.deleteLater = mock.MagicMock(return_value=None)
-    w.fs = mock_fs
-    w.dockWidgetArea = mock.MagicMock()
-    w.remove_filesystem()
-    mock_fs.setParent.assert_called_once_with(None)
-    mock_fs.deleteLater.assert_called_once_with()
-    assert w.fs is None
 
 
 def test_Window_remove_repl():

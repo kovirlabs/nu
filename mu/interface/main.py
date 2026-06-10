@@ -61,7 +61,6 @@ from mu.interface.panes import (
     PythonProcessPane,
     JupyterREPLPane,
     MicroPythonREPLPane,
-    FileSystemPane,
     PlotterPane,
 )
 from mu.interface.editor import EditorPane
@@ -585,41 +584,6 @@ class Window(QMainWindow):
         """
         self.data_received.emit(data)
 
-    def add_filesystem(self, home, file_manager, board_name="board"):
-        """
-        Adds the file system pane to the application.
-        """
-        self.fs_pane = FileSystemPane(home)
-
-        @self.fs_pane.open_file.connect
-        def on_open_file(file):
-            # Bubble the signal up
-            self.open_file.emit(file)
-
-        self.fs = QDockWidget(_("Filesystem on ") + board_name)
-        self.fs.setWidget(self.fs_pane)
-        self.fs.setFeatures(QDockWidget.DockWidgetMovable)
-        self.fs.setAllowedAreas(Qt.BottomDockWidgetArea)
-        self.addDockWidget(Qt.BottomDockWidgetArea, self.fs)
-        self.fs_pane.setFocus()
-        file_manager.on_list_files.connect(self.fs_pane.on_ls)
-        self.fs_pane.list_files.connect(file_manager.ls)
-        self.fs_pane.microbit_fs.put.connect(file_manager.put)
-        self.fs_pane.microbit_fs.delete.connect(file_manager.delete)
-        self.fs_pane.microbit_fs.list_files.connect(file_manager.ls)
-        self.fs_pane.local_fs.get.connect(file_manager.get)
-        self.fs_pane.local_fs.put.connect(file_manager.put)
-        self.fs_pane.local_fs.list_files.connect(file_manager.ls)
-        file_manager.on_put_file.connect(self.fs_pane.microbit_fs.on_put)
-        file_manager.on_delete_file.connect(self.fs_pane.microbit_fs.on_delete)
-        file_manager.on_get_file.connect(self.fs_pane.local_fs.on_get)
-        file_manager.on_list_fail.connect(self.fs_pane.on_ls_fail)
-        file_manager.on_put_fail.connect(self.fs_pane.on_put_fail)
-        file_manager.on_delete_fail.connect(self.fs_pane.on_delete_fail)
-        file_manager.on_get_fail.connect(self.fs_pane.on_get_fail)
-        self.connect_zoom(self.fs_pane)
-        return self.fs_pane
-
     def add_micropython_repl(self, name, connection):
         """
         Adds a MicroPython based REPL pane to the application.
@@ -873,16 +837,6 @@ class Window(QMainWindow):
                 self.debug_inspector.expand(
                     self.debug_model.indexFromItem(item_to_expand)
                 )
-
-    def remove_filesystem(self):
-        """
-        Removes the file system pane from the application.
-        """
-        if hasattr(self, "fs") and self.fs:
-            self.fs_pane = None
-            self.fs.setParent(None)
-            self.fs.deleteLater()
-            self.fs = None
 
     def remove_repl(self):
         """
