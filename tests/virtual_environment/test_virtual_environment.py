@@ -444,11 +444,11 @@ def test_venv_is_singleton():
     are the same instance
     """
     venv = mu.virtual_environment.venv
-    from mu.modes import pygamezero, python3, web, debugger
+    from mu.modes import pygamezero, python3, debugger
     from mu.interface import dialogs
     from mu import app, logic
 
-    for module in [pygamezero, python3, web, debugger, dialogs, app, logic]:
+    for module in [pygamezero, python3, debugger, dialogs, app, logic]:
         assert module.venv is venv
 
 

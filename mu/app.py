@@ -53,7 +53,6 @@ from .modes import (
     MicrobitMode,
     DebugMode,
     PyGameZeroMode,
-    WebMode,
 )
 from .interface.themes import NIGHT_STYLE, DAY_STYLE, CONTRAST_STYLE
 from . import settings
@@ -250,7 +249,6 @@ def setup_modes(editor, view):
         "python": PythonMode(editor, view),
         "circuitpython": CircuitPythonMode(editor, view),
         "microbit": MicrobitMode(editor, view),
-        "web": WebMode(editor, view),
         "debugger": DebugMode(editor, view),
         "pygamezero": PyGameZeroMode(editor, view),
     }

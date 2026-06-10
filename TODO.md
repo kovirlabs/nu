@@ -59,13 +59,15 @@ QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly
 - [x] Suite green: **1033 passed, 20 skipped** (was 1120; 87 mode tests removed); flake8 clean
 - Remaining modes: `python, circuitpython, microbit, web, debugger, pygamezero`
 
-**1b. Drop Web mode** (separate step — threads through core session code):
-- [ ] `mu/modes/web.py` + `api/flask.py` (FLASK_APIS, ~2.1k lines)
-- [ ] `interface/dialogs.py` `PythonAnywhereWidget` + `AdminDialog` web/PythonAnywhere blocks
-- [ ] `interface/workers.py` `PythonAnywhereWorker`
-- [ ] `interface/main.py` `upload_to_python_anywhere` + handlers + import
-- [ ] `logic.py` `pa_username`/`pa_token`/`pa_instance` session save/load + settings
-- [ ] Corresponding tests; suite green
+**1b. Drop Web mode** (separate step — threads through core session code): ✅ DONE
+- [x] `mu/modes/web.py` + `api/flask.py` (FLASK_APIS, ~2.1k lines)
+- [x] `interface/dialogs.py` `PythonAnywhereWidget` + `AdminDialog` web/PythonAnywhere blocks
+- [x] `interface/workers.py` `PythonAnywhereWorker` (whole file removed)
+- [x] `interface/main.py` `upload_to_python_anywhere` + handlers + import (+ unused QThread/QProgressDialog)
+- [x] `logic.py` `pa_username`/`pa_token`/`pa_instance` session save/load + settings
+- [x] `mu/wheels/__init__.py` flask wheel entry
+- [x] Corresponding tests (test_web, test_workers deleted; test_dialogs/main/logic pruned); suite green
+- [x] Suite green: **990 passed, 20 skipped**; flake8 clean. Modes: python, circuitpython, microbit, debugger, pygamezero
 
 **1c. Toolchain**:
 - [ ] Adopt **ruff** for dev lint+format (replaces flake8 + pycodestyle + pyflakes + black

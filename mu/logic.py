@@ -794,9 +794,6 @@ class Editor(QObject):
         self.modes = {}
         self.envars = {}  # See restore session and show_admin
         self.minify = False
-        self.pa_username = ""
-        self.pa_token = ""
-        self.pa_instance = "www"
         self.microbit_runtime = ""
         self.user_locale = ""  # user defined language locale
         self.connected_devices = DeviceList(self.modes, parent=self)
@@ -955,12 +952,6 @@ class Editor(QObject):
         if "venv_path" in old_session:
             venv.relocate(old_session["venv_path"])
             venv.ensure()
-
-        python_anywhere = old_session.get("python_anywhere")
-        if python_anywhere:
-            self.pa_username = python_anywhere["username"]
-            self.pa_token = python_anywhere["token"]
-            self.pa_instance = python_anywhere["instance"]
 
         if "locale" in old_session:
             self.user_locale = old_session["locale"].strip()
@@ -1430,11 +1421,6 @@ class Editor(QObject):
                 "w": self._view.width(),
                 "h": self._view.height(),
             },
-            "python_anywhere": {
-                "username": self.pa_username,
-                "token": self.pa_token,
-                "instance": self.pa_instance,
-            },
             "locale": self.user_locale,
         }
         save_session(session)
@@ -1459,9 +1445,6 @@ class Editor(QObject):
             "minify": self.minify,
             "microbit_runtime": self.microbit_runtime,
             "locale": self.user_locale,
-            "pa_username": self.pa_username,
-            "pa_token": self.pa_token,
-            "pa_instance": self.pa_instance,
         }
         baseline_packages, user_packages = venv.installed_packages()
         packages = user_packages
@@ -1499,12 +1482,6 @@ class Editor(QObject):
                 ]
                 old_packages = [p.lower() for p in user_packages]
                 self.sync_package_state(old_packages, new_packages)
-            if "pa_username" in new_settings:
-                self.pa_username = new_settings["pa_username"].strip()
-            if "pa_token" in new_settings:
-                self.pa_token = new_settings["pa_token"].strip()
-            if "pa_instance" in new_settings:
-                self.pa_instance = new_settings["pa_instance"].strip()
             if "locale" in new_settings:
                 self.user_locale = new_settings["locale"]
             # Ensure mode UI is updated given settings.
