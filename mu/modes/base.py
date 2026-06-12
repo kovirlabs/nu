@@ -24,8 +24,8 @@ import time
 import logging
 import pkgutil
 from serial import Serial
-from PyQt5.QtSerialPort import QSerialPort, QSerialPortInfo
-from PyQt5.QtCore import QObject, pyqtSignal, QIODevice, QTimer
+from PyQt6.QtSerialPort import QSerialPort, QSerialPortInfo
+from PyQt6.QtCore import QObject, pyqtSignal, QIODevice, QTimer
 from mu.logic import Device
 from .. import config, settings
 
@@ -80,7 +80,7 @@ class REPLConnection(QObject):
 
         logger.info("Connecting to REPL on port: {}".format(self.port))
 
-        if not self.serial.open(QIODevice.ReadWrite):
+        if not self.serial.open(QIODevice.OpenModeFlag.ReadWrite):
             msg = _("Cannot connect to device on port {}").format(self.port)
             raise IOError(msg)
 
@@ -93,7 +93,7 @@ class REPLConnection(QObject):
             pyser = Serial(self.port)  # open serial port w/pyserial
             pyser.dtr = True
             pyser.close()
-            self.serial.open(QIODevice.ReadWrite)
+            self.serial.open(QIODevice.OpenModeFlag.ReadWrite)
         self.serial.readyRead.connect(self._on_serial_read)
 
         logger.info("Connected to REPL on port: {}".format(self.port))

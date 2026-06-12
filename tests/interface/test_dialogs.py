@@ -7,7 +7,7 @@ import os
 import pytest
 import mu.i18n
 import mu.interface.dialogs
-from PyQt5.QtWidgets import QDialog, QWidget, QDialogButtonBox
+from PyQt6.QtWidgets import QDialog, QWidget, QDialogButtonBox
 from unittest import mock
 from mu import virtual_environment
 from mu.modes import (
@@ -85,7 +85,7 @@ def test_ModeSelector_get_mode():
     raise the expected exception if cancelled).
     """
     ms = mu.interface.dialogs.ModeSelector()
-    ms.result = mock.MagicMock(return_value=QDialog.Accepted)
+    ms.result = mock.MagicMock(return_value=QDialog.DialogCode.Accepted)
     item = mock.MagicMock()
     item.icon = "name"
     ms.mode_list = mock.MagicMock()
@@ -227,7 +227,10 @@ def test_PackageDialog_setup():
     assert args0 == ("install", to_add)
     [args1], _ = queue_called_with[1]
     assert args1 == ("remove", to_remove)
-    assert pd.button_box.button(QDialogButtonBox.Ok).isEnabled() is False
+    assert (
+        pd.button_box.button(QDialogButtonBox.StandardButton.Ok).isEnabled()
+        is False
+    )
 
 
 @pytest.mark.skip(

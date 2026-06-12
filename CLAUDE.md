@@ -22,13 +22,13 @@ Two packaging configs coexist: `setup.py` / `setup.cfg` remain the canonical def
 
 ## Runtime constraints
 
-Mu pins **old, exact dependency versions** and a narrow Python range — this is the single biggest source of friction. `setup.py` declares `python_requires=">=3.5,<3.9"` and pins `PyQt5==5.13.2`, `PyQt5-sip<=12.13.0`, `qtconsole==4.7.7`, `black<22.1.0`, etc. These pins exist for cross-platform wheel availability (microbit, packaging). Don't bump them casually; modernization is the fork's goal but each pin tends to have a downstream reason (see comments in `setup.py`).
+As of **Phase 2** (see `TODO.md`) Mu runs on **PyQt6** and **Python 3.11+**. `setup.py` declares `python_requires=">=3.11"` and depends on `PyQt6>=6.6`, `PyQt6-QScintilla>=2.14`, `PyQt6-Charts>=6.6`, with a modern Jupyter stack (`qtconsole>=5.5`, `ipykernel>=6.29`, `jupyter-client>=8.0`). The old frozen Py3.5-era pins are gone. Two pins are intentionally still old: `black>=19.10b0,<22.1.0` + `click<=8.0.4` — the `<22.1.0` ceiling resolves to a build that runs on 3.11, and bumping black means reformatting the whole tree (deferred to the toolchain phase). `black` powers the in-editor "Tidy" button (a runtime dependency), so don't drop it.
 
-Because of the `<3.9` ceiling, the uv project (`pyproject.toml`) pins `requires-python = ">=3.8,<3.9"` — 3.8 is the newest interpreter the original supports and the only point in that range with usable modern wheels. `uv sync` auto-downloads a managed CPython 3.8 into `.venv`. The system `python3` here is 3.14, which **cannot** run Mu with these pins, so always work through the uv venv (or a 3.8 virtualenv).
+`pyproject.toml` mirrors `setup.py` and pins `requires-python = ">=3.11"`; `uv sync` auto-downloads a managed CPython into `.venv`. The system `python3` here is 3.14; prefer working through the uv venv (or any 3.11+ virtualenv).
 
 ## Common commands
 
-Dev setup with uv (preferred): `uv sync` installs the runtime dependencies into `.venv` using CPython 3.8; add `--extra dev` (or `--all-extras`) for the tests/docs/packaging/i18n tooling. Run things with `uv run python run.py`, `uv run python -m mu`, or `uv run pytest`.
+Dev setup with uv (preferred): `uv sync` installs the runtime dependencies into `.venv` using a managed CPython 3.11; add `--extra dev` (or `--all-extras`) for the tests/docs/packaging/i18n tooling. Run things with `uv run python run.py`, `uv run python -m mu`, or `uv run pytest`.
 
 Dev setup the original way (inside a 3.8 virtualenv): `pip install -e ".[dev]"` installs runtime + tests + docs + packaging + i18n extras.
 
@@ -38,7 +38,7 @@ Most workflows go through the `Makefile` (which delegates to `make.py`):
 - `make test` — full test suite (`pytest -v --random-order`). Sets `LANG=en_GB.utf8`; locale-sensitive tests need this.
 - `make coverage` — tests with coverage report (`--cov=mu`). Upstream maintained 100% coverage.
 - `make flake8` — lint.
-- `make black` — check formatting; `make tidy` — apply Black formatting. Line length **88**.
+- `make black` — check formatting; `make tidy` — apply Black formatting. Black wraps at **79** (`make.py` `BLACK_FLAGS`); flake8 allows up to **88** (`setup.cfg`).
 - `make check` — runs `black` + `flake8` + `coverage`; this is the pre-commit gate.
 - `make dist` — build sdist/wheel. `make win32`/`win64`/`macos`/`linux` build platform installers via `pup`.
 
@@ -48,7 +48,7 @@ Most workflows go through the `Makefile` (which delegates to `make.py`):
 ```
 QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly -q
 ```
-Current green baseline: **1033 passed, 20 skipped**. (`~/.local/share/mu` must exist or you'll see a harmless at-exit settings-save traceback.) Lint the project's way with `PYFLAKES_BUILTINS=_ python -m flake8 mu/ tests/` — the `_` builtin is gettext; without that env var you get spurious `F821 undefined name '_'`.
+Current green baseline (Python 3.11 + PyQt6): **889 passed, 20 skipped**. (`~/.local/share/mu` must exist or you'll see a harmless at-exit settings-save traceback.) On a headless box without Mesa, Qt6's `offscreen` plugin still needs `libEGL.so.1` — put it on `LD_LIBRARY_PATH` (e.g. `apt-get download libegl1 libglvnd0 && dpkg -x` into a local dir). Lint the project's way with `PYFLAKES_BUILTINS=_ python -m flake8 mu/ tests/` — the `_` builtin is gettext; without that env var you get spurious `F821 undefined name '_'`.
 
 Test layout mirrors the source tree: `tests/test_logic.py` tests `mu/logic.py`, `tests/modes/` tests `mu/modes/`, etc.
 

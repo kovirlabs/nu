@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import logging
 
-from PyQt5.QtGui import QColor, QFontDatabase
+from PyQt6.QtGui import QColor, QFontDatabase
 from mu.resources import load_stylesheet, load_font_data
 
 
@@ -49,7 +49,7 @@ class Font:
     editor.
     """
 
-    _DATABASE = None
+    _FONTS_LOADED = False
 
     def __init__(
         self, color="#181818", paper="#FEFEF7", bold=False, italic=False
@@ -62,23 +62,25 @@ class Font:
     @classmethod
     def get_database(cls):
         """
-        Create a font database and load the MU builtin fonts into it.
-        This is a cached classmethod so the font files aren't re-loaded
-        every time a font is referenced
+        Register Mu's builtin fonts with Qt's font database.
+
+        Qt6's QFontDatabase is entirely static (it can no longer be
+        instantiated), so this simply ensures the application fonts are loaded
+        exactly once for the lifetime of the process.
         """
-        if cls._DATABASE is None:
-            cls._DATABASE = QFontDatabase()
+        if not cls._FONTS_LOADED:
             for variant in FONT_VARIANTS:
                 filename = FONT_FILENAME_PATTERN.format(variant=variant)
                 font_data = load_font_data(filename)
-                cls._DATABASE.addApplicationFontFromData(font_data)
-        return cls._DATABASE
+                QFontDatabase.addApplicationFontFromData(font_data)
+            cls._FONTS_LOADED = True
 
     def load(self, size=DEFAULT_FONT_SIZE):
         """
         Load the font from the font database, using the correct size and style
         """
-        return Font.get_database().font(FONT_NAME, self.stylename, size)
+        Font.get_database()
+        return QFontDatabase.font(FONT_NAME, self.stylename, size)
 
     @property
     def stylename(self):

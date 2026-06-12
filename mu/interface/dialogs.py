@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import logging
 
-from PyQt5.QtCore import QSize, QTimer
-from PyQt5.QtWidgets import (
+from PyQt6.QtCore import QSize, QTimer
+from PyQt6.QtWidgets import (
     QVBoxLayout,
     QListWidget,
     QLabel,
@@ -96,7 +96,8 @@ class ModeSelector(QDialog):
         instructions.setWordWrap(True)
         widget_layout.addWidget(instructions)
         button_box = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+            QDialogButtonBox.StandardButton.Ok
+            | QDialogButtonBox.StandardButton.Cancel
         )
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
@@ -112,7 +113,7 @@ class ModeSelector(QDialog):
         """
         Return details of the newly selected mode.
         """
-        if self.result() == QDialog.Accepted:
+        if self.result() == QDialog.DialogCode.Accepted:
             return self.mode_list.currentItem().icon
         else:
             raise RuntimeError("Mode change cancelled.")
@@ -136,7 +137,7 @@ class LogWidget(QWidget):
         widget_layout.addWidget(label)
         self.log_text_area = QPlainTextEdit()
         self.log_text_area.setReadOnly(True)
-        self.log_text_area.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.log_text_area.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.log_text_area.setPlainText(log)
         widget_layout.addWidget(self.log_text_area)
 
@@ -161,7 +162,7 @@ class EnvironmentVariablesWidget(QWidget):
         label.setWordWrap(True)
         widget_layout.addWidget(label)
         self.text_area = QPlainTextEdit()
-        self.text_area.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.text_area.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.text_area.setPlainText(envars)
         widget_layout.addWidget(self.text_area)
 
@@ -176,7 +177,7 @@ class PackagesWidget(QWidget):
         widget_layout = QVBoxLayout()
         self.setLayout(widget_layout)
         self.text_area = QPlainTextEdit()
-        self.text_area.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.text_area.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         label = QLabel(
             _(
                 "The packages shown below will be available to "
@@ -263,7 +264,8 @@ class AdminDialog(QDialog):
         self.tabs = QTabWidget()
         widget_layout.addWidget(self.tabs)
         button_box = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+            QDialogButtonBox.StandardButton.Ok
+            | QDialogButtonBox.StandardButton.Cancel
         )
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
@@ -338,7 +340,8 @@ class FindReplaceDialog(QDialog):
         self.replace_all_flag.setChecked(replace_flag)
         widget_layout.addWidget(self.replace_all_flag)
         button_box = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+            QDialogButtonBox.StandardButton.Ok
+            | QDialogButtonBox.StandardButton.Cancel
         )
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
@@ -389,11 +392,13 @@ class PackageDialog(QDialog):
         # Text area for pip output.
         self.text_area = QPlainTextEdit()
         self.text_area.setReadOnly(True)
-        self.text_area.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.text_area.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         widget_layout.addWidget(self.text_area)
         # Buttons.
-        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok)
-        self.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(
+            False
+        )
         self.button_box.accepted.connect(self.accept)
         widget_layout.addWidget(self.button_box)
 
@@ -423,7 +428,9 @@ class PackageDialog(QDialog):
         Set the UI to a valid end state.
         """
         self.text_area.appendPlainText("\nFINISHED")
-        self.button_box.button(QDialogButtonBox.Ok).setEnabled(True)
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(
+            True
+        )
 
     def run_pip(self, command, packages):
         """

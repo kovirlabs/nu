@@ -23,8 +23,8 @@ import mu.logic
 import mu.settings
 
 from mu.virtual_environment import venv
-from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtCore import pyqtSignal, QObject, Qt
+from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtCore import pyqtSignal, QObject, Qt
 
 from mu import __version__
 
@@ -736,12 +736,12 @@ def test_devicelist_data(microbit_com1, adafruit_feather):
     dl = mu.logic.DeviceList(modes)
     dl.add_device(microbit_com1)
     dl.add_device(adafruit_feather)
-    tooltip = dl.data(dl.index(0), Qt.ToolTipRole)
-    display = dl.data(dl.index(0), Qt.DisplayRole)
+    tooltip = dl.data(dl.index(0), Qt.ItemDataRole.ToolTipRole)
+    display = dl.data(dl.index(0), Qt.ItemDataRole.DisplayRole)
     assert display == adafruit_feather.name
     assert tooltip == str(adafruit_feather)
-    tooltip = dl.data(dl.index(1), Qt.ToolTipRole)
-    display = dl.data(dl.index(1), Qt.DisplayRole)
+    tooltip = dl.data(dl.index(1), Qt.ItemDataRole.ToolTipRole)
+    display = dl.data(dl.index(1), Qt.ItemDataRole.DisplayRole)
     assert display == microbit_com1.name
     assert tooltip == str(microbit_com1)
 
@@ -1281,7 +1281,9 @@ def test_load_other_file_change_mode():
     view = mock.MagicMock()
     view.get_load_path = mock.MagicMock(return_value="foo.html")
     view.add_tab = mock.MagicMock()
-    view.show_confirmation = mock.MagicMock(return_value=QMessageBox.Ok)
+    view.show_confirmation = mock.MagicMock(
+        return_value=QMessageBox.StandardButton.Ok
+    )
     view.current_tab.path = "path"
     ed = mu.logic.Editor(view)
     ed.change_mode = mock.MagicMock()
@@ -1902,7 +1904,9 @@ def test_quit_modified_cancelled_from_button():
     """
     view = mock.MagicMock()
     view.modified = True
-    view.show_confirmation = mock.MagicMock(return_value=QMessageBox.Cancel)
+    view.show_confirmation = mock.MagicMock(
+        return_value=QMessageBox.StandardButton.Cancel
+    )
     ed = mu.logic.Editor(view)
     mock_open = mock.MagicMock()
     mock_open.return_value.__enter__ = lambda s: s
@@ -1923,7 +1927,9 @@ def test_quit_modified_cancelled_from_event():
     """
     view = mock.MagicMock()
     view.modified = True
-    view.show_confirmation = mock.MagicMock(return_value=QMessageBox.Cancel)
+    view.show_confirmation = mock.MagicMock(
+        return_value=QMessageBox.StandardButton.Cancel
+    )
     ed = mu.logic.Editor(view)
     mock_open = mock.MagicMock()
     mock_open.return_value.__enter__ = lambda s: s
@@ -2168,7 +2174,7 @@ def test_quit_calls_sys_exit(mocked_session):
     mock_event = mock.MagicMock()
     mock_event.ignore = mock.MagicMock(return_value=None)
     with mock.patch(
-        "PyQt5.QtCore.QCoreApplication.exit", return_value=0
+        "PyQt6.QtCore.QCoreApplication.exit", return_value=0
     ) as ex, mock.patch("builtins.open", mock_open):
         ed.quit(mock_event)
     ex.assert_called_once_with(0)
@@ -2448,7 +2454,9 @@ def test_ask_to_change_mode_confirm():
     Ensure the ask_to_change_mode calls change_mode, if user confirms.
     """
     view = mock.MagicMock()
-    view.show_confirmation = mock.MagicMock(return_value=QMessageBox.Ok)
+    view.show_confirmation = mock.MagicMock(
+        return_value=QMessageBox.StandardButton.Ok
+    )
     ed = mu.logic.Editor(view)
     ed.change_mode = mock.MagicMock()
     mode_py = mock.MagicMock()
@@ -2468,7 +2476,9 @@ def test_ask_to_change_mode_cancel(adafruit_feather):
     by user.
     """
     view = mock.MagicMock()
-    view.show_confirmation = mock.MagicMock(return_value=QMessageBox.Cancel)
+    view.show_confirmation = mock.MagicMock(
+        return_value=QMessageBox.StandardButton.Cancel
+    )
     ed = mu.logic.Editor(view)
     ed.change_mode = mock.MagicMock()
     mode_py = mock.MagicMock()
@@ -2488,7 +2498,9 @@ def test_ask_to_change_mode_already_in_mode(microbit_com1):
     selected.
     """
     view = mock.MagicMock()
-    view.show_confirmation = mock.MagicMock(return_value=QMessageBox.Ok)
+    view.show_confirmation = mock.MagicMock(
+        return_value=QMessageBox.StandardButton.Ok
+    )
     ed = mu.logic.Editor(view)
     ed.change_mode = mock.MagicMock()
     mode_mb = mock.MagicMock()
@@ -2510,7 +2522,9 @@ def test_ask_to_change_mode_currently_running_code(microbit_com1):
     is running code.
     """
     view = mock.MagicMock()
-    view.show_confirmation = mock.MagicMock(return_value=QMessageBox.Ok)
+    view.show_confirmation = mock.MagicMock(
+        return_value=QMessageBox.StandardButton.Ok
+    )
     ed = mu.logic.Editor(view)
     ed.change_mode = mock.MagicMock()
     mode_py = mock.MagicMock()
@@ -2533,7 +2547,9 @@ def test_ask_to_change_mode_when_selecting_mode_is_silent(adafruit_feather):
     the mode selection dialog active (indicated by the selecting_mode flag).
     """
     view = mock.MagicMock()
-    view.show_confirmation = mock.MagicMock(return_value=QMessageBox.Cancel)
+    view.show_confirmation = mock.MagicMock(
+        return_value=QMessageBox.StandardButton.Cancel
+    )
     ed = mu.logic.Editor(view)
     ed.change_mode = mock.MagicMock()
     mode_py = mock.MagicMock()

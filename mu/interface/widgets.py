@@ -16,8 +16,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt5.QtCore import QSize, Qt, pyqtSignal
-from PyQt5.QtWidgets import (
+from PyQt6.QtCore import QSize, Qt, pyqtSignal
+from PyQt6.QtWidgets import (
     QHBoxLayout,
     QWidget,
     QLabel,
@@ -59,7 +59,9 @@ class DeviceSelector(QWidget):
 
         # Device selection combobox
         self.selector = QComboBox()
-        self.selector.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self.selector.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToContents
+        )
         self.selector.setHidden(True)
         self.selector.currentIndexChanged.connect(self._device_changed)
         layout.addWidget(self.selector)
@@ -156,7 +158,9 @@ class DeviceSelector(QWidget):
             self.connection_status.setPixmap(self.connected_icon)
             model = self.selector.model()
             ix = model.index(self.selector.currentIndex(), 0)
-            tooltip = self.selector.model().data(ix, Qt.ToolTipRole)
+            tooltip = self.selector.model().data(
+                ix, Qt.ItemDataRole.ToolTipRole
+            )
             self._set_tooltip(tooltip)
 
     def _set_tooltip(self, tooltip):

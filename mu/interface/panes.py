@@ -27,7 +27,7 @@ import bisect
 import os.path
 import codecs
 
-from PyQt5.QtCore import (
+from PyQt6.QtCore import (
     Qt,
     QProcess,
     QProcessEnvironment,
@@ -35,12 +35,12 @@ from PyQt5.QtCore import (
     QTimer,
 )
 from collections import deque
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QTextEdit,
     QMenu,
     QTreeView,
 )
-from PyQt5.QtGui import (
+from PyQt6.QtGui import (
     QKeySequence,
     QTextCursor,
     QCursor,
@@ -58,7 +58,7 @@ logger = logging.getLogger(__name__)
 
 CHARTS = True
 try:  # pragma: no cover
-    from PyQt5.QtChart import QChart, QLineSeries, QChartView, QValueAxis
+    from PyQt6.QtCharts import QChart, QLineSeries, QChartView, QValueAxis
 except ImportError:  # pragma: no cover
     logger.info("Unable to find QChart. Plotter button will not display.")
     QChartView = object
@@ -162,7 +162,7 @@ class MicroPythonREPLPane(QTextEdit):
         self.setAcceptRichText(False)
         self.setReadOnly(False)
         self.setUndoRedoEnabled(False)
-        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self.context_menu)
         # The following variable maintains the position where we know
         # the device cursor is placed. It is initialized to the beginning
@@ -201,15 +201,19 @@ class MicroPythonREPLPane(QTextEdit):
         """
         menu = QMenu(self)
         if platform.system() == "Darwin":
-            copy_keys = QKeySequence(Qt.CTRL + Qt.Key_C)
-            paste_keys = QKeySequence(Qt.CTRL + Qt.Key_V)
+            copy_keys = QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_C)
+            paste_keys = QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_V)
         else:
-            copy_keys = QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_C)
-            paste_keys = QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_V)
+            copy_keys = QKeySequence(
+                Qt.Modifier.CTRL | Qt.Modifier.SHIFT | Qt.Key.Key_C
+            )
+            paste_keys = QKeySequence(
+                Qt.Modifier.CTRL | Qt.Modifier.SHIFT | Qt.Key.Key_V
+            )
 
         menu.addAction("Copy", self.copy, copy_keys)
         menu.addAction("Paste", self.paste, paste_keys)
-        menu.exec_(QCursor.pos())
+        menu.exec(QCursor.pos())
 
     def set_theme(self, theme):
         self.set_font_size(self.font_size)
@@ -225,30 +229,35 @@ class MicroPythonREPLPane(QTextEdit):
         """
         tc = self.textCursor()
         key = data.key()
-        ctrl_only = data.modifiers() == Qt.ControlModifier
-        meta_only = data.modifiers() == Qt.MetaModifier
+        ctrl_only = data.modifiers() == Qt.KeyboardModifier.ControlModifier
+        meta_only = data.modifiers() == Qt.KeyboardModifier.MetaModifier
         ctrl_shift_only = (
-            data.modifiers() == Qt.ControlModifier | Qt.ShiftModifier
+            data.modifiers()
+            == Qt.KeyboardModifier.ControlModifier
+            | Qt.KeyboardModifier.ShiftModifier
         )
-        shift_down = data.modifiers() & Qt.ShiftModifier
+        shift_down = data.modifiers() & Qt.KeyboardModifier.ShiftModifier
         on_osx = platform.system() == "Darwin"
 
-        if key == Qt.Key_Return:
+        if key == Qt.Key.Key_Return:
             # Move cursor to the end of document before sending carriage return
-            tc.movePosition(QTextCursor.End, mode=QTextCursor.MoveAnchor)
+            tc.movePosition(
+                QTextCursor.MoveOperation.End,
+                mode=QTextCursor.MoveMode.MoveAnchor,
+            )
             self.device_cursor_position = tc.position()
             self.send(VT100_RETURN)
-        elif key == Qt.Key_Backspace:
+        elif key == Qt.Key.Key_Backspace:
             if not self.delete_selection():
                 self.send(VT100_BACKSPACE)
-        elif key == Qt.Key_Delete:
+        elif key == Qt.Key.Key_Delete:
             if not self.delete_selection():
                 self.send(VT100_DELETE)
-        elif key == Qt.Key_Up:
+        elif key == Qt.Key.Key_Up:
             self.send(VT100_UP)
-        elif key == Qt.Key_Down:
+        elif key == Qt.Key.Key_Down:
             self.send(VT100_DOWN)
-        elif key == Qt.Key_Right:
+        elif key == Qt.Key.Key_Right:
             if shift_down:
                 # Text selection - pass down
                 super().keyPressEvent(data)
@@ -256,7 +265,7 @@ class MicroPythonREPLPane(QTextEdit):
                 self.move_cursor_to(tc.selectionEnd())
             else:
                 self.send(VT100_RIGHT)
-        elif key == Qt.Key_Left:
+        elif key == Qt.Key.Key_Left:
             if shift_down:
                 # Text selection - pass down
                 super().keyPressEvent(data)
@@ -264,23 +273,23 @@ class MicroPythonREPLPane(QTextEdit):
                 self.move_cursor_to(tc.selectionStart())
             else:
                 self.send(VT100_LEFT)
-        elif key == Qt.Key_Home:
+        elif key == Qt.Key.Key_Home:
             self.send(VT100_HOME)
-        elif key == Qt.Key_End:
+        elif key == Qt.Key.Key_End:
             self.send(VT100_END)
         elif (on_osx and meta_only) or (not on_osx and ctrl_only):
             # Handle the Control key. On OSX/macOS/Darwin (python calls this
-            # platform Darwin), this is handled by Qt.MetaModifier. Other
-            # platforms (Linux, Windows) call this Qt.ControlModifier. Go
+            # platform Darwin), this is handled by the Meta modifier. Other
+            # platforms (Linux, Windows) call this the Control modifier. Go
             # figure. See http://doc.qt.io/qt-5/qt.html#KeyboardModifier-enum
-            if Qt.Key_A <= key <= Qt.Key_Z:
+            if Qt.Key.Key_A <= key <= Qt.Key.Key_Z:
                 # The microbit treats an input of \x01 as Ctrl+A, etc.
-                self.send(bytes([1 + key - Qt.Key_A]))
+                self.send(bytes([1 + key - Qt.Key.Key_A]))
         elif ctrl_shift_only or (on_osx and ctrl_only):
             # Command-key on Mac, Ctrl-Shift on Win/Lin
-            if key == Qt.Key_C:
+            if key == Qt.Key.Key_C:
                 self.copy()
-            elif key == Qt.Key_V:
+            elif key == Qt.Key.Key_V:
                 self.delete_selection()
                 self.paste()
         else:
@@ -321,8 +330,8 @@ class MicroPythonREPLPane(QTextEdit):
             cursor = self.textCursor()
             cursor.setPosition(self.device_cursor_position)
             cursor.movePosition(
-                QTextCursor.StartOfLine,
-                mode=QTextCursor.KeepAnchor,
+                QTextCursor.MoveOperation.StartOfLine,
+                mode=QTextCursor.MoveMode.KeepAnchor,
             )
             line_start = cursor.selectionStart()
             if line_start > new_position:
@@ -392,7 +401,7 @@ class MicroPythonREPLPane(QTextEdit):
 
         while i < len(data):
             if data[i] == "\b":
-                tc.movePosition(QTextCursor.Left)
+                tc.movePosition(QTextCursor.MoveOperation.Left)
                 self.device_cursor_position = tc.position()
             elif data[i] == "\r":
                 # Carriage return. Do nothing, we handle newlines when
@@ -411,22 +420,30 @@ class MicroPythonREPLPane(QTextEdit):
                         count = 1 if count_string == "" else int(count_string)
                         action = match.group("action")
                         if action == "A":  # up
-                            tc.movePosition(QTextCursor.Up, n=count)
+                            tc.movePosition(
+                                QTextCursor.MoveOperation.Up, n=count
+                            )
                             self.device_cursor_position = tc.position()
                         elif action == "B":  # down
-                            tc.movePosition(QTextCursor.Down, n=count)
+                            tc.movePosition(
+                                QTextCursor.MoveOperation.Down, n=count
+                            )
                             self.device_cursor_position = tc.position()
                         elif action == "C":  # right
-                            tc.movePosition(QTextCursor.Right, n=count)
+                            tc.movePosition(
+                                QTextCursor.MoveOperation.Right, n=count
+                            )
                             self.device_cursor_position = tc.position()
                         elif action == "D":  # left
-                            tc.movePosition(QTextCursor.Left, n=count)
+                            tc.movePosition(
+                                QTextCursor.MoveOperation.Left, n=count
+                            )
                             self.device_cursor_position = tc.position()
                         elif action == "K":  # delete things
                             if count_string == "":  # delete to end of line
                                 tc.movePosition(
-                                    QTextCursor.EndOfLine,
-                                    mode=QTextCursor.KeepAnchor,
+                                    QTextCursor.MoveOperation.EndOfLine,
+                                    mode=QTextCursor.MoveMode.KeepAnchor,
                                 )
                                 tc.removeSelectedText()
                                 self.device_cursor_position = tc.position()
@@ -468,7 +485,7 @@ class MicroPythonREPLPane(QTextEdit):
                     self.unprocessed_input = data[i:]
                     break
             elif data[i] == "\n":
-                tc.movePosition(QTextCursor.End)
+                tc.movePosition(QTextCursor.MoveOperation.End)
                 self.device_cursor_position = tc.position() + 1
                 self.setTextCursor(tc)
                 self.insertPlainText(data[i])
@@ -520,7 +537,7 @@ class PythonProcessPane(QTextEdit):
         self.setAcceptRichText(False)
         self.setReadOnly(False)
         self.setUndoRedoEnabled(False)
-        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self.context_menu)
         self.running = False  # Flag to show the child process is running.
         self.setObjectName("PythonRunner")
@@ -582,7 +599,9 @@ class PythonProcessPane(QTextEdit):
             command_args = []
         logger.info("Command args: {}".format(command_args))
         self.process = QProcess(self)
-        self.process.setProcessChannelMode(QProcess.MergedChannels)
+        self.process.setProcessChannelMode(
+            QProcess.ProcessChannelMode.MergedChannels
+        )
         # Force buffers to flush immediately.
         env = QProcessEnvironment.systemEnvironment()
         env.insert("PYTHONUNBUFFERED", "1")
@@ -663,7 +682,7 @@ class PythonProcessPane(QTextEdit):
         cursor.insertText("\n\n---------- FINISHED ----------\n")
         msg = "exit code: {} status: {}".format(code, status)
         cursor.insertText(msg)
-        cursor.movePosition(QTextCursor.End)
+        cursor.movePosition(QTextCursor.MoveOperation.End)
         self.setTextCursor(cursor)
         self.setReadOnly(True)
 
@@ -673,14 +692,18 @@ class PythonProcessPane(QTextEdit):
         """
         menu = QMenu(self)
         if platform.system() == "Darwin":
-            copy_keys = QKeySequence(Qt.CTRL + Qt.Key_C)
-            paste_keys = QKeySequence(Qt.CTRL + Qt.Key_V)
+            copy_keys = QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_C)
+            paste_keys = QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_V)
         else:
-            copy_keys = QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_C)
-            paste_keys = QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_V)
+            copy_keys = QKeySequence(
+                Qt.Modifier.CTRL | Qt.Modifier.SHIFT | Qt.Key.Key_C
+            )
+            paste_keys = QKeySequence(
+                Qt.Modifier.CTRL | Qt.Modifier.SHIFT | Qt.Key.Key_V
+            )
         menu.addAction("Copy", self.copy, copy_keys)
         menu.addAction("Paste", self.paste, paste_keys)
-        menu.exec_(QCursor.pos())
+        menu.exec(QCursor.pos())
 
     def insertFromMimeData(self, source):
         """
@@ -708,7 +731,7 @@ class PythonProcessPane(QTextEdit):
         remainder = text[1:]  # remaining characters to process in the future.
         if character.isprintable() or character in string.printable:
             if character == "\n" or character == "\r":
-                self.parse_input(Qt.Key_Enter, character, None)
+                self.parse_input(Qt.Key.Key_Enter, character, None)
             else:
                 self.parse_input(None, character, None)
         if remainder:
@@ -754,17 +777,19 @@ class PythonProcessPane(QTextEdit):
         """
         Correctly encodes user input and sends it to the connected process.
 
-        The key is a Qt.Key_Something value, text is the textual representation
+        The key is a Qt.Key.Key_Something value, text is the textual representation
         of the input, and modifiers are the control keys (shift, CTRL, META,
         etc) also used.
         """
         msg = b""  # Eventually to be inserted into the pane at the cursor.
-        if key == Qt.Key_Enter or key == Qt.Key_Return:
+        if key == Qt.Key.Key_Enter or key == Qt.Key.Key_Return:
             msg = b"\n"
         elif (
-            platform.system() == "Darwin" and modifiers == Qt.MetaModifier
+            platform.system() == "Darwin"
+            and modifiers == Qt.KeyboardModifier.MetaModifier
         ) or (
-            platform.system() != "Darwin" and modifiers == Qt.ControlModifier
+            platform.system() != "Darwin"
+            and modifiers == Qt.KeyboardModifier.ControlModifier
         ):
             # Handle CTRL-C and CTRL-D
             if self.process and self.running:
@@ -772,10 +797,10 @@ class PythonProcessPane(QTextEdit):
                 # NOTE: Windows related constraints don't allow us to send a
                 # CTRL-C, rather, the process will just terminate.
                 halt_flag = False
-                if key == Qt.Key_C:
+                if key == Qt.Key.Key_C:
                     halt_flag = True
                     os.kill(pid, signal.SIGINT)
-                if key == Qt.Key_D:
+                if key == Qt.Key.Key_D:
                     halt_flag = True
                     self.process.kill()
                 if halt_flag:
@@ -786,52 +811,57 @@ class PythonProcessPane(QTextEdit):
                     # next iteration of the event loop).
                     QTimer.singleShot(1, self.on_process_halt)
                     return
-        elif key == Qt.Key_Up:
+        elif key == Qt.Key.Key_Up:
             self.history_back()
-        elif key == Qt.Key_Down:
+        elif key == Qt.Key.Key_Down:
             self.history_forward()
-        elif key == Qt.Key_Right:
+        elif key == Qt.Key.Key_Right:
             cursor = self.textCursor()
-            cursor.movePosition(QTextCursor.Right)
+            cursor.movePosition(QTextCursor.MoveOperation.Right)
             self.setTextCursor(cursor)
-        elif key == Qt.Key_Left:
+        elif key == Qt.Key.Key_Left:
             cursor = self.textCursor()
             if cursor.position() > self.start_of_current_line:
-                cursor.movePosition(QTextCursor.Left)
+                cursor.movePosition(QTextCursor.MoveOperation.Left)
                 self.setTextCursor(cursor)
-        elif key == Qt.Key_Home:
+        elif key == Qt.Key.Key_Home:
             cursor = self.textCursor()
-            cursor.movePosition(QTextCursor.End)
+            cursor.movePosition(QTextCursor.MoveOperation.End)
             buffer_len = len(self.toPlainText()) - self.start_of_current_line
             for i in range(buffer_len):
-                cursor.movePosition(QTextCursor.Left)
+                cursor.movePosition(QTextCursor.MoveOperation.Left)
             self.setTextCursor(cursor)
-        elif key == Qt.Key_End:
+        elif key == Qt.Key.Key_End:
             cursor = self.textCursor()
-            cursor.movePosition(QTextCursor.End)
+            cursor.movePosition(QTextCursor.MoveOperation.End)
             self.setTextCursor(cursor)
-        elif (modifiers == Qt.ControlModifier | Qt.ShiftModifier) or (
-            platform.system() == "Darwin" and modifiers == Qt.ControlModifier
+        elif (
+            modifiers
+            == Qt.KeyboardModifier.ControlModifier
+            | Qt.KeyboardModifier.ShiftModifier
+        ) or (
+            platform.system() == "Darwin"
+            and modifiers == Qt.KeyboardModifier.ControlModifier
         ):
             # Command-key on Mac, Ctrl-Shift on Win/Lin
-            if key == Qt.Key_C:
+            if key == Qt.Key.Key_C:
                 self.copy()
-            elif key == Qt.Key_V:
+            elif key == Qt.Key.Key_V:
                 self.paste()
         elif text.isprintable():
             # If the key is for a printable character then add it to the
             # active buffer and display it.
             msg = bytes(text, "utf8")
-        if key == Qt.Key_Backspace:
+        if key == Qt.Key.Key_Backspace:
             self.backspace()
-        if key == Qt.Key_Delete:
+        if key == Qt.Key.Key_Delete:
             self.delete()
-        if key == Qt.Key_Enter or key == Qt.Key_Return:
+        if key == Qt.Key.Key_Enter or key == Qt.Key.Key_Return:
             # First move cursor to the end of the line and insert newline in
             # case return/enter is pressed while the cursor is in the
             # middle of the line
             cursor = self.textCursor()
-            cursor.movePosition(QTextCursor.End)
+            cursor.movePosition(QTextCursor.MoveOperation.End)
             self.setTextCursor(cursor)
             self.insert(msg)
             # Then write line to std_in and add to history
@@ -925,9 +955,9 @@ class PythonProcessPane(QTextEdit):
         Append text to the text area.
         """
         cursor = self.textCursor()
-        cursor.movePosition(QTextCursor.End)
+        cursor.movePosition(QTextCursor.MoveOperation.End)
         cursor.insertText(msg.decode("utf-8"))
-        cursor.movePosition(QTextCursor.End)
+        cursor.movePosition(QTextCursor.MoveOperation.End)
         self.setTextCursor(cursor)
 
     def insert(self, msg):
@@ -936,7 +966,7 @@ class PythonProcessPane(QTextEdit):
         """
         cursor = self.textCursor()
         if cursor.position() < self.start_of_current_line:
-            cursor.movePosition(QTextCursor.End)
+            cursor.movePosition(QTextCursor.MoveOperation.End)
         cursor.insertText(msg.decode("utf-8"))
         self.setTextCursor(cursor)
 
@@ -964,7 +994,7 @@ class PythonProcessPane(QTextEdit):
         Remove all the characters currently in the input buffer line.
         """
         cursor = self.textCursor()
-        cursor.movePosition(QTextCursor.End)
+        cursor.movePosition(QTextCursor.MoveOperation.End)
         buffer_len = len(self.toPlainText()) - self.start_of_current_line
         for i in range(buffer_len):
             cursor.deletePreviousChar()
@@ -1011,7 +1041,7 @@ class DebugInspector(QTreeView):
     def __init__(self):
         super().__init__()
         self.setUniformRowHeights(True)
-        self.setSelectionBehavior(QTreeView.SelectRows)
+        self.setSelectionBehavior(QTreeView.SelectionBehavior.SelectRows)
         # Record row expansion/collapse to keep dicts expanded on update
         self.expanded.connect(self.record_expanded)
         self.collapsed.connect(self.record_collapsed)
@@ -1099,10 +1129,14 @@ class PlotterPane(QChartView):
         self.axis_y.setRange(self.min_y, self.max_y)
         self.axis_x.setLabelFormat("time")
         self.axis_y.setLabelFormat("%d")
-        self.chart.setAxisX(self.axis_x, self.series[0])
-        self.chart.setAxisY(self.axis_y, self.series[0])
+        # Qt6 dropped QChart.setAxisX/setAxisY: axes are added to the chart and
+        # then attached to each series.
+        self.chart.addAxis(self.axis_x, Qt.AlignmentFlag.AlignBottom)
+        self.chart.addAxis(self.axis_y, Qt.AlignmentFlag.AlignLeft)
+        self.series[0].attachAxis(self.axis_x)
+        self.series[0].attachAxis(self.axis_y)
         self.setChart(self.chart)
-        self.setRenderHint(QPainter.Antialiasing)
+        self.setRenderHint(QPainter.RenderHint.Antialiasing)
 
     def process_tty_data(self, data):
         """
@@ -1171,8 +1205,8 @@ class PlotterPane(QChartView):
                 for i in range(value_len - series_len):
                     new_series = QLineSeries()
                     self.chart.addSeries(new_series)
-                    self.chart.setAxisX(self.axis_x, new_series)
-                    self.chart.setAxisY(self.axis_y, new_series)
+                    new_series.attachAxis(self.axis_x)
+                    new_series.attachAxis(self.axis_y)
                     self.series.append(new_series)
                     self.data.append(deque([0] * self.lookback))
             else:
@@ -1236,8 +1270,8 @@ class PlotterPane(QChartView):
         Sets the theme / look for the plotter pane.
         """
         if theme == "day":
-            self.chart.setTheme(QChart.ChartThemeLight)
+            self.chart.setTheme(QChart.ChartTheme.ChartThemeLight)
         elif theme == "night":
-            self.chart.setTheme(QChart.ChartThemeDark)
+            self.chart.setTheme(QChart.ChartTheme.ChartThemeDark)
         else:
-            self.chart.setTheme(QChart.ChartThemeHighContrast)
+            self.chart.setTheme(QChart.ChartTheme.ChartThemeHighContrast)

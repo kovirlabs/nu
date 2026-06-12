@@ -6,44 +6,40 @@
 # `package = false` (under [tool.uv]) tells uv to manage the dependencies in the
 # virtualenv without trying to build/install the project itself.
 #
-# The original supports Python >=3.5,<3.9. We pin to 3.8 (the newest supported
-# interpreter, with usable wheels for the old pinned Qt stack). `uv sync` will
-# download a managed CPython 3.8 automatically.
+# Phase 2 of the modernization (see TODO.md): the editor now targets PyQt6 and
+# Python >=3.11. `uv sync` downloads a managed CPython for the venv.
 [project]
 name = "nu"
 version = "1.2.2"
 description = "A simple Python editor for beginner programmers. A maintained continuation of the Mu editor."
-requires-python = ">=3.8,<3.9"
+requires-python = ">=3.11"
 dependencies = [
-    # Qt stack — skipped on ARM, where these come from system packages
-    # (matching the markers in setup.py).
-    'PyQt5-sip<=12.13.0; "arm" not in platform_machine and "aarch" not in platform_machine',
-    'PyQt5==5.13.2; "arm" not in platform_machine and "aarch" not in platform_machine',
-    'QScintilla==2.11.3; "arm" not in platform_machine and "aarch" not in platform_machine',
-    'PyQtChart==5.13.1; "arm" not in platform_machine and "aarch" not in platform_machine',
-    "pyzmq<=26.0.3",
-    "jupyter-client>=4.1,<6.2",
-    "ipykernel>=4.1,<6",
-    "ipython_genutils>=0.2.0",
-    "qtconsole==4.7.7",
+    # Qt6 stack. PyQt6 ships manylinux/macOS/Windows wheels (incl. aarch64),
+    # so the old "skip on ARM" markers from the PyQt5 era are no longer needed.
+    "PyQt6>=6.6",
+    "PyQt6-QScintilla>=2.14",
+    "PyQt6-Charts>=6.6",
+    # Jupyter REPL stack. Modernized from the frozen Py3.5-era pins.
+    "qtconsole>=5.5",
+    "ipykernel>=6.29",
+    "jupyter-client>=8.0",
+    "pyzmq",
     # Serial port discovery / CircuitPython board identification.
     "adafruit-board-toolkit~=1.1",
     "pyserial~=3.5",
     "nudatus>=0.0.3",
     # flake8 brings pycodestyle + pyflakes, which are runtime dependencies.
     "flake8>=3.8.3",
+    # `black` powers the "Tidy" button (mu/logic.py). Kept at the existing pin
+    # for now (the <22.1.0 ceiling resolves to a build that runs on 3.11);
+    # bumping black + reformatting is part of the separate toolchain phase.
     "click<=8.0.4",
-    'black>=19.10b0,<22.1.0; python_version > "3.5"',
-    "platformdirs>=2.0.0,<3.0.0",
+    "black>=19.10b0,<22.1.0",
+    "platformdirs>=2.6",
     "semver>=2.8.0",
     "virtualenv>=20.0.0",
     "wheel",
-    "requests>=2.0.0",
     "pywin32; sys_platform == 'win32'",
-    # mu/resources imports pkg_resources at runtime. Modern venvs don't ship
-    # setuptools by default, so declare it explicitly. TODO (Phase 2): migrate
-    # pkg_resources -> importlib.resources and drop this.
-    "setuptools",
 ]
 
 [project.optional-dependencies]

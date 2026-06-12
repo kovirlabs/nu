@@ -26,7 +26,7 @@ from mu.logic import LOG_FILE, LOG_DIR, ENCODING
 from mu.resources import load_movie
 from mu import mu_debug
 from mu.virtual_environment import VirtualEnvironment as VE, SplashLogHandler
-from PyQt5.QtCore import Qt
+from PyQt6.QtCore import Qt
 
 
 class DumSig:
@@ -116,7 +116,7 @@ def test_animated_splash_draw_log():
     expected = "\n".join(expected)
     asplash.draw_log(msg)
     asplash.showMessage.assert_called_once_with(
-        expected, Qt.AlignBottom | Qt.AlignLeft
+        expected, Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignLeft
     )
 
 
@@ -292,11 +292,10 @@ def test_run():
         assert set_log.call_count == 1
         # foo.call_count is instantiating the class
         assert qa.call_count == 1
-        # foo.mock_calls are method calls on the object
-        if hasattr(Qt, "AA_EnableHighDpiScaling"):
-            assert len(qa.mock_calls) == 9
-        else:
-            assert len(qa.mock_calls) == 8
+        # foo.mock_calls are method calls on the object. Under Qt6 high-DPI
+        # scaling is always on, so the two AA_*HighDpi* setAttribute calls that
+        # Qt5 needed are gone (was 9 with them, now 7).
+        assert len(qa.mock_calls) == 7
         assert qsp.call_count == 1
         assert len(qsp.mock_calls) == 4
         assert ed.call_count == 1

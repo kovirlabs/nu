@@ -12,10 +12,13 @@ smaller codebase (less to port, lower risk). Keep the test suite green at every
 step — it's what makes the bigger changes safe.
 
 Baseline test suite (Python 3.8 + PyQt5, pre-changes): **1120 passed, 20 skipped**.
+Current baseline (Python 3.11 + PyQt6, post Phase 2): **889 passed, 20 skipped**.
 Run headless with:
 ```
 QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly -q
 ```
+(On a headless box without Mesa, Qt6 needs `libEGL.so.1` on `LD_LIBRARY_PATH`
+even for the `offscreen` platform plugin.)
 
 ## Decisions locked in
 
@@ -87,15 +90,24 @@ Windows build parse `mu/__init__.py` + `setup.py`):
 - [ ] Move metadata fully into `pyproject.toml` (hatchling backend), retire
   `setup.py` / `setup.cfg` duplication once installers are confirmed working
 
-## Phase 2 — Modern Python + Qt6 (the one "medium" change)
+## Phase 2 — Modern Python + Qt6 (the one "medium" change) ✅ DONE
 
-- [ ] PyQt5 → **PyQt6** (`PyQt6-QScintilla` 2.14, `PyQt6-Charts`); bump
-  `qtconsole`/`jupyter-client`/`ipykernel` to current; **delete the FIXME pins**
-- [ ] Mechanical port: scoped enums (`Qt.AlignBottom` → `Qt.AlignmentFlag.AlignBottom`),
-  `exec_()` → `exec()`, signal/slot signatures, `QAction` moves to `QtGui`, etc.
-- [ ] `requires-python = ">=3.11"`; refresh `.venv` to a modern CPython
-- [ ] Migrate `pkg_resources` → `importlib.resources`; drop the `setuptools` dep
-- [ ] Suite green on the new stack
+- [x] PyQt5 → **PyQt6** (`PyQt6-QScintilla` 2.14, `PyQt6-Charts`); bump
+  `qtconsole`/`jupyter-client`/`ipykernel` to current; **deleted the FIXME pins**
+  (pyzmq/jupyter-client/ipykernel/ipython_genutils). Dropped the old "skip Qt on
+  ARM" markers — PyQt6 ships aarch64 wheels.
+- [x] Mechanical port: scoped enums (`Qt.AlignBottom` → `Qt.AlignmentFlag.AlignBottom`),
+  `exec_()` → `exec()`, `QAction`/`QShortcut` moved to `QtGui`,
+  `QtChart` → `QtCharts`, `QChart.setAxisX/Y` → `addAxis`+`attachAxis`,
+  `QDesktopWidget` → `QApplication.primaryScreen()`, `QFontDatabase` static API,
+  `setToolButtonStyle`/`QIODevice.OpenModeFlag` enums, dropped the Qt5-only
+  `AA_*HighDpi*` attributes (always-on in Qt6).
+- [x] `requires-python = ">=3.11"`; `.venv` refreshed to managed CPython 3.11.
+- [x] Migrated `pkg_resources` → `importlib.resources`; dropped the `setuptools` dep.
+- [x] Suite green on the new stack: **889 passed, 20 skipped**; flake8 + black clean.
+- NOTE: `black`/`click` left at their existing pins (the `<22.1.0` ceiling
+  resolves to a build that runs on 3.11). Bumping black + reformatting the tree
+  belongs to the toolchain work in **Phase 1c**, kept out of this diff.
 
 ## Phase 3 — Verify packaging & CI
 
