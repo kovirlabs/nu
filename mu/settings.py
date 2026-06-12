@@ -109,15 +109,11 @@ class SettingsBase(object):
         empty one is created in the default location.
         """
         # App location depends on being interpreted by normal Python or bundled
-        app_path = (
-            sys.executable if getattr(sys, "frozen", False) else sys.argv[0]
-        )
+        app_path = sys.executable if getattr(sys, "frozen", False) else sys.argv[0]
         app_dir = os.path.dirname(os.path.abspath(app_path))
         # The os x bundled application is placed 3 levels deep in the .app folder
         if platform.system() == "Darwin" and getattr(sys, "frozen", False):
-            app_dir = os.path.dirname(
-                os.path.dirname(os.path.dirname(app_dir))
-            )
+            app_dir = os.path.dirname(os.path.dirname(os.path.dirname(app_dir)))
 
         return [app_dir, config.DATA_DIR]
 
@@ -130,9 +126,7 @@ class SettingsBase(object):
         If requested, set up autosave
         """
         for dirpath in self.default_file_locations():
-            filepath = os.path.join(
-                dirpath, self.filestem + "." + serialiser_ext
-            )
+            filepath = os.path.join(dirpath, self.filestem + "." + serialiser_ext)
             if os.path.exists(filepath):
                 break
         self.load(filepath)
@@ -211,9 +205,7 @@ class SettingsBase(object):
                 try:
                     serialised_settings = serialiser.load(f)
                 except SerialiserDecodeError:
-                    logger.exception(
-                        "Unable to decode settings from %s", filepath
-                    )
+                    logger.exception("Unable to decode settings from %s", filepath)
                     serialised_settings = {}
                 self.update(serialised_settings)
         except FileNotFoundError:
@@ -232,31 +224,24 @@ class SettingsBase(object):
         limiting to values which have been changed
         """
         if changed_only:
-            return dict(
-                (k, v) for (k, v) in self._dict.items() if k in self._dirty
-            )
+            return dict((k, v) for (k, v) in self._dict.items() if k in self._dirty)
         else:
             return dict(self._dict)
 
 
 class UserSettings(SettingsBase):
-
-    DEFAULTS = {
-        "workspace": os.path.join(config.HOME_DIRECTORY, config.WORKSPACE_NAME)
-    }
+    DEFAULTS = {"workspace": os.path.join(config.HOME_DIRECTORY, config.WORKSPACE_NAME)}
     autosave = False
     filestem = "settings"
 
 
 class SessionSettings(SettingsBase):
-
     DEFAULTS = {}
     autosave = True
     filestem = "session"
 
 
 class VirtualEnvironmentSettings(SettingsBase):
-
     DEFAULTS = {
         "baseline_packages": [],
     }

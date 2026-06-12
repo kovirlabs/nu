@@ -58,7 +58,7 @@ Nu uses `uv <https://docs.astral.sh/uv/>`_ for development. With uv installed::
 
     git clone https://github.com/kovirlabs/nu.git
     cd nu
-    uv sync                  # downloads a managed CPython 3.8 and the pinned deps
+    uv sync                  # downloads a managed CPython 3.11 and the pinned deps
     uv run python -m mu      # launch Nu
 
 Development
@@ -69,9 +69,11 @@ headlessly, without a display)::
 
     uv run pytest
 
-Lint with flake8 (the ``_`` builtin is gettext's translation function)::
+Lint and format with `ruff <https://docs.astral.sh/ruff/>`_ (config lives in
+``pyproject.toml``)::
 
-    PYFLAKES_BUILTINS=_ uv run --no-sync python -m flake8 mu/ tests/
+    uv run --no-sync python -m ruff check     # lint
+    uv run --no-sync python -m ruff format    # reformat in place
 
 Documentation
 -------------

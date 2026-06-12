@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 import os
 import sys
 import codecs
@@ -55,9 +56,7 @@ FLAKE_REGEX = re.compile(r".*:(\d+):(\d+):?\s+(.*)")
 # Regex to match undefined name errors for given builtins
 BUILTINS_REGEX = r"^undefined name '({})'"
 # Regex to match false positive flake errors if microbit.* is expanded.
-EXPAND_FALSE_POSITIVE = re.compile(
-    r"^.*'microbit\.(\w+)' imported but unused$"
-)
+EXPAND_FALSE_POSITIVE = re.compile(r"^.*'microbit\.(\w+)' imported but unused$")
 # The text to which "from microbit import \*" should be expanded.
 EXPANDED_IMPORT = (
     "from microbit import pin15, pin2, pin0, pin1, "
@@ -107,26 +106,17 @@ MOTD = [  # Candidate phrases for the message of the day (MOTD).
     _("For the Zen of Python: import this"),
     _("Diversity promotes creativity."),
     _("An open mind, spirit of adventure and respect for diversity are key."),
-    _(
-        "Don't worry if it doesn't work. Learn the lesson, fix it and try "
-        "again! :-)"
-    ),
+    _("Don't worry if it doesn't work. Learn the lesson, fix it and try again! :-)"),
     _("Coding is collaboration."),
     _("Compliment and amplify the good things with code."),
-    _(
-        "In theory, theory and practice are the same. In practice, they're "
-        "not. ;-)"
-    ),
+    _("In theory, theory and practice are the same. In practice, they're not. ;-)"),
     _("Debugging is twice as hard as writing the code in the first place."),
     _("It's fun to program."),
     _("Programming has more to do with problem solving than writing code."),
     _("Start with your users' needs."),
     _("Try to see things from your users' point of view."),
     _("Put yourself in your users' shoes."),
-    _(
-        "Explaining a programming problem to a friend often reveals the "
-        "solution. :-)"
-    ),
+    _("Explaining a programming problem to a friend often reveals the solution. :-)"),
     _("If you don't know, ask. Nobody to ask? Just look it up."),
     _("Complexity is the enemy. KISS - keep it simple, stupid!"),
     _("Beautiful is better than ugly."),
@@ -142,10 +132,7 @@ MOTD = [  # Candidate phrases for the message of the day (MOTD).
     _("Errors should never pass silently. Unless explicitly silenced."),
     _("In the face of ambiguity, refuse the temptation to guess."),
     _("There should be one-- and preferably only one --obvious way to do it."),
-    _(
-        "Now is better than never. Although never is often better than "
-        "*right* now."
-    ),
+    _("Now is better than never. Although never is often better than *right* now."),
     _("If the implementation is hard to explain, it's a bad idea."),
     _("If the implementation is easy to explain, it may be a good idea."),
     _("Namespaces are one honking great idea -- let's do more of those!"),
@@ -167,9 +154,7 @@ MOTD = [  # Candidate phrases for the message of the day (MOTD).
     _("A good programmer asks questions."),
     _("A good programmer is willing to say, 'I don't know'."),
     _("Wisest are they that know they know nothing."),
-    _(
-        "Computers aren’t the thing. They’re the thing that gets us to the thing."
-    ),
+    _("Computers aren’t the thing. They’re the thing that gets us to the thing."),
     _("Don't stare at a blank screen - try something out."),
     _("If you're stuck - try explaining it to a rubber duck."),
     _("It's ok to be stuck, go for a walk and then try again (:"),
@@ -193,9 +178,7 @@ NEWLINE = "\n"
 # cookie, in which case we honour that encoding.
 #
 ENCODING = "utf-8"
-ENCODING_COOKIE_RE = re.compile(
-    "^[ \t\v]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)"
-)
+ENCODING_COOKIE_RE = re.compile("^[ \t\v]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)")
 
 logger = logging.getLogger(__name__)
 
@@ -236,8 +219,7 @@ def save_and_encode(text, filepath, newline=os.linesep):
 
     with open(filepath, "w", encoding=encoding, newline="") as f:
         text_to_write = (
-            newline.join(line.rstrip(" ") for line in text.splitlines())
-            + newline
+            newline.join(line.rstrip(" ") for line in text.splitlines()) + newline
         )
         write_and_flush(f, text_to_write)
 
@@ -282,9 +264,7 @@ def sniff_encoding(filepath):
                 codecs.lookup(cookie_codec)
             except LookupError:
                 logger.warning(
-                    "Encoding cookie has invalid codec name: {}".format(
-                        cookie_codec
-                    )
+                    "Encoding cookie has invalid codec name: {}".format(cookie_codec)
                 )
             else:
                 return cookie_codec
@@ -513,9 +493,7 @@ class MuFlakeCodeReporter:
         called filename. The message parameter contains a description of the
         problem.
         """
-        self.log.append(
-            {"line_no": 0, "filename": filename, "message": str(message)}
-        )
+        self.log.append({"line_no": 0, "filename": filename, "message": str(message)})
 
     def syntaxError(self, filename, message, line_no, column, source):
         """
@@ -554,9 +532,7 @@ class MuFlakeCodeReporter:
                 }
             )
         else:
-            self.log.append(
-                {"line_no": 0, "column": 0, "message": str(message)}
-            )
+            self.log.append({"line_no": 0, "column": 0, "message": str(message)})
 
 
 class Device:
@@ -834,9 +810,7 @@ class Editor(QObject):
             logger.debug("Creating directory: {}".format(images_path))
             os.makedirs(images_path)
             for img in DEFAULT_IMAGES:
-                shutil.copy(
-                    path(img, "pygamezero/"), os.path.join(images_path, img)
-                )
+                shutil.copy(path(img, "pygamezero/"), os.path.join(images_path, img))
         if not os.path.exists(fonts_path):
             logger.debug("Creating directory: {}".format(fonts_path))
             os.makedirs(fonts_path)
@@ -844,9 +818,7 @@ class Editor(QObject):
             logger.debug("Creating directory: {}".format(sounds_path))
             os.makedirs(sounds_path)
             for sfx in DEFAULT_SOUNDS:
-                shutil.copy(
-                    path(sfx, "pygamezero/"), os.path.join(sounds_path, sfx)
-                )
+                shutil.copy(path(sfx, "pygamezero/"), os.path.join(sounds_path, sfx))
         if not os.path.exists(music_path):
             logger.debug("Creating directory: {}".format(music_path))
             os.makedirs(music_path)
@@ -872,9 +844,7 @@ class Editor(QObject):
         # Connect to logs
         status_bar.connect_logs(self.show_admin, "Ctrl+Shift+D")
         # Show connection messages in status_bar
-        self.connected_devices.device_connected.connect(
-            status_bar.device_connected
-        )
+        self.connected_devices.device_connected.connect(status_bar.device_connected)
         # Connect to device list
         device_selector = status_bar.device_selector
         status_bar.device_selector.set_device_list(self.connected_devices)
@@ -921,9 +891,7 @@ class Editor(QObject):
             if isinstance(old_envars, list):
                 old_envars = dict(old_envars)
             self.envars = old_envars
-            logger.info(
-                "User defined environment variables: " "{}".format(self.envars)
-            )
+            logger.info("User defined environment variables: {}".format(self.envars))
         if "zoom_level" in old_session:
             self._view.zoom_position = old_session["zoom_level"]
             self._view.set_zoom()
@@ -954,9 +922,7 @@ class Editor(QObject):
         self.show_status_message(random.choice(MOTD), 10)
         if not self._view.tab_count:
             py = self.modes[self.mode].code_template + NEWLINE
-            tab = self._view.add_tab(
-                None, py, self.modes[self.mode].api(), NEWLINE
-            )
+            tab = self._view.add_tab(None, py, self.modes[self.mode].api(), NEWLINE)
             tab.setCursorPosition(len(py.split(NEWLINE)), 0)
             logger.info("Starting with blank file.")
 
@@ -979,9 +945,7 @@ class Editor(QObject):
         """
         logger.info("Added a new tab.")
         default_text = self.modes[self.mode].code_template + NEWLINE
-        self._view.add_tab(
-            None, default_text, self.modes[self.mode].api(), NEWLINE
-        )
+        self._view.add_tab(None, default_text, self.modes[self.mode].api(), NEWLINE)
 
     def _load(self, path):
         """
@@ -1015,9 +979,7 @@ class Editor(QObject):
             # folks understand this file is no longer available (there's
             # nothing else we can do).
             if not os.path.isfile(widget.path):
-                logger.info(
-                    "The file {} no longer exists.".format(widget.path)
-                )
+                logger.info("The file {} no longer exists.".format(widget.path))
                 continue
             # Check for duplication of open file.
             if os.path.samefile(path, widget.path):
@@ -1051,8 +1013,9 @@ class Editor(QObject):
                     except Exception as exc:
                         # No worries, log it and try the next mode
                         logger.warning(
-                            "Error when mode {} try to open the "
-                            "{} file.".format(mode_name, path),
+                            "Error when mode {} try to open the {} file.".format(
+                                mode_name, path
+                            ),
                             exc_info=exc,
                         )
                     else:
@@ -1086,16 +1049,12 @@ class Editor(QObject):
                     "mode?"
                 ).format(mode_name, mode_name)
                 if (
-                    self._view.show_confirmation(
-                        message, info, icon="Question"
-                    )
+                    self._view.show_confirmation(message, info, icon="Question")
                     == QMessageBox.StandardButton.Ok
                 ):
                     self.change_mode(file_mode)
             logger.debug(text)
-            self._view.add_tab(
-                name, text, self.modes[self.mode].api(), newline
-            )
+            self._view.add_tab(name, text, self.modes[self.mode].api(), newline)
 
     def get_dialog_directory(self, default=None):
         """
@@ -1259,7 +1218,7 @@ class Editor(QObject):
             folder = self.get_dialog_directory(default)
             path = self._view.get_save_path(folder)
             if path and self.check_for_shadow_module(path):
-                message = _("You cannot use the filename " '"{}"').format(
+                message = _('You cannot use the filename "{}"').format(
                     os.path.basename(path)
                 )
                 info = _(
@@ -1412,10 +1371,7 @@ class Editor(QObject):
         """
         logger.info("Showing admin with logs from {}".format(LOG_FILE))
         envars = "\n".join(
-            [
-                "{}={}".format(name, value)
-                for name, value in self.envars.items()
-            ]
+            ["{}={}".format(name, value) for name, value in self.envars.items()]
         )
         settings = {
             "envars": envars,
@@ -1436,9 +1392,7 @@ class Editor(QObject):
                 self.envars = extract_envars(new_settings["envars"])
             if "packages" in new_settings:
                 new_packages = [
-                    p
-                    for p in new_settings["packages"].lower().split("\n")
-                    if p.strip()
+                    p for p in new_settings["packages"].lower().split("\n") if p.strip()
                 ]
                 old_packages = [p.lower() for p in user_packages]
                 self.sync_package_state(old_packages, new_packages)
@@ -1475,9 +1429,7 @@ class Editor(QObject):
         """
         if self.modes[self.mode].is_debugger:
             return
-        logger.info(
-            "Showing available modes: {}".format(list(self.modes.keys()))
-        )
+        logger.info("Showing available modes: {}".format(list(self.modes.keys())))
         self.selecting_mode = True  # Flag to stop auto-detection of modes.
         new_mode = self._view.select_mode(self.modes, self.mode)
         self.selecting_mode = False
@@ -1513,9 +1465,7 @@ class Editor(QObject):
         button_bar.connect("load", self.load, "Ctrl+O")
         button_bar.connect("save", self.save, "Ctrl+S")
         for action in self.modes[mode].actions():
-            button_bar.connect(
-                action["name"], action["handler"], action["shortcut"]
-            )
+            button_bar.connect(action["name"], action["handler"], action["shortcut"])
         button_bar.connect("zoom-in", self.zoom_in, "Ctrl++")
         button_bar.connect("zoom-out", self.zoom_out, "Ctrl+-")
         button_bar.connect("theme", self.toggle_theme, "F1")
@@ -1554,9 +1504,7 @@ class Editor(QObject):
                 tab.breakpoint_handles = set()
                 tab.reset_annotations()
         self.modes[mode].ensure_state()
-        self.show_status_message(
-            _("Changed to {} mode.").format(self.modes[mode].name)
-        )
+        self.show_status_message(_("Changed to {} mode.").format(self.modes[mode].name))
 
     def autosave(self):
         """
@@ -1569,8 +1517,7 @@ class Editor(QObject):
                     # Suppress error message on autosave attempts
                     self.save_tab_to_file(tab, show_error_messages=False)
                     logger.info(
-                        "Autosave detected and saved "
-                        "changes in {}.".format(tab.path)
+                        "Autosave detected and saved changes in {}.".format(tab.path)
                     )
 
     def ask_to_change_mode(self, new_mode, mode_name, heading):
@@ -1585,9 +1532,9 @@ class Editor(QObject):
         m = self.modes[self.mode]
         running = hasattr(m, "runner") and m.runner
         if (self.mode != new_mode and not self.selecting_mode) and not running:
-            msg_body = _(
-                "Would you like to change Mu to the {} " "mode?"
-            ).format(mode_name)
+            msg_body = _("Would you like to change Mu to the {} mode?").format(
+                mode_name
+            )
             change_confirmation = self._view.show_confirmation(
                 heading, msg_body, icon="Question"
             )
@@ -1620,10 +1567,7 @@ class Editor(QObject):
         """
         How to handle the toggling of a breakpoint.
         """
-        if (
-            self.modes[self.mode].has_debugger
-            or self.modes[self.mode].is_debugger
-        ):
+        if self.modes[self.mode].has_debugger or self.modes[self.mode].is_debugger:
             tab = self._view.current_tab
             code = tab.text(line)
             if self.mode == "debugger":
@@ -1661,7 +1605,7 @@ class Editor(QObject):
             new_path = self._view.get_save_path(tab.path)
             if new_path and new_path != tab.path:
                 if self.check_for_shadow_module(new_path):
-                    message = _("You cannot use the filename " '"{}"').format(
+                    message = _('You cannot use the filename "{}"').format(
                         os.path.basename(new_path)
                     )
                     info = _(
@@ -1672,9 +1616,7 @@ class Editor(QObject):
                     )
                     self._view.show_message(message, info)
                     return
-                logger.info(
-                    "Attempting to rename {} to {}".format(tab.path, new_path)
-                )
+                logger.info("Attempting to rename {} to {}".format(tab.path, new_path))
                 # The user specified a path to a file.
                 if not self.has_python_extension(os.path.basename(new_path)):
                     # No extension given, default to .py
@@ -1683,13 +1625,10 @@ class Editor(QObject):
                 for other_tab in self._view.widgets:
                     if other_tab.path == new_path:
                         logger.info(
-                            "Cannot rename, a file of that name is "
-                            "already open in Mu"
+                            "Cannot rename, a file of that name is already open in Mu"
                         )
                         message = _("Could not rename file.")
-                        information = _(
-                            "A file of that name is already open " "in Mu."
-                        )
+                        information = _("A file of that name is already open in Mu.")
                         self._view.show_message(message, information)
                         return
                 # Finally rename
@@ -1720,9 +1659,7 @@ class Editor(QObject):
                     )
                     if replaced == 1:
                         msg = _('Replaced "{}" with "{}".')
-                        self.show_status_message(
-                            msg.format(self.find, self.replace)
-                        )
+                        self.show_status_message(msg.format(self.find, self.replace))
                     elif replaced > 1:
                         msg = _('Replaced {} matches of "{}" with "{}".')
                         self.show_status_message(
@@ -1741,8 +1678,7 @@ class Editor(QObject):
             else:
                 message = _("You must provide something to find.")
                 information = _(
-                    "Please try again, this time with something "
-                    "in the find box."
+                    "Please try again, this time with something in the find box."
                 )
                 self._view.show_message(message, information)
 
@@ -1760,8 +1696,7 @@ class Editor(QObject):
         else:
             message = _("You must provide something to find.")
             information = _(
-                "Please try again, this time with something "
-                "in the find box."
+                "Please try again, this time with something in the find box."
             )
             self._view.show_message(message, information)
 
@@ -1803,7 +1738,7 @@ class Editor(QObject):
             # reformatting from black.
             tab.SendScintilla(tab.SCI_SETTEXT, tidy_code.encode("utf-8"))
             self.show_status_message(
-                _("Successfully cleaned the code. " "Use CTRL-Z to undo.")
+                _("Successfully cleaned the code. Use CTRL-Z to undo.")
             )
         except Exception as ex:
             # The user's code is problematic. Recover with a modal dialog

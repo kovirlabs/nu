@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 import os
 import ctypes
 import logging
@@ -246,10 +247,7 @@ class CircuitPythonMode(MicroPythonMode):
             try:
                 for disk in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
                     path = "{}:\\".format(disk)
-                    if (
-                        os.path.exists(path)
-                        and get_volume_name(path) == "CIRCUITPY"
-                    ):
+                    if os.path.exists(path) and get_volume_name(path) == "CIRCUITPY":
                         return path
             finally:
                 ctypes.windll.kernel32.SetErrorMode(old_mode)

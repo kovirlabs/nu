@@ -28,9 +28,7 @@ def get_gitlog():
     Get unique tuples of username / email address from GIT log.
     """
     command = ["git", "log", "--pretty=format:%an|%ae"]
-    raw = subprocess.check_output(command, stderr=subprocess.STDOUT).decode(
-        "utf-8"
-    )
+    raw = subprocess.check_output(command, stderr=subprocess.STDOUT).decode("utf-8")
     lines = raw.split("\n")
     result = set()
     for line in lines:
@@ -44,7 +42,7 @@ path = os.path.abspath(os.path.join(".git", "avatar"))
 if not os.path.exists(path):
     os.makedirs(path)
 
-for (username, email) in users:
+for username, email in users:
     print(f"Processing {username} {email}")
     if "users.noreply.github.com" in email:
         raw_username, _ = email.split("@")

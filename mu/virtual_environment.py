@@ -134,9 +134,7 @@ class Process(QObject):
         for k, v in envvars.items():
             environment.insert(k, v)
         self.process.setProcessEnvironment(environment)
-        self.process.setProcessChannelMode(
-            QProcess.ProcessChannelMode.MergedChannels
-        )
+        self.process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
 
     def run_blocking(self, command, args, wait_for_s=30.0, **envvars):
         """Run `command` with `args` via QProcess, passing `envvars` as
@@ -216,8 +214,7 @@ class Process(QObject):
             else:
                 logger.error("Virtual environment creation timed out")
                 raise VirtualEnvironmentTimeoutError(
-                    "Virtual environment creation timed out:\n"
-                    + compact(output),
+                    "Virtual environment creation timed out:\n" + compact(output),
                     wait_for_s,
                 )
 
@@ -266,9 +263,7 @@ class Pip(object):
         self.process = Process()
         self.timeout = 180.0
 
-    def run(
-        self, command, *args, wait_for_s=None, slots=Process.Slots(), **kwargs
-    ):
+    def run(self, command, *args, wait_for_s=None, slots=Process.Slots(), **kwargs):
         """
         Run a command with args, treating kwargs as Posix switches.
 
@@ -318,19 +313,11 @@ class Pip(object):
         """
         if isinstance(packages, str):
             return self.run(
-                "install",
-                packages,
-                wait_for_s=self.timeout,
-                slots=slots,
-                **kwargs
+                "install", packages, wait_for_s=self.timeout, slots=slots, **kwargs
             )
         else:
             return self.run(
-                "install",
-                *packages,
-                wait_for_s=self.timeout,
-                slots=slots,
-                **kwargs
+                "install", *packages, wait_for_s=self.timeout, slots=slots, **kwargs
             )
 
     def uninstall(self, packages, slots=Process.Slots(), **kwargs):
@@ -350,7 +337,7 @@ class Pip(object):
                 wait_for_s=self.timeout,
                 slots=slots,
                 yes=True,
-                **kwargs
+                **kwargs,
             )
         else:
             return self.run(
@@ -359,7 +346,7 @@ class Pip(object):
                 wait_for_s=self.timeout,
                 slots=slots,
                 yes=True,
-                **kwargs
+                **kwargs,
             )
 
     def version(self):
@@ -440,9 +427,7 @@ class SplashLogHandler(logging.NullHandler):
         """
         messages = record.getMessage().splitlines()
         for msg in messages:
-            output = "[{level}] - {message}".format(
-                level=record.levelname, message=msg
-            )
+            output = "[{level}] - {message}".format(level=record.levelname, message=msg)
             self.emitter.emit(output)
 
     def handle(self, record):
@@ -495,10 +480,7 @@ class VirtualEnvironment(object):
         """
         logger.info("Running %s with kwargs %s", args, kwargs)
         process = subprocess.run(
-            list(args),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            **kwargs
+            list(args), stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs
         )
         stdout_output = process.stdout.decode(ENCODING, errors="replace")
         stderr_output = process.stderr.decode(ENCODING, errors="replace")
@@ -540,9 +522,7 @@ class VirtualEnvironment(object):
             os.path.join(self._bin_directory, "pip" + self._bin_extension)
         )
         self.reset_pip()
-        logger.debug(
-            "Virtual environment set up %s at %s", self.name, self.path
-        )
+        logger.debug("Virtual environment set up %s at %s", self.name, self.path)
         self.settings["dirpath"] = self.path
 
     def run_python(self, *args, slots=Process.Slots()):
@@ -600,9 +580,7 @@ class VirtualEnvironment(object):
         try:
             os.rename(self.path, error_dirpath)
         except OSError:
-            logger.exception(
-                "Unable to quarantine %s as %s", self.path, error_dirpath
-            )
+            logger.exception("Unable to quarantine %s as %s", self.path, error_dirpath)
         else:
             logger.info("Quarantined %s as %s", self.path, error_dirpath)
 
@@ -676,9 +654,7 @@ class VirtualEnvironment(object):
                 # the existing user packages
                 #
                 else:
-                    venv_mu_version = self.settings.get(
-                        "mu_version", "-no-version-"
-                    )
+                    venv_mu_version = self.settings.get("mu_version", "-no-version-")
                     if venv_mu_version != mu_version:
                         logger.warning(
                             "Venv created by Mu version %s; Current Mu is version %s",
@@ -740,9 +716,7 @@ class VirtualEnvironment(object):
         Ensure that the virtual environment path exists and is a valid venv.
         """
         if not os.path.exists(self.path):
-            raise VirtualEnvironmentEnsureError(
-                "%s does not exist." % self.path
-            )
+            raise VirtualEnvironmentEnsureError("%s does not exist." % self.path)
         elif not os.path.isdir(self.path):
             raise VirtualEnvironmentEnsureError(
                 "%s exists but is not a directory." % self.path
@@ -789,8 +763,7 @@ class VirtualEnvironment(object):
             )
         else:
             raise VirtualEnvironmentEnsureError(
-                "Interpreter not found where expected at: %s"
-                % self.interpreter
+                "Interpreter not found where expected at: %s" % self.interpreter
             )
 
     def ensure_interpreter_version(self):
@@ -945,13 +918,9 @@ class VirtualEnvironment(object):
             # The wheels are installed one at a time as they reduces the possibility
             # of the process installing them breaching its timeout
             #
-            for wheel in glob.glob(
-                os.path.join(unpacked_wheels_dirpath, "*.whl")
-            ):
+            for wheel in glob.glob(os.path.join(unpacked_wheels_dirpath, "*.whl")):
                 logger.info(
-                    "About to install from wheel: {}".format(
-                        os.path.basename(wheel)
-                    )
+                    "About to install from wheel: {}".format(os.path.basename(wheel))
                 )
                 self.pip.install(wheel, deps=False, index=False)
 
@@ -971,9 +940,7 @@ class VirtualEnvironment(object):
         #
         # TODO: Add semver check to ensure filepath is safe
         #
-        zipped_wheels_filepath = os.path.join(
-            wheels_dirpath, "%s.zip" % mu_version
-        )
+        zipped_wheels_filepath = os.path.join(wheels_dirpath, "%s.zip" % mu_version)
         logger.info("Expecting zipped wheels at %s", zipped_wheels_filepath)
         if not os.path.exists(zipped_wheels_filepath):
             logger.warning("No zipped wheels found; downloading...")
@@ -1017,9 +984,7 @@ class VirtualEnvironment(object):
         containing the referenced Python interpreter.
         """
         logger.info("Discovering installed third party modules in venv.")
-        baseline_packages = [
-            name for name, version in self.baseline_packages()
-        ]
+        baseline_packages = [name for name, version in self.baseline_packages()]
         user_packages = []
         self.reset_pip()
         for package, version in self.pip.installed():

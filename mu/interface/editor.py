@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 import keyword
 import os
 import re
@@ -197,9 +198,7 @@ class EditorPane(QsciScintilla):
         self.set_theme()
         # Markers and indicators
         self.setMarginSensitivity(0, True)
-        self.markerDefine(
-            QsciScintilla.MarkerSymbol.Circle, self.BREAKPOINT_MARKER
-        )
+        self.markerDefine(QsciScintilla.MarkerSymbol.Circle, self.BREAKPOINT_MARKER)
         self.setMarginSensitivity(1, True)
         # Additional dummy margin to prevent accidental breakpoint toggles when
         # trying to position the edit cursor to the left of the first column,
@@ -224,9 +223,7 @@ class EditorPane(QsciScintilla):
         self.indicatorDefine(
             QsciScintilla.IndicatorStyle.FullBoxIndicator, self.DEBUG_INDICATOR
         )
-        self.setAnnotationDisplay(
-            QsciScintilla.AnnotationDisplay.AnnotationBoxed
-        )
+        self.setAnnotationDisplay(QsciScintilla.AnnotationDisplay.AnnotationBoxed)
         self.selectionChanged.connect(self.selection_change_listener)
         self.set_zoom()
 
@@ -235,6 +232,7 @@ class EditorPane(QsciScintilla):
         Connect clicking the margin to the passed in handler function, via a
         filtering handler that ignores clicks on margin 4.
         """
+
         # Margin 4 motivation in self.configure comments.
         def func_ignoring_margin_4(margin, line, modifiers):
             if margin != 4:
@@ -256,16 +254,12 @@ class EditorPane(QsciScintilla):
         self.setIndicatorForegroundColor(
             theme.IndicatorStyle, self.check_indicators["style"]["id"]
         )
-        self.setIndicatorForegroundColor(
-            theme.DebugStyle, self.DEBUG_INDICATOR
-        )
+        self.setIndicatorForegroundColor(theme.DebugStyle, self.DEBUG_INDICATOR)
         for type_ in self.search_indicators:
             self.setIndicatorForegroundColor(
                 theme.IndicatorWordMatch, self.search_indicators[type_]["id"]
             )
-        self.setMarkerBackgroundColor(
-            theme.BreakpointMarker, self.BREAKPOINT_MARKER
-        )
+        self.setMarkerBackgroundColor(theme.BreakpointMarker, self.BREAKPOINT_MARKER)
         self.setAutoCompletionThreshold(2)
         self.setAutoCompletionSource(QsciScintilla.AutoCompletionSource.AcsAll)
         self.setLexer(self.lexer)
@@ -354,9 +348,7 @@ class EditorPane(QsciScintilla):
         Clears all the text indicators related to the check code functionality.
         """
         for indicator in self.check_indicators:
-            for _, markers in self.check_indicators[indicator][
-                "markers"
-            ].items():
+            for _, markers in self.check_indicators[indicator]["markers"].items():
                 line_no = markers[0]["line_no"]  # All markers on same line.
                 self.clearIndicatorRange(
                     line_no,
@@ -410,9 +402,7 @@ class EditorPane(QsciScintilla):
         self.reset_debugger_highlight()
         # Calculate the line length & account for \r\n giving ObOE.
         line_length = len(self.text(line).rstrip())
-        self.fillIndicatorRange(
-            line, 0, line, line_length, self.DEBUG_INDICATOR
-        )
+        self.fillIndicatorRange(line, 0, line, line_length, self.DEBUG_INDICATOR)
         self.ensureLineVisible(line)
 
     def reset_debugger_highlight(self):
@@ -425,9 +415,7 @@ class EditorPane(QsciScintilla):
         """
         for i in range(self.lines()):
             line_length = len(self.text(i))
-            self.clearIndicatorRange(
-                i, 0, i, line_length, self.DEBUG_INDICATOR
-            )
+            self.clearIndicatorRange(i, 0, i, line_length, self.DEBUG_INDICATOR)
 
     def show_annotations(self):
         """
@@ -531,9 +519,7 @@ class EditorPane(QsciScintilla):
             return
 
         pos1 = self.positionFromLineIndex(line1, col1)
-        word_end_pos = self.SendScintilla(
-            QsciScintilla.SCI_WORDENDPOSITION, pos1, 1
-        )
+        word_end_pos = self.SendScintilla(QsciScintilla.SCI_WORDENDPOSITION, pos1, 1)
         _, end_offset = self.lineIndexFromPosition(word_end_pos)
         if col1 != end_offset:
             return

@@ -2,6 +2,7 @@
 """
 Tests for the app script.
 """
+
 import sys
 import os.path
 import pytest
@@ -70,9 +71,7 @@ def test_animated_splash_init():
     test_animation.start = mock.MagicMock()
     asplash = AnimatedSplash(test_animation)
     assert asplash.animation == test_animation
-    asplash.animation.frameChanged.connect.assert_called_once_with(
-        asplash.set_frame
-    )
+    asplash.animation.frameChanged.connect.assert_called_once_with(asplash.set_frame)
     asplash.animation.start.assert_called_once_with()
 
 
@@ -177,9 +176,10 @@ def test_worker_fail():
     ex = RuntimeError("Boom")
     mock_ensure.side_effect = ex
     with pytest.raises(RuntimeError):
-        with mock.patch(
-            "mu.app.venv.ensure_and_create", mock_ensure
-        ), mock.patch("mu.app.time") as mock_time:
+        with (
+            mock.patch("mu.app.venv.ensure_and_create", mock_ensure),
+            mock.patch("mu.app.time") as mock_time,
+        ):
             w.run()
     assert mock_ensure.call_count == 1
     assert w.failed.emit.call_count == 1
@@ -194,11 +194,12 @@ def test_setup_logging_without_envvar():
     Resetting the MU_LOG_TO_STDOUT env var should mean stdout logging is disabled
     """
     os.environ.pop("MU_LOG_TO_STDOUT", "")
-    with mock.patch("mu.app.TimedRotatingFileHandler") as log_conf, mock.patch(
-        "mu.app.os.path.exists", return_value=False
-    ), mock.patch("mu.app.logging") as logging, mock.patch(
-        "mu.app.os.makedirs", return_value=None
-    ) as mkdir:
+    with (
+        mock.patch("mu.app.TimedRotatingFileHandler") as log_conf,
+        mock.patch("mu.app.os.path.exists", return_value=False),
+        mock.patch("mu.app.logging") as logging,
+        mock.patch("mu.app.os.makedirs", return_value=None) as mkdir,
+    ):
         setup_logging()
         mkdir.assert_called_once_with(LOG_DIR, exist_ok=True)
         log_conf.assert_called_once_with(
@@ -219,11 +220,12 @@ def test_setup_logging_with_envvar():
     will be enabled
     """
     os.environ["MU_LOG_TO_STDOUT"] = "1"
-    with mock.patch("mu.app.TimedRotatingFileHandler") as log_conf, mock.patch(
-        "mu.app.os.path.exists", return_value=False
-    ), mock.patch("mu.app.logging") as logging, mock.patch(
-        "mu.app.os.makedirs", return_value=None
-    ) as mkdir:
+    with (
+        mock.patch("mu.app.TimedRotatingFileHandler") as log_conf,
+        mock.patch("mu.app.os.path.exists", return_value=False),
+        mock.patch("mu.app.logging") as logging,
+        mock.patch("mu.app.os.makedirs", return_value=None) as mkdir,
+    ):
         setup_logging()
         mkdir.assert_called_once_with(LOG_DIR, exist_ok=True)
         log_conf.assert_called_once_with(
@@ -267,27 +269,20 @@ def test_run():
 
     window = Win()
 
-    with mock.patch("mu.app.setup_logging") as set_log, mock.patch(
-        "mu.app.QApplication"
-    ) as qa, mock.patch("mu.app.AnimatedSplash") as qsp, mock.patch(
-        "mu.app.Editor"
-    ) as ed, mock.patch(
-        "mu.app.load_movie"
-    ), mock.patch(
-        "mu.app.Window", window
-    ) as win, mock.patch(
-        "sys.argv", ["mu"]
-    ), mock.patch(
-        "sys.exit"
-    ) as ex, mock.patch(
-        "mu.app.QEventLoop"
-    ) as mock_event_loop, mock.patch(
-        "mu.app.QThread"
-    ), mock.patch(
-        "mu.app.StartupWorker"
-    ) as mock_worker, mock.patch(
-        "mu.app.setup_exception_handler"
-    ) as mock_set_except:
+    with (
+        mock.patch("mu.app.setup_logging") as set_log,
+        mock.patch("mu.app.QApplication") as qa,
+        mock.patch("mu.app.AnimatedSplash") as qsp,
+        mock.patch("mu.app.Editor") as ed,
+        mock.patch("mu.app.load_movie"),
+        mock.patch("mu.app.Window", window) as win,
+        mock.patch("sys.argv", ["mu"]),
+        mock.patch("sys.exit") as ex,
+        mock.patch("mu.app.QEventLoop") as mock_event_loop,
+        mock.patch("mu.app.QThread"),
+        mock.patch("mu.app.StartupWorker") as mock_worker,
+        mock.patch("mu.app.setup_exception_handler") as mock_set_except,
+    ):
         run()
         assert set_log.call_count == 1
         # foo.call_count is instantiating the class
@@ -351,12 +346,13 @@ def test_close_splash_screen():
     splash = mock.MagicMock()
 
     # Mock QTimer, QApplication, Window, Editor, sys.exit
-    with mock.patch("mu.app.Window", window), mock.patch(
-        "mu.app.QApplication"
-    ), mock.patch("sys.exit"), mock.patch("mu.app.Editor"), mock.patch(
-        "mu.app.AnimatedSplash", return_value=splash
-    ), mock.patch.object(
-        VE, "ensure_and_create"
+    with (
+        mock.patch("mu.app.Window", window),
+        mock.patch("mu.app.QApplication"),
+        mock.patch("sys.exit"),
+        mock.patch("mu.app.Editor"),
+        mock.patch("mu.app.AnimatedSplash", return_value=splash),
+        mock.patch.object(VE, "ensure_and_create"),
     ):
         run()
         assert splash.close.call_count == 1
@@ -369,9 +365,11 @@ def test_excepthook():
     ex = Exception("BANG")
     exc_args = (type(ex), ex, ex.__traceback__)
 
-    with mock.patch("mu.app.logging.error") as error, mock.patch(
-        "mu.app.sys.exit"
-    ) as exit, mock.patch("mu.app.webbrowser") as browser:
+    with (
+        mock.patch("mu.app.logging.error") as error,
+        mock.patch("mu.app.sys.exit") as exit,
+        mock.patch("mu.app.webbrowser") as browser,
+    ):
         excepthook(*exc_args)
         error.assert_called_once_with("Unrecoverable error", exc_info=exc_args)
         exit.assert_called_once_with(1)
@@ -389,9 +387,11 @@ def test_excepthook_alamo():
     mock_browser = mock.MagicMock()
     mock_browser.open.side_effect = RuntimeError("BROWSER BANG")
 
-    with mock.patch("mu.app.logging.error") as error, mock.patch(
-        "mu.app.sys.exit"
-    ) as exit, mock.patch("mu.app.webbrowser", mock_browser):
+    with (
+        mock.patch("mu.app.logging.error") as error,
+        mock.patch("mu.app.sys.exit") as exit,
+        mock.patch("mu.app.webbrowser", mock_browser),
+    ):
         excepthook(*exc_args)
         assert error.call_count == 2
         exit.assert_called_once_with(1)
@@ -452,7 +452,7 @@ def test_running_twice():
             "-c",
             "from mu import app;",
             "app.setup_exception_handler();",
-            "app.check_only_running_once()"
+            "app.check_only_running_once()",
             # should throw an exception and exit with code 2 if it's already running
         )
     )

@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 import logging
 import os
 
@@ -283,11 +284,7 @@ class DebugMode(BaseMode):
             for handle in list(tab.breakpoint_handles):
                 line = tab.markerLine(handle)
                 code = tab.text(line)
-                if (
-                    line > -1
-                    and line not in break_lines
-                    and is_breakpoint_line(code)
-                ):
+                if line > -1 and line not in break_lines and is_breakpoint_line(code):
                     self.debugger.create_breakpoint(tab.path, line + 1)
                     break_lines.add(line)
                 else:
@@ -358,17 +355,13 @@ class DebugMode(BaseMode):
         """
         Handle when the debugger sends a warning message.
         """
-        self.editor.show_status_message(
-            _("Debugger warning: {}").format(message)
-        )
+        self.editor.show_status_message(_("Debugger warning: {}").format(message))
 
     def debug_on_error(self, message):
         """
         Handle when the debugger sends an error message.
         """
-        self.editor.show_status_message(
-            _("Debugger error: {}").format(message)
-        )
+        self.editor.show_status_message(_("Debugger error: {}").format(message))
 
     def debug_on_call(self, args):
         """

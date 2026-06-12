@@ -2,6 +2,7 @@
 """
 Tests for the user interface elements of Mu.
 """
+
 import os
 
 import pytest
@@ -27,12 +28,10 @@ def test_ModeItem_init():
     mock_text = mock.MagicMock()
     mock_icon = mock.MagicMock()
     mock_load = mock.MagicMock(return_value=icon)
-    with mock.patch(
-        "mu.interface.dialogs.QListWidgetItem.setText", mock_text
-    ), mock.patch(
-        "mu.interface.dialogs.QListWidgetItem.setIcon", mock_icon
-    ), mock.patch(
-        "mu.interface.dialogs.load_icon", mock_load
+    with (
+        mock.patch("mu.interface.dialogs.QListWidgetItem.setText", mock_text),
+        mock.patch("mu.interface.dialogs.QListWidgetItem.setIcon", mock_icon),
+        mock.patch("mu.interface.dialogs.load_icon", mock_load),
     ):
         mi = mu.interface.dialogs.ModeItem(name, description, icon)
         assert mi.name == name
@@ -227,15 +226,10 @@ def test_PackageDialog_setup():
     assert args0 == ("install", to_add)
     [args1], _ = queue_called_with[1]
     assert args1 == ("remove", to_remove)
-    assert (
-        pd.button_box.button(QDialogButtonBox.StandardButton.Ok).isEnabled()
-        is False
-    )
+    assert pd.button_box.button(QDialogButtonBox.StandardButton.Ok).isEnabled() is False
 
 
-@pytest.mark.skip(
-    reason="Superseded probably by ntoll's previous work on venv"
-)
+@pytest.mark.skip(reason="Superseded probably by ntoll's previous work on venv")
 def test_PackageDialog_remove_packages():
     """
     Ensure the pkg_dirs of to-be-removed packages is correctly filled and the
@@ -252,9 +246,10 @@ def test_PackageDialog_remove_packages():
         "quux-1.0.0.dist-info",
         "quux",
     ]
-    with mock.patch(
-        "mu.interface.dialogs.os.listdir", return_value=dirs
-    ), mock.patch("mu.interface.dialogs.QTimer") as mock_qtimer:
+    with (
+        mock.patch("mu.interface.dialogs.os.listdir", return_value=dirs),
+        mock.patch("mu.interface.dialogs.QTimer") as mock_qtimer,
+    ):
         pd.remove_packages()
         assert pd.pkg_dirs == {
             "foo": os.path.join("wibble", "foo-1.0.0.dist-info"),
@@ -264,9 +259,7 @@ def test_PackageDialog_remove_packages():
         mock_qtimer.singleShot.assert_called_once_with(2, pd.remove_package)
 
 
-@pytest.mark.skip(
-    reason="Superseded probably by ntoll's previous work on venv"
-)
+@pytest.mark.skip(reason="Superseded probably by ntoll's previous work on venv")
 def test_PackageDialog_remove_package_dist_info():
     """
     Ensures that if there are packages remaining to be deleted, then the next
@@ -280,12 +273,12 @@ def test_PackageDialog_remove_package_dist_info():
     mock_remove = mock.MagicMock()
     mock_shutil = mock.MagicMock()
     mock_qtimer = mock.MagicMock()
-    with mock.patch("builtins.open"), mock.patch(
-        "mu.interface.dialogs.csv.reader", return_value=files
-    ), mock.patch("mu.interface.dialogs.os.remove", mock_remove), mock.patch(
-        "mu.interface.dialogs.shutil", mock_shutil
-    ), mock.patch(
-        "mu.interface.dialogs.QTimer", mock_qtimer
+    with (
+        mock.patch("builtins.open"),
+        mock.patch("mu.interface.dialogs.csv.reader", return_value=files),
+        mock.patch("mu.interface.dialogs.os.remove", mock_remove),
+        mock.patch("mu.interface.dialogs.shutil", mock_shutil),
+        mock.patch("mu.interface.dialogs.QTimer", mock_qtimer),
     ):
         pd.remove_package()
         assert pd.pkg_dirs == {}
@@ -295,9 +288,7 @@ def test_PackageDialog_remove_package_dist_info():
         mock_qtimer.singleShot.assert_called_once_with(2, pd.remove_package)
 
 
-@pytest.mark.skip(
-    reason="Superseded probably by ntoll's previous work on venv"
-)
+@pytest.mark.skip(reason="Superseded probably by ntoll's previous work on venv")
 def test_PackageDialog_remove_package_dist_info_cannot_delete():
     """
     Ensures that if there are packages remaining to be deleted, then the next
@@ -312,14 +303,13 @@ def test_PackageDialog_remove_package_dist_info_cannot_delete():
     mock_shutil = mock.MagicMock()
     mock_qtimer = mock.MagicMock()
     mock_log = mock.MagicMock()
-    with mock.patch("builtins.open"), mock.patch(
-        "mu.interface.dialogs.csv.reader", return_value=files
-    ), mock.patch("mu.interface.dialogs.os.remove", mock_remove), mock.patch(
-        "mu.interface.dialogs.logger.error", mock_log
-    ), mock.patch(
-        "mu.interface.dialogs.shutil", mock_shutil
-    ), mock.patch(
-        "mu.interface.dialogs.QTimer", mock_qtimer
+    with (
+        mock.patch("builtins.open"),
+        mock.patch("mu.interface.dialogs.csv.reader", return_value=files),
+        mock.patch("mu.interface.dialogs.os.remove", mock_remove),
+        mock.patch("mu.interface.dialogs.logger.error", mock_log),
+        mock.patch("mu.interface.dialogs.shutil", mock_shutil),
+        mock.patch("mu.interface.dialogs.QTimer", mock_qtimer),
     ):
         pd.remove_package()
         assert pd.pkg_dirs == {}
@@ -330,9 +320,7 @@ def test_PackageDialog_remove_package_dist_info_cannot_delete():
         mock_qtimer.singleShot.assert_called_once_with(2, pd.remove_package)
 
 
-@pytest.mark.skip(
-    reason="Superseded probably by ntoll's previous work on venv"
-)
+@pytest.mark.skip(reason="Superseded probably by ntoll's previous work on venv")
 def test_PackageDialog_remove_package_egg_info():
     """
     Ensures that if there are packages remaining to be deleted, then the next
@@ -346,12 +334,11 @@ def test_PackageDialog_remove_package_egg_info():
     mock_remove = mock.MagicMock()
     mock_shutil = mock.MagicMock()
     mock_qtimer = mock.MagicMock()
-    with mock.patch(
-        "builtins.open", mock.mock_open(read_data=files)
-    ), mock.patch("mu.interface.dialogs.os.remove", mock_remove), mock.patch(
-        "mu.interface.dialogs.shutil", mock_shutil
-    ), mock.patch(
-        "mu.interface.dialogs.QTimer", mock_qtimer
+    with (
+        mock.patch("builtins.open", mock.mock_open(read_data=files)),
+        mock.patch("mu.interface.dialogs.os.remove", mock_remove),
+        mock.patch("mu.interface.dialogs.shutil", mock_shutil),
+        mock.patch("mu.interface.dialogs.QTimer", mock_qtimer),
     ):
         pd.remove_package()
         assert pd.pkg_dirs == {}
@@ -361,9 +348,7 @@ def test_PackageDialog_remove_package_egg_info():
         mock_qtimer.singleShot.assert_called_once_with(2, pd.remove_package)
 
 
-@pytest.mark.skip(
-    reason="Superseded probably by ntoll's previous work on venv"
-)
+@pytest.mark.skip(reason="Superseded probably by ntoll's previous work on venv")
 def test_PackageDialog_remove_package_egg_info_cannot_delete():
     """
     Ensures that if there are packages remaining to be deleted, then the next
@@ -378,14 +363,12 @@ def test_PackageDialog_remove_package_egg_info_cannot_delete():
     mock_shutil = mock.MagicMock()
     mock_qtimer = mock.MagicMock()
     mock_log = mock.MagicMock()
-    with mock.patch(
-        "builtins.open", mock.mock_open(read_data=files)
-    ), mock.patch("mu.interface.dialogs.os.remove", mock_remove), mock.patch(
-        "mu.interface.dialogs.logger.error", mock_log
-    ), mock.patch(
-        "mu.interface.dialogs.shutil", mock_shutil
-    ), mock.patch(
-        "mu.interface.dialogs.QTimer", mock_qtimer
+    with (
+        mock.patch("builtins.open", mock.mock_open(read_data=files)),
+        mock.patch("mu.interface.dialogs.os.remove", mock_remove),
+        mock.patch("mu.interface.dialogs.logger.error", mock_log),
+        mock.patch("mu.interface.dialogs.shutil", mock_shutil),
+        mock.patch("mu.interface.dialogs.QTimer", mock_qtimer),
     ):
         pd.remove_package()
         assert pd.pkg_dirs == {}
@@ -396,9 +379,7 @@ def test_PackageDialog_remove_package_egg_info_cannot_delete():
         mock_qtimer.singleShot.assert_called_once_with(2, pd.remove_package)
 
 
-@pytest.mark.skip(
-    reason="Superseded probably by ntoll's previous work on venv"
-)
+@pytest.mark.skip(reason="Superseded probably by ntoll's previous work on venv")
 def test_PackageDialog_remove_package_egg_info_cannot_open_record():
     """
     If the installed-files.txt file is not available (sometimes the case), then
@@ -410,25 +391,20 @@ def test_PackageDialog_remove_package_egg_info_cannot_open_record():
     pd.module_dir = "baz"
     mock_qtimer = mock.MagicMock()
     mock_log = mock.MagicMock()
-    with mock.patch(
-        "builtins.open", mock.MagicMock(side_effect=Exception("boom"))
-    ), mock.patch("mu.interface.dialogs.logger.error", mock_log), mock.patch(
-        "mu.interface.dialogs.QTimer", mock_qtimer
+    with (
+        mock.patch("builtins.open", mock.MagicMock(side_effect=Exception("boom"))),
+        mock.patch("mu.interface.dialogs.logger.error", mock_log),
+        mock.patch("mu.interface.dialogs.QTimer", mock_qtimer),
     ):
         pd.remove_package()
         assert pd.pkg_dirs == {}
         assert mock_log.call_count == 2
-        msg = (
-            "UNABLE TO REMOVE PACKAGE: foo (check the logs for "
-            "more information.)"
-        )
+        msg = "UNABLE TO REMOVE PACKAGE: foo (check the logs for more information.)"
         pd.append_data.assert_called_once_with(msg)
         mock_qtimer.singleShot.assert_called_once_with(2, pd.remove_package)
 
 
-@pytest.mark.skip(
-    reason="Superseded probably by ntoll's previous work on venv"
-)
+@pytest.mark.skip(reason="Superseded probably by ntoll's previous work on venv")
 def test_PackageDialog_remove_package_end_state():
     """
     If there are no more packages to remove and there's nothing to be done for
@@ -441,14 +417,14 @@ def test_PackageDialog_remove_package_end_state():
     pd.to_add = {}
     pd.process = None
     pd.end_state = mock.MagicMock()
-    with mock.patch(
-        "mu.interface.dialogs.os.listdir", return_value=["bar", "baz"]
-    ), mock.patch(
-        "mu.interface.dialogs.os.walk",
-        side_effect=[[("bar", [], [])], [("baz", [], ["x"])]],
-    ), mock.patch(
-        "mu.interface.dialogs.shutil"
-    ) as mock_shutil:
+    with (
+        mock.patch("mu.interface.dialogs.os.listdir", return_value=["bar", "baz"]),
+        mock.patch(
+            "mu.interface.dialogs.os.walk",
+            side_effect=[[("bar", [], [])], [("baz", [], ["x"])]],
+        ),
+        mock.patch("mu.interface.dialogs.shutil") as mock_shutil,
+    ):
         pd.remove_package()
         assert mock_shutil.rmtree.call_count == 2
         call_args = mock_shutil.rmtree.call_args_list
@@ -457,9 +433,7 @@ def test_PackageDialog_remove_package_end_state():
     pd.end_state.assert_called_once_with()
 
 
-@pytest.mark.skip(
-    reason="Superseded probably by ntoll's previous work on venv"
-)
+@pytest.mark.skip(reason="Superseded probably by ntoll's previous work on venv")
 def test_PackageDialog_end_state():
     """
     Ensure the expected end-state is correctly configured (for when all tasks

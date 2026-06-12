@@ -6,6 +6,7 @@ Usage:
 scrapy runspider adafruit_api.py -o adafruit.json
 
 """
+
 import scrapy
 from bs4 import BeautifulSoup
 
@@ -55,9 +56,7 @@ class AdafruitSpider(scrapy.Spider):
             # Args into function
             args = []
             for ems in func_spec.css("em"):
-                args.append(
-                    ems.extract().replace("<em>", "").replace("</em>", "")
-                )
+                args.append(ems.extract().replace("<em>", "").replace("</em>", ""))
             # Function description.
             soup = BeautifulSoup(func_doc.extract(), "html.parser")
             d = self.to_dict(func_name, args, soup.text)

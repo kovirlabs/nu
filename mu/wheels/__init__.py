@@ -127,9 +127,7 @@ def pip_download(dirpath, logger, additional_flags=[]):
         # NB Probably not necessary now that we're using a temp directory
         #
         if process.returncode != 0:
-            raise WheelsDownloadError(
-                "Pip was unable to download %s" % pip_identifiers
-            )
+            raise WheelsDownloadError("Pip was unable to download %s" % pip_identifiers)
 
 
 def convert_sdists_to_wheels(dirpath, logger):

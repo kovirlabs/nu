@@ -2,6 +2,7 @@
 """
 Tests for the debug runner.
 """
+
 import json
 import pytest
 import os.path
@@ -102,9 +103,7 @@ def test_Debugger_output_no_client_connection():
     with mock.patch("mu.debugger.runner.logger.debug") as mock_logger:
         db.output("test", foo="bar")
         assert mock_logger.call_count == 2
-        mock_logger.call_args_list[0][0] == (
-            "Debugger client not connected " "to runner."
-        )
+        mock_logger.call_args_list[0][0] == ("Debugger client not connected to runner.")
         mock_logger.call_args_list[1][0] == AttributeError("bang!")
 
 
@@ -291,8 +290,9 @@ def test_Debugger_interact_client_close():
     mock_queue = mock.MagicMock()
     mock_queue.get.side_effect = [("quit", {"foo": "bar"})]
     mock_queue_class = mock.MagicMock(return_value=mock_queue)
-    with mock.patch("mu.debugger.runner.Thread", mock_thread), mock.patch(
-        "mu.debugger.runner.Queue", mock_queue_class
+    with (
+        mock.patch("mu.debugger.runner.Thread", mock_thread),
+        mock.patch("mu.debugger.runner.Queue", mock_queue_class),
     ):
         db.interact(None, None)
     db.output.assert_called_once_with("bootstrap", breakpoints=[])
@@ -397,9 +397,7 @@ def test_Debugger_user_line_starting_valid_line():
     mock_frame.f_lineno = 1
     db.user_line(mock_frame)
     assert db._run_state == mu.debugger.runner.DebugState.STARTED
-    db.output.assert_called_once_with(
-        "line", filename=db.canonic("foo"), line=1
-    )
+    db.output.assert_called_once_with("line", filename=db.canonic("foo"), line=1)
     db.interact.assert_called_once_with(mock_frame, None)
 
 
@@ -455,9 +453,7 @@ def test_Debugger_user_exception_string_exc_type():
     mock_frame.f_locals = {}
     db.user_exception(mock_frame, exc_info)
     assert mock_frame.f_locals["__exception__"] == ("type", "value")
-    db.output.assert_called_once_with(
-        "exception", name="type", value=repr("value")
-    )
+    db.output.assert_called_once_with("exception", name="type", value=repr("value"))
     db.interact.assert_called_once_with(mock_frame, "traceback")
 
 
@@ -477,9 +473,7 @@ def test_Debugger_user_exception_other_exc_type():
     mock_frame.f_locals = {}
     db.user_exception(mock_frame, exc_info)
     assert mock_frame.f_locals["__exception__"] == (mock_type, "value")
-    db.output.assert_called_once_with(
-        "exception", name="type", value=repr("value")
-    )
+    db.output.assert_called_once_with("exception", name="type", value=repr("value"))
     db.interact.assert_called_once_with(mock_frame, "traceback")
 
 
@@ -492,13 +486,9 @@ def test_Debugger_do_break_non_executable_line():
     db = mu.debugger.runner.Debugger(mock_socket, "localhost", 9999)
     db.output = mock.MagicMock()
     db.is_executable_line = mock.MagicMock(return_value=False)
-    with mock.patch(
-        "mu.debugger.runner.is_breakpoint_line", return_value=False
-    ):
+    with mock.patch("mu.debugger.runner.is_breakpoint_line", return_value=False):
         db.do_break("foo.py", 10)
-    db.output.assert_called_once_with(
-        "error", message="foo.py:10 is not executable"
-    )
+    db.output.assert_called_once_with("error", message="foo.py:10 is not executable")
 
 
 def test_Debugger_do_break_causes_error():
@@ -511,9 +501,7 @@ def test_Debugger_do_break_causes_error():
     db.output = mock.MagicMock()
     db.is_executable_line = mock.MagicMock(return_value=True)
     db.set_break = mock.MagicMock(return_value="bang!")
-    with mock.patch(
-        "mu.debugger.runner.is_breakpoint_line", return_value=True
-    ):
+    with mock.patch("mu.debugger.runner.is_breakpoint_line", return_value=True):
         db.do_break("foo.py", 10)
     db.output.assert_called_once_with("error", message="bang!")
 
@@ -535,9 +523,7 @@ def test_Debugger_do_break():
     mock_bp.temporary = False
     mock_bp.funcname = "bar"
     db.get_breaks = mock.MagicMock(return_value=[mock_bp])
-    with mock.patch(
-        "mu.debugger.runner.is_breakpoint_line", return_value=True
-    ):
+    with mock.patch("mu.debugger.runner.is_breakpoint_line", return_value=True):
         db.do_break("foo.py", 10)
     db.output.assert_called_once_with(
         "breakpoint_create",
@@ -561,9 +547,7 @@ def test_Debugger_do_enable_no_such_breakpoint():
     mock_bdb.Breakpoint.bpbynumber = {1: 1, 2: 2, 3: 3}
     with mock.patch("mu.debugger.runner.bdb", mock_bdb):
         db.do_enable("4")
-    db.output.assert_called_once_with(
-        "error", message="No breakpoint numbered 4"
-    )
+    db.output.assert_called_once_with("error", message="No breakpoint numbered 4")
 
 
 def test_Debugger_do_enable():
@@ -595,9 +579,7 @@ def test_Debugger_do_disable_no_such_breakpoint():
     mock_bdb.Breakpoint.bpbynumber = {1: 1, 2: 2, 3: 3}
     with mock.patch("mu.debugger.runner.bdb", mock_bdb):
         db.do_disable("4")
-    db.output.assert_called_once_with(
-        "error", message="No breakpoint numbered 4"
-    )
+    db.output.assert_called_once_with("error", message="No breakpoint numbered 4")
 
 
 def test_Debugger_do_disable():
@@ -647,9 +629,7 @@ def test_Debugger_do_ignore_no_breakpoint():
     mock_bdb.Breakpoint.bpbynumber = {1: mock_breakpoint, 2: 2, 3: 3}
     with mock.patch("mu.debugger.runner.bdb", mock_bdb):
         db.do_ignore(4, 1)
-    db.output.assert_called_once_with(
-        "error", message="No breakpoint numbered 4"
-    )
+    db.output.assert_called_once_with("error", message="No breakpoint numbered 4")
 
 
 def test_Debugger_do_ignore():
@@ -682,9 +662,7 @@ def test_Debugger_do_clear_no_breakpoint():
     mock_bdb.Breakpoint.bpbynumber = {1: mock_breakpoint, 2: 2, 3: 3}
     with mock.patch("mu.debugger.runner.bdb", mock_bdb):
         db.do_clear(4)
-    db.output.assert_called_once_with(
-        "error", message="No breakpoint numbered 4"
-    )
+    db.output.assert_called_once_with("error", message="No breakpoint numbered 4")
 
 
 def test_Debugger_do_clear_error_encountered():
@@ -863,10 +841,10 @@ def test_run_with_user_requested_quit():
     mock_sys.argv = [None, None]
     mock_sys.path = [None]
     mock_socket = mock.MagicMock()
-    with mock.patch(
-        "mu.debugger.runner.Debugger", mock_debugger_class
-    ), mock.patch("mu.debugger.runner.sys", mock_sys), mock.patch(
-        "mu.debugger.runner.socket", mock_socket
+    with (
+        mock.patch("mu.debugger.runner.Debugger", mock_debugger_class),
+        mock.patch("mu.debugger.runner.sys", mock_sys),
+        mock.patch("mu.debugger.runner.socket", mock_socket),
     ):
         mu.debugger.runner.run("localhost", 1908, "foo.py", ["bar", "baz"])
     mock_debugger.reset.assert_called_once_with()
@@ -891,10 +869,10 @@ def test_run_with_restart_exception():
     mock_sys.argv = [None, None]
     mock_sys.path = [None]
     mock_socket = mock.MagicMock()
-    with mock.patch(
-        "mu.debugger.runner.Debugger", mock_debugger_class
-    ), mock.patch("mu.debugger.runner.sys", mock_sys), mock.patch(
-        "mu.debugger.runner.socket", mock_socket
+    with (
+        mock.patch("mu.debugger.runner.Debugger", mock_debugger_class),
+        mock.patch("mu.debugger.runner.sys", mock_sys),
+        mock.patch("mu.debugger.runner.socket", mock_socket),
     ):
         mu.debugger.runner.run("localhost", 1908, "foo.py", ["bar", "baz"])
     assert mock_debugger.output.call_count == 2
@@ -913,10 +891,10 @@ def test_run_with_expected_exception():
     mock_sys.argv = [None, None]
     mock_sys.path = [None]
     mock_socket = mock.MagicMock()
-    with mock.patch(
-        "mu.debugger.runner.Debugger", mock_debugger_class
-    ), mock.patch("mu.debugger.runner.sys", mock_sys), mock.patch(
-        "mu.debugger.runner.socket", mock_socket
+    with (
+        mock.patch("mu.debugger.runner.Debugger", mock_debugger_class),
+        mock.patch("mu.debugger.runner.sys", mock_sys),
+        mock.patch("mu.debugger.runner.socket", mock_socket),
     ):
         mu.debugger.runner.run("localhost", 1908, "foo.py", ["bar", "baz"])
     assert mock_debugger.client is None
@@ -935,10 +913,10 @@ def test_run_with_unexpected_exception():
     mock_sys.argv = [None, None]
     mock_sys.path = [None]
     mock_socket = mock.MagicMock()
-    with mock.patch(
-        "mu.debugger.runner.Debugger", mock_debugger_class
-    ), mock.patch("mu.debugger.runner.sys", mock_sys), mock.patch(
-        "mu.debugger.runner.socket", mock_socket
+    with (
+        mock.patch("mu.debugger.runner.Debugger", mock_debugger_class),
+        mock.patch("mu.debugger.runner.sys", mock_sys),
+        mock.patch("mu.debugger.runner.socket", mock_socket),
     ):
         mu.debugger.runner.run("localhost", 1908, "foo.py", ["bar", "baz"])
     assert mock_debugger.output.call_count == 1

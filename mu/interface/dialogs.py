@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 import logging
 
 from PyQt6.QtCore import QSize, QTimer
@@ -81,9 +82,7 @@ class ModeSelector(QDialog):
         self.mode_list.setIconSize(QSize(48, 48))
         for name, item in modes.items():
             if not item.is_debugger:
-                litem = ModeItem(
-                    item.name, item.description, item.icon, self.mode_list
-                )
+                litem = ModeItem(item.name, item.description, item.icon, self.mode_list)
                 if item.icon == current_mode:
                     self.mode_list.setCurrentItem(litem)
         self.mode_list.sortItems()
@@ -96,8 +95,7 @@ class ModeSelector(QDialog):
         instructions.setWordWrap(True)
         widget_layout.addWidget(instructions)
         button_box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok
-            | QDialogButtonBox.StandardButton.Cancel
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
@@ -264,8 +262,7 @@ class AdminDialog(QDialog):
         self.tabs = QTabWidget()
         widget_layout.addWidget(self.tabs)
         button_box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok
-            | QDialogButtonBox.StandardButton.Cancel
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
@@ -340,8 +337,7 @@ class FindReplaceDialog(QDialog):
         self.replace_all_flag.setChecked(replace_flag)
         widget_layout.addWidget(self.replace_all_flag)
         button_box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok
-            | QDialogButtonBox.StandardButton.Cancel
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
@@ -396,9 +392,7 @@ class PackageDialog(QDialog):
         widget_layout.addWidget(self.text_area)
         # Buttons.
         self.button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
-        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(
-            False
-        )
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
         self.button_box.accepted.connect(self.accept)
         widget_layout.addWidget(self.button_box)
 
@@ -428,9 +422,7 @@ class PackageDialog(QDialog):
         Set the UI to a valid end state.
         """
         self.text_area.appendPlainText("\nFINISHED")
-        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(
-            True
-        )
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
 
     def run_pip(self, command, packages):
         """
@@ -442,9 +434,7 @@ class PackageDialog(QDialog):
         elif command == "install":
             pip_fn = venv.install_user_packages
         else:
-            raise RuntimeError(
-                "Invalid pip command: %s %s" % (command, packages)
-            )
+            raise RuntimeError("Invalid pip command: %s %s" % (command, packages))
         pip_fn(
             packages,
             slots=venv.Slots(

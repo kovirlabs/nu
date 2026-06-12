@@ -55,8 +55,41 @@ docs = ["sphinx"]
 package = ["wheel", "twine"]
 i18n = ["babel"]
 utils = ["scrapy", "beautifulsoup4", "requests"]
-dev = ["nu[tests]", "nu[docs]", "nu[package]", "nu[i18n]"]
-all = ["nu[tests]", "nu[docs]", "nu[package]", "nu[i18n]", "nu[utils]"]
+# ruff is the dev lint+format tool (replaces flake8/pycodestyle/pyflakes/black
+# *as dev tools*; those three stay as runtime deps for the in-editor checker
+# and the "Tidy" button — see install_requires above).
+lint = ["ruff>=0.6"]
+dev = ["nu[tests]", "nu[docs]", "nu[package]", "nu[i18n]", "nu[lint]"]
+all = [
+    "nu[tests]",
+    "nu[docs]",
+    "nu[package]",
+    "nu[i18n]",
+    "nu[utils]",
+    "nu[lint]",
+]
 
 [tool.uv]
 package = false
+
+[tool.ruff]
+# Single source of truth for both the formatter wrap and the E501 lint check.
+# (The old split was black -l 79 for formatting + flake8 max-line-length 88.)
+line-length = 88
+target-version = "py311"
+# `_` is gettext's translation function, injected as a builtin at runtime.
+builtins = ["_"]
+extend-exclude = [
+    "mu/contrib",     # vendored third-party code (now empty)
+    "mu/modes/api",   # generated API stubs
+    "docs",
+]
+
+[tool.ruff.lint]
+# pycodestyle (E/W) + pyflakes (F): the rules flake8 ran by default.
+select = ["E", "W", "F"]
+ignore = [
+    "E203",  # whitespace before ':' — conflicts with the formatter
+    "E731",  # assignment of a lambda expression
+    "E402",  # module-level import not at top of file
+]

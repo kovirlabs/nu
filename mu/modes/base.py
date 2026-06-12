@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 import sys
 import os
 import os.path
@@ -205,17 +206,13 @@ class BaseMode(QObject):
         in some network systems this in inaccessible. This allows a key in the
         settings file to be used to set a custom path.
         """
-        workspace_dir = os.path.join(
-            config.HOME_DIRECTORY, config.WORKSPACE_NAME
-        )
+        workspace_dir = os.path.join(config.HOME_DIRECTORY, config.WORKSPACE_NAME)
         settings_workspace = settings.settings.get("workspace")
 
         if settings_workspace:
             if os.path.isdir(settings_workspace):
                 logger.info(
-                    "Using workspace {} from settings file".format(
-                        settings_workspace
-                    )
+                    "Using workspace {} from settings file".format(settings_workspace)
                 )
                 workspace_dir = settings_workspace
             else:
@@ -428,9 +425,7 @@ class MicroPythonMode(BaseMode):
                     continue
                 if with_logging:
                     logger.info("Found device on port: {}".format(device.port))
-                    logger.info(
-                        "Serial number: {}".format(device.serial_number)
-                    )
+                    logger.info("Serial number: {}".format(device.serial_number))
                     if device.board_name:
                         logger.info("Board type: {}".format(device.board_name))
                 devices.append(device)
@@ -490,9 +485,7 @@ class MicroPythonMode(BaseMode):
         if device:
             try:
                 if not self.connection:
-                    self.connection = REPLConnection(
-                        device.port, self.baudrate
-                    )
+                    self.connection = REPLConnection(device.port, self.baudrate)
                     self.connection.open()
                     if self.force_interrupt:
                         self.connection.send_interrupt()
@@ -541,9 +534,7 @@ class MicroPythonMode(BaseMode):
         if device:
             try:
                 if not self.connection:
-                    self.connection = REPLConnection(
-                        device.port, self.baudrate
-                    )
+                    self.connection = REPLConnection(device.port, self.baudrate)
                     self.connection.open()
                 self.view.add_micropython_plotter(
                     self.name, self.connection, self.on_data_flood

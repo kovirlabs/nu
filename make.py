@@ -7,9 +7,18 @@ import shutil
 import subprocess
 
 PYTEST = "pytest"
-FLAKE8 = "flake8"
-BLACK = "black"
-BLACK_FLAGS = ["-l", "79", "--exclude=mu/contrib/"]
+RUFF = "ruff"
+# Paths ruff lints and formats. Excludes (mu/contrib, mu/modes/api, docs) are
+# configured in pyproject.toml's [tool.ruff].
+RUFF_TARGETS = [
+    "setup.py",
+    "make.py",
+    "run.py",
+    "mu",
+    "package",
+    "tests",
+    "utils",
+]
 PYGETTEXT = os.path.join(sys.base_prefix, "tools", "i18n", "pygettext.py")
 
 INCLUDE_PATTERNS = {"*.py"}
@@ -23,9 +32,7 @@ EXCLUDE_PATTERNS = {
 _exported = {}
 
 
-def _walk(
-    start_from=".", include_patterns=None, exclude_patterns=None, recurse=True
-):
+def _walk(start_from=".", include_patterns=None, exclude_patterns=None, recurse=True):
     if include_patterns:
         _include_patterns = set(os.path.normpath(p) for p in include_patterns)
     else:
@@ -40,15 +47,11 @@ def _walk(
             filepath = os.path.normpath(os.path.join(dirpath, filename))
 
             if not any(
-                fnmatch.fnmatch(filepath, pattern)
-                for pattern in _include_patterns
+                fnmatch.fnmatch(filepath, pattern) for pattern in _include_patterns
             ):
                 continue
 
-            if any(
-                fnmatch.fnmatch(filepath, pattern)
-                for pattern in _exclude_patterns
-            ):
+            if any(fnmatch.fnmatch(filepath, pattern) for pattern in _exclude_patterns):
                 continue
 
             yield filepath
@@ -94,9 +97,7 @@ def test(*pytest_args):
     """
     print("\ntest")
     os.environ["LANG"] = "en_GB.utf8"
-    return subprocess.run(
-        [sys.executable, "-m", PYTEST] + list(pytest_args)
-    ).returncode
+    return subprocess.run([sys.executable, "-m", PYTEST] + list(pytest_args)).returncode
 
 
 @export
@@ -124,74 +125,39 @@ def coverage():
 
 
 @export
-def flake8(*flake8_args):
-    """Run the flake8 code checker
-
-    Call flake8 on all files as specified by setup.cfg
-    """
-    print("\nflake8")
-    os.environ["PYFLAKES_BUILTINS"] = "_"
-    return subprocess.run([sys.executable, "-m", FLAKE8]).returncode
+def lint(*ruff_args):
+    """Run the ruff code checker."""
+    print("\nlint")
+    return subprocess.run(
+        [sys.executable, "-m", RUFF, "check", *RUFF_TARGETS, *ruff_args]
+    ).returncode
 
 
 @export
 def tidy():
-    """Tidy code with the 'black' formatter."""
+    """Reformat code with the 'ruff' formatter."""
     clean()
     print("\nTidy")
-    for target in [
-        "setup.py",
-        "make.py",
-        "mu",
-        "package",
-        "tests",
-        "utils",
-    ]:
-        return_code = subprocess.run(
-            [sys.executable, "-m", BLACK, target] + BLACK_FLAGS
-        ).returncode
-        if return_code != 0:
-            return return_code
-    return 0
+    return subprocess.run(
+        [sys.executable, "-m", RUFF, "format", *RUFF_TARGETS]
+    ).returncode
 
 
 @export
-def black():
-    """Check code with the 'black' formatter."""
+def format():
+    """Check code formatting with 'ruff' (makes no changes)."""
     clean()
-    print("\nblack")
-    # Black is no available in Python 3.5, in that case let the tests continue
-    try:
-        import black as black_  # noqa: F401
-    except ImportError as e:
-        python_version = sys.version_info
-        if python_version.major == 3 and python_version.minor == 5:
-            print("Black checks are not available in Python 3.5.")
-            return 0
-        else:
-            print(e)
-            return 1
-    for target in [
-        "setup.py",
-        "make.py",
-        "mu",
-        "package",
-        "tests",
-        "utils",
-    ]:
-        return_code = subprocess.run(
-            [sys.executable, "-m", BLACK, target, "--check"] + BLACK_FLAGS
-        ).returncode
-        if return_code != 0:
-            return return_code
-    return 0
+    print("\nformat")
+    return subprocess.run(
+        [sys.executable, "-m", RUFF, "format", "--check", *RUFF_TARGETS]
+    ).returncode
 
 
 @export
 def check():
     """Run all the checkers and tests"""
     print("\nCheck")
-    funcs = [clean, black, flake8, coverage]
+    funcs = [clean, format, lint, coverage]
     for func in funcs:
         return_code = func()
         if return_code != 0:
@@ -268,10 +234,7 @@ def translate_begin(lang=""):
             mu_po_filename=repr(mu_po_filename),
         )
     )
-    print(
-        "Review its translation strings "
-        "and finalize with 'make translate_done'."
-    )
+    print("Review its translation strings and finalize with 'make translate_done'.")
 
     return result
 
@@ -344,9 +307,7 @@ def translate_test(lang=""):
 
     local_env = dict(os.environ)
     local_env["LANG"] = _translate_lang(lang)
-    return subprocess.run(
-        [sys.executable, "-m", "mu"], env=local_env
-    ).returncode
+    return subprocess.run([sys.executable, "-m", "mu"], env=local_env).returncode
 
 
 @export
@@ -354,9 +315,7 @@ def run():
     """Run Mu from within a virtual environment"""
     clean()
     if not os.environ.get("VIRTUAL_ENV"):
-        raise RuntimeError(
-            "Cannot run Mu;" "your Python virtualenv is not activated"
-        )
+        raise RuntimeError("Cannot run Mu;your Python virtualenv is not activated")
     return subprocess.run([sys.executable, "-m", "mu"]).returncode
 
 

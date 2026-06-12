@@ -79,11 +79,21 @@ even for the `offscreen` platform plugin.)
   `microfs.py`** + tests. `mu/contrib/` is now empty (all of uflash/esptool/microfs gone).
   Suite green: **889 passed, 20 skipped**; flake8 clean.
 
-**1c. Toolchain**:
-- [ ] Adopt **ruff** for dev lint+format (replaces flake8 + pycodestyle + pyflakes + black
-  *as dev tools*). NOTE: `pyflakes` + `pycodestyle` stay as **runtime** deps — `logic.py`
-  uses them for the in-editor code checker.
-- [ ] Point `make.py` / `Makefile` lint+tidy targets at ruff
+**1c. Toolchain**: ✅ DONE
+- [x] Adopted **ruff** for dev lint+format (replaces flake8 + pycodestyle + pyflakes + black
+  *as dev tools*). `pyflakes` + `pycodestyle` (via the `flake8` pin) and `black` stay as
+  **runtime** deps — `logic.py` uses pyflakes/pycodestyle for the in-editor code checker and
+  black for the "Tidy" button.
+- [x] Repointed `make.py` / `Makefile` targets at ruff: `make lint` (ruff check),
+  `make format` (ruff format --check), `make tidy` (ruff format), `make check` =
+  clean + format + lint + coverage. Dropped the `PYFLAKES_BUILTINS=_` dance — the gettext
+  `_` builtin is now declared in `[tool.ruff] builtins`.
+- [x] ruff config lives in `pyproject.toml` `[tool.ruff]`; removed the `[flake8]` section
+  from `setup.cfg`. **Unified line-length to 88** for both format and the `E501` lint check
+  (retired the old black-79 / flake8-88 split), so the tree was reformatted to 88 columns
+  (mostly the modern "blank line after module docstring" rule). Fixed one new finding
+  (`E721` in `mu/app.py`: `!=` → `is not` for an exception-type comparison).
+- [x] Suite still green: **889 passed, 20 skipped**; `ruff check` + `ruff format --check` clean.
 
 **1d. Packaging consolidation** (do carefully — `make.py` installer scripts and the
 Windows build parse `mu/__init__.py` + `setup.py`):

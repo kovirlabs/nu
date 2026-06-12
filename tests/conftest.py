@@ -25,9 +25,7 @@ def qtapp():
 @pytest.fixture(scope="session", autouse=True)
 def disable_autosave():
     """Ensure that no settings are autosaved as part of a test"""
-    with mock.patch.object(
-        settings.SettingsBase, "register_for_autosave"
-    ) as register:
+    with mock.patch.object(settings.SettingsBase, "register_for_autosave") as register:
         yield register
 
 

@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 import sys
 import os
 import re
@@ -135,13 +136,13 @@ class JupyterREPLPane(RichJupyterWidget):
 
 VT100_RETURN = b"\r"
 VT100_BACKSPACE = b"\b"
-VT100_DELETE = b"\x1B[\x33\x7E"
-VT100_UP = b"\x1B[A"
-VT100_DOWN = b"\x1B[B"
-VT100_RIGHT = b"\x1B[C"
-VT100_LEFT = b"\x1B[D"
-VT100_HOME = b"\x1B[H"
-VT100_END = b"\x1B[F"
+VT100_DELETE = b"\x1b[\x33\x7e"
+VT100_UP = b"\x1b[A"
+VT100_DOWN = b"\x1b[B"
+VT100_RIGHT = b"\x1b[C"
+VT100_LEFT = b"\x1b[D"
+VT100_HOME = b"\x1b[H"
+VT100_END = b"\x1b[F"
 
 
 class MicroPythonREPLPane(QTextEdit):
@@ -233,8 +234,7 @@ class MicroPythonREPLPane(QTextEdit):
         meta_only = data.modifiers() == Qt.KeyboardModifier.MetaModifier
         ctrl_shift_only = (
             data.modifiers()
-            == Qt.KeyboardModifier.ControlModifier
-            | Qt.KeyboardModifier.ShiftModifier
+            == Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier
         )
         shift_down = data.modifiers() & Qt.KeyboardModifier.ShiftModifier
         on_osx = platform.system() == "Darwin"
@@ -420,24 +420,16 @@ class MicroPythonREPLPane(QTextEdit):
                         count = 1 if count_string == "" else int(count_string)
                         action = match.group("action")
                         if action == "A":  # up
-                            tc.movePosition(
-                                QTextCursor.MoveOperation.Up, n=count
-                            )
+                            tc.movePosition(QTextCursor.MoveOperation.Up, n=count)
                             self.device_cursor_position = tc.position()
                         elif action == "B":  # down
-                            tc.movePosition(
-                                QTextCursor.MoveOperation.Down, n=count
-                            )
+                            tc.movePosition(QTextCursor.MoveOperation.Down, n=count)
                             self.device_cursor_position = tc.position()
                         elif action == "C":  # right
-                            tc.movePosition(
-                                QTextCursor.MoveOperation.Right, n=count
-                            )
+                            tc.movePosition(QTextCursor.MoveOperation.Right, n=count)
                             self.device_cursor_position = tc.position()
                         elif action == "D":  # left
-                            tc.movePosition(
-                                QTextCursor.MoveOperation.Left, n=count
-                            )
+                            tc.movePosition(QTextCursor.MoveOperation.Left, n=count)
                             self.device_cursor_position = tc.position()
                         elif action == "K":  # delete things
                             if count_string == "":  # delete to end of line
@@ -449,7 +441,7 @@ class MicroPythonREPLPane(QTextEdit):
                                 self.device_cursor_position = tc.position()
                         else:
                             # Unknown action, log warning and ignore
-                            command = match.group(0).replace("\x1B", "<Esc>")
+                            command = match.group(0).replace("\x1b", "<Esc>")
                             msg = "Received unsupported VT100 command: {}"
                             logger.warning(msg.format(command))
                     else:
@@ -470,7 +462,7 @@ class MicroPythonREPLPane(QTextEdit):
                             logger.warning("dropped title {}".format(string))
                         else:
                             # Unknown action, log warning and ignore
-                            command = match.group(0).replace("\x1B", "<Esc>")
+                            command = match.group(0).replace("\x1b", "<Esc>")
                             msg = "Received unsupported VT100 command: {}"
                             logger.warning(msg.format(command))
                     else:
@@ -585,9 +577,7 @@ class PythonProcessPane(QTextEdit):
         self.is_interactive = interactive
         if not envars:  # Envars must be a dict if not passed a value.
             envars = {}
-        envars = {
-            name: v for (name, v) in envars.items() if name != "PYTHONPATH"
-        }
+        envars = {name: v for (name, v) in envars.items() if name != "PYTHONPATH"}
         self.script = ""
         if script_name:
             self.script = os.path.abspath(os.path.normcase(script_name))
@@ -599,9 +589,7 @@ class PythonProcessPane(QTextEdit):
             command_args = []
         logger.info("Command args: {}".format(command_args))
         self.process = QProcess(self)
-        self.process.setProcessChannelMode(
-            QProcess.ProcessChannelMode.MergedChannels
-        )
+        self.process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
         # Force buffers to flush immediately.
         env = QProcessEnvironment.systemEnvironment()
         env.insert("PYTHONUNBUFFERED", "1")
@@ -616,9 +604,7 @@ class PythonProcessPane(QTextEdit):
             env.insert("LANG", encoding)
         # Manage environment variables that may have been set by the user.
         if envars:
-            logger.info(
-                "Running with environment variables: " "{}".format(envars)
-            )
+            logger.info("Running with environment variables: {}".format(envars))
             for name, value in envars.items():
                 env.insert(name, value)
         logger.info("Working directory: {}".format(working_directory))
@@ -639,9 +625,7 @@ class PythonProcessPane(QTextEdit):
             # order to run, so we temporarily set the PYTHONPATH
             # to point to Mu's own directory
             #
-            env.insert(
-                "PYTHONPATH", os.path.abspath(os.path.join(mu_dir, ".."))
-            )
+            env.insert("PYTHONPATH", os.path.abspath(os.path.join(mu_dir, "..")))
             self.process.setProcessEnvironment(env)
             self.process.start(interpreter, args)
         else:
@@ -837,8 +821,7 @@ class PythonProcessPane(QTextEdit):
             self.setTextCursor(cursor)
         elif (
             modifiers
-            == Qt.KeyboardModifier.ControlModifier
-            | Qt.KeyboardModifier.ShiftModifier
+            == Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier
         ) or (
             platform.system() == "Darwin"
             and modifiers == Qt.KeyboardModifier.ControlModifier
@@ -1067,9 +1050,7 @@ class DebugInspector(QTreeView):
         Sets the font size for all the textual elements in this pane.
         """
         stylesheet = (
-            "QWidget{font-size: "
-            + str(new_size)
-            + "pt; font-family: Monospace;}"
+            "QWidget{font-size: " + str(new_size) + "pt; font-family: Monospace;}"
         )
         self.setStyleSheet(stylesheet)
 

@@ -2,6 +2,7 @@
 """
 Tests for the user interface elements of Mu.
 """
+
 from unittest import mock
 import mu.interface.themes
 import mu.interface.editor
@@ -26,9 +27,7 @@ def test_Font():
     assert f.bold is False
     assert f.italic is False
     # Passed in arguments
-    f = mu.interface.themes.Font(
-        color="pink", paper="black", bold=True, italic=True
-    )
+    f = mu.interface.themes.Font(color="pink", paper="black", bold=True, italic=True)
     assert f.color == "pink"
     assert f.paper == "black"
     assert f.bold

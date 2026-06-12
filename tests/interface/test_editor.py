@@ -2,6 +2,7 @@
 """
 Tests for the user interface elements of Mu.
 """
+
 from unittest import mock
 import mu.i18n
 import mu.interface.editor
@@ -42,9 +43,7 @@ def test_csslexer_description_other():
     returned. This is due to a bug in the base QsciLexerCSS class.
     """
     lexer = mu.interface.editor.CssLexer()
-    with mock.patch(
-        "mu.interface.editor.QsciLexerCSS.description", return_value="foo"
-    ):
+    with mock.patch("mu.interface.editor.QsciLexerCSS.description", return_value="foo"):
         assert "foo" == lexer.description(lexer.Value)
 
 
@@ -56,12 +55,10 @@ def test_EditorPane_init_python():
     mock_text = mock.MagicMock(return_value=None)
     mock_modified = mock.MagicMock(return_value=None)
     mock_configure = mock.MagicMock(return_value=None)
-    with mock.patch(
-        "mu.interface.editor.EditorPane.setText", mock_text
-    ), mock.patch(
-        "mu.interface.editor.EditorPane.setModified", mock_modified
-    ), mock.patch(
-        "mu.interface.editor.EditorPane.configure", mock_configure
+    with (
+        mock.patch("mu.interface.editor.EditorPane.setText", mock_text),
+        mock.patch("mu.interface.editor.EditorPane.setModified", mock_modified),
+        mock.patch("mu.interface.editor.EditorPane.configure", mock_configure),
     ):
         path = "/foo/bar.py"
         text = 'print("Hello, World!")'
@@ -82,12 +79,10 @@ def test_EditorPane_init_html():
     mock_text = mock.MagicMock(return_value=None)
     mock_modified = mock.MagicMock(return_value=None)
     mock_configure = mock.MagicMock(return_value=None)
-    with mock.patch(
-        "mu.interface.editor.EditorPane.setText", mock_text
-    ), mock.patch(
-        "mu.interface.editor.EditorPane.setModified", mock_modified
-    ), mock.patch(
-        "mu.interface.editor.EditorPane.configure", mock_configure
+    with (
+        mock.patch("mu.interface.editor.EditorPane.setText", mock_text),
+        mock.patch("mu.interface.editor.EditorPane.setModified", mock_modified),
+        mock.patch("mu.interface.editor.EditorPane.configure", mock_configure),
     ):
         path = "/foo/bar.html"
         text = "<html></html>"
@@ -108,12 +103,10 @@ def test_EditorPane_init_css():
     mock_text = mock.MagicMock(return_value=None)
     mock_modified = mock.MagicMock(return_value=None)
     mock_configure = mock.MagicMock(return_value=None)
-    with mock.patch(
-        "mu.interface.editor.EditorPane.setText", mock_text
-    ), mock.patch(
-        "mu.interface.editor.EditorPane.setModified", mock_modified
-    ), mock.patch(
-        "mu.interface.editor.EditorPane.configure", mock_configure
+    with (
+        mock.patch("mu.interface.editor.EditorPane.setText", mock_text),
+        mock.patch("mu.interface.editor.EditorPane.setModified", mock_modified),
+        mock.patch("mu.interface.editor.EditorPane.configure", mock_configure),
     ):
         path = "/foo/bar.css"
         text = "h1 { color: red; }"
@@ -175,12 +168,8 @@ def test_EditorPane_configure():
     assert ep.setIndicatorDrawUnder.call_count == 1
     assert ep.setAnnotationDisplay.call_count == 1
     assert ep.selectionChanged.connect.call_count == 1
-    squiggle = (
-        mu.interface.editor.QsciScintilla.IndicatorStyle.SquiggleIndicator
-    )
-    straight = (
-        mu.interface.editor.QsciScintilla.IndicatorStyle.StraightBoxIndicator
-    )
+    squiggle = mu.interface.editor.QsciScintilla.IndicatorStyle.SquiggleIndicator
+    straight = mu.interface.editor.QsciScintilla.IndicatorStyle.StraightBoxIndicator
     ep.indicatorDefine.assert_has_calls(
         [
             mock.call(squiggle, ep.check_indicators["error"]["id"]),
@@ -249,9 +238,7 @@ def test_EditorPane_set_theme():
     ep = mu.interface.editor.EditorPane("/foo/bar.py", "baz")
     ep.lexer = mock.MagicMock()
     mock_api = mock.MagicMock()
-    with mock.patch(
-        "mu.interface.editor.QsciAPIs", return_value=mock_api
-    ) as mapi:
+    with mock.patch("mu.interface.editor.QsciAPIs", return_value=mock_api) as mapi:
         ep.set_api(api)
         mapi.assert_called_once_with(ep.lexer)
         mock_api.add.assert_called_once_with("api help text")
@@ -428,9 +415,7 @@ def test_EditorPane_debugger_at_line():
     ep.debugger_at_line(99)
     ep.reset_debugger_highlight.assert_called_once_with()
     ep.text.assert_called_once_with(99)
-    ep.fillIndicatorRange.assert_called_once_with(
-        99, 0, 99, 3, ep.DEBUG_INDICATOR
-    )
+    ep.fillIndicatorRange.assert_called_once_with(99, 0, 99, 3, ep.DEBUG_INDICATOR)
     ep.ensureLineVisible.assert_called_once_with(99)
 
 
@@ -447,9 +432,7 @@ def test_EditorPane_debugger_at_line_windows_line_endings():
     ep.debugger_at_line(99)
     ep.reset_debugger_highlight.assert_called_once_with()
     ep.text.assert_called_once_with(99)
-    ep.fillIndicatorRange.assert_called_once_with(
-        99, 0, 99, 3, ep.DEBUG_INDICATOR
-    )
+    ep.fillIndicatorRange.assert_called_once_with(99, 0, 99, 3, ep.DEBUG_INDICATOR)
     ep.ensureLineVisible.assert_called_once_with(99)
 
 
@@ -952,9 +935,10 @@ def test_EditorPane_wheelEvent():
     ep = mu.interface.editor.EditorPane(None, "baz")
     mock_app = mock.MagicMock()
     mock_app.keyboardModifiers.return_value = []
-    with mock.patch("mu.interface.editor.QApplication", mock_app), mock.patch(
-        "mu.interface.editor.QsciScintilla.wheelEvent"
-    ) as mw:
+    with (
+        mock.patch("mu.interface.editor.QApplication", mock_app),
+        mock.patch("mu.interface.editor.QsciScintilla.wheelEvent") as mw,
+    ):
         ep.wheelEvent(None)
         mw.assert_called_once_with(None)
 
@@ -964,9 +948,10 @@ def test_EditorPane_wheelEvent_with_modifier_ignored():
     ep = mu.interface.editor.EditorPane(None, "baz")
     mock_app = mock.MagicMock()
     mock_app.keyboardModifiers.return_value = ["CTRL"]
-    with mock.patch("mu.interface.editor.QApplication", mock_app), mock.patch(
-        "mu.interface.editor.QsciScintilla.wheelEvent"
-    ) as mw:
+    with (
+        mock.patch("mu.interface.editor.QApplication", mock_app),
+        mock.patch("mu.interface.editor.QsciScintilla.wheelEvent") as mw,
+    ):
         ep.wheelEvent(None)
         assert mw.call_count == 0
 

@@ -2,6 +2,7 @@
 """
 Tests for the virtual_environment module pip support
 """
+
 import os
 import random
 import logging
@@ -154,9 +155,7 @@ def test_pip_install_single_package():
     """Ensure that installing a single package results in:
     "pip install <package>"
     """
-    pip_install_testing(
-        "test_pip_install_single_package", "install", rstring()
-    )
+    pip_install_testing("test_pip_install_single_package", "install", rstring())
 
 
 def test_pip_install_several_packages():
@@ -164,9 +163,7 @@ def test_pip_install_several_packages():
     "pip install <packageA> <packageB>"
     """
     package_names = [rstring() for _ in range(random.randint(1, 5))]
-    pip_install_testing(
-        "test_pip_install_several_packages", "install", package_names
-    )
+    pip_install_testing("test_pip_install_several_packages", "install", package_names)
 
 
 def test_pip_install_single_package_with_flag():
@@ -218,9 +215,7 @@ def test_pip_uninstall_single_package():
     """Ensure that uninstalling a single package results in:
     "pip uninstall <package>"
     """
-    pip_install_testing(
-        "test_pip_uninstall_single_package", "uninstall", rstring()
-    )
+    pip_install_testing("test_pip_uninstall_single_package", "uninstall", rstring())
 
 
 def test_pip_uninstall_several_packages():
@@ -331,12 +326,9 @@ def test_installed_packages():
     #
     Pip = mu.virtual_environment.Pip
     packages = [
-        (rstring(10), rstring(6, "0123456789."), rstring(30))
-        for _ in rrange(5)
+        (rstring(10), rstring(6, "0123456789."), rstring(30)) for _ in rrange(5)
     ]
-    pip_list_output = os.linesep.join(
-        ["*", "*"] + ["%s %s %s" % p for p in packages]
-    )
+    pip_list_output = os.linesep.join(["*", "*"] + ["%s %s %s" % p for p in packages])
     pip_freeze_output = os.linesep.join("%s==%s" % (p[:2]) for p in packages)
     pip_executable = "pip-" + rstring() + ".exe"
     pip = mu.virtual_environment.Pip(pip_executable)
@@ -362,12 +354,9 @@ def test_installed_packages_no_location():
     #
     Pip = mu.virtual_environment.Pip
     packages = [
-        (rstring(10), rstring(6, "0123456789."), rstring(30))
-        for _ in rrange(5)
+        (rstring(10), rstring(6, "0123456789."), rstring(30)) for _ in rrange(5)
     ]
-    pip_list_output = os.linesep.join(
-        ["*", "*"] + ["%s %s" % p[:2] for p in packages]
-    )
+    pip_list_output = os.linesep.join(["*", "*"] + ["%s %s" % p[:2] for p in packages])
     pip_freeze_output = os.linesep.join("%s==%s" % (p[:2]) for p in packages)
     pip_executable = "pip-" + rstring() + ".exe"
     pip = mu.virtual_environment.Pip(pip_executable)

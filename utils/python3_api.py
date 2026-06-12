@@ -3,6 +3,7 @@
 Given a list of modules, extracts the help into a json file to be turned into
 an API list for Mu.
 """
+
 import json
 import inspect
 import importlib

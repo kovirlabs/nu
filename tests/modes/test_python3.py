@@ -2,6 +2,7 @@
 """
 Tests for the Python3 mode.
 """
+
 import sys
 import os
 from mu.modes.python3 import PythonMode, KernelRunner
@@ -29,13 +30,15 @@ def test_kernel_runner_start_kernel():
     mock_os.environ = {}
     mock_os.pathsep = os.pathsep
     mock_os.path.dirname.return_value = (
-        "/Applications/mu-editor.app" "/Contents/Resources/app/mu"
+        "/Applications/mu-editor.app/Contents/Resources/app/mu"
     )
     mock_kernel_manager_class = mock.MagicMock()
     mock_kernel_manager_class.return_value = mock_kernel_manager
-    with mock.patch("mu.modes.python3.os", mock_os), mock.patch(
-        "mu.modes.python3.MuKernelManager", mock_kernel_manager_class
-    ), mock.patch("sys.platform", "darwin"):
+    with (
+        mock.patch("mu.modes.python3.os", mock_os),
+        mock.patch("mu.modes.python3.MuKernelManager", mock_kernel_manager_class),
+        mock.patch("sys.platform", "darwin"),
+    ):
         kr.start_kernel()
     mock_os.chdir.assert_called_once_with("/a/path/to/mu_code")
     assert mock_os.environ["name"] == "value"
@@ -43,9 +46,7 @@ def test_kernel_runner_start_kernel():
     mock_kernel_manager_class.assert_called_once_with()
     mock_kernel_manager.start_kernel.assert_called_once_with()
     assert kr.repl_kernel_client == mock_client
-    kr.kernel_started.emit.assert_called_once_with(
-        mock_kernel_manager, mock_client
-    )
+    kr.kernel_started.emit.assert_called_once_with(mock_kernel_manager, mock_client)
 
 
 def test_kernel_runner_stop_kernel():
@@ -370,9 +371,11 @@ def test_python_add_repl():
     pm = PythonMode(editor, view)
     pm.set_buttons = mock.MagicMock()
     pm.stop_kernel = mock.MagicMock()
-    with mock.patch("mu.modes.python3.QThread", mock_qthread), mock.patch(
-        "mu.modes.python3.KernelRunner", mock_kernel_runner
-    ), mock.patch.object(venv, "name", "name"):
+    with (
+        mock.patch("mu.modes.python3.QThread", mock_qthread),
+        mock.patch("mu.modes.python3.KernelRunner", mock_kernel_runner),
+        mock.patch.object(venv, "name", "name"),
+    ):
         pm.add_repl()
     mock_qthread.assert_called_once_with()
     mock_kernel_runner.assert_called_once_with(
@@ -382,21 +385,15 @@ def test_python_add_repl():
     assert pm.kernel_runner == mock_kernel_runner()
     pm.set_buttons.assert_called_once_with(repl=False)
     pm.kernel_runner.moveToThread.assert_called_once_with(pm.kernel_thread)
-    pm.kernel_runner.kernel_started.connect.assert_called_once_with(
-        pm.on_kernel_start
-    )
+    pm.kernel_runner.kernel_started.connect.assert_called_once_with(pm.on_kernel_start)
     pm.kernel_runner.kernel_finished.connect.assert_called_once_with(
         pm.kernel_thread.quit
     )
-    pm.stop_kernel.connect.assert_called_once_with(
-        pm.kernel_runner.stop_kernel
-    )
+    pm.stop_kernel.connect.assert_called_once_with(pm.kernel_runner.stop_kernel)
     pm.kernel_thread.started.connect.assert_called_once_with(
         pm.kernel_runner.start_kernel
     )
-    pm.kernel_thread.finished.connect.assert_called_once_with(
-        pm.on_kernel_stop
-    )
+    pm.kernel_thread.finished.connect.assert_called_once_with(pm.on_kernel_stop)
     pm.kernel_thread.start.assert_called_once_with()
 
 
@@ -544,9 +541,7 @@ def test_python_on_kernel_start():
     mock_kernel_manager = mock.MagicMock()
     mock_client = mock.MagicMock()
     pm.on_kernel_start(mock_kernel_manager, mock_client)
-    view.add_jupyter_repl.assert_called_once_with(
-        mock_kernel_manager, mock_client
-    )
+    view.add_jupyter_repl.assert_called_once_with(mock_kernel_manager, mock_client)
     pm.set_buttons.assert_called_once_with(repl=True)
     editor.show_status_message.assert_called_once_with("REPL started.")
     # Check button states are set according to what other aspects of the mode
