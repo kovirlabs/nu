@@ -96,7 +96,7 @@ jobs:
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: mu-editor-${{ runner.os }}-${{ github.sha }}
+          name: nu-editor-${{ runner.os }}-${{ github.sha }}
           path: ${{ matrix.artifact-glob }}
           if-no-files-found: error
 
@@ -121,10 +121,15 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           tag="${GITHUB_REF_NAME}"
-          # A tag with a prerelease segment (e.g. v1.0.0-beta0.1) -> pre-release;
-          # a clean vX.Y.Z tag -> full release.
-          prerelease=""
-          case "$tag" in *-*) prerelease="--prerelease";; esac
-          gh release create "$tag" --title "Mu Editor $tag" --generate-notes $prerelease
+          version="${tag#v}"
+          # A clean final release is digits-and-dots only (vX.Y.Z). Any PEP 440
+          # pre/dev segment (b1, rc1, .dev1, a 1.0.0-beta0.1-style tag, ...)
+          # publishes as a GitHub pre-release.
+          if [[ "$version" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+            prerelease=""
+          else
+            prerelease="--prerelease"
+          fi
+          gh release create "$tag" --title "nu $tag" --generate-notes $prerelease
           # -exec ... {} + tolerates the spaces in the installer filenames.
           find artifacts -type f -exec gh release upload "$tag" {} +
