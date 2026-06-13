@@ -89,7 +89,7 @@ nu-editor = "mu.app:run"
 
 [project.optional-dependencies]
 tests = [
-    "pytest>=4.6",
+    "pytest>=9.0.3",
     "pytest-cov",
     "pytest-random-order>=1.0.0",
     "pytest-faulthandler",
