@@ -1028,6 +1028,45 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#building-installers-briefcase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building installers (Briefcase)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Building installers (Briefcase)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-ships-inside-the-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What ships inside the app
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#signing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#python-package" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1408,6 +1447,45 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#building-installers-briefcase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building installers (Briefcase)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Building installers (Briefcase)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-ships-inside-the-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What ships inside the app
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#signing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#python-package" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1511,41 +1589,89 @@
 
 
 <h1 id="packaging-mu">Packaging Mu<a class="headerlink" href="#packaging-mu" title="Permanent link">&para;</a></h1>
-<p>Because our target users (beginner programmers and those who support them) may
-not be confident with the technical requirements for installing packages,
-we need to make obtaining and setting up Mu as simple and easy as possible. </p>
-<p>Furthermore, we aim to make the creation of packages automatic and as simple
-as possible. By automating this process we ensure that the knowledge and steps
-needed to package Mu is stored in software (so everyone can see how we do it)
-and we don't rely on a volunteer to take time and effort to make things happen.
-If you submit code and it is accepted into our master branch, within minutes
-you should have a set of packages for different platforms that includes your
-changes. Such builds can be
-<a href="http://mu-builds.s3-website.eu-west-2.amazonaws.com/">found here</a>. </p>
-<p>Of course, such builds are not "official" releases. We'll only do that every
-so often when major updates land. These will take the form of
-<a href="https://github.com/mu-editor/mu/releases">releases found in our GitHub repository</a>.
-Such releases will include the "official" installers for supported platforms.
-The installers referenced on <a href="http://codewith.mu/">Mu's website</a> will always
-be the latest stable release of Mu on GitHub.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Huge thanks to <a href="https://twitter.com/carlosperate">Carlos Pereira Atencio</a>
-who made considerable efforts to automate and configure the packaging of
-Mu. Without the contributions of volunteers like Carlos, projects like Mu
-simply wouldn't exist. If you find Mu useful why not say thank you to
-Carlos via Twitter..?</p>
-<p>Thank you Carlos! :-)</p>
+<p>Our target users (beginner programmers and those who support them) may not be
+confident with installing software, so obtaining and setting up Mu needs to be
+as simple as possible — and producing the installers needs to be automatic, so
+cutting a release doesn't depend on one volunteer's time.</p>
+<p>Since <strong>Phase 4</strong> (see <code>TODO.md</code>) the native installers are built with
+<strong><a href="https://briefcase.readthedocs.io/">Briefcase</a></strong> (part of the BeeWare suite),
+replacing the previous <code>pup</code> pipeline. A single definition in
+<code>pyproject.toml</code>'s <code>[tool.briefcase]</code> drives all three platforms:</p>
+<table>
+<thead>
+<tr>
+<th>OS</th>
+<th>Format</th>
+<th>CI runner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Windows</td>
+<td><code>.msi</code></td>
+<td><code>windows-latest</code></td>
+</tr>
+<tr>
+<td>macOS</td>
+<td><code>.dmg</code> (ad-hoc signed)</td>
+<td><code>macos-13</code> (Intel)</td>
+</tr>
+<tr>
+<td>Linux</td>
+<td><code>.AppImage</code></td>
+<td><code>ubuntu-latest</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="building-installers-briefcase">Building installers (Briefcase)<a class="headerlink" href="#building-installers-briefcase" title="Permanent link">&para;</a></h2>
+<p>CI is the release path: <code>.github/workflows/build.yml</code> builds one OS per job and
+uploads the installer as a downloadable artifact. <strong>Trigger it from the GitHub
+Actions tab</strong> ("Build installers" → <em>Run workflow</em>), or it runs on a push to
+<code>master</code> / a <code>v*</code> tag. Download the artifact for your OS from the run.</p>
+<p>Locally (inside a pip-enabled virtualenv with the <code>package</code> extra,
+<code>pip install -e ".[package]"</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$ make win64     # 64-bit Windows MSI
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>$ make macos     # macOS .app/.dmg (ad-hoc signed)
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>$ make linux     # Linux AppImage
+</code></pre></div>
+<p>Each target fetches the offline baseline wheels and runs the Briefcase
+create → build → package cycle (see <code>make.py</code>). The build is mostly self-driving
+once the build tools are present (Briefcase fetches WiX for the Windows MSI on
+demand).</p>
+<h3 id="what-ships-inside-the-app">What ships inside the app<a class="headerlink" href="#what-ships-inside-the-app" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The editor (<code>mu</code>) plus its third-party dependencies (PyQt6, etc.), installed
+  into the bundle by Briefcase from <code>[tool.briefcase.app.mu].requires</code>.</li>
+<li>A pinned <strong><code>uv</code></strong> binary — it rides in via the PyPI <code>uv</code> wheel, and
+  <code>find_uv()</code> locates it at runtime through <code>uv.find_uv_bin()</code> (no <code>PATH</code> or
+  <code>MU_UV</code> needed in the packaged app).</li>
+<li>The <strong>baseline wheels zip</strong> (<code>mu/wheels/&lt;version&gt;.zip</code>, built by
+  <code>python -m mu.wheels --package</code> before packaging), so the first-run
+  <code>uv venv</code> sets up the learner's environment <strong>offline</strong>.</li>
+</ul>
+<p>At first launch Mu creates the user's environment with
+<code>uv venv --python &lt;the bundled interpreter&gt;</code>, so the packaged Python is reused
+for the learner's code — no separate CPython download is required.</p>
+<h3 id="signing">Signing<a class="headerlink" href="#signing" title="Permanent link">&para;</a></h3>
+<p>CI builds are <strong>unsigned</strong> (macOS uses an ad-hoc signature). Users will see a
+SmartScreen (Windows) or Gatekeeper (macOS) warning until code-signing secrets
+(Authenticode / Apple notarization) are wired into <code>build.yml</code> — tracked as a
+follow-up in <code>TODO.md</code> (Phase 4d).</p>
+<div class="admonition warning">
+<p class="admonition-title">The sections below are historical</p>
+<p>Everything from "Python Package" down is <strong>inherited from upstream Mu</strong> and
+describes the <strong>retired</strong> toolchain (Appveyor, <code>pynsist</code>/NSIS, Travis, the
+<code>pup</code> builder, tkinter assets, <code>setup.py</code>). It is kept for reference while
+the docs are modernized and <strong>does not reflect how this fork builds today</strong> —
+see the Briefcase flow above. The legacy <code>pup</code> <code>make</code> targets survive as
+<code>win32</code>, <code>win64-pup</code>, <code>macos-pup</code>, <code>linux-pup</code>, and <code>linux-docker</code> until the
+Briefcase builds are confirmed on all three OSes (Phase 4e).</p>
 </div>
-<p>We package Mu in various different ways so it is as widely available as
-possible. What follows is a brief description of how each package is generated
-(some of them require the manual intervention of others outside the Mu
-project).</p>
 <h2 id="python-package">Python Package<a class="headerlink" href="#python-package" title="Permanent link">&para;</a></h2>
 <p>If you have Python 3.5 or later installed on Windows, OSX or 64-bit Linux and
 you are familiar with Python's built-in packaging system, you can install Mu
 into a virtual environment with <code>pip</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$ pip install mu-editor
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>$ pip install mu-editor
 </code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -1562,8 +1688,8 @@ $ shortcut mu
 <code>pip</code> to install it. We use <a href="https://github.com/pypa/twine">twine</a> to push
 releases to PyPI and I (Nicholas - maintainer) simply use a Makefile to
 automate this:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>$ make publish-test
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>$ make publish-live
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>$ make publish-test
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>$ make publish-live
 </code></pre></div>
 <p>The <code>make publish-live</code> command is what updates PyPI. The
 <code>make publish-test</code> command uses the test instance of PyPI so we can confirm
@@ -1574,7 +1700,7 @@ for the Raspberry Pi and features Mu as Recommended Software. Raspberry Pi OS
 uses the Mu packages contributed to Debian by
 <a href="https://twitter.com/nickmorrott">Nick Morrott</a>.</p>
 <p>To install Mu on Raspberry Pi OS from the command line, type:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>$ sudo apt install mu-editor
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>$ sudo apt install mu-editor
 </code></pre></div>
 <p>Alternatively, Mu can be installed from the Recommended Software menu in the
 Programming section.</p>
@@ -1643,8 +1769,8 @@ explain this process more fully
 (the details of which are described
 <a href="https://developer.mozilla.org.cach3.com/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Signing_an_executable_with_Authenticode">by Mozilla</a>).</p>
 <p>Use the <code>make</code> command to build your own installers:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>$ make win32
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>$ make win64
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>$ make win32
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>$ make win64
 </code></pre></div>
 <p>This will clean the repository before running the <code>win_installer.py</code> command
 for the requested bitness.</p>
@@ -1653,7 +1779,7 @@ to download the appropriate tkinter-related resources from
 <a href="https://github.com/mu-editor/mu_tkinter">Mu's tkinter assets repository</a>.</p>
 <p>If asked, the command for automatically installing Mu, system wide, should use
 the following flags:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>mu-editor_win64.exe /S /AllUsers
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>mu-editor_win64.exe /S /AllUsers
 </code></pre></div>
 <p>The <code>/S</code> flag tells the installer to work in "silent" mode (i.e. you won't
 see the windows shown in the screenshots above) and the <code>/AllUsers</code> flag
@@ -1683,7 +1809,7 @@ Fedora based distributions.</p>
 <a href="https://twitter.com/nickmorrott">Nick Morrott</a> and have been available to
 install since the releases of Debian 10 "buster" and Ubuntu 19.04 "Disco Dingo".</p>
 <p>To install Mu on Debian/Ubuntu from the command line, type:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>$ sudo apt install mu-editor
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>$ sudo apt install mu-editor
 </code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
