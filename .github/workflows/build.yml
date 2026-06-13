@@ -1,24 +1,29 @@
 name: Build installers
 
-# Native installers via Briefcase (Phase 4d, see TODO.md) — replaces the stale
-# pup pipeline. One runner per OS produces an unsigned, downloadable artifact:
-#   windows -> .msi   macOS -> .dmg (ad-hoc signed)   linux -> .AppImage
+# Native installers via Briefcase (Phase 4d, see TODO.md). One runner per OS:
+#   windows -> .msi   macOS -> zipped .app (ad-hoc signed)   linux -> .AppImage
 #
-# Trigger it by hand from the Actions tab ("Run workflow") to get a build to
-# test, or on a push to master / a version tag. Signing (Authenticode /
-# Apple notarization) is deferred — users will see a SmartScreen / Gatekeeper
-# warning until secrets are wired in (see TODO.md Phase 4d note).
+# Installers are built on a version tag (`vX.Y.Z[...]`) or a manual run, NOT on
+# every push — tests run separately in test.yml. On a tag, the `release` job
+# publishes a GitHub Release with the installers attached: a tag with a
+# prerelease segment (e.g. v1.0.0-beta0.1) publishes as a pre-release; a clean
+# vX.Y.Z tag publishes as a full release.
+#
+# Signing (Authenticode / Apple notarization) is deferred — users will see a
+# SmartScreen / Gatekeeper warning until secrets are wired in (TODO.md 4d).
 
 on:
   workflow_dispatch:
   push:
-    branches: 'master'
     tags: 'v*'
 
 jobs:
   build:
     name: ${{ matrix.label }}
     runs-on: ${{ matrix.runs-on }}
+    # Bound a hung packaging step (macOS dmg historically hangs on headless
+    # runners) so it fails fast instead of needing a manual cancel.
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -27,47 +32,63 @@ jobs:
             runs-on: windows-latest
             briefcase-platform: windows
             briefcase-format: ''
+            docker-arg: ''
             package-args: ''
             artifact-glob: dist/*.msi
           # Intel runner on purpose: the baseline wheels (mu/wheels) are fetched
-          # for macosx_11_0_x86_64 (see os_compatibility_flags), so the bundled
-          # app must be x86_64 too. The result runs on Apple Silicon via Rosetta.
-          - label: macOS dmg
+          # for macosx_11_0_x86_64, so the bundled app must be x86_64 too (runs
+          # on Apple Silicon via Rosetta). Package as a zipped .app — the dmg
+          # path uses Finder/AppleScript and hangs on headless CI.
+          - label: macOS app
             runs-on: macos-13
             briefcase-platform: macOS
             briefcase-format: ''
-            package-args: '--adhoc-sign'
-            artifact-glob: dist/*.dmg
+            docker-arg: ''
+            package-args: '--adhoc-sign --packaging-format zip'
+            artifact-glob: dist/*.zip
+          # --no-docker: Briefcase's Docker (manylinux) image has no compatible
+          # PyQt6-QScintilla wheel and falls back to a source build that dies at
+          # qmake. Building against the host (with the Qt libs installed below)
+          # uses the normal binary wheels.
           - label: Linux AppImage
             runs-on: ubuntu-latest
             briefcase-platform: linux
             briefcase-format: appimage
-            package-args: ''
+            docker-arg: '--no-docker'
+            package-args: '--no-docker'
             artifact-glob: dist/*.AppImage
     steps:
       - uses: actions/checkout@v4
 
-      # Briefcase bundles a Python support package matching this version, and
-      # the baseline wheels below are fetched for it — keep them in lockstep.
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      # For the --no-docker AppImage, linuxdeploy bundles the Qt6 platform
+      # plugin's shared libraries from the host, so they must be present.
+      - name: Install Linux Qt6 runtime libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libegl1 libgl1 libxkbcommon-x11-0 libdbus-1-3 \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+            libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0
 
       - name: Install Briefcase
         run: python -m pip install --upgrade pip briefcase
 
       # Build the offline baseline-wheels zip (pgzero/pygame/ipykernel + deps)
       # into mu/wheels/<version>.zip so the first-run `uv venv` needs no network.
-      # Briefcase copies it into the app along with the rest of the mu/ sources.
       - name: Build offline baseline wheels
         run: python -m mu.wheels --package
 
       - name: Briefcase create
-        run: briefcase create ${{ matrix.briefcase-platform }} ${{ matrix.briefcase-format }}
+        run: briefcase create ${{ matrix.briefcase-platform }} ${{ matrix.briefcase-format }} ${{ matrix.docker-arg }}
 
       - name: Briefcase build
-        run: briefcase build ${{ matrix.briefcase-platform }} ${{ matrix.briefcase-format }}
+        run: briefcase build ${{ matrix.briefcase-platform }} ${{ matrix.briefcase-format }} ${{ matrix.docker-arg }}
 
       - name: Briefcase package
         run: briefcase package ${{ matrix.briefcase-platform }} ${{ matrix.briefcase-format }} ${{ matrix.package-args }}
@@ -78,3 +99,32 @@ jobs:
           name: mu-editor-${{ runner.os }}-${{ github.sha }}
           path: ${{ matrix.artifact-glob }}
           if-no-files-found: error
+
+  release:
+    name: Publish release
+    needs: build
+    # Run on tag pushes even if a platform's build failed (always()), so a beta
+    # still ships whatever installers did build.
+    if: always() && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all installers
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Publish GitHub release with installers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          # A tag with a prerelease segment (e.g. v1.0.0-beta0.1) -> pre-release;
+          # a clean vX.Y.Z tag -> full release.
+          prerelease=""
+          case "$tag" in *-*) prerelease="--prerelease";; esac
+          gh release create "$tag" --title "Mu Editor $tag" --generate-notes $prerelease
+          # -exec ... {} + tolerates the spaces in the installer filenames.
+          find artifacts -type f -exec gh release upload "$tag" {} +
