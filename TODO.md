@@ -134,9 +134,11 @@ even for the `offscreen` platform plugin.)
 
 ## Phase 3 — Verify packaging & CI
 
-- [ ] Confirm AppImage / macOS `.app` / Windows installer build on the PyQt6 base
-  *(deferred to the maintainer — pup-driven `make win64`/`macos`/`linux` + `build.yml`,
-  which still pin old Python: `build.yml` uses 3.8 and `make.py` references a 3.7.9 PBS URL).*
+- [ ] Confirm AppImage / macOS `.app` / Windows installer build on the PyQt6 base.
+  **Superseded by Phase 4**: the stale `pup` pipeline (alpha, Py3.8-only, 3.10-capped,
+  needs a macOS fork + custom Docker image) is being replaced by **Briefcase**, and the
+  baked-in venv that forced a venv-capable bundled Python is being replaced by a uv-driven
+  model. Installer work continues there.
 - [x] Trimmed CI (`.github/workflows/test.yml`) to the supported range: matrix is now
   Python **3.11 + 3.14** on ubuntu/macOS/Windows, with 3.12 + 3.13 added on Linux only.
   **Deleted the two PyQt5-era jobs** (`test-arm` Debian-buster + `test-pios` Raspberry Pi OS
@@ -144,10 +146,58 @@ even for the `offscreen` platform plugin.)
   Added the Qt6 apt deps (`libxcb-cursor0`/`libegl1`/`libgl1`). `build.yml` left for the
   installer work above.
 
+## Phase 4 — uv-driven environments + Briefcase installers
+
+A deliberate departure from Mu's "hide everything" ethos: make the Python environment a
+**real, visible, scriptable** thing (good pedagogy), which also dissolves the packaging
+constraint — the app's own interpreter no longer needs to be venv-capable because **uv**
+manages the kid's-code Python separately. Decisions (maintainer, 2026-06): PEP 723
+`uv run` **and** explicit `uv` buttons; progressive disclosure to keep the beginner-first
+feel; offline-first via bundled assets; **Briefcase** for native installers.
+
+**4a. Replace the baked-in venv with uv** (on the current stack — testable before packaging):
+- [ ] Rewrite `mu/virtual_environment.py` internals as thin `QProcess` wrappers around
+  `uv` (`uv venv`, `uv pip`/`uv add`, `uv run`). Resolve a pinned `uv` binary at runtime.
+- [ ] Startup: ensure/create the default env via uv (replaces `venv.ensure_and_create`,
+  same splash/worker flow); "activate" by setting `VIRTUAL_ENV` + `PATH` in the spawned
+  process env; render the UI scoped to that env. (uv also auto-discovers `.venv` in the
+  working dir.)
+- [ ] Keep the suite green; add tests for the uv wrapper.
+
+**4b. Env UX (progressive disclosure):**
+- [ ] "Environment: <name>" indicator + package list scoped to the active env.
+- [ ] `uv` buttons (new env / add package / show packages) that **echo the real command**
+  into a log/console pane — the transparency is the lesson.
+- [ ] PEP 723: "Run" uses `uv run` so inline `# /// script` dependencies auto-resolve.
+- [ ] Advanced multi-env create/switch, hidden by default.
+
+**4c. Bundle assets for offline:**
+- [ ] Vendor a pinned `uv` binary per platform.
+- [ ] Vendor a python-build-standalone **CPython 3.14** per platform; make it the *primary*
+  source (NOT network-conditional): `uv venv --python <bundled>` or pre-seed
+  `UV_PYTHON_INSTALL_DIR` + `UV_PYTHON_DOWNLOADS=never`.
+- [ ] Build a wheelhouse (extend `mu/wheels/`) and wire `UV_FIND_LINKS` for offline `pip`.
+
+**4d. Briefcase packaging:**
+- [ ] Add `[tool.briefcase]` to `pyproject.toml`; declare PyQt6 + Qt plugins/data; include
+  uv + PBS 3.14 + wheelhouse as app resources.
+- [ ] **Build all three in CI** (`build.yml`): ubuntu → AppImage, windows → MSI,
+  macOS → `.dmg` — so cutting a release is push-button. Local builds stay available for dev
+  (Linux here; the maintainer's Windows box for spot-checking the GUI), but are no longer
+  the release path.
+- [ ] Repoint `make.py`/`Makefile` installer targets at Briefcase (dev/local convenience).
+- NOTE: CI *builds* are credential-free, but **signing isn't** — macOS notarization (Apple
+  Developer cert) and Windows Authenticode need secrets wired into `build.yml`, else users
+  hit Gatekeeper / SmartScreen warnings. Land unsigned-but-building first, add signing after.
+
+**4e. Retire pup:**
+- [ ] Remove pup-based targets, the `_PUP_PBS_URLs` table refs, `linux-docker`, and the
+  `carlosperate/pup` fork usage once Briefcase builds are confirmed on all three OSes.
+
 ## Notes / deferred
 
-- `virtual_environment.py` (~1k lines) powers "install packages from the UI" — a real
-  feature; leave intact unless that feature is dropped.
+- `virtual_environment.py` (~1k lines) powers "install packages from the UI" — being
+  **replaced by the uv-driven model in Phase 4** (not dropped; reshaped).
 - Orphaned resource icons / locale strings for removed modes are harmless; sweep later.
 - 100%-coverage mandate is great for the Qt6 port; can relax to "don't regress" afterward
   if it slows iteration.
