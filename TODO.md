@@ -231,12 +231,23 @@ installable package; "add a plugin" is a uv install).
 | Discovery / distribution | **Entry points** (installable packages, `mu.plugins` group) **+ a drop-in dir** for local/dev |
 | Core vs plugin boundary | **Core keeps Python 3 + Debugger** (plain editing/run/REPL/debug); CircuitPython, Pygame Zero, micro:bit, … are plugins |
 | Plugin API | **Stable, versioned API up front** — a documented façade over the editor, not raw internals |
+| Source layout & distribution | Bundled plugins live **in-repo** under `plugins/*` as a **uv workspace** of independently-published PyPI packages; **extract** one to its own repo only once the API is stable *and* it needs to diverge (separate maintainer / release cadence / licence). Community plugins live in their own repos. |
+
+NOTE (packaging rationale): three *independent* axes — **loading** (entry points, fixed),
+**distribution** (a real installable package, optionally on PyPI), and **source location**
+(this repo vs its own). Keeping bundled plugins in a monorepo *now* keeps the volatile-API
+phase **atomic** (change the API + all bundled plugins in one PR) and **dogfoods** the
+community path (same entry-point install), while independent packaging makes "graduate to its
+own repo later" a trivial directory move. Purely-local plugins need no PyPI at all — the
+drop-in dir covers them.
 
 **5a. Define the plugin API + host (no behavior change yet):**
 - [ ] Add a `mu/plugin/` package: a **versioned** public API (`PLUGIN_API_VERSION`) with a
-  `Plugin` base (lifecycle: `load`/`unload`) and a `ModePlugin` that contributes one or more
-  modes. Today's `BaseMode` (`name`/`icon`/`actions()`/`api()`/`workspace_dir()`) is already
-  ~most of the surface — formalize and freeze it.
+  `Plugin` base (lifecycle: `register(host)`/`unregister(host)`) and a `ModePlugin` that
+  contributes one or more modes. Today's `BaseMode`
+  (`name`/`icon`/`actions()`/`api()`/`workspace_dir()`) is already ~most of the surface —
+  formalize, re-export as `mu.plugin.Mode`, and freeze it. See `docs/plugins.md` for the
+  proposed surface.
 - [ ] Pass plugins a **host context/façade** (register a mode, add toolbar actions, panes,
   API stubs, menu items, settings; read the current tab/text) instead of the raw
   `Editor`/`Window`, so plugins don't couple to internal class layout.
@@ -254,6 +265,9 @@ installable package; "add a plugin" is a uv install).
   takes down the editor.
 
 **5c. Convert the specialized modes to bundled plugins (proof of the API):**
+- [ ] Scaffold a `plugins/` **uv workspace** (`[tool.uv.workspace]`): each bundled plugin is
+  `plugins/<name>/` with its own `pyproject.toml` + `mu.plugins` entry point — independently
+  buildable/publishable, sharing the repo lockfile.
 - [ ] Move **CircuitPython** and **Pygame Zero** out of the core set into bundled plugins
   loaded through the same entry-point path (shipped + enabled by default) — they become the
   reference plugins. Keep **Python 3 + Debugger** in core.

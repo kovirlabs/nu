@@ -66,6 +66,7 @@ nav:
   - Architecture:
       - Overview: architecture.md
       - Modes: modes.md
+      - Plugins (proposed): plugins.md
       - Debugger / runner: debugger.md
       - User experience: user-experience.md
       - Tests: tests.md
