@@ -165,7 +165,7 @@ project_name = "nu-editor"
 bundle = "org.kovir"
 # Briefcase needs a concrete version string; keep this in sync with
 # mu/__init__.py, which stays the canonical source the rest of the tooling reads.
-version = "2.0.0b1"
+version = "2.0.0b2"
 url = "https://github.com/kovirlabs/nu"
 # `author` is the installer publisher AND the Windows install-path folder
 # (Program Files\<author>\<formal_name>), so this is nu's maintainer — not the

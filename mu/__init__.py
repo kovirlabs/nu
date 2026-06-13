@@ -8,7 +8,7 @@
 __title__ = "nu-editor"
 __description__ = "A simple Python editor for beginner programmers."
 
-__version__ = "2.0.0b1"
+__version__ = "2.0.0b2"
 
 __license__ = "GPL3"
 __url__ = "https://github.com/kovirlabs/nu"

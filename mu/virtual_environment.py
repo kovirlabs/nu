@@ -1026,11 +1026,22 @@ class VirtualEnvironment(object):
         Create a new virtual environment using `uv`.
 
         ``uv venv --seed`` produces the same ``bin/python`` + ``bin/pip`` +
-        ``pyvenv.cfg`` layout the rest of this module expects (so the
-        pip-based baseline-wheel install downstream is unchanged), but without
-        relying on Mu's own interpreter being able to bootstrap a venv. The
-        base interpreter is pinned with ``--python`` so uv reuses the running
-        interpreter rather than reaching for a downloaded one.
+        ``pyvenv.cfg`` layout the rest of this module expects (so the pip-based
+        baseline-wheel install downstream is unchanged).
+
+        The base interpreter is pinned by **version** (e.g. ``3.12``), *not* by
+        ``sys.executable``. In a packaged (Briefcase) app ``sys.executable`` is
+        the application *launcher stub*, not a real Python, so ``uv`` can't
+        introspect it (``error: Failed to inspect Python interpreter``). Pinning
+        the version lets uv resolve a genuine interpreter for it — a system
+        install, a uv-managed CPython, or a download — which is also the Phase 4
+        model of uv managing the learner's Python independently of Mu's own. The
+        version is the running app's Python, which is what the baseline wheels
+        were built for.
+
+        TODO (Phase 4c): bundle a python-build-standalone CPython and set
+        ``UV_PYTHON_DOWNLOADS=never`` so the very first run works fully offline
+        even with no system Python present.
 
         Run synchronously via ``run_subprocess`` (not the QProcess-based
         ``Uv`` wrapper) because creation happens on the startup worker thread,
@@ -1040,19 +1051,19 @@ class VirtualEnvironment(object):
         logger.info("Virtualenv name: {}".format(self.name))
 
         uv_executable = safe_short_path(find_uv())
-        base_interpreter = safe_short_path(sys.executable)
+        python_version = "%d.%d" % sys.version_info[:2]
         ok, output = self.run_subprocess(
             uv_executable,
             "venv",
             "--python",
-            base_interpreter,
+            python_version,
             "--seed",
             self.path,
         )
         if ok:
             logger.info(
-                "Created virtual environment using %s at %s",
-                base_interpreter,
+                "Created virtual environment for Python %s at %s",
+                python_version,
                 self.path,
             )
         else:
