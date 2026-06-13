@@ -50,6 +50,7 @@ from PyQt6.QtGui import (
 )
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
 from ..i18n import language_code
+from ..virtual_environment import venv
 from mu.interface.themes import Font, DEFAULT_FONT_SIZE
 from mu.interface.themes import DAY_STYLE, NIGHT_STYLE, CONTRAST_STYLE
 
@@ -602,6 +603,13 @@ class PythonProcessPane(QTextEdit):
             encoding = "{}.utf-8".format(language_code)
             env.insert("LC_ALL", encoding)
             env.insert("LANG", encoding)
+        # Activate the user's virtual environment for the child process: point
+        # VIRTUAL_ENV at it and prepend its bin/Scripts dir to PATH. The script
+        # is already launched with the venv interpreter; this makes the rest of
+        # the environment match it (tools resolved by name, VIRTUAL_ENV-aware
+        # libraries). User-supplied envars below still take precedence.
+        for name, value in venv.activation_vars().items():
+            env.insert(name, value)
         # Manage environment variables that may have been set by the user.
         if envars:
             logger.info("Running with environment variables: {}".format(envars))

@@ -662,6 +662,29 @@ class VirtualEnvironment(object):
         logger.debug("Virtual environment set up %s at %s", self.name, self.path)
         self.settings["dirpath"] = self.path
 
+    def activation_vars(self, base_path=None):
+        """Environment-variable overrides that "activate" this venv for a
+        spawned child process.
+
+        Points ``VIRTUAL_ENV`` at this environment and prepends its
+        ``bin``/``Scripts`` directory to ``PATH``, so the child — and anything
+        it shells out to by name (``python``, ``pip``) or any library that keys
+        off ``VIRTUAL_ENV`` — resolves against the user's environment rather
+        than the system one. ``base_path`` defaults to the current process
+        ``PATH``.
+
+        Mu strips any *inherited* ``VIRTUAL_ENV`` at start-up (see ``app.run``,
+        which kept a stray pointer to Mu's own env from breaking modes); this
+        instead sets it explicitly, per child, to the user's env — the one
+        whose interpreter actually runs their code.
+        """
+        if base_path is None:
+            base_path = os.environ.get("PATH", "")
+        path = self._bin_directory
+        if base_path:
+            path = self._bin_directory + os.pathsep + base_path
+        return {"VIRTUAL_ENV": self.path, "PATH": path}
+
     def run_python(self, *args, slots=Process.Slots()):
         """
         Run the referenced Python interpreter with the passed in args

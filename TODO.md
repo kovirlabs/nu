@@ -166,12 +166,22 @@ feel; offline-first via bundled assets; **Briefcase** for native installers.
   downstream is untouched) instead of `python -m virtualenv`. Dropped the `virtualenv`
   runtime dep, added `uv>=0.5`, regenerated `uv.lock`. User-package install/remove/list
   already route through `uv pip` (b267f14).
-- [x] Suite green: **921 passed, 20 skipped**; ruff check + format clean. Added direct
-  tests for the uv wrapper (`find_uv`/`UvNotFound`/`Uv`), which had been entirely uncovered.
-- [ ] **Still to do**: switch the startup flow to "activate" the env (export
-  `VIRTUAL_ENV` + `PATH` into spawned processes, scope the UI to it) — the env is still
-  driven via the old `ensure_and_create` path (now uv-created). Wiring `uv run` to the
-  "Run" action for PEP 723 inline deps lands with 4b.
+- [x] **"Activate" the env for spawned user code**: `VirtualEnvironment.activation_vars()`
+  returns `VIRTUAL_ENV` (→ the user's env) + a `PATH` with the env's `bin`/`Scripts`
+  prepended, and `PythonProcessPane.start_process` now injects them — so the Run path
+  (Python 3, Pygame Zero, debugger, which all share `start_process`) runs with the env
+  *activated*, not merely launched by interpreter path. NB the startup strip of any
+  *inherited* `VIRTUAL_ENV` (`app.run`, the old pgzero fix) stays: we now set the variable
+  explicitly per-child to the **user's** env (the historically-correct target).
+- [x] Suite green: **924 passed, 20 skipped**; ruff check + format clean. Added direct
+  tests for the uv wrapper (`find_uv`/`UvNotFound`/`Uv`, previously entirely uncovered) and
+  for `activation_vars`.
+- [ ] **Still to do in 4a**: activate the REPL/Jupyter-kernel subprocess too
+  (`KernelRunner` in `modes/python3.py` mutates `os.environ` rather than going through
+  `start_process`) and **GUI-validate** the activation across modes — esp. Pygame Zero,
+  whose interaction with `VIRTUAL_ENV` was the original reason for the startup strip.
+  Wiring `uv run` to the "Run" action for PEP 723 inline deps, and scoping the UI to the
+  env (indicator + package list), land with 4b.
 
 **4b. Env UX (progressive disclosure):**
 - [ ] "Environment: <name>" indicator + package list scoped to the active env.

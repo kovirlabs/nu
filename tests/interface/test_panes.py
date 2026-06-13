@@ -1221,8 +1221,14 @@ def test_PythonProcessPane_start_process_user_environment_variables():
         mock.patch("mu.interface.panes.QProcess", mock_process_class),
         mock.patch("mu.interface.panes.sys") as mock_sys,
         mock.patch("mu.interface.panes.QProcessEnvironment", mock_environment_class),
+        mock.patch("mu.interface.panes.venv") as mock_venv,
     ):
         mock_sys.platform = "darwin"
+        # The user's venv is "activated" into the child process environment.
+        mock_venv.activation_vars.return_value = {
+            "VIRTUAL_ENV": "/the/venv",
+            "PATH": "/the/venv/bin:SYS",
+        }
         ppp = mu.interface.panes.PythonProcessPane()
         envars = {"name": "value"}
         ppp.start_process(
@@ -1233,7 +1239,7 @@ def test_PythonProcessPane_start_process_user_environment_variables():
             envars=envars,
         )
     expected_encoding = "{}.utf-8".format(i18n.language_code)
-    assert mock_environment.insert.call_count == 5
+    assert mock_environment.insert.call_count == 7
     assert mock_environment.insert.call_args_list[0][0] == (
         "PYTHONUNBUFFERED",
         "1",
@@ -1250,7 +1256,16 @@ def test_PythonProcessPane_start_process_user_environment_variables():
         "LANG",
         expected_encoding,
     )
-    assert mock_environment.insert.call_args_list[4][0] == ("name", "value")
+    # The venv activation lands before user envars (which keep precedence).
+    assert mock_environment.insert.call_args_list[4][0] == (
+        "VIRTUAL_ENV",
+        "/the/venv",
+    )
+    assert mock_environment.insert.call_args_list[5][0] == (
+        "PATH",
+        "/the/venv/bin:SYS",
+    )
+    assert mock_environment.insert.call_args_list[6][0] == ("name", "value")
 
 
 @pytest.mark.skip(reason="Only used by debugger; now refactored")

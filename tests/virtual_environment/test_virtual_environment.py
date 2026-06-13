@@ -427,6 +427,26 @@ def test_installed_packages(venv):
             assert set(user_result) == set(name for name, _ in user_packages)
 
 
+def test_activation_vars(venv):
+    """activation_vars points VIRTUAL_ENV at the env and prepends its bin
+    directory to the supplied PATH."""
+    result = venv.activation_vars(base_path="/usr/bin")
+    assert result["VIRTUAL_ENV"] == venv.path
+    assert result["PATH"] == venv._bin_directory + os.pathsep + "/usr/bin"
+
+
+def test_activation_vars_defaults_to_process_path(venv):
+    """With no base_path, the current process PATH is extended."""
+    with mock.patch.dict(os.environ, {"PATH": "/sys/path"}):
+        result = venv.activation_vars()
+    assert result["PATH"] == venv._bin_directory + os.pathsep + "/sys/path"
+
+
+def test_activation_vars_empty_base_path(venv):
+    """An empty base PATH yields just the venv bin directory (no separator)."""
+    assert venv.activation_vars(base_path="")["PATH"] == venv._bin_directory
+
+
 #
 # Tests for the `uv` wrapper (find_uv + Uv) underpinning Phase 4a. These never
 # spawn a real `uv`: find_uv is exercised against a patched PATH/environment and
