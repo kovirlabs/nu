@@ -34,13 +34,23 @@ def test_kernel_runner_start_kernel():
     )
     mock_kernel_manager_class = mock.MagicMock()
     mock_kernel_manager_class.return_value = mock_kernel_manager
+    mock_venv = mock.MagicMock()
+    mock_venv.activation_vars.return_value = {
+        "VIRTUAL_ENV": "/the/venv",
+        "PATH": "/the/venv/bin:SYS",
+    }
     with (
         mock.patch("mu.modes.python3.os", mock_os),
         mock.patch("mu.modes.python3.MuKernelManager", mock_kernel_manager_class),
+        mock.patch("mu.modes.python3.venv", mock_venv),
         mock.patch("sys.platform", "darwin"),
     ):
         kr.start_kernel()
     mock_os.chdir.assert_called_once_with("/a/path/to/mu_code")
+    # The user's venv is activated into the kernel's environment...
+    assert mock_os.environ["VIRTUAL_ENV"] == "/the/venv"
+    assert mock_os.environ["PATH"] == "/the/venv/bin:SYS"
+    # ...and user-defined envars still take precedence.
     assert mock_os.environ["name"] == "value"
     assert kr.repl_kernel_manager == mock_kernel_manager
     mock_kernel_manager_class.assert_called_once_with()

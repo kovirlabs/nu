@@ -93,6 +93,12 @@ class KernelRunner(QObject):
         logger.debug("About to start kernel")
         logger.info(sys.path)
         os.chdir(self.cwd)  # Ensure the kernel runs with the expected CWD.
+        # Activate the user's virtual environment for the kernel subprocess
+        # (VIRTUAL_ENV + the env's bin/Scripts prepended to PATH), mirroring
+        # the Run path. User-defined envars below still take precedence. These
+        # are restored to default_envars by stop_kernel.
+        for name, value in venv.activation_vars().items():
+            os.environ[name] = value
         # Add user defined envars to os.environ so they can be picked up by
         # the child process running the kernel.
         logger.info(
