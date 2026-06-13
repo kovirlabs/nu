@@ -7,7 +7,6 @@ programmers, shaped by extensive feedback from teachers and learners. It is
 also a pleasant "no frills" editor for anyone who wants one. Most importantly:
 have fun!
 
-.. image:: https://mu.readthedocs.io/en/latest/_images/logo.png
 
 Why Nu?
 -------
