@@ -33,9 +33,10 @@ even for the `offscreen` platform plugin.)
 
 ### Resolved decision
 
-- [x] **micro:bit mode — DROPPED.** Its tooling (`uflash` 2.0.0, `microfs` 1.4.5)
-  is frozen since 2021 / unmaintained, with no actively-maintained desktop-Python
-  alternative. See 1e below.
+- [x] **micro:bit mode — DROPPED** (for now). Its tooling (`uflash` 2.0.0, `microfs` 1.4.5)
+  is frozen since 2021 / unmaintained. See 1e below. **Reintroduced** the right way — as a
+  modern **plugin** on maintained tooling (`mpremote`/`pyOCD`) — in **Phase 6**, atop the
+  **Phase 5** plugin architecture.
 
 ---
 
@@ -213,6 +214,114 @@ feel; offline-first via bundled assets; **Briefcase** for native installers.
 **4e. Retire pup:**
 - [ ] Remove pup-based targets, the `_PUP_PBS_URLs` table refs, `linux-docker`, and the
   `carlosperate/pup` fork usage once Briefcase builds are confirmed on all three OSes.
+
+## Phase 5 — Plugin architecture (shell the core; modes become plugins)
+
+**Long-term direction.** Shrink Nu to a lean **core** — editor, REPL, plotter, the
+uv-managed environment, and a **plugin host** — and push capability out into **plugins**.
+The specialized modes ship as bundled, default-enabled plugins; the community can write and
+install their own. This is what lets "reintroduce micro:bit" (Phase 6) be a *plugin* rather
+than a fork-wide change, and it leans directly on the Phase 4 uv model (a plugin is an
+installable package; "add a plugin" is a uv install).
+
+### Decisions locked in (maintainer, 2026-06)
+
+| Question | Decision |
+|---|---|
+| Discovery / distribution | **Entry points** (installable packages, `mu.plugins` group) **+ a drop-in dir** for local/dev |
+| Core vs plugin boundary | **Core keeps Python 3 + Debugger** (plain editing/run/REPL/debug); CircuitPython, Pygame Zero, micro:bit, … are plugins |
+| Plugin API | **Stable, versioned API up front** — a documented façade over the editor, not raw internals |
+
+**5a. Define the plugin API + host (no behavior change yet):**
+- [ ] Add a `mu/plugin/` package: a **versioned** public API (`PLUGIN_API_VERSION`) with a
+  `Plugin` base (lifecycle: `load`/`unload`) and a `ModePlugin` that contributes one or more
+  modes. Today's `BaseMode` (`name`/`icon`/`actions()`/`api()`/`workspace_dir()`) is already
+  ~most of the surface — formalize and freeze it.
+- [ ] Pass plugins a **host context/façade** (register a mode, add toolbar actions, panes,
+  API stubs, menu items, settings; read the current tab/text) instead of the raw
+  `Editor`/`Window`, so plugins don't couple to internal class layout.
+- [ ] Plugins declare the API version they target; the host checks compatibility and
+  **warns/skips** on mismatch rather than crashing.
+- [ ] Write `docs/plugins.md` + a "writing a plugin" guide (mirror `docs/modes.md`); ship a
+  minimal **example plugin** as the canonical template.
+
+**5b. Plugin discovery + loading:**
+- [ ] Discover installed plugins via `importlib.metadata` entry points (group `mu.plugins`).
+- [ ] Also scan a **drop-in dir** (`<data>/plugins/`) for local/unpackaged plugins.
+- [ ] Replace the hardcoded mode wiring (`app.py` import list + `modes/__init__.py` +
+  `setup_modes`) with discovery + an enabled/disabled **registry** persisted in settings.
+- [ ] **Error isolation**: a plugin that fails to import/load is logged and skipped — never
+  takes down the editor.
+
+**5c. Convert the specialized modes to bundled plugins (proof of the API):**
+- [ ] Move **CircuitPython** and **Pygame Zero** out of the core set into bundled plugins
+  loaded through the same entry-point path (shipped + enabled by default) — they become the
+  reference plugins. Keep **Python 3 + Debugger** in core.
+- [ ] Relocate each plugin's API stubs (`modes/api/`), wheels, icons, and settings into its
+  own package; keep the suite green (port mode tests → plugin tests).
+
+**5d. Plugin dependencies via uv (ties into Phase 4):**
+- [ ] A plugin declares its PyPI runtime deps; installing the plugin **uv-installs** the
+  package + deps into the user env (or a dedicated plugin env). "Add a plugin" reuses the
+  Phase 4b uv buttons and echoes the real command.
+- [ ] Offline-first: bundled plugins' wheels ship in the installer wheelhouse (`mu/wheels`).
+
+**5e. Plugin management UX:**
+- [ ] A **"Plugins"** admin tab: list bundled / installed / available, enable/disable,
+  install/remove — surfacing the real uv command (transparency, as in 4b).
+- NOTE on **trust**: plugins are arbitrary in-process Python; the trust model is "you chose
+  to install it" (same as pip) — document this plainly. A curated/signed plugin index is a
+  possible *future*, not a v1 gate. In-process plugins can't be meaningfully sandboxed
+  without a far larger redesign — explicitly out of scope.
+
+NOTE: the versioned API is a real commitment — bump it deliberately and keep a small
+compatibility-shim window. micro:bit (Phase 6) is the deliberate **first external-shaped
+plugin**: if it can be a clean plugin, the API is good.
+
+---
+
+## Phase 6 — micro:bit, reintroduced as a modern plugin
+
+micro:bit was **dropped in Phase 1** because its desktop tooling (`uflash`, `microfs`) was
+frozen/unmaintained. Reintroduce it the right way: as the **flagship plugin** on the Phase 5
+system, built entirely on **actively-maintained** tooling. (Maintainer deferred the tech
+choice; recommended stack below.)
+
+### Recommended stack
+
+| Concern | Modern tool (replaces) |
+|---|---|
+| REPL + on-device file transfer | **`mpremote`** — MicroPython's official, maintained tool (replaces vendored `microfs`) |
+| Firmware/program flashing | **`pyOCD`** (CMSIS-DAP/DAPLink), with **DAPLink mass-storage drag-and-drop** as a zero-dependency fallback (replaces vendored `uflash` + its 1.86 MB blob) |
+| Hex format | **Universal Hex** — one image covers micro:bit **V1 + V2** |
+| Board detect | serial VID:PID via the existing `adafruit-board-toolkit` + the mounted `MICROBIT` DAPLink volume |
+
+**6a. Connectivity + flashing foundation:**
+- [ ] REPL + file ops (`ls`/`cp`/`rm`/mount) over serial via **`mpremote`**.
+- [ ] Flash via **`pyOCD`**; fall back to copying a `.hex` onto the mounted `MICROBIT` drive
+  (no drivers needed). Handle **Universal Hex** for V1+V2.
+- [ ] Obtain the micro:bit MicroPython firmware by **pin + fetch / installer-bundle** — do
+  **not** re-vendor a frozen blob (the original mistake that got the mode dropped).
+
+**6b. The plugin (on the Phase 5 API):**
+- [ ] A `nu-microbit` plugin providing the micro:bit **mode**: flash button, REPL,
+  file-transfer pane, workspace dir.
+- [ ] Reintroduce the **file-transfer pane** (the old `FileSystemPane`, removed in Phase 1d)
+  as plugin-owned UI driven by `mpremote`.
+- [ ] Ship **modern `microbit` V2 API stubs** for autocomplete/calltips (audio, microphone,
+  speaker, `log`, radio, …).
+
+**6c. Packaging + distribution:**
+- [ ] Bundle as a default-enabled plugin; include `mpremote`/`pyOCD` wheels for offline
+  installers.
+- [ ] Also publish to PyPI so it doubles as the **worked example** for community authors.
+
+**6d. Stretch / future:**
+- [ ] WebUSB-style direct flashing (pyOCD already gives programmatic flashing; full WebUSB
+  parity is a browser concept — lower priority on the desktop/Qt stack).
+- [ ] V2 extras: filesystem browser, radio tooling, on-device `log` integration in the pane.
+
+---
 
 ## Notes / deferred
 
