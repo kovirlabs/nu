@@ -1,0 +1,1703 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Developer documentation for Nu, a maintained continuation of the Mu editor.">
+      
+      
+      
+        <link rel="canonical" href="https://kovirlabs.github.io/nu/user-experience/">
+      
+      
+        <link rel="prev" href="../debugger/">
+      
+      
+        <link rel="next" href="../tests/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>User experience - Nu developer documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#user-experience" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Nu developer documentation" class="md-header__button md-logo" aria-label="Nu developer documentation" data-md-component="logo">
+      
+  <img src="../icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Nu developer documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              User experience
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/kovirlabs/nu" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kovirlabs/nu
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Nu developer documentation" class="md-nav__button md-logo" aria-label="Nu developer documentation" data-md-component="logo">
+      
+  <img src="../icon.png" alt="logo">
+
+    </a>
+    Nu developer documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/kovirlabs/nu" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kovirlabs/nu
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../first-steps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First steps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../code_of_conduct/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code of Conduct
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debugger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debugger / runner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User experience
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User experience
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-ux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is UX?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ux-and-mu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UX and Mu
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resources-for-ux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resources for UX
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../translations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Translations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design decisions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Design decisions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design/file_reading_and_writing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File reading and writing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design/line-endings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Line endings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design/runtime_virtual_environment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime virtual environment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design/settings-and-sessions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings and sessions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Packaging & release
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Packaging & release
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../packaging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Packaging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release process
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../website/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Authors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../copyright/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Copyright & image credits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../license/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    License
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-ux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is UX?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ux-and-mu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UX and Mu
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resources-for-ux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resources for UX
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="user-experience">User Experience<a class="headerlink" href="#user-experience" title="Permanent link">&para;</a></h1>
+<p>We care deeply about all our users - we want using Mu to be a positive
+experience. In particular we focus on our primary users:</p>
+<ul>
+<li>Beginner programmers,</li>
+<li>Those who support beginner programmers.</li>
+</ul>
+<p>They are at the centre of all Mu related development.</p>
+<p>In order to understand how Mu can best support our users we need to learn about
+their needs, world view and how this reflects upon and influences their
+experience of using Mu (hence the name of this section).</p>
+<p>This includes taking into account cultural differences, special educational
+needs, level of education and other aspects of a person's life that may impact
+on their accessibility to technology.</p>
+<p>These are not problems to be "solved". Rather, this illustrates that Mu is an
+application to be evolved in a way to inclusively address the needs of users.
+As a result, it is important to keep Mu simple so that it is easy to make the
+inevitable changes needed. It's also important to point out that we will make
+mistakes and may need to revise how Mu works. Therefore Mu should be simple
+enough that it is easy to fix.</p>
+<p>It's important to differentiate between design and usability. Plenty of
+software looks beautiful but is difficult to use. With Mu, we aim to put
+usability and a great experience before looks.</p>
+<p>This beautiful yet inconvenient wine glass from
+<a href="https://www.theuncomfortable.com/">the uncomfortable</a> illustrates what I
+mean (used with permission, see <a href="../copyright/">copyright</a>).</p>
+<p><img alt="" src="../beautifully_useless.jpg" /></p>
+<h2 id="what-is-ux">What is UX?<a class="headerlink" href="#what-is-ux" title="Permanent link">&para;</a></h2>
+<p>I have some wonderful friends in the tech world and one in particular,
+<a href="https://twitter.com/pixeldiva">Ann Carrier</a>,  was kind enough to explain
+her work in "user experience" which I'll reproduce below. It beautifully
+captures how I'd like user experience to relate to Mu. I sent her a series of
+questions to help me understand what I needed to do to bring about great UX in
+Mu and Ann gave some great answers.</p>
+<p>What is UX and why is it important / useful?</p>
+<div class="highlight"><pre><span></span><code>UX is short for User Experience. User Experience means the overall
+experience of a person using a product such as a website or computer
+application, especially in terms of how easy or pleasing it is to use.
+
+It&#39;s a really important part of the process of creating a product for
+people to use. It focuses on finding out about the needs of the people who
+will be using the product or service. This can also include how they
+behave, or what they do right now to achieve whatever it is they need to
+do. Once you understand this, you can then go about the process of
+designing something to meet those needs. You can even include users in the
+process through interviews, usability assessments or other workshops. There
+is absolutely nothing better than seeing people use a thing you&#39;ve designed
+to help you figure out all the things you haven&#39;t quite got right!
+</code></pre></div>
+<p>Can you describe the processes and techniques you use as part of your job?</p>
+<div class="highlight"><pre><span></span><code>I start with research. That takes many forms. Whether it&#39;s desk research
+into the latest apps or design patterns, or into the other products in the
+area we want to build a product in, or speaking to the people who are going
+to be using the product, this stage is vital.
+
+Once we have a better idea of the problem we&#39;re trying to solve, and the
+context which surrounds that problem, we can begin to try and solve it.
+There are many ways to do this, but I always find it helpful to draw things
+out. This is especially helpful when you&#39;re working in a team. Having a
+diagram (even if it&#39;s just boxes, lines and dodgy handwriting) that
+everyone can see and suggest changes to helps you know that everyone has a
+shared understanding.
+
+Once we have a shared understanding of the problem, and if there is one,
+the current workflows or processes we can then begin to look ahead to how
+this thing could work, in a magical perfect world that in reality, rarely
+exists. When we have this, we can then look at what steps we are going to
+take to get there. This allows us to have a firm &quot;North Star&quot; in mind, and
+with every step, re-assess not only whether that&#39;s the same direction we
+want to keep going in, but whether or not any solutions will take us closer
+towards, or further away from it. At this stage, we can and should also
+write down the success criteria - in other words, how will we know this is
+working?
+
+Next up is sketching out ideas for how the interface will look. Coming up
+with lots of ideas at this point is really useful. The first idea you have
+is rarely the best, so it&#39;s good to try and get a lot of ideas on to paper
+so that you can figure out the best ones. One technique you can use is to
+try to come up with 6 different solutions to a problem. And if you&#39;re
+struggling to come up with all 6, then try things like solving the problem
+the opposite way to the last idea, or something completely wacky. It&#39;s
+amazing how useful this can be. Sometimes, the right idea is just a tiny
+bit to the side of the absolutely wrong way of doing a thing.
+
+Sketching doesn&#39;t need to be just done by designers, and you certainly
+don&#39;t need to be an artist. As long as you can draw boxes and arrows, and
+your handwriting is neat enough that you can read it afterwards, you&#39;re
+good. The point of a sketch is to communicate an idea. If everyone you&#39;re
+working with can understand what you&#39;re trying to describe with the sketch,
+then that&#39;s all it needs to do.
+
+Once you&#39;ve got more of an idea of what the solution will be, and talked
+that over with anyone who needs to be involved (Product Managers,
+Engineers, Testers, Users) then you can move on to more high fidelity
+designs. These are called mockups and they show what the user interface
+could look like, once it&#39;s been built. Even at this stage, changes - known
+as iterations - can and will still happen, because at every point you&#39;re
+finding out more and more and refining your idea, until you get to the
+point where it&#39;s built and in the hands of your users.
+</code></pre></div>
+<p>How does your UX work fit in with the wider software development project?</p>
+<div class="highlight"><pre><span></span><code>In a good team, UX people are involved the whole way through, from the
+first ideas, through research, exploration of solutions right to the end
+when the product is out in the world. That said, user experience isn&#39;t just
+the responsibility of people with UX in their job titles. Everyone has a
+part to play in delivering a good user experience to the people using the
+product.
+</code></pre></div>
+<p>What advice would you give to people doing UX for the first time?</p>
+<div class="highlight"><pre><span></span><code>If a good carpenter&#39;s rule is &quot;measure twice, cut once&quot; a good rule for UX
+people is &quot;listen more than you talk&quot;. Do your research. Find out about the
+people who will be using the product. What they need. What they want. What
+problems they&#39;ve currently got. How they work. Then keep talking to them as
+you design and build.
+</code></pre></div>
+<p>Is there anything else we should know about UX that's not been covered by your
+answers to the above?</p>
+<div class="highlight"><pre><span></span><code>There&#39;s a great Shaker proverb which says:
+
+    &quot;Don&#39;t make something unless it is both made necessary and useful;
+    but if it is both necessary and useful, don&#39;t hesitate to make it
+    beautiful.&quot;
+
+This gives you a great set of questions to ask of yourself whenever you&#39;re
+approaching a project.
+
+Necessary:
+
+1. what problem are we trying to solve?
+2. is the proposed solution needed (can it be solved a different way?)
+3. will it solve the problem?
+
+Useful (and usable):
+
+4. does the solution solve the problem for the people who need it?
+5. does it work well?
+
+Beautiful:
+
+6. does it look good? (beautiful things make people happy!)
+</code></pre></div>
+<h2 id="ux-and-mu">UX and Mu<a class="headerlink" href="#ux-and-mu" title="Permanent link">&para;</a></h2>
+<p>The "story so far" of Mu and UX starts with Carrie Anne Philbin's (director of
+education at the Raspberry Pi Foundation)
+<a href="https://www.youtube.com/watch?v=_gU7sfTrz4c">keynote address to EuroPython 2015</a>.
+This formed the basis for usability decisions when Mu was first created. While
+running workshops to test a browser based editor for the BBC's micro:bit, we'd
+heard from teachers that while the browser was very convenient in terms of
+setting things up, it was a pain to have to continually download scripts and
+then copy them onto the device and they also wanted easy access to
+MicroPython's REPL. I wondered "how hard can it be?" and set out to create an
+editor based on Carrie Anne's comments about the needs of teachers and learners
+when it came to code editing.</p>
+<p>Halfway into the keynote Carrie Anne talks about a development
+environments for beginner programmers in Python:</p>
+<div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto;">
+    <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/_gU7sfTrz4c?rel=0&amp;start=2002" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+
+<p>She starts by explaining the problems with online editors. Often they require
+users to sign up, thus excluding a large number of children who, for legal
+(child protection) reasons, are not allowed to sign up because they have not
+reached the minimum age (usually around 14 years old) for them to be allowed to
+create their own accounts. Online editors introduce bureaucratic problems too:
+often schools use a "whitelist" system with their firewalls - they block
+everything except those sites on the whitelist. Getting a site onto the
+school's whitelist is often an onerously bureaucratic and slow task.
+Furthermore, assuming the website is available, many online editors expect
+their users to have access to modern hardware and browsers. This is often not
+the case and intractable technical problems result. Finally, a significant
+minority of children still don't have access to the internet, even in
+relatively advanced countries like the UK. For these reasons, a native
+developmnet environment is preferred.</p>
+<p>Carrie Anne then explores two offerings for students to use as native code
+editors.</p>
+<p>PyCharm has an educational edition that is both free and open. However, Carrie
+Anne claims it's not very obvious for either beginner developers or teachers
+how best to use the application. She mentions there are too many opportunities
+for users to fail because of the plethora of buttons and menus. As a teacher,
+she wants something simple and obvious.</p>
+<p>Next, she turns her attention to Idle - the editor that comes bundled with
+Python. It's good that Idle is free, has some syntax highlighting, auto-indents
+Python code, is cross platform, lightweight and simple. However, there are no
+line numbers, error reporting is incomrehensible to beginners and, most
+importantly, there are two separate windows that often get lost or confused
+with each other (one for code, the other for a sort of REPL).</p>
+<p>She suggests we turn out attention to a project called <a href="http://sonic-pi.net/">SonicPi</a>,
+a sort of programmable music tool for the Raspberry Pi, as an example of the
+sorts of features teachers and learners desire in a coding environment. She
+enumerates features that may not immediately seem important for beginner
+programmers and teachers.</p>
+<ul>
+<li>All the panels are in the same window and it's obvious what each one does.</li>
+<li>There's built-in help.</li>
+<li>There are a limited number of obviously named buttons that encompass the core
+  tasks required of the user.</li>
+<li>Zooming in and out is a killer feature for teachers.</li>
+<li>Simple things like line numbers and help for aligning code make a huge
+  difference.</li>
+</ul>
+<p>Finally, she challenges the audience by asking, "Why can't we have something
+like that for Python?" Being of a teacher-ish disposition she sets the
+assembled conference homework to be due in 2016.</p>
+<p>When I started work on Mu I watched the video mentioned above and sketched a
+rough outline of how Mu might work in terms of usability, reproduced below.</p>
+<p><img alt="" src="../mu_sketch.jpg" /></p>
+<p>Notice that while the details are obviously different, the core interface looks
+like Mu (if you're wondering what "micro:ed" refers to - it was Mu's original
+name until the BBC got shirty about it and I changed it to Mu). I simply took
+Carrie Anne's suggestions and made the simplest thing possible.</p>
+<p>Since then I've interviewed many teachers, observed lots of lessons and
+workshops and gathered feedback from users online. Changes to the usability of
+Mu generally follow a pattern:</p>
+<ul>
+<li>We find evidence of several people wanting a change to make their lives
+  easier (we tend to ignore single case exacmples of desired changes).</li>
+<li>We use our issue tracking system built into GitHub as a way to come up with a
+  tangible plan.</li>
+<li>We create the simplest possible solution and ask for feedback.</li>
+<li>Iterate!</li>
+</ul>
+<h2 id="resources-for-ux">Resources for UX<a class="headerlink" href="#resources-for-ux" title="Permanent link">&para;</a></h2>
+<p>In addition to providing answers about UX, Ann very kindly pointed me to
+various resources on the web that helped me to understand the challenges and
+work needed to do actionable UX research.</p>
+<p>Andrew Travers has 
+<a href="https://web.archive.org/web/20210516205833/https://trvrs.co/book/">blogged about</a>
+a free pocket guide he has written on
+<a href="https://s3-eu-west-1.amazonaws.com/interviewing-for-research/InterviewingForResearch.pdf">interviewing for research</a>.
+I found this invaluable reading and helped me to prepare for the observations
+and interviews I conducted as part of the process of developing Mu. This is
+where I would start if I were new to UX research and wanted to get a quick
+overview of things to do.</p>
+<p>The Government Digital Service of the UK Government has an international
+reputation for software development greatness. The foundation of this
+reputation are the documents it releases, for free, that outline the "best
+practices" and expectations about process that GDS have about various aspects
+of the software development process. Their
+<a href="https://www.gov.uk/service-manual/user-research">service manual on user research</a>
+is a comprehensive outline of the various tasks, processes and outcomes needed
+to do effective UX research. I particularly found the section on
+<a href="https://www.gov.uk/service-manual/user-research/analyse-a-research-session">analysis of UX research</a> helpful.</p>
+<p>Finally, it's good to read the suggestions, heuristics and best practice for
+working with users who have additional requirements when using software. Again,
+the UK government's GDS has a number of resources, although I found this blog
+post on the
+<a href="https://accessibility.blog.gov.uk/2016/09/02/dos-and-donts-on-designing-for-accessibility/">Dos and don'ts on designing for accessibility</a>
+(and the associated posters) to be a rich seam of useful advice. All their
+resources in this context can be found on their page about
+<a href="https://www.gov.uk/service-manual/helping-people-to-use-your-service">accessibility and assisted digital</a>.</p>
+<p>Mu has a long way to go on its path to being an inclusive and accessible code
+editor, but what is certain is that UX is a core driver of this journey.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; Nicholas H. Tollervey and the Mu/Nu contributors
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "navigation.tracking", "content.code.copy", "search.suggest", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
