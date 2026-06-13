@@ -19,7 +19,17 @@ description = "A simple Python editor for beginner programmers. A maintained con
 readme = "README.md"
 requires-python = ">=3.11"
 license = "GPL-3.0-or-later"
-authors = [{ name = "Nicholas H.Tollervey", email = "ntoll@ntoll.org" }]
+# nu's maintainer. The original Mu editor was created by Nicholas H. Tollervey
+# and the Mu community — credited as the original creators in AUTHORS.md and via
+# the `Upstream` URL below.
+authors = [
+    { name = "Evan Gress", email = "kovirlabs@kovir.org" },
+    { name = "Kovir Labs", email = "kovirlabs@kovir.org" },
+]
+maintainers = [
+    { name = "Evan Gress", email = "kovirlabs@kovir.org" },
+    { name = "Kovir Labs", email = "kovirlabs@kovir.org" },
+]
 keywords = ["editor", "python", "beginner", "education", "mu"]
 classifiers = [
     "Development Status :: 4 - Beta",

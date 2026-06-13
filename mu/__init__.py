@@ -13,5 +13,7 @@ __version__ = "2.0.0b1"
 __license__ = "GPL3"
 __url__ = "https://github.com/kovirlabs/nu"
 
-__author__ = "Nicholas H.Tollervey"
-__email__ = "ntoll@ntoll.org"
+# nu's maintainer; the original Mu editor was created by Nicholas H. Tollervey
+# and the Mu community (see AUTHORS.md).
+__author__ = "Evan Gress (Kovir Labs)"
+__email__ = "kovirlabs@kovir.org"

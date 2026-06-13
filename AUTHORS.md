@@ -1,3 +1,13 @@
+# nu — Authors
+
+**nu** is maintained by **Evan Gress** / **Kovir Labs** (kovirlabs@kovir.org).
+
+nu is a continuation of the **Mu editor**, created by **Nicholas H. Tollervey**
+and the Mu community (credited in full below). nu stands entirely on their work —
+the original creators keep their credit as the foundation of this project.
+
+---
+
 # Mu's Developers
 
 Mu was created and [mostly written by](https://github.com/mu-editor/mu/graphs/contributors)
