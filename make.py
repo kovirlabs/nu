@@ -11,7 +11,6 @@ RUFF = "ruff"
 # Paths ruff lints and formats. Excludes (mu/contrib, mu/modes/api, docs) are
 # configured in pyproject.toml's [tool.ruff].
 RUFF_TARGETS = [
-    "setup.py",
     "make.py",
     "run.py",
     "mu",
@@ -115,7 +114,7 @@ def coverage():
             PYTEST,
             "-v",
             "--cov-config",
-            "setup.cfg",
+            "pyproject.toml",
             "--cov-report",
             "term-missing",
             "--cov=mu",
@@ -325,9 +324,7 @@ def dist():
     if check() != 0:
         raise RuntimeError("Check failed")
     print("Checks pass; good to package")
-    return subprocess.run(
-        [sys.executable, "setup.py", "sdist", "bdist_wheel"]
-    ).returncode
+    return subprocess.run([sys.executable, "-m", "build"]).returncode
 
 
 @export

@@ -43,7 +43,7 @@ mode_packages = [
     # https://github.com/mu-editor/mu/issues/2423
     ("pgzero", ("pgzero>=1.2.1", "pygame<2.1.3")),
     # The version of ipykernel here should match the one used by qtconsole as
-    # specified in setup.py. Mirrored from setup.py's install_requires.
+    # specified in pyproject.toml. Mirrored from [project].dependencies.
     ("ipykernel", ("ipykernel>=6.29",)),
 ]
 

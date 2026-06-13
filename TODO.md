@@ -12,7 +12,7 @@ smaller codebase (less to port, lower risk). Keep the test suite green at every
 step — it's what makes the bigger changes safe.
 
 Baseline test suite (Python 3.8 + PyQt5, pre-changes): **1120 passed, 20 skipped**.
-Current baseline (Python 3.11 + PyQt6, post Phase 2): **889 passed, 20 skipped**.
+Current baseline (Python 3.11–3.14 + PyQt6): **889 passed, 20 skipped**.
 Run headless with:
 ```
 QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly -q
@@ -26,7 +26,7 @@ even for the `offscreen` platform plugin.)
 |---|---|
 | License | **Stay GPLv3** → keep PyQt5/QScintilla; modernize *within* Qt |
 | GUI framework | **Keep Qt** (kivy/tkinter rejected: would lose QScintilla + qtconsole REPL; full rewrite) |
-| Qt/Python baseline | **Modernize**: PyQt5 → **PyQt6**, require **Python 3.11+**, drop stale pins |
+| Qt/Python baseline | **Modernize**: PyQt5 → **PyQt6**, require **Python 3.11+** (verified through 3.14), drop stale pins |
 | Modes to keep | **Python3, Debugger, Pygame Zero, CircuitPython** |
 | Modes to drop | ESP, Pico, Pyboard, Lego, Snek, **Web** |
 | OS targets | **Linux, Windows, macOS** (all three) |
@@ -95,10 +95,23 @@ even for the `offscreen` platform plugin.)
   (`E721` in `mu/app.py`: `!=` → `is not` for an exception-type comparison).
 - [x] Suite still green: **889 passed, 20 skipped**; `ruff check` + `ruff format --check` clean.
 
-**1d. Packaging consolidation** (do carefully — `make.py` installer scripts and the
-Windows build parse `mu/__init__.py` + `setup.py`):
-- [ ] Move metadata fully into `pyproject.toml` (hatchling backend), retire
-  `setup.py` / `setup.cfg` duplication once installers are confirmed working
+**1d. Packaging consolidation**: ✅ DONE
+- [x] Moved all metadata into `pyproject.toml` with the **hatchling** backend; **deleted
+  `setup.py` + `setup.cfg`**. pytest/coverage config moved to `[tool.pytest.ini_options]` /
+  `[tool.coverage.run]`; lint config already in `[tool.ruff]`. Version stays in
+  `mu/__init__.py` via `[tool.hatch.version]` (still the single source the installer tooling
+  parses). Distribution name preserved as **`mu-editor`** v1.2.2 (package dir stays `mu`).
+- [x] `make dist` / Makefile now run `python -m build` (was `setup.py sdist bdist_wheel`);
+  `--cov-config` repointed to `pyproject.toml`. Build verified: sdist + wheel produced, all
+  data files (resources/locale/wheels/`conf`) included, metadata correct (`mu-editor` 1.2.2,
+  `License-Expression: GPL-3.0-or-later`, entry point `mu-editor = mu.app:run`).
+- [x] **black bumped to `>=24`** and the `click<=8.0.4` clamp dropped (old black crashed on
+  Python 3.12+; ruff is the dev formatter so the bump can't reflow the tree). Enabled
+  **Python 3.14**: stack resolves + suite green on 3.14 (PyQt6 6.11, black 26). Kept
+  `requires-python = ">=3.11"` (don't strand 3.11–3.13 users); classifiers list 3.11–3.14.
+- NOTE: the original "once installers are confirmed working" caveat is **deferred** — the
+  maintainer will re-validate the pup-driven installers (`make win64`/`macos`/`linux` +
+  `build.yml`) separately. Those still reference old Python and are untouched here.
 
 ## Phase 2 — Modern Python + Qt6 (the one "medium" change) ✅ DONE
 
@@ -122,7 +135,14 @@ Windows build parse `mu/__init__.py` + `setup.py`):
 ## Phase 3 — Verify packaging & CI
 
 - [ ] Confirm AppImage / macOS `.app` / Windows installer build on the PyQt6 base
-- [ ] Trim CI (`.github/workflows/`) to supported Python versions; speed it up
+  *(deferred to the maintainer — pup-driven `make win64`/`macos`/`linux` + `build.yml`,
+  which still pin old Python: `build.yml` uses 3.8 and `make.py` references a 3.7.9 PBS URL).*
+- [x] Trimmed CI (`.github/workflows/test.yml`) to the supported range: matrix is now
+  Python **3.11 + 3.14** on ubuntu/macOS/Windows, with 3.12 + 3.13 added on Linux only.
+  **Deleted the two PyQt5-era jobs** (`test-arm` Debian-buster + `test-pios` Raspberry Pi OS
+  stretch/buster) — QEMU-emulated, slow, and incompatible with the PyQt6/Py3.11 stack.
+  Added the Qt6 apt deps (`libxcb-cursor0`/`libegl1`/`libgl1`). `build.yml` left for the
+  installer work above.
 
 ## Notes / deferred
 

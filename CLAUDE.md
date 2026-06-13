@@ -14,17 +14,17 @@ The original maintainers archived the upstream GitHub repo. This fork exists so 
 
 This repo is **"nu"** (`github.com/kovirlabs/nu`), a fork of the **Mu editor** (`github.com/mu-editor/mu`, the `upstream` remote). Mu is a modal Python code editor for beginner programmers, built on PyQt5. Upstream was archived/marked unmaintained; this fork's stated goal is to keep it usable and modernize it as needed.
 
-The actual editor lives in `mu/`. Package metadata still identifies as `mu-editor` v1.2.2 (`mu/__init__.py`, `setup.py`).
+The actual editor lives in `mu/`. The distribution is published as `mu-editor` v1.2.2 (the importable package stays `mu`); the version lives in `mu/__init__.py`.
 
 `main.py` at the repo root is a stray PyCharm sample — not part of the project; ignore it.
 
-Two packaging configs coexist: `setup.py` / `setup.cfg` remain the canonical definition used by the `make` targets and platform installers, while `pyproject.toml` + `uv.lock` provide a **uv-based dev workflow** whose dependencies mirror `setup.py` (see below).
+Since **Phase 1d** (see `TODO.md`) `pyproject.toml` is the **single, canonical packaging definition**, built with the **hatchling** backend (`make dist` → `python -m build`); `setup.py` and `setup.cfg` were retired and their config (deps, pytest, coverage, lint) folded into `pyproject.toml`. `uv.lock` pins the resolved dev environment. The version is read from `mu/__init__.py` via `[tool.hatch.version]`. NOTE: the platform **installers** (pup-driven `make win64`/`macos`/`linux`, and `.github/workflows/build.yml`) have **not** yet been re-validated on this base — they still reference old Python (e.g. `build.yml` pins 3.8) and are deferred installer work.
 
 ## Runtime constraints
 
-As of **Phase 2** (see `TODO.md`) Mu runs on **PyQt6** and **Python 3.11+**. `setup.py` declares `python_requires=">=3.11"` and depends on `PyQt6>=6.6`, `PyQt6-QScintilla>=2.14`, `PyQt6-Charts>=6.6`, with a modern Jupyter stack (`qtconsole>=5.5`, `ipykernel>=6.29`, `jupyter-client>=8.0`). The old frozen Py3.5-era pins are gone. Two pins are intentionally still old: `black>=19.10b0,<22.1.0` + `click<=8.0.4` — the `<22.1.0` ceiling resolves to a build that runs on 3.11. Since Phase 1c, **ruff** (not black) is the dev linter+formatter; `black` is now *only* a runtime dependency powering the in-editor "Tidy" button (`mu/logic.py`), so don't drop it. Bumping its pin is an independent, deferred task.
+As of **Phase 2** (see `TODO.md`) Mu runs on **PyQt6** and **Python 3.11+** (verified green through **3.14**). `pyproject.toml` declares `requires-python = ">=3.11"` and depends on `PyQt6>=6.6`, `PyQt6-QScintilla>=2.14`, `PyQt6-Charts>=6.6`, with a modern Jupyter stack (`qtconsole>=5.5`, `ipykernel>=6.29`, `jupyter-client>=8.0`). The old frozen Py3.5-era pins are gone. Since Phase 1c, **ruff** (not black) is the dev linter+formatter; `black` (`>=24`) is now *only* a runtime dependency powering the in-editor "Tidy" button (`mu/logic.py`), so don't drop it. The old `black<22.1.0` + `click<=8.0.4` pins were removed in Phase 1d — old black crashed on Python 3.12+ (`ast.Str` was removed), and click now comes in transitively via black.
 
-`pyproject.toml` mirrors `setup.py` and pins `requires-python = ">=3.11"`; `uv sync` auto-downloads a managed CPython into `.venv`. The system `python3` here is 3.14; prefer working through the uv venv (or any 3.11+ virtualenv).
+`uv sync` auto-downloads a managed CPython into `.venv` and installs the project editable. The system `python3` here is 3.14; prefer working through the uv venv (or any 3.11+ virtualenv).
 
 ## Common commands
 
@@ -42,13 +42,13 @@ Most workflows go through the `Makefile` (which delegates to `make.py`):
 - `make check` — runs `format` + `lint` + `coverage`; this is the pre-commit gate.
 - `make dist` — build sdist/wheel. `make win32`/`win64`/`macos`/`linux` build platform installers via `pup`.
 
-**Run a single test** (the Makefile has no target for this): `pytest tests/test_logic.py::test_name`. Note that `addopts = --random-order` is set in `setup.cfg`, so test order is randomized by default — add `-p no:randomly` or `--random-order-seed=...` when you need a reproducible order while debugging.
+**Run a single test** (the Makefile has no target for this): `pytest tests/test_logic.py::test_name`. Note that `addopts = --random-order` is set in `pyproject.toml` (`[tool.pytest.ini_options]`), so test order is randomized by default — add `-p no:randomly` or `--random-order-seed=...` when you need a reproducible order while debugging.
 
 **Running tests headlessly** (no display, e.g. via uv): the Qt tests need a platform plugin, so set `QT_QPA_PLATFORM=offscreen`. Full incantation used during development:
 ```
 QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly -q
 ```
-Current green baseline (Python 3.11 + PyQt6): **889 passed, 20 skipped**. (`~/.local/share/mu` must exist or you'll see a harmless at-exit settings-save traceback.) On a headless box without Mesa, Qt6's `offscreen` plugin still needs `libEGL.so.1` — put it on `LD_LIBRARY_PATH` (e.g. `apt-get download libegl1 libglvnd0 && dpkg -x` into a local dir). Lint the project's way with `uv run --no-sync python -m ruff check` and reformat with `... ruff format` (config in `pyproject.toml` `[tool.ruff]`; the gettext `_` builtin is declared there as `builtins = ["_"]`, so no env var dance is needed).
+Current green baseline (Python 3.11–3.14 + PyQt6): **889 passed, 20 skipped**. (`~/.local/share/mu` must exist or you'll see a harmless at-exit settings-save traceback.) On a headless box without Mesa, Qt6's `offscreen` plugin still needs `libEGL.so.1` — put it on `LD_LIBRARY_PATH` (e.g. `apt-get download libegl1 libglvnd0 && dpkg -x` into a local dir). Lint the project's way with `uv run --no-sync python -m ruff check` and reformat with `... ruff format` (config in `pyproject.toml` `[tool.ruff]`; the gettext `_` builtin is declared there as `builtins = ["_"]`, so no env var dance is needed).
 
 Test layout mirrors the source tree: `tests/test_logic.py` tests `mu/logic.py`, `tests/modes/` tests `mu/modes/`, etc.
 

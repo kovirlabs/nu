@@ -58,7 +58,7 @@ test: clean
 
 coverage: clean
 	export LANG=en_GB.utf8
-	pytest -v --random-order --cov-config setup.cfg --cov-report term-missing --cov=mu tests/
+	pytest -v --random-order --cov-config pyproject.toml --cov-report term-missing --cov=mu tests/
 
 tidy:
 	python make.py tidy
@@ -70,7 +70,7 @@ check: clean format lint coverage
 
 dist: check
 	@echo "\nChecks pass, good to package..."
-	python setup.py sdist bdist_wheel
+	python -m build
 
 publish-test: dist
 	@echo "\nPackaging complete... Uploading to PyPi..."

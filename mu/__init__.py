@@ -1,7 +1,9 @@
 # IMPORTANT
 # ---------
-# Keep these metadata assignments simple and single-line. They are parsed
-# somewhat naively by setup.py and the Windows installer generation script.
+# Keep these metadata assignments simple and single-line. __version__ is the
+# single source of truth for the package version (read by hatchling via
+# [tool.hatch.version] in pyproject.toml) and is parsed somewhat naively by the
+# platform installer generation tooling.
 
 __title__ = "mu-editor"
 __description__ = "A simple Python editor for beginner programmers."

@@ -1,18 +1,49 @@
-# uv-based dependency definition for the "nu" fork of the Mu editor.
+# Single source of truth for the "nu" fork of the Mu editor.
 #
-# Dependencies below mirror setup.py's install_requires / extras_require so the
-# uv workflow matches the original project. setup.py / setup.cfg remain the
-# canonical packaging config used by the `make` targets and platform installers;
-# `package = false` (under [tool.uv]) tells uv to manage the dependencies in the
-# virtualenv without trying to build/install the project itself.
+# Since Phase 1d (see TODO.md) this file is the canonical packaging definition:
+# setup.py / setup.cfg were retired and the metadata lives here, built with the
+# hatchling backend. The distribution is still published as `mu-editor` (the
+# importable package remains `mu`); the version is read from mu/__init__.py.
 #
-# Phase 2 of the modernization (see TODO.md): the editor now targets PyQt6 and
-# Python >=3.11. `uv sync` downloads a managed CPython for the venv.
+# The editor targets PyQt6 and Python >=3.11 (verified through 3.14). `uv sync`
+# downloads a managed CPython for the venv and installs the project editable.
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
-name = "nu"
-version = "1.2.2"
+name = "mu-editor"
+dynamic = ["version"]
 description = "A simple Python editor for beginner programmers. A maintained continuation of the Mu editor."
+readme = "README.rst"
 requires-python = ">=3.11"
+license = "GPL-3.0-or-later"
+authors = [{ name = "Nicholas H.Tollervey", email = "ntoll@ntoll.org" }]
+keywords = ["editor", "python", "beginner", "education", "mu"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Win32 (MS Windows)",
+    "Environment :: X11 Applications :: Qt",
+    "Environment :: MacOS X",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: POSIX",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Education",
+    "Topic :: Games/Entertainment",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Debuggers",
+    "Topic :: Software Development :: Embedded Systems",
+    "Topic :: Text Editors",
+    "Topic :: Text Editors :: Integrated Development Environments (IDE)",
+]
 dependencies = [
     # Qt6 stack. PyQt6 ships manylinux/macOS/Windows wheels (incl. aarch64),
     # so the old "skip on ARM" markers from the PyQt5 era are no longer needed.
@@ -28,19 +59,28 @@ dependencies = [
     "adafruit-board-toolkit~=1.1",
     "pyserial~=3.5",
     "nudatus>=0.0.3",
-    # flake8 brings pycodestyle + pyflakes, which are runtime dependencies.
+    # flake8 brings pycodestyle + pyflakes, which are runtime dependencies
+    # (the in-editor code checker in mu/logic.py uses their APIs directly).
     "flake8>=3.8.3",
-    # `black` powers the "Tidy" button (mu/logic.py). Kept at the existing pin
-    # for now (the <22.1.0 ceiling resolves to a build that runs on 3.11);
-    # bumping black + reformatting is part of the separate toolchain phase.
-    "click<=8.0.4",
-    "black>=19.10b0,<22.1.0",
+    # `black` powers the "Tidy" button (mu/logic.py) at runtime. Bumped off the
+    # old <22.1.0 pin (which crashed on Python 3.12+: `ast.Str` removed) now
+    # that ruff — not black — is the dev formatter, so the bump cannot reflow
+    # the source tree. The old `click<=8.0.4` clamp (only needed by old black)
+    # is gone; click now comes in transitively via black.
+    "black>=24",
     "platformdirs>=2.6",
     "semver>=2.8.0",
     "virtualenv>=20.0.0",
     "wheel",
     "pywin32; sys_platform == 'win32'",
 ]
+
+[project.urls]
+Homepage = "https://github.com/kovirlabs/nu"
+Upstream = "https://github.com/mu-editor/mu"
+
+[project.scripts]
+mu-editor = "mu.app:run"
 
 [project.optional-dependencies]
 tests = [
@@ -52,25 +92,46 @@ tests = [
     "coverage",
 ]
 docs = ["sphinx"]
-package = ["wheel", "twine"]
+package = ["build", "wheel", "twine"]
 i18n = ["babel"]
 utils = ["scrapy", "beautifulsoup4", "requests"]
 # ruff is the dev lint+format tool (replaces flake8/pycodestyle/pyflakes/black
-# *as dev tools*; those three stay as runtime deps for the in-editor checker
-# and the "Tidy" button — see install_requires above).
+# *as dev tools*; those stay as runtime deps for the in-editor checker and the
+# "Tidy" button — see [project.dependencies] above).
 lint = ["ruff>=0.6"]
-dev = ["nu[tests]", "nu[docs]", "nu[package]", "nu[i18n]", "nu[lint]"]
+dev = [
+    "mu-editor[tests]",
+    "mu-editor[docs]",
+    "mu-editor[package]",
+    "mu-editor[i18n]",
+    "mu-editor[lint]",
+]
 all = [
-    "nu[tests]",
-    "nu[docs]",
-    "nu[package]",
-    "nu[i18n]",
-    "nu[utils]",
-    "nu[lint]",
+    "mu-editor[tests]",
+    "mu-editor[docs]",
+    "mu-editor[package]",
+    "mu-editor[i18n]",
+    "mu-editor[utils]",
+    "mu-editor[lint]",
 ]
 
-[tool.uv]
-package = false
+[tool.hatch.version]
+# mu/__init__.py stays the single version source (also parsed by the
+# platform installer tooling).
+path = "mu/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["mu"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/mu",
+    "/conf",
+    "/run.py",
+    "/README.rst",
+    "/CHANGES.rst",
+    "/LICENSE",
+]
 
 [tool.ruff]
 # Single source of truth for both the formatter wrap and the E501 lint check.
@@ -92,4 +153,16 @@ ignore = [
     "E203",  # whitespace before ':' — conflicts with the formatter
     "E731",  # assignment of a lambda expression
     "E402",  # module-level import not at top of file
+]
+
+[tool.pytest.ini_options]
+filterwarnings = ["ignore::DeprecationWarning"]
+addopts = "--random-order"
+
+[tool.coverage.run]
+omit = [
+    "mu/contrib/*",
+    "mu/mu_debug.py",
+    "mu/__main__.py",
+    "mu/wheels/*",
 ]
