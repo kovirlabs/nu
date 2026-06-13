@@ -3,7 +3,9 @@ import sys
 from collections import namedtuple
 import functools
 import glob
+import json
 import logging
+import shutil
 import subprocess
 import tempfile
 import time
@@ -404,6 +406,140 @@ class Pip(object):
             #
             name, version = line.split()[:2]
             yield name, version
+
+
+#
+# uv-based environment management (Phase 4, see TODO.md).
+#
+# `uv` is a single self-contained binary that manages its own Python
+# interpreters and creates/maintains virtual environments. Driving the user's
+# environment through `uv` decouples it from Mu's own interpreter (so a packaged
+# Mu no longer needs a venv-capable bundled Python) and lets us surface the env
+# to learners as a real, scriptable thing rather than hidden machinery.
+#
+# This is the foundation the VirtualEnvironment swap sits on; nothing is wired
+# into it yet.
+#
+UV_ENV_VAR = "MU_UV"
+
+
+class UvNotFound(VirtualEnvironmentError):
+    """Raised when no `uv` executable can be located."""
+
+    def __init__(self, message="Could not locate a `uv` executable"):
+        super().__init__(message)
+
+
+def find_uv():
+    """Locate the `uv` executable.
+
+    Packaged builds ship a pinned `uv` binary and point the ``MU_UV``
+    environment variable at it; a dev checkout falls back to whatever ``uv`` is
+    on the ``PATH``. Raise :class:`UvNotFound` if neither is available.
+    """
+    override = os.environ.get(UV_ENV_VAR)
+    if override:
+        if os.path.exists(override):
+            return override
+        raise UvNotFound(
+            "%s points at a non-existent uv executable: %s" % (UV_ENV_VAR, override)
+        )
+    found = shutil.which("uv")
+    if found:
+        return found
+    raise UvNotFound(
+        "Could not find a `uv` executable on PATH or via the %s "
+        "environment variable" % UV_ENV_VAR
+    )
+
+
+class Uv(object):
+    """
+    Proxy for the `uv` package/environment manager.
+
+    Wraps the subset of `uv` Mu needs to manage the user's environment —
+    creating venvs, installing/removing/listing packages, and running scripts
+    (including PEP 723 inline-dependency scripts via ``uv run``). Mirrors the
+    blocking + ``Slots``-async calling style of :class:`Pip`, reusing the
+    QProcess-based :class:`Process` runner so output streams to the GUI.
+
+    When ``venv_path`` is given, package and run operations target that
+    environment explicitly (``--python``) for determinism, rather than relying
+    on an ambient ``VIRTUAL_ENV``.
+    """
+
+    def __init__(self, uv_executable=None, venv_path=None):
+        self.executable = uv_executable or find_uv()
+        self.venv_path = venv_path
+
+    def __str__(self):
+        return "<Uv %s (venv=%s)>" % (self.executable, self.venv_path)
+
+    def _python_args(self):
+        """`--python <venv>` selector, when this Uv targets a specific env."""
+        return ["--python", str(self.venv_path)] if self.venv_path else []
+
+    def run_blocking(self, command, *args, wait_for_s=180.0, **envvars):
+        """Run a uv subcommand synchronously and return its combined output."""
+        process = Process()
+        return process.run_blocking(
+            self.executable,
+            [command, *(str(a) for a in args)],
+            wait_for_s=wait_for_s,
+            **envvars,
+        )
+
+    def run(self, command, *args, slots=Process.Slots(), **envvars):
+        """Run a uv subcommand asynchronously, streaming via `slots`.
+
+        Returns the live :class:`Process` so the caller can keep a reference.
+        """
+        process = Process()
+        if slots.started:
+            process.started.connect(slots.started)
+        if slots.output:
+            process.output.connect(slots.output)
+        if slots.finished:
+            process.finished.connect(slots.finished)
+        process.run(
+            self.executable,
+            [command, *(str(a) for a in args)],
+            **envvars,
+        )
+        return process
+
+    def version(self):
+        """Return the `uv` version string."""
+        return self.run_blocking("--version").strip()
+
+    def create_venv(self, path, python=None):
+        """Create a virtual environment at `path` (optionally a specific
+        Python version or interpreter via `python`)."""
+        args = ["venv"]
+        if python:
+            args += ["--python", str(python)]
+        args.append(str(path))
+        return self.run_blocking(*args)
+
+    def install(self, packages, slots=Process.Slots(), upgrade=False, **kwargs):
+        """`uv pip install` the given package(s) into the target env."""
+        packages = [packages] if isinstance(packages, str) else list(packages)
+        args = ["pip", "install"]
+        if upgrade:
+            args.append("--upgrade")
+        args += [*self._python_args(), *packages]
+        return self.run(*args, slots=slots, **kwargs)
+
+    def uninstall(self, packages, slots=Process.Slots(), **kwargs):
+        """`uv pip uninstall` the given package(s) from the target env."""
+        packages = [packages] if isinstance(packages, str) else list(packages)
+        args = ["pip", "uninstall", *self._python_args(), *packages]
+        return self.run(*args, slots=slots, **kwargs)
+
+    def list_packages(self):
+        """Return ``(name, version)`` tuples for packages in the target env."""
+        output = self.run_blocking("pip", "list", "--format=json", *self._python_args())
+        return [(p["name"], p["version"]) for p in json.loads(output)]
 
 
 class SplashLogHandler(logging.NullHandler):
@@ -962,21 +1098,27 @@ class VirtualEnvironment(object):
         """
         return self.settings.get("baseline_packages")
 
+    def _uv(self):
+        """Return a `Uv` proxy targeting this environment's interpreter.
+
+        Built on demand (like `reset_pip`) so locating the `uv` binary is
+        deferred to actual use and always reflects the current interpreter.
+        """
+        return Uv(venv_path=self.interpreter)
+
     def install_user_packages(self, packages, slots=Process.Slots()):
         """
         Install user defined packages.
         """
         logger.info("Installing user packages: %s", ", ".join(packages))
-        self.reset_pip()
-        self.pip.install(packages, slots=slots, upgrade=True)
+        self._uv().install(packages, slots=slots, upgrade=True)
 
     def remove_user_packages(self, packages, slots=Process.Slots()):
         """
         Remove user defined packages.
         """
         logger.info("Removing user packages: %s", ", ".join(packages))
-        self.reset_pip()
-        self.pip.uninstall(packages, slots=slots)
+        self._uv().uninstall(packages, slots=slots)
 
     def installed_packages(self):
         """
@@ -986,8 +1128,7 @@ class VirtualEnvironment(object):
         logger.info("Discovering installed third party modules in venv.")
         baseline_packages = [name for name, version in self.baseline_packages()]
         user_packages = []
-        self.reset_pip()
-        for package, version in self.pip.installed():
+        for package, version in self._uv().list_packages():
             if package not in baseline_packages:
                 user_packages.append(package)
         logger.info(user_packages)
