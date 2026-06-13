@@ -2,13 +2,14 @@
 """
 Tests for the debug client.
 """
+
 import socket
 import pytest
 import json
 import os.path
 import mu.debugger.client
 from unittest import mock
-from PyQt5.QtCore import pyqtBoundSignal
+from PyQt6.QtCore import pyqtBoundSignal
 
 
 def test_Breakpoint_init():
@@ -60,9 +61,10 @@ def test_CommandBufferHandler_worker_with_connection_refused_error():
     mock_debugger = mock.MagicMock()
     cbh = mu.debugger.client.CommandBufferHandler(mock_debugger)
     cbh.on_fail = mock.MagicMock()
-    with mock.patch(
-        "mu.debugger.client.socket", mock_socket_factory
-    ), mock.patch("mu.debugger.client.time", mock_time):
+    with (
+        mock.patch("mu.debugger.client.socket", mock_socket_factory),
+        mock.patch("mu.debugger.client.time", mock_time),
+    ):
         cbh.worker()
     msg = (
         "Connection timed out. Is your machine slow or busy? Free up some "
@@ -159,9 +161,7 @@ def test_command_buffer_message():
     with mock.patch("mu.debugger.client.socket", mock_socket_factory):
         cbh.worker()
     assert mock_debugger.socket.recv.call_count == 3
-    expected = msg.replace(mu.debugger.client.Debugger.ETX, b"").decode(
-        "utf-8"
-    )
+    expected = msg.replace(mu.debugger.client.Debugger.ETX, b"").decode("utf-8")
     cbh.on_command.emit.assert_called_once_with(expected)
 
 
@@ -184,8 +184,9 @@ def test_Debugger_start():
     mock_thread = mock.MagicMock(return_value=mock_thread_instance)
     mock_handler_instance = mock.MagicMock()
     mock_handler = mock.MagicMock(return_value=mock_handler_instance)
-    with mock.patch("mu.debugger.client.QThread", mock_thread), mock.patch(
-        "mu.debugger.client.CommandBufferHandler", mock_handler
+    with (
+        mock.patch("mu.debugger.client.QThread", mock_thread),
+        mock.patch("mu.debugger.client.CommandBufferHandler", mock_handler),
     ):
         db = mu.debugger.client.Debugger("localhost", 1908)
         db.view = mock.MagicMock()
@@ -196,12 +197,8 @@ def test_Debugger_start():
     )
     mock_thread_instance.start.assert_called_once_with()
     mock_handler.assert_called_once_with(db)
-    mock_handler_instance.moveToThread.assert_called_once_with(
-        mock_thread_instance
-    )
-    mock_handler_instance.on_command.connect.assert_called_once_with(
-        db.on_command
-    )
+    mock_handler_instance.moveToThread.assert_called_once_with(mock_thread_instance)
+    mock_handler_instance.on_command.connect.assert_called_once_with(db.on_command)
     mock_handler_instance.on_fail.connect.assert_called_once_with(db.on_fail)
 
 
@@ -283,9 +280,7 @@ def test_Debugger_output_no_client_connection():
     with mock.patch("mu.debugger.client.logger.debug") as mock_logger:
         db.output("test", foo="bar")
         assert mock_logger.call_count == 2
-        mock_logger.call_args_list[0][0] == (
-            "Debugger client not connected " "to runner."
-        )
+        mock_logger.call_args_list[0][0] == ("Debugger client not connected to runner.")
         mock_logger.call_args_list[1][0] == AttributeError("bang!")
 
 

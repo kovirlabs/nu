@@ -1,15 +1,15 @@
 XARGS := xargs -0 $(shell test $$(uname) = Linux && echo -r)
 GREP_T_FLAG := $(shell test $$(uname) = Linux && echo -T)
-export PYFLAKES_BUILTINS=_
 
 all:
 	@echo "\nThere is no default Makefile target right now. Try:\n"
 	@echo "make run - run the local development version of Mu."
 	@echo "make clean - reset the project and remove auto-generated assets."
-	@echo "make flake8 - run the flake8 code checker."
+	@echo "make lint - run the ruff code checker."
 	@echo "make test - run the test suite."
 	@echo "make coverage - view a report on test coverage."
-	@echo "make tidy - tidy code with the 'black' formatter."
+	@echo "make format - check code formatting with ruff."
+	@echo "make tidy - reformat code with the 'ruff' formatter."
 	@echo "make check - run all the checkers and tests."
 	@echo "make dist - make a dist/wheel for the project."
 	@echo "make publish-test - publish the project to PyPI test instance."
@@ -49,8 +49,8 @@ else
 	python run.py
 endif
 
-flake8:
-	@python make.py flake8
+lint:
+	@python make.py lint
 
 test: clean
 	export LANG=en_GB.utf8
@@ -58,19 +58,19 @@ test: clean
 
 coverage: clean
 	export LANG=en_GB.utf8
-	pytest -v --random-order --cov-config setup.cfg --cov-report term-missing --cov=mu tests/
+	pytest -v --random-order --cov-config pyproject.toml --cov-report term-missing --cov=mu tests/
 
 tidy:
 	python make.py tidy
 
-black:
-	python make.py black
+format:
+	python make.py format
 
-check: clean black flake8 coverage
+check: clean format lint coverage
 
 dist: check
 	@echo "\nChecks pass, good to package..."
-	python setup.py sdist bdist_wheel
+	python -m build
 
 publish-test: dist
 	@echo "\nPackaging complete... Uploading to PyPi..."

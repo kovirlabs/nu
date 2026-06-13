@@ -2,6 +2,7 @@
 """
 Tests for the QProcess-based Process class
 """
+
 import sys
 import platform
 from unittest import mock
@@ -9,13 +10,11 @@ import uuid
 
 import pytest
 
-from PyQt5.QtCore import QTimer, QProcess
+from PyQt6.QtCore import QTimer, QProcess
 
 from mu import virtual_environment
 
-is_arm = platform.machine().startswith("arm") or platform.machine().startswith(
-    "aarch"
-)
+is_arm = platform.machine().startswith("arm") or platform.machine().startswith("aarch")
 
 
 def test_creation_environment():
@@ -113,9 +112,10 @@ def test_run():
     """Ensure that a QProcess is started with the relevant params"""
     command = sys.executable
     args = ["-c", "import sys; print(sys.executable)"]
-    with mock.patch.object(
-        QTimer, "singleShot", _QTimer_singleshot
-    ), mock.patch.object(QProcess, "start") as mocked_start:
+    with (
+        mock.patch.object(QTimer, "singleShot", _QTimer_singleshot),
+        mock.patch.object(QProcess, "start") as mocked_start,
+    ):
         p = virtual_environment.Process()
         p.run(command, args)
 
@@ -130,12 +130,10 @@ def test_wait_shows_failure():
     # - The wait needs to complete
     # - And the result of the wait needs to indicate a failure
     #
-    with mock.patch.object(
-        QProcess, "waitForFinished", return_value=False
-    ), mock.patch.object(
-        QProcess, "exitStatus", return_value=QProcess.CrashExit
-    ), mock.patch.object(
-        QProcess, "start"
+    with (
+        mock.patch.object(QProcess, "waitForFinished", return_value=False),
+        mock.patch.object(QProcess, "exitStatus", return_value=QProcess.CrashExit),
+        mock.patch.object(QProcess, "start"),
     ):
         p = virtual_environment.Process()
         p.run(None, None)

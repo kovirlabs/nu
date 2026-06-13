@@ -1,50 +1,86 @@
-# uv-based dependency definition for the "nu" fork of the Mu editor.
+# Single source of truth for the "nu" fork of the Mu editor.
 #
-# Dependencies below mirror setup.py's install_requires / extras_require so the
-# uv workflow matches the original project. setup.py / setup.cfg remain the
-# canonical packaging config used by the `make` targets and platform installers;
-# `package = false` (under [tool.uv]) tells uv to manage the dependencies in the
-# virtualenv without trying to build/install the project itself.
+# Since Phase 1d (see TODO.md) this file is the canonical packaging definition:
+# setup.py / setup.cfg were retired and the metadata lives here, built with the
+# hatchling backend. The distribution is still published as `mu-editor` (the
+# importable package remains `mu`); the version is read from mu/__init__.py.
 #
-# The original supports Python >=3.5,<3.9. We pin to 3.8 (the newest supported
-# interpreter, with usable wheels for the old pinned Qt stack). `uv sync` will
-# download a managed CPython 3.8 automatically.
+# The editor targets PyQt6 and Python >=3.11 (verified through 3.14). `uv sync`
+# downloads a managed CPython for the venv and installs the project editable.
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
-name = "nu"
-version = "1.2.2"
+name = "mu-editor"
+dynamic = ["version"]
 description = "A simple Python editor for beginner programmers. A maintained continuation of the Mu editor."
-requires-python = ">=3.8,<3.9"
+readme = "README.rst"
+requires-python = ">=3.11"
+license = "GPL-3.0-or-later"
+authors = [{ name = "Nicholas H.Tollervey", email = "ntoll@ntoll.org" }]
+keywords = ["editor", "python", "beginner", "education", "mu"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Win32 (MS Windows)",
+    "Environment :: X11 Applications :: Qt",
+    "Environment :: MacOS X",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: POSIX",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Education",
+    "Topic :: Games/Entertainment",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Debuggers",
+    "Topic :: Software Development :: Embedded Systems",
+    "Topic :: Text Editors",
+    "Topic :: Text Editors :: Integrated Development Environments (IDE)",
+]
 dependencies = [
-    # Qt stack — skipped on ARM, where these come from system packages
-    # (matching the markers in setup.py).
-    'PyQt5-sip<=12.13.0; "arm" not in platform_machine and "aarch" not in platform_machine',
-    'PyQt5==5.13.2; "arm" not in platform_machine and "aarch" not in platform_machine',
-    'QScintilla==2.11.3; "arm" not in platform_machine and "aarch" not in platform_machine',
-    'PyQtChart==5.13.1; "arm" not in platform_machine and "aarch" not in platform_machine',
-    "pyzmq<=26.0.3",
-    "jupyter-client>=4.1,<6.2",
-    "ipykernel>=4.1,<6",
-    "ipython_genutils>=0.2.0",
-    "qtconsole==4.7.7",
+    # Qt6 stack. PyQt6 ships manylinux/macOS/Windows wheels (incl. aarch64),
+    # so the old "skip on ARM" markers from the PyQt5 era are no longer needed.
+    "PyQt6>=6.6",
+    "PyQt6-QScintilla>=2.14",
+    "PyQt6-Charts>=6.6",
+    # Jupyter REPL stack. Modernized from the frozen Py3.5-era pins.
+    "qtconsole>=5.5",
+    "ipykernel>=6.29",
+    "jupyter-client>=8.0",
+    "pyzmq",
     # Serial port discovery / CircuitPython board identification.
     "adafruit-board-toolkit~=1.1",
     "pyserial~=3.5",
     "nudatus>=0.0.3",
-    # flake8 brings pycodestyle + pyflakes, which are runtime dependencies.
+    # flake8 brings pycodestyle + pyflakes, which are runtime dependencies
+    # (the in-editor code checker in mu/logic.py uses their APIs directly).
     "flake8>=3.8.3",
-    "click<=8.0.4",
-    'black>=19.10b0,<22.1.0; python_version > "3.5"',
-    "platformdirs>=2.0.0,<3.0.0",
+    # `black` powers the "Tidy" button (mu/logic.py) at runtime. Bumped off the
+    # old <22.1.0 pin (which crashed on Python 3.12+: `ast.Str` removed) now
+    # that ruff — not black — is the dev formatter, so the bump cannot reflow
+    # the source tree. The old `click<=8.0.4` clamp (only needed by old black)
+    # is gone; click now comes in transitively via black.
+    "black>=24",
+    "platformdirs>=2.6",
     "semver>=2.8.0",
     "virtualenv>=20.0.0",
     "wheel",
-    "requests>=2.0.0",
     "pywin32; sys_platform == 'win32'",
-    # mu/resources imports pkg_resources at runtime. Modern venvs don't ship
-    # setuptools by default, so declare it explicitly. TODO (Phase 2): migrate
-    # pkg_resources -> importlib.resources and drop this.
-    "setuptools",
 ]
+
+[project.urls]
+Homepage = "https://github.com/kovirlabs/nu"
+Upstream = "https://github.com/mu-editor/mu"
+
+[project.scripts]
+mu-editor = "mu.app:run"
 
 [project.optional-dependencies]
 tests = [
@@ -56,11 +92,77 @@ tests = [
     "coverage",
 ]
 docs = ["sphinx"]
-package = ["wheel", "twine"]
+package = ["build", "wheel", "twine"]
 i18n = ["babel"]
 utils = ["scrapy", "beautifulsoup4", "requests"]
-dev = ["nu[tests]", "nu[docs]", "nu[package]", "nu[i18n]"]
-all = ["nu[tests]", "nu[docs]", "nu[package]", "nu[i18n]", "nu[utils]"]
+# ruff is the dev lint+format tool (replaces flake8/pycodestyle/pyflakes/black
+# *as dev tools*; those stay as runtime deps for the in-editor checker and the
+# "Tidy" button — see [project.dependencies] above).
+lint = ["ruff>=0.6"]
+dev = [
+    "mu-editor[tests]",
+    "mu-editor[docs]",
+    "mu-editor[package]",
+    "mu-editor[i18n]",
+    "mu-editor[lint]",
+]
+all = [
+    "mu-editor[tests]",
+    "mu-editor[docs]",
+    "mu-editor[package]",
+    "mu-editor[i18n]",
+    "mu-editor[utils]",
+    "mu-editor[lint]",
+]
 
-[tool.uv]
-package = false
+[tool.hatch.version]
+# mu/__init__.py stays the single version source (also parsed by the
+# platform installer tooling).
+path = "mu/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["mu"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/mu",
+    "/conf",
+    "/run.py",
+    "/README.rst",
+    "/CHANGES.rst",
+    "/LICENSE",
+]
+
+[tool.ruff]
+# Single source of truth for both the formatter wrap and the E501 lint check.
+# (The old split was black -l 79 for formatting + flake8 max-line-length 88.)
+line-length = 88
+target-version = "py311"
+# `_` is gettext's translation function, injected as a builtin at runtime.
+builtins = ["_"]
+extend-exclude = [
+    "mu/contrib",     # vendored third-party code (now empty)
+    "mu/modes/api",   # generated API stubs
+    "docs",
+]
+
+[tool.ruff.lint]
+# pycodestyle (E/W) + pyflakes (F): the rules flake8 ran by default.
+select = ["E", "W", "F"]
+ignore = [
+    "E203",  # whitespace before ':' — conflicts with the formatter
+    "E731",  # assignment of a lambda expression
+    "E402",  # module-level import not at top of file
+]
+
+[tool.pytest.ini_options]
+filterwarnings = ["ignore::DeprecationWarning"]
+addopts = "--random-order"
+
+[tool.coverage.run]
+omit = [
+    "mu/contrib/*",
+    "mu/mu_debug.py",
+    "mu/__main__.py",
+    "mu/wheels/*",
+]

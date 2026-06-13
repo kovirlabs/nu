@@ -15,6 +15,7 @@ and checking that appropriate things are called. We need to be careful
 not to over-describe the parameters as we might, for example, want later
 to add or remove certain flags, or to use different wheels.
 """
+
 import sys
 import os
 import glob
@@ -98,13 +99,13 @@ def patched():
     the expensive parts and pass them into the test so we can detect
     how they've been called
     """
-    with mock.patch.object(
-        subprocess, "run"
-    ) as subprocess_run, mock.patch.object(
-        VE, "run_python"
-    ) as run_python, mock.patch.object(
-        VE, "run_subprocess", return_value=(True, "")
-    ) as run_subprocess:
+    with (
+        mock.patch.object(subprocess, "run") as subprocess_run,
+        mock.patch.object(VE, "run_python") as run_python,
+        mock.patch.object(
+            VE, "run_subprocess", return_value=(True, "")
+        ) as run_subprocess,
+    ):
         yield subprocess_run, run_python, run_subprocess
 
 
@@ -132,9 +133,7 @@ def test_wheels(tmp_path):
     with zipfile.ZipFile(os.path.join(wheels_dirpath, zip_filename), "w") as z:
         z.write(WHEEL_FILEPATH, WHEEL_FILENAME)
 
-    with mock.patch.object(
-        mu.virtual_environment, "wheels_dirpath", wheels_dirpath
-    ):
+    with mock.patch.object(mu.virtual_environment, "wheels_dirpath", wheels_dirpath):
         yield wheels_dirpath
 
 
@@ -248,15 +247,11 @@ def test_create_virtual_environment_name_obj(patched, venv_dirpath):
 
 def test_create_virtual_environment_failure(venv):
     output = uuid.uuid1().hex
-    with mock.patch.object(
-        venv, "run_subprocess", return_value=(False, output)
-    ):
+    with mock.patch.object(venv, "run_subprocess", return_value=(False, output)):
         try:
             venv.create()
         except Exception as exc:
-            assert isinstance(
-                exc, mu.virtual_environment.VirtualEnvironmentCreateError
-            )
+            assert isinstance(exc, mu.virtual_environment.VirtualEnvironmentCreateError)
             assert "nable to create" in exc.message
             assert output in exc.message
 
@@ -270,14 +265,11 @@ def test_download_wheels_if_not_present(venv, test_wheels):
         os.unlink(filepath)
     assert not glob.glob(os.path.join(wheels_dirpath, "*.zip"))
 
-    with mock.patch.object(
-        mu.virtual_environment, "wheels_dirpath", wheels_dirpath
-    ), mock.patch.object(
-        mu.wheels, "download"
-    ) as mock_download, mock.patch.object(
-        venv, "install_from_zipped_wheels"
-    ), mock.patch.object(
-        venv.pip, "version"
+    with (
+        mock.patch.object(mu.virtual_environment, "wheels_dirpath", wheels_dirpath),
+        mock.patch.object(mu.wheels, "download") as mock_download,
+        mock.patch.object(venv, "install_from_zipped_wheels"),
+        mock.patch.object(venv.pip, "version"),
     ):
         try:
             venv.install_baseline_packages()
@@ -299,11 +291,14 @@ def test_download_wheels_failure(venv, test_wheels):
     for filepath in glob.glob(os.path.join(wheels_dirpath, "*.zip")):
         os.unlink(filepath)
     assert not glob.glob(os.path.join(wheels_dirpath, "*.zip"))
-    with mock.patch.object(
-        mu.wheels,
-        "download",
-        side_effect=mu.wheels.WheelsDownloadError(message),
-    ), mock.patch.object(venv.pip, "version"):
+    with (
+        mock.patch.object(
+            mu.wheels,
+            "download",
+            side_effect=mu.wheels.WheelsDownloadError(message),
+        ),
+        mock.patch.object(venv.pip, "version"),
+    ):
         try:
             venv.install_baseline_packages()
         except mu.wheels.WheelsDownloadError as exc:
@@ -320,16 +315,16 @@ def test_base_packages_installed(patched, venv, test_wheels):
     #
     expected_args = [WHEEL_FILENAME]
 
-    with mock.patch.object(venv, "create_venv"), mock.patch.object(
-        venv, "register_baseline_packages"
-    ), mock.patch.object(venv, "install_jupyter_kernel"), mock.patch.object(
-        venv.pip, "version"
-    ), mock.patch.object(
-        PIP, "install"
-    ) as mock_pip_install:
+    with (
+        mock.patch.object(venv, "create_venv"),
+        mock.patch.object(venv, "register_baseline_packages"),
+        mock.patch.object(venv, "install_jupyter_kernel"),
+        mock.patch.object(venv.pip, "version"),
+        mock.patch.object(PIP, "install") as mock_pip_install,
+    ):
         venv.create()
 
-    for (mock_args, mock_kwargs) in mock_pip_install.call_args_list:
+    for mock_args, mock_kwargs in mock_pip_install.call_args_list:
         assert len(mock_args) == 1
         assert os.path.basename(mock_args[0]) in expected_args
         assert mock_kwargs == {"deps": False, "index": False}
@@ -367,9 +362,7 @@ def test_jupyter_kernel_failure(patched, venv):
     """Ensure when the Jupyter kernel fails to install we raise an exception and
     include the output"""
     output = uuid.uuid1().hex
-    with mock.patch.object(
-        venv, "run_subprocess", return_value=(False, output)
-    ):
+    with mock.patch.object(venv, "run_subprocess", return_value=(False, output)):
         try:
             venv.install_jupyter_kernel()
         except VEError as exc:
@@ -423,9 +416,7 @@ def test_installed_packages(patched, venv):
     all_packages = baseline_packages + user_packages
     random.shuffle(all_packages)
 
-    with mock.patch.object(
-        VE, "baseline_packages", return_value=baseline_packages
-    ):
+    with mock.patch.object(VE, "baseline_packages", return_value=baseline_packages):
         with mock.patch.object(PIP, "installed", return_value=all_packages):
             baseline_result, user_result = venv.installed_packages()
             assert set(baseline_result) == set(
@@ -466,8 +457,9 @@ def _ensure_venv(results):
 def test_venv_folder_created(venv):
     """When not existing venv is ensured we create a new one"""
     os.rmdir(venv.path)
-    with mock.patch.object(VE, "create") as mock_create, mock.patch.object(
-        VE, "ensure", _ensure_venv([True, VEError("Failed")])
+    with (
+        mock.patch.object(VE, "create") as mock_create,
+        mock.patch.object(VE, "ensure", _ensure_venv([True, VEError("Failed")])),
     ):
         venv.ensure_and_create()
 
@@ -476,8 +468,9 @@ def test_venv_folder_created(venv):
 
 def test_venv_second_try(venv):
     """If the creation of a venv fails to produce a valid venv, try again"""
-    with mock.patch.object(VE, "create") as mock_create, mock.patch.object(
-        VE, "ensure", _ensure_venv([True, VEError("Failed")])
+    with (
+        mock.patch.object(VE, "create") as mock_create,
+        mock.patch.object(VE, "ensure", _ensure_venv([True, VEError("Failed")])),
     ):
         venv.ensure_and_create()
 
@@ -486,11 +479,12 @@ def test_venv_second_try(venv):
 
 def test_venv_fails_after_three_tries(venv):
     """If the venv fails to ensure after three tries we raise an exception"""
-    with mock.patch.object(VE, "create"), mock.patch.object(
-        VE,
-        "ensure",
-        _ensure_venv(
-            [VEError("Failed"), VEError("Failed"), VEError("Failed")]
+    with (
+        mock.patch.object(VE, "create"),
+        mock.patch.object(
+            VE,
+            "ensure",
+            _ensure_venv([VEError("Failed"), VEError("Failed"), VEError("Failed")]),
         ),
     ):
         with pytest.raises(VEError):
@@ -499,9 +493,11 @@ def test_venv_fails_after_three_tries(venv):
 
 def test_venv_ensure_and_create_splash_handler(venv):
     """Ensure the splash handler is set up when calling ensure_and_create"""
-    with mock.patch.object(VE, "create"), mock.patch.object(
-        VE, "ensure"
-    ), mock.patch.object(mu.virtual_environment, "logger") as mock_logger:
+    with (
+        mock.patch.object(VE, "create"),
+        mock.patch.object(VE, "ensure"),
+        mock.patch.object(mu.virtual_environment, "logger") as mock_logger,
+    ):
         venv.ensure_and_create(object)
 
     all_args = mock_logger.addHandler.call_args
@@ -523,9 +519,10 @@ def test_venv_ensure_and_create_splash_handler(venv):
 def test_venv_folder_already_exists(venv):
     """When all ensure tests pass, we have an existing venv so don't create it"""
     open(os.path.join(venv.path, "pyvenv.cfg"), "w").close()
-    with mock.patch.object(VE, "ensure") as mock_ensure, mock.patch.object(
-        VE, "create"
-    ) as mock_create:
+    with (
+        mock.patch.object(VE, "ensure") as mock_ensure,
+        mock.patch.object(VE, "create") as mock_create,
+    ):
         venv.ensure_and_create()
 
     assert not mock_create.called
@@ -588,9 +585,10 @@ def test_ensure_interpreter_version(venv):
 def test_ensure_key_modules_failure(venv):
     modules = [uuid.uuid1().hex, uuid.uuid1().hex, uuid.uuid1().hex]
     output = uuid.uuid1().hex
-    with mock.patch.object(
-        mu.wheels, "mode_packages", modules
-    ), mock.patch.object(VE, "run_subprocess", return_value=(False, output)):
+    with (
+        mock.patch.object(mu.wheels, "mode_packages", modules),
+        mock.patch.object(VE, "run_subprocess", return_value=(False, output)),
+    ):
         try:
             venv.ensure_key_modules()
         except VEError as exc:
@@ -601,9 +599,10 @@ def test_ensure_key_modules_failure(venv):
 def test_ensure_key_modules_success(venv):
     modules = [uuid.uuid1().hex, uuid.uuid1().hex, uuid.uuid1().hex]
     output = uuid.uuid1().hex
-    with mock.patch.object(
-        mu.wheels, "mode_packages", modules
-    ), mock.patch.object(VE, "run_subprocess", return_value=(True, output)):
+    with (
+        mock.patch.object(mu.wheels, "mode_packages", modules),
+        mock.patch.object(VE, "run_subprocess", return_value=(True, output)),
+    ):
         venv.ensure_key_modules()
 
 
@@ -645,9 +644,7 @@ def test_run_python_nonblocking(venv):
     """
     command = venv.interpreter
     args = (uuid.uuid1().hex, uuid.uuid1().hex)
-    with mock.patch.object(
-        mu.virtual_environment.Process, "run"
-    ) as mocked_run:
+    with mock.patch.object(mu.virtual_environment.Process, "run") as mocked_run:
         venv.run_python(*args, slots=venv.Slots(output=lambda x: x))
     mocked_run.assert_called_with(command, args)
 
@@ -715,9 +712,11 @@ def test_recreate_on_version_change(venv):
     mu_version = uuid.uuid1().hex
     settings = mu.settings.VirtualEnvironmentSettings()
     settings["mu_version"] = mu_version
-    with mock.patch.object(venv, "settings", settings), mock.patch.object(
-        venv, "recreate"
-    ) as mocked_recreate, mock.patch.object(venv, "ensure"):
+    with (
+        mock.patch.object(venv, "settings", settings),
+        mock.patch.object(venv, "recreate") as mocked_recreate,
+        mock.patch.object(venv, "ensure"),
+    ):
         venv.ensure_and_create()
 
     assert mocked_recreate.called
@@ -728,9 +727,11 @@ def test_no_recreate_on_same_version(venv):
     mu_version = mu.__version__
     settings = mu.settings.VirtualEnvironmentSettings()
     settings["mu_version"] = mu_version
-    with mock.patch.object(venv, "settings", settings), mock.patch.object(
-        venv, "recreate"
-    ) as mocked_recreate, mock.patch.object(venv, "ensure"):
+    with (
+        mock.patch.object(venv, "settings", settings),
+        mock.patch.object(venv, "recreate") as mocked_recreate,
+        mock.patch.object(venv, "ensure"),
+    ):
         venv.ensure_and_create()
 
     assert not mocked_recreate.called
@@ -750,18 +751,18 @@ def test_recreate_steps(venv):
     settings = mu.settings.VirtualEnvironmentSettings()
     settings["mu_version"] = mu_version
 
-    with mock.patch.object(venv, "settings", settings), mock.patch.object(
-        venv, "quarantine_venv"
-    ) as mocked_quarantine_venv, mock.patch.object(
-        venv, "installed_packages", return_value=(None, user_packages)
-    ) as mocked_installed_packages, mock.patch.object(
-        venv, "relocate"
-    ) as mocked_relocate, mock.patch.object(
-        venv, "create"
-    ) as mocked_create, mock.patch.object(
-        venv, "install_user_packages"
-    ) as mocked_install_user_packages, mock.patch.object(
-        venv, "ensure"
+    with (
+        mock.patch.object(venv, "settings", settings),
+        mock.patch.object(venv, "quarantine_venv") as mocked_quarantine_venv,
+        mock.patch.object(
+            venv, "installed_packages", return_value=(None, user_packages)
+        ) as mocked_installed_packages,
+        mock.patch.object(venv, "relocate") as mocked_relocate,
+        mock.patch.object(venv, "create") as mocked_create,
+        mock.patch.object(
+            venv, "install_user_packages"
+        ) as mocked_install_user_packages,
+        mock.patch.object(venv, "ensure"),
     ):
         venv.ensure_and_create()
 

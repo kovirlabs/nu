@@ -12,10 +12,13 @@ smaller codebase (less to port, lower risk). Keep the test suite green at every
 step — it's what makes the bigger changes safe.
 
 Baseline test suite (Python 3.8 + PyQt5, pre-changes): **1120 passed, 20 skipped**.
+Current baseline (Python 3.11–3.14 + PyQt6): **889 passed, 20 skipped**.
 Run headless with:
 ```
 QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly -q
 ```
+(On a headless box without Mesa, Qt6 needs `libEGL.so.1` on `LD_LIBRARY_PATH`
+even for the `offscreen` platform plugin.)
 
 ## Decisions locked in
 
@@ -23,7 +26,7 @@ QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly
 |---|---|
 | License | **Stay GPLv3** → keep PyQt5/QScintilla; modernize *within* Qt |
 | GUI framework | **Keep Qt** (kivy/tkinter rejected: would lose QScintilla + qtconsole REPL; full rewrite) |
-| Qt/Python baseline | **Modernize**: PyQt5 → **PyQt6**, require **Python 3.11+**, drop stale pins |
+| Qt/Python baseline | **Modernize**: PyQt5 → **PyQt6**, require **Python 3.11+** (verified through 3.14), drop stale pins |
 | Modes to keep | **Python3, Debugger, Pygame Zero, CircuitPython** |
 | Modes to drop | ESP, Pico, Pyboard, Lego, Snek, **Web** |
 | OS targets | **Linux, Windows, macOS** (all three) |
@@ -76,31 +79,70 @@ QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly
   `microfs.py`** + tests. `mu/contrib/` is now empty (all of uflash/esptool/microfs gone).
   Suite green: **889 passed, 20 skipped**; flake8 clean.
 
-**1c. Toolchain**:
-- [ ] Adopt **ruff** for dev lint+format (replaces flake8 + pycodestyle + pyflakes + black
-  *as dev tools*). NOTE: `pyflakes` + `pycodestyle` stay as **runtime** deps — `logic.py`
-  uses them for the in-editor code checker.
-- [ ] Point `make.py` / `Makefile` lint+tidy targets at ruff
+**1c. Toolchain**: ✅ DONE
+- [x] Adopted **ruff** for dev lint+format (replaces flake8 + pycodestyle + pyflakes + black
+  *as dev tools*). `pyflakes` + `pycodestyle` (via the `flake8` pin) and `black` stay as
+  **runtime** deps — `logic.py` uses pyflakes/pycodestyle for the in-editor code checker and
+  black for the "Tidy" button.
+- [x] Repointed `make.py` / `Makefile` targets at ruff: `make lint` (ruff check),
+  `make format` (ruff format --check), `make tidy` (ruff format), `make check` =
+  clean + format + lint + coverage. Dropped the `PYFLAKES_BUILTINS=_` dance — the gettext
+  `_` builtin is now declared in `[tool.ruff] builtins`.
+- [x] ruff config lives in `pyproject.toml` `[tool.ruff]`; removed the `[flake8]` section
+  from `setup.cfg`. **Unified line-length to 88** for both format and the `E501` lint check
+  (retired the old black-79 / flake8-88 split), so the tree was reformatted to 88 columns
+  (mostly the modern "blank line after module docstring" rule). Fixed one new finding
+  (`E721` in `mu/app.py`: `!=` → `is not` for an exception-type comparison).
+- [x] Suite still green: **889 passed, 20 skipped**; `ruff check` + `ruff format --check` clean.
 
-**1d. Packaging consolidation** (do carefully — `make.py` installer scripts and the
-Windows build parse `mu/__init__.py` + `setup.py`):
-- [ ] Move metadata fully into `pyproject.toml` (hatchling backend), retire
-  `setup.py` / `setup.cfg` duplication once installers are confirmed working
+**1d. Packaging consolidation**: ✅ DONE
+- [x] Moved all metadata into `pyproject.toml` with the **hatchling** backend; **deleted
+  `setup.py` + `setup.cfg`**. pytest/coverage config moved to `[tool.pytest.ini_options]` /
+  `[tool.coverage.run]`; lint config already in `[tool.ruff]`. Version stays in
+  `mu/__init__.py` via `[tool.hatch.version]` (still the single source the installer tooling
+  parses). Distribution name preserved as **`mu-editor`** v1.2.2 (package dir stays `mu`).
+- [x] `make dist` / Makefile now run `python -m build` (was `setup.py sdist bdist_wheel`);
+  `--cov-config` repointed to `pyproject.toml`. Build verified: sdist + wheel produced, all
+  data files (resources/locale/wheels/`conf`) included, metadata correct (`mu-editor` 1.2.2,
+  `License-Expression: GPL-3.0-or-later`, entry point `mu-editor = mu.app:run`).
+- [x] **black bumped to `>=24`** and the `click<=8.0.4` clamp dropped (old black crashed on
+  Python 3.12+; ruff is the dev formatter so the bump can't reflow the tree). Enabled
+  **Python 3.14**: stack resolves + suite green on 3.14 (PyQt6 6.11, black 26). Kept
+  `requires-python = ">=3.11"` (don't strand 3.11–3.13 users); classifiers list 3.11–3.14.
+- NOTE: the original "once installers are confirmed working" caveat is **deferred** — the
+  maintainer will re-validate the pup-driven installers (`make win64`/`macos`/`linux` +
+  `build.yml`) separately. Those still reference old Python and are untouched here.
 
-## Phase 2 — Modern Python + Qt6 (the one "medium" change)
+## Phase 2 — Modern Python + Qt6 (the one "medium" change) ✅ DONE
 
-- [ ] PyQt5 → **PyQt6** (`PyQt6-QScintilla` 2.14, `PyQt6-Charts`); bump
-  `qtconsole`/`jupyter-client`/`ipykernel` to current; **delete the FIXME pins**
-- [ ] Mechanical port: scoped enums (`Qt.AlignBottom` → `Qt.AlignmentFlag.AlignBottom`),
-  `exec_()` → `exec()`, signal/slot signatures, `QAction` moves to `QtGui`, etc.
-- [ ] `requires-python = ">=3.11"`; refresh `.venv` to a modern CPython
-- [ ] Migrate `pkg_resources` → `importlib.resources`; drop the `setuptools` dep
-- [ ] Suite green on the new stack
+- [x] PyQt5 → **PyQt6** (`PyQt6-QScintilla` 2.14, `PyQt6-Charts`); bump
+  `qtconsole`/`jupyter-client`/`ipykernel` to current; **deleted the FIXME pins**
+  (pyzmq/jupyter-client/ipykernel/ipython_genutils). Dropped the old "skip Qt on
+  ARM" markers — PyQt6 ships aarch64 wheels.
+- [x] Mechanical port: scoped enums (`Qt.AlignBottom` → `Qt.AlignmentFlag.AlignBottom`),
+  `exec_()` → `exec()`, `QAction`/`QShortcut` moved to `QtGui`,
+  `QtChart` → `QtCharts`, `QChart.setAxisX/Y` → `addAxis`+`attachAxis`,
+  `QDesktopWidget` → `QApplication.primaryScreen()`, `QFontDatabase` static API,
+  `setToolButtonStyle`/`QIODevice.OpenModeFlag` enums, dropped the Qt5-only
+  `AA_*HighDpi*` attributes (always-on in Qt6).
+- [x] `requires-python = ">=3.11"`; `.venv` refreshed to managed CPython 3.11.
+- [x] Migrated `pkg_resources` → `importlib.resources`; dropped the `setuptools` dep.
+- [x] Suite green on the new stack: **889 passed, 20 skipped**; flake8 + black clean.
+- NOTE: `black`/`click` left at their existing pins (the `<22.1.0` ceiling
+  resolves to a build that runs on 3.11). Bumping black + reformatting the tree
+  belongs to the toolchain work in **Phase 1c**, kept out of this diff.
 
 ## Phase 3 — Verify packaging & CI
 
 - [ ] Confirm AppImage / macOS `.app` / Windows installer build on the PyQt6 base
-- [ ] Trim CI (`.github/workflows/`) to supported Python versions; speed it up
+  *(deferred to the maintainer — pup-driven `make win64`/`macos`/`linux` + `build.yml`,
+  which still pin old Python: `build.yml` uses 3.8 and `make.py` references a 3.7.9 PBS URL).*
+- [x] Trimmed CI (`.github/workflows/test.yml`) to the supported range: matrix is now
+  Python **3.11 + 3.14** on ubuntu/macOS/Windows, with 3.12 + 3.13 added on Linux only.
+  **Deleted the two PyQt5-era jobs** (`test-arm` Debian-buster + `test-pios` Raspberry Pi OS
+  stretch/buster) — QEMU-emulated, slow, and incompatible with the PyQt6/Py3.11 stack.
+  Added the Qt6 apt deps (`libxcb-cursor0`/`libegl1`/`libgl1`). `build.yml` left for the
+  installer work above.
 
 ## Notes / deferred
 

@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 import sys
 import os
 import logging
@@ -26,7 +27,7 @@ from mu.interface.panes import CHARTS
 from ..virtual_environment import venv
 from qtconsole.manager import QtKernelManager
 from qtconsole.client import QtKernelClient
-from PyQt5.QtCore import QObject, QThread, pyqtSignal
+from PyQt6.QtCore import QObject, QThread, pyqtSignal
 
 
 logger = logging.getLogger(__name__)
@@ -42,9 +43,7 @@ class MuKernelManager(QtKernelManager):
         kernel_cmd, kw = self.pre_start_kernel(**kw)
         cmd_interpreter = kernel_cmd[0]
         if cmd_interpreter != venv.interpreter:
-            self.log.debug(
-                "Wrong interpreter selected to run REPL: %s", kernel_cmd
-            )
+            self.log.debug("Wrong interpreter selected to run REPL: %s", kernel_cmd)
             self.log.debug(
                 "Using default interpreter to run REPL instead: %s",
                 cmd_interpreter,
@@ -97,8 +96,7 @@ class KernelRunner(QObject):
         # Add user defined envars to os.environ so they can be picked up by
         # the child process running the kernel.
         logger.info(
-            "Starting iPython kernel with user defined envars: "
-            "{}".format(self.envars)
+            "Starting iPython kernel with user defined envars: {}".format(self.envars)
         )
         for k, v in self.envars.items():
             if k != "PYTHONPATH":
@@ -108,9 +106,7 @@ class KernelRunner(QObject):
         self.repl_kernel_manager.kernel_name = self.kernel_name
         self.repl_kernel_manager.start_kernel()
         self.repl_kernel_client = self.repl_kernel_manager.client()
-        self.kernel_started.emit(
-            self.repl_kernel_manager, self.repl_kernel_client
-        )
+        self.kernel_started.emit(self.repl_kernel_manager, self.repl_kernel_client)
 
     def stop_kernel(self):
         """
@@ -172,9 +168,7 @@ class PythonMode(BaseMode):
                 {
                     "name": "plotter",
                     "display_name": _("Plotter"),
-                    "description": _(
-                        "Plot data from your script or the REPL."
-                    ),
+                    "description": _("Plot data from your script or the REPL."),
                     "handler": self.toggle_plotter,
                     "shortcut": "CTRL+Shift+P",
                 }
@@ -282,11 +276,7 @@ class PythonMode(BaseMode):
         else:
             logger.info("Toggle REPL off.")
             self.editor.show_status_message(
-                _(
-                    "Stopping iPython REPL "
-                    "(this may take a short amount "
-                    "of time)."
-                )
+                _("Stopping iPython REPL (this may take a short amount of time).")
             )
             self.remove_repl()
 

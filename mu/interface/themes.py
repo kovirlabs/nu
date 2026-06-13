@@ -16,9 +16,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 import logging
 
-from PyQt5.QtGui import QColor, QFontDatabase
+from PyQt6.QtGui import QColor, QFontDatabase
 from mu.resources import load_stylesheet, load_font_data
 
 
@@ -49,11 +50,9 @@ class Font:
     editor.
     """
 
-    _DATABASE = None
+    _FONTS_LOADED = False
 
-    def __init__(
-        self, color="#181818", paper="#FEFEF7", bold=False, italic=False
-    ):
+    def __init__(self, color="#181818", paper="#FEFEF7", bold=False, italic=False):
         self.color = color
         self.paper = paper
         self.bold = bold
@@ -62,23 +61,25 @@ class Font:
     @classmethod
     def get_database(cls):
         """
-        Create a font database and load the MU builtin fonts into it.
-        This is a cached classmethod so the font files aren't re-loaded
-        every time a font is referenced
+        Register Mu's builtin fonts with Qt's font database.
+
+        Qt6's QFontDatabase is entirely static (it can no longer be
+        instantiated), so this simply ensures the application fonts are loaded
+        exactly once for the lifetime of the process.
         """
-        if cls._DATABASE is None:
-            cls._DATABASE = QFontDatabase()
+        if not cls._FONTS_LOADED:
             for variant in FONT_VARIANTS:
                 filename = FONT_FILENAME_PATTERN.format(variant=variant)
                 font_data = load_font_data(filename)
-                cls._DATABASE.addApplicationFontFromData(font_data)
-        return cls._DATABASE
+                QFontDatabase.addApplicationFontFromData(font_data)
+            cls._FONTS_LOADED = True
 
     def load(self, size=DEFAULT_FONT_SIZE):
         """
         Load the font from the font database, using the correct size and style
         """
-        return Font.get_database().font(FONT_NAME, self.stylename, size)
+        Font.get_database()
+        return QFontDatabase.font(FONT_NAME, self.stylename, size)
 
     @property
     def stylename(self):
@@ -168,9 +169,7 @@ class DayTheme(Theme):
     ClassSelector = Tag
     PseudoClass = ClassSelector
     UnknownPseudoClass = ClassSelector
-    CSS1Property = (
-        CSS2Property
-    ) = CSS3Property = UnknownProperty = SingleQuotedString
+    CSS1Property = CSS2Property = CSS3Property = UnknownProperty = SingleQuotedString
     Value = Number
     IDSelector = Tag
     Important = UnmatchedBraceBackground
@@ -192,12 +191,8 @@ class NightTheme(Theme):
     UnclosedString = Font(paper="#c93827")
     Comment = CommentBlock = CommentLine = Font(color="#969896", paper="#222")
     Keyword = Font(color="#73a46a", bold=True, paper="#222")
-    SingleQuotedString = DoubleQuotedString = Font(
-        color="#f0c674", paper="#222"
-    )
-    SingleQuotedFString = DoubleQuotedFString = Font(
-        color="#f0c674", paper="#222"
-    )
+    SingleQuotedString = DoubleQuotedString = Font(color="#f0c674", paper="#222")
+    SingleQuotedFString = DoubleQuotedFString = Font(color="#f0c674", paper="#222")
     TripleSingleQuotedString = TripleDoubleQuotedString = Font(
         color="#f0c674", paper="#222"
     )
@@ -240,9 +235,7 @@ class NightTheme(Theme):
     ClassSelector = Tag
     PseudoClass = ClassSelector
     UnknownPseudoClass = ClassSelector
-    CSS1Property = (
-        CSS2Property
-    ) = CSS3Property = UnknownProperty = SingleQuotedString
+    CSS1Property = CSS2Property = CSS3Property = UnknownProperty = SingleQuotedString
     Value = Number
     IDSelector = Tag
     Important = UnmatchedBraceBackground
@@ -264,9 +257,7 @@ class ContrastTheme(Theme):
     Comment = CommentBlock = Font(color="#AAA", paper="black")
     Keyword = Font(color="#EEE", bold=True, paper="black")
     SingleQuotedString = DoubleQuotedString = Font(color="#AAA", paper="black")
-    SingleQuotedFString = DoubleQuotedFString = Font(
-        color="#AAA", paper="black"
-    )
+    SingleQuotedFString = DoubleQuotedFString = Font(color="#AAA", paper="black")
     TripleSingleQuotedString = TripleDoubleQuotedString = Font(
         color="#AAA", paper="black"
     )
@@ -309,9 +300,7 @@ class ContrastTheme(Theme):
     ClassSelector = Tag
     PseudoClass = ClassSelector
     UnknownPseudoClass = ClassSelector
-    CSS1Property = (
-        CSS2Property
-    ) = CSS3Property = UnknownProperty = SingleQuotedString
+    CSS1Property = CSS2Property = CSS3Property = UnknownProperty = SingleQuotedString
     Value = Number
     IDSelector = Tag
     Important = UnmatchedBraceBackground

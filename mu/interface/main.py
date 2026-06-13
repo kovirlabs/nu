@@ -16,14 +16,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 import sys
 import logging
 import os.path
-from PyQt5.QtCore import QSize, Qt, pyqtSignal, QTimer
-from PyQt5.QtWidgets import (
+from PyQt6.QtCore import QSize, Qt, pyqtSignal, QTimer
+from PyQt6.QtWidgets import (
     QToolBar,
-    QAction,
-    QDesktopWidget,
     QWidget,
     QVBoxLayout,
     QTabWidget,
@@ -33,13 +32,18 @@ from PyQt5.QtWidgets import (
     QMainWindow,
     QStatusBar,
     QDockWidget,
-    QShortcut,
     QApplication,
     QTabBar,
     QPushButton,
     QHBoxLayout,
 )
-from PyQt5.QtGui import QKeySequence, QStandardItemModel, QCursor
+from PyQt6.QtGui import (
+    QAction,
+    QShortcut,
+    QKeySequence,
+    QStandardItemModel,
+    QCursor,
+)
 from mu import __version__
 from mu.interface.dialogs import (
     ModeSelector,
@@ -81,8 +85,8 @@ class ButtonBar(QToolBar):
         super().__init__(parent)
         self.setMovable(False)
         self.setIconSize(QSize(64, 64))
-        self.setToolButtonStyle(3)
-        self.setContextMenuPolicy(Qt.PreventContextMenu)
+        self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)
         self.setObjectName("StandardToolBar")
         self.reset()
 
@@ -139,9 +143,7 @@ class ButtonBar(QToolBar):
         self.addAction(
             name="theme",
             display_name=_("Theme"),
-            tool_text=_(
-                "Toggle theme between day, night or " "high contrast."
-            ),
+            tool_text=_("Toggle theme between day, night or high contrast."),
         )
         self.addSeparator()
         self.addAction(
@@ -161,9 +163,7 @@ class ButtonBar(QToolBar):
             tool_text=_("Show help about Mu in a browser."),
         )
         self.addSeparator()
-        self.addAction(
-            name="quit", display_name=_("Quit"), tool_text=_("Quit Mu.")
-        )
+        self.addAction(name="quit", display_name=_("Quit"), tool_text=_("Quit Mu."))
 
     def set_responsive_mode(self, width, height):
         """
@@ -180,9 +180,7 @@ class ButtonBar(QToolBar):
         Creates an action associated with an icon and name and adds it to the
         widget's slots.
         """
-        action = QAction(
-            load_icon(name), display_name, self, toolTip=tool_text
-        )
+        action = QAction(load_icon(name), display_name, self, toolTip=tool_text)
         super().addAction(action)
         self.slots[name] = action
 
@@ -217,11 +215,8 @@ class FileTabs(QTabWidget):
         window = self.nativeParentWidget()
         modified = self.widget(tab_id).isModified()
         if modified:
-            msg = (
-                "There is un-saved work, closing the tab will cause you "
-                "to lose it."
-            )
-            if window.show_confirmation(msg) == QMessageBox.Cancel:
+            msg = "There is un-saved work, closing the tab will cause you to lose it."
+            if window.show_confirmation(msg) == QMessageBox.StandardButton.Cancel:
                 return
         super(FileTabs, self).removeTab(tab_id)
 
@@ -259,9 +254,7 @@ class FileTabs(QTabWidget):
                     )
                 else:
                     # This icon is actually empty
-                    state_lbl.setPixmap(
-                        load_pixmap("document", size=self.iconSize())
-                    )
+                    state_lbl.setPixmap(load_pixmap("document", size=self.iconSize()))
             except RuntimeError:  # pragma: no cover
                 pass
 
@@ -286,7 +279,7 @@ class FileTabs(QTabWidget):
         container.setLayout(box)
         # Add the box, clearly it isn't a button but QTabBar actually takes
         # any QWidget not just buttons
-        self.tabBar().setTabButton(tab_id, QTabBar.RightSide, container)
+        self.tabBar().setTabButton(tab_id, QTabBar.ButtonPosition.RightSide, container)
 
         # Return the index of the new page just like the real addTab
         return tab_id
@@ -341,7 +334,7 @@ class Window(QMainWindow):
         Trap a CTRL-scroll event so the user is able to zoom in and out.
         """
         modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.ControlModifier:
+        if modifiers == Qt.KeyboardModifier.ControlModifier:
             zoom = event.angleDelta().y() > 0
             if zoom:
                 self.zoom_in()
@@ -401,11 +394,7 @@ class Window(QMainWindow):
         behaviour)
         """
         if allow_previous:
-            open_in = (
-                folder
-                if self.previous_folder is None
-                else self.previous_folder
-            )
+            open_in = folder if self.previous_folder is None else self.previous_folder
         else:
             open_in = folder
         path, _ = QFileDialog.getOpenFileName(
@@ -537,7 +526,7 @@ class Window(QMainWindow):
             menu.insertAction(actions[0], copy_to_repl)
             menu.insertSeparator(actions[0])
         # Display menu.
-        menu.exec_(QCursor.pos())
+        menu.exec(QCursor.pos())
 
     def copy_to_repl(self):
         """
@@ -632,13 +621,13 @@ class Window(QMainWindow):
         self.repl_pane = repl_pane
         self.repl = QDockWidget(_("{} REPL").format(name))
         self.repl.setWidget(repl_pane)
-        self.repl.setFeatures(QDockWidget.DockWidgetMovable)
+        self.repl.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
         self.repl.setAllowedAreas(
-            Qt.BottomDockWidgetArea
-            | Qt.LeftDockWidgetArea
-            | Qt.RightDockWidgetArea
+            Qt.DockWidgetArea.BottomDockWidgetArea
+            | Qt.DockWidgetArea.LeftDockWidgetArea
+            | Qt.DockWidgetArea.RightDockWidgetArea
         )
-        area = self._repl_area or Qt.BottomDockWidgetArea
+        area = self._repl_area or Qt.DockWidgetArea.BottomDockWidgetArea
         self.addDockWidget(area, self.repl)
         self.connect_zoom(self.repl_pane)
         self.repl_pane.set_theme(self.theme)
@@ -651,13 +640,13 @@ class Window(QMainWindow):
         self.plotter_pane = plotter_pane
         self.plotter = QDockWidget(_("{} Plotter").format(name))
         self.plotter.setWidget(plotter_pane)
-        self.plotter.setFeatures(QDockWidget.DockWidgetMovable)
+        self.plotter.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
         self.plotter.setAllowedAreas(
-            Qt.BottomDockWidgetArea
-            | Qt.LeftDockWidgetArea
-            | Qt.RightDockWidgetArea
+            Qt.DockWidgetArea.BottomDockWidgetArea
+            | Qt.DockWidgetArea.LeftDockWidgetArea
+            | Qt.DockWidgetArea.RightDockWidgetArea
         )
-        area = self._plotter_area or Qt.BottomDockWidgetArea
+        area = self._plotter_area or Qt.DockWidgetArea.BottomDockWidgetArea
         self.addDockWidget(area, self.plotter)
         self.plotter_pane.set_theme(self.theme)
         self.plotter_pane.setFocus()
@@ -702,17 +691,17 @@ class Window(QMainWindow):
             _("Running: {}").format(os.path.basename(script_name))
         )
         self.runner.setWidget(self.process_runner)
-        self.runner.setFeatures(QDockWidget.DockWidgetMovable)
+        self.runner.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
         self.runner.setAllowedAreas(
-            Qt.BottomDockWidgetArea
-            | Qt.LeftDockWidgetArea
-            | Qt.RightDockWidgetArea
+            Qt.DockWidgetArea.BottomDockWidgetArea
+            | Qt.DockWidgetArea.LeftDockWidgetArea
+            | Qt.DockWidgetArea.RightDockWidgetArea
         )
         self.process_runner.debugger = debugger
         if debugger:
-            area = self._debugger_area or Qt.BottomDockWidgetArea
+            area = self._debugger_area or Qt.DockWidgetArea.BottomDockWidgetArea
         else:
-            area = self._runner_area or Qt.BottomDockWidgetArea
+            area = self._runner_area or Qt.DockWidgetArea.BottomDockWidgetArea
         self.addDockWidget(area, self.runner)
         logger.info(
             "About to start_process: %r, %r, %r, %r, %r, %r, %r, %r",
@@ -750,13 +739,13 @@ class Window(QMainWindow):
         self.debug_inspector.setModel(self.debug_model)
         self.inspector = QDockWidget(_("Debug Inspector"))
         self.inspector.setWidget(self.debug_inspector)
-        self.inspector.setFeatures(QDockWidget.DockWidgetMovable)
+        self.inspector.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
         self.inspector.setAllowedAreas(
-            Qt.BottomDockWidgetArea
-            | Qt.LeftDockWidgetArea
-            | Qt.RightDockWidgetArea
+            Qt.DockWidgetArea.BottomDockWidgetArea
+            | Qt.DockWidgetArea.LeftDockWidgetArea
+            | Qt.DockWidgetArea.RightDockWidgetArea
         )
-        area = self._inspector_area or Qt.RightDockWidgetArea
+        area = self._inspector_area or Qt.DockWidgetArea.RightDockWidgetArea
         self.addDockWidget(area, self.inspector)
         self.connect_zoom(self.debug_inspector)
         # Setup the inspector headers and restore column widths
@@ -797,9 +786,7 @@ class Window(QMainWindow):
                 self.debug_model.appendRow(
                     [
                         list_item,
-                        DebugInspectorItem(
-                            _("(A list of {} items.)").format(len(val))
-                        ),
+                        DebugInspectorItem(_("(A list of {} items.)").format(len(val))),
                     ]
                 )
             elif isinstance(val, dict):
@@ -816,9 +803,7 @@ class Window(QMainWindow):
                 self.debug_model.appendRow(
                     [
                         dict_item,
-                        DebugInspectorItem(
-                            _("(A dict of {} items.)").format(len(val))
-                        ),
+                        DebugInspectorItem(_("(A dict of {} items.)").format(len(val))),
                     ]
                 )
             else:
@@ -967,10 +952,10 @@ class Window(QMainWindow):
         message_box.setWindowTitle("Mu")
         if information:
             message_box.setInformativeText(information)
-        if icon and hasattr(message_box, icon):
-            message_box.setIcon(getattr(message_box, icon))
+        if icon and hasattr(QMessageBox.Icon, icon):
+            message_box.setIcon(getattr(QMessageBox.Icon, icon))
         else:
-            message_box.setIcon(message_box.Warning)
+            message_box.setIcon(QMessageBox.Icon.Warning)
         logger.debug(message)
         logger.debug(information)
         message_box.exec()
@@ -993,12 +978,14 @@ class Window(QMainWindow):
         message_box.setWindowTitle(_("Mu"))
         if information:
             message_box.setInformativeText(information)
-        if icon and hasattr(message_box, icon):
-            message_box.setIcon(getattr(message_box, icon))
+        if icon and hasattr(QMessageBox.Icon, icon):
+            message_box.setIcon(getattr(QMessageBox.Icon, icon))
         else:
-            message_box.setIcon(message_box.Warning)
-        message_box.setStandardButtons(message_box.Cancel | message_box.Ok)
-        message_box.setDefaultButton(message_box.Cancel)
+            message_box.setIcon(QMessageBox.Icon.Warning)
+        message_box.setStandardButtons(
+            QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.Ok
+        )
+        message_box.setDefaultButton(QMessageBox.StandardButton.Cancel)
         logger.debug(message)
         logger.debug(information)
         return message_box.exec()
@@ -1018,7 +1005,7 @@ class Window(QMainWindow):
         """
         Returns an (width, height) tuple with the screen geometry.
         """
-        screen = QDesktopWidget().screenGeometry()
+        screen = QApplication.primaryScreen().geometry()
         return screen.width(), screen.height()
 
     def size_window(self, x=None, y=None, w=None, h=None):
@@ -1083,7 +1070,9 @@ class Window(QMainWindow):
             min(screen_width // 2, MIN_WINDOW_WIDTH),
             min(screen_height // 2, MIN_WINDOW_HEIGHT),
         )
-        self.setTabPosition(Qt.AllDockWidgetAreas, QTabWidget.North)
+        self.setTabPosition(
+            Qt.DockWidgetArea.AllDockWidgetAreas, QTabWidget.TabPosition.North
+        )
         self.widget = QWidget()
         widget_layout = QVBoxLayout()
         self.widget.setLayout(widget_layout)
@@ -1228,9 +1217,7 @@ class Window(QMainWindow):
                     counter += 1
             return counter
         else:
-            found = self.current_tab.findFirst(
-                target_text, False, True, False, True
-            )
+            found = self.current_tab.findFirst(target_text, False, True, False, True)
             if found:
                 self.current_tab.replace(replace)
                 return 1
@@ -1325,9 +1312,7 @@ class StatusBar(QStatusBar):
         Connect the mouse press event and keyboard shortcut for the log widget
         to the referenced handler function.
         """
-        self.logs_label.shortcut = QShortcut(
-            QKeySequence(shortcut), self.parent()
-        )
+        self.logs_label.shortcut = QShortcut(QKeySequence(shortcut), self.parent())
         self.logs_label.shortcut.activated.connect(handler)
         self.logs_label.mousePressEvent = handler
 
@@ -1336,9 +1321,7 @@ class StatusBar(QStatusBar):
         Connect the mouse press event and keyboard shortcut for the mode widget
         to the referenced handler function.
         """
-        self.mode_label.shortcut = QShortcut(
-            QKeySequence(shortcut), self.parent()
-        )
+        self.mode_label.shortcut = QShortcut(QKeySequence(shortcut), self.parent())
         self.mode_label.shortcut.activated.connect(handler)
         self.mode_label.mousePressEvent = handler
 

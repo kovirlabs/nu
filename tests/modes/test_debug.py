@@ -2,6 +2,7 @@
 """
 Tests for the debug mode.
 """
+
 from mu.debugger.config import DEBUGGER_PORT
 from mu.modes.debugger import DebugMode
 from mu.virtual_environment import venv
@@ -53,9 +54,10 @@ def test_debug_start():
     mock_debugger = mock.MagicMock()
     mock_debugger_class = mock.MagicMock(return_value=mock_debugger)
     dm = DebugMode(editor, view)
-    with mock.patch(
-        "mu.modes.debugger.Debugger", mock_debugger_class
-    ), mock.patch.object(venv, "interpreter", "interpreter"):
+    with (
+        mock.patch("mu.modes.debugger.Debugger", mock_debugger_class),
+        mock.patch.object(venv, "interpreter", "interpreter"),
+    ):
         dm.start()
     editor.save_tab_to_file.assert_called_once_with(view.current_tab)
     view.add_python3_runner.assert_called_once_with(
@@ -155,9 +157,7 @@ def test_debug_finished():
     # Buttons are set to the right state.
     assert view.button_bar.slots["stop"].setEnabled.call_count == 0
     view.button_bar.slots["run"].setEnabled.assert_called_once_with(False)
-    view.button_bar.slots["step-over"].setEnabled.assert_called_once_with(
-        False
-    )
+    view.button_bar.slots["step-over"].setEnabled.assert_called_once_with(False)
     view.button_bar.slots["step-in"].setEnabled.assert_called_once_with(False)
     view.button_bar.slots["step-out"].setEnabled.assert_called_once_with(False)
     # Tabs are set to the right state.
@@ -249,9 +249,7 @@ def test_debug_toggle_breakpoint_off():
     mock_debugger.breakpoints.assert_called_once_with(mock_tab.path)
     mock_tab.markersAtLine.assert_called_once_with(0)
     mock_debugger.disable_breakpoint.assert_called_once_with(mock_breakpoint)
-    mock_tab.markerDelete.assert_called_once_with(
-        0, mock_tab.BREAKPOINT_MARKER
-    )
+    mock_tab.markerDelete.assert_called_once_with(0, mock_tab.BREAKPOINT_MARKER)
 
 
 def test_debug_toggle_breakpoint_off_no_breakpoint():
@@ -274,9 +272,7 @@ def test_debug_toggle_breakpoint_off_no_breakpoint():
     mock_debugger.breakpoints.assert_called_once_with(mock_tab.path)
     mock_tab.markersAtLine.assert_called_once_with(0)
     assert mock_debugger.disable_breakpoint.call_count == 0
-    mock_tab.markerDelete.assert_called_once_with(
-        0, mock_tab.BREAKPOINT_MARKER
-    )
+    mock_tab.markerDelete.assert_called_once_with(0, mock_tab.BREAKPOINT_MARKER)
 
 
 def test_debug_toggle_breakpoint_on_new():
@@ -404,9 +400,7 @@ def test_debug_on_bootstrap_remove_invalid_breaks():
     mock_tab.breakpoint_handles = set([0])
     mock_tab.markerLine.return_value = 1
     view.widgets = [mock_tab]
-    with mock.patch(
-        "mu.modes.debugger.is_breakpoint_line", return_value=False
-    ):
+    with mock.patch("mu.modes.debugger.is_breakpoint_line", return_value=False):
         dm.debug_on_bootstrap()
     assert 0 not in mock_tab.breakpoint_handles
     mock_tab.markerDelete.assert_called_once_with(1, -1)

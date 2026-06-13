@@ -3,13 +3,12 @@
 Retrieves the GH releases stats from their open API and counts the total number
 of asset downloads, which so far are all Mu installers.
 """
+
 import datetime
 import requests
 
 
-releases = requests.get(
-    "https://api.github.com/repos/mu-editor/mu/releases"
-).json()
+releases = requests.get("https://api.github.com/repos/mu-editor/mu/releases").json()
 
 # First generate date objects for each release and add them to their dictionary
 for release in releases:
@@ -39,9 +38,7 @@ for i, release in enumerate(reversed_releases):
     if "assets" in release and len(release["assets"]):
         for asset in release["assets"]:
             total_downloads += asset["download_count"]
-            print(
-                "\tDownloads: {:6}".format(asset["download_count"]), end="\t"
-            )
+            print("\tDownloads: {:6}".format(asset["download_count"]), end="\t")
             print("Asset: {}".format(asset["name"]))
     else:
         print("\tNo assets on this release")

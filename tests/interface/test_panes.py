@@ -2,8 +2,9 @@
 """
 Tests for the user interface elements of Mu.
 """
-from PyQt5.QtCore import Qt, QEvent, QPointF
-from PyQt5.QtGui import QTextCursor, QMouseEvent
+
+from PyQt6.QtCore import Qt, QEvent, QPointF
+from PyQt6.QtGui import QTextCursor, QMouseEvent
 from collections import deque
 from unittest import mock
 
@@ -118,9 +119,11 @@ def test_MicroPythonREPLPane_context_menu():
     mock_platform.system.return_value = "WinNT"
     mock_qmenu = mock.MagicMock()
     mock_qmenu_class = mock.MagicMock(return_value=mock_qmenu)
-    with mock.patch("mu.interface.panes.platform", mock_platform), mock.patch(
-        "mu.interface.panes.QMenu", mock_qmenu_class
-    ), mock.patch("mu.interface.panes.QCursor"):
+    with (
+        mock.patch("mu.interface.panes.platform", mock_platform),
+        mock.patch("mu.interface.panes.QMenu", mock_qmenu_class),
+        mock.patch("mu.interface.panes.QCursor"),
+    ):
         rp = mu.interface.panes.MicroPythonREPLPane(mock_repl_connection)
         rp.context_menu()
     assert mock_qmenu.addAction.call_count == 2
@@ -132,7 +135,7 @@ def test_MicroPythonREPLPane_context_menu():
     assert paste_action[0] == "Paste"
     assert paste_action[1] == rp.paste
     assert paste_action[2].toString() == "Ctrl+Shift+V"
-    assert mock_qmenu.exec_.call_count == 1
+    assert mock_qmenu.exec.call_count == 1
 
 
 def test_MicroPythonREPLPane_context_menu_darwin():
@@ -145,9 +148,11 @@ def test_MicroPythonREPLPane_context_menu_darwin():
     mock_platform.system.return_value = "Darwin"
     mock_qmenu = mock.MagicMock()
     mock_qmenu_class = mock.MagicMock(return_value=mock_qmenu)
-    with mock.patch("mu.interface.panes.platform", mock_platform), mock.patch(
-        "mu.interface.panes.QMenu", mock_qmenu_class
-    ), mock.patch("mu.interface.panes.QCursor"):
+    with (
+        mock.patch("mu.interface.panes.platform", mock_platform),
+        mock.patch("mu.interface.panes.QMenu", mock_qmenu_class),
+        mock.patch("mu.interface.panes.QCursor"),
+    ):
         rp = mu.interface.panes.MicroPythonREPLPane(mock_repl_connection)
         rp.context_menu()
     assert mock_qmenu.addAction.call_count == 2
@@ -159,7 +164,7 @@ def test_MicroPythonREPLPane_context_menu_darwin():
     assert paste_action[0] == "Paste"
     assert paste_action[1] == rp.paste
     assert paste_action[2].toString() == "Ctrl+V"
-    assert mock_qmenu.exec_.call_count == 1
+    assert mock_qmenu.exec.call_count == 1
 
 
 def test_MicroPythonREPLPane_keyPressEvent():
@@ -169,9 +174,9 @@ def test_MicroPythonREPLPane_keyPressEvent():
     mock_repl_connection = mock.MagicMock()
     rp = mu.interface.panes.MicroPythonREPLPane(mock_repl_connection)
     data = mock.MagicMock
-    data.key = mock.MagicMock(return_value=Qt.Key_A)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_A)
     data.text = mock.MagicMock(return_value="a")
-    data.modifiers = mock.MagicMock(return_value=Qt.NoModifier)
+    data.modifiers = mock.MagicMock(return_value=Qt.KeyboardModifier.NoModifier)
     rp.keyPressEvent(data)
     mock_repl_connection.write.assert_called_once_with(bytes("a", "utf-8"))
 
@@ -183,9 +188,9 @@ def test_MicroPythonREPLPane_keyPressEvent_backspace():
     mock_repl_connection = mock.MagicMock()
     rp = mu.interface.panes.MicroPythonREPLPane(mock_repl_connection)
     data = mock.MagicMock
-    data.key = mock.MagicMock(return_value=Qt.Key_Backspace)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_Backspace)
     data.text = mock.MagicMock(return_value="")
-    data.modifiers = mock.MagicMock(return_value=Qt.NoModifier)
+    data.modifiers = mock.MagicMock(return_value=Qt.KeyboardModifier.NoModifier)
     rp.keyPressEvent(data)
     mock_repl_connection.write.assert_called_once_with(
         mu.interface.panes.VT100_BACKSPACE
@@ -199,9 +204,9 @@ def test_MicroPythonREPLPane_keyPressEvent_return():
     mock_serial = mock.MagicMock()
     rp = mu.interface.panes.MicroPythonREPLPane(mock_serial)
     data = mock.MagicMock
-    data.key = mock.MagicMock(return_value=Qt.Key_Return)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_Return)
     data.text = mock.MagicMock(return_value="")
-    data.modifiers = mock.MagicMock(return_value=Qt.NoModifier)
+    data.modifiers = mock.MagicMock(return_value=Qt.KeyboardModifier.NoModifier)
     rp.keyPressEvent(data)
     mock_serial.write.assert_called_once_with(mu.interface.panes.VT100_RETURN)
 
@@ -213,13 +218,11 @@ def test_MicroPythonREPLPane_keyPressEvent_delete():
     mock_repl_connection = mock.MagicMock()
     rp = mu.interface.panes.MicroPythonREPLPane(mock_repl_connection)
     data = mock.MagicMock
-    data.key = mock.MagicMock(return_value=Qt.Key_Delete)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_Delete)
     data.text = mock.MagicMock(return_value="")
-    data.modifiers = mock.MagicMock(return_value=Qt.NoModifier)
+    data.modifiers = mock.MagicMock(return_value=Qt.KeyboardModifier.NoModifier)
     rp.keyPressEvent(data)
-    mock_repl_connection.write.assert_called_once_with(
-        mu.interface.panes.VT100_DELETE
-    )
+    mock_repl_connection.write.assert_called_once_with(mu.interface.panes.VT100_DELETE)
 
 
 def test_MicroPythonREPLPane_keyPressEvent_up():
@@ -229,13 +232,11 @@ def test_MicroPythonREPLPane_keyPressEvent_up():
     mock_repl_connection = mock.MagicMock()
     rp = mu.interface.panes.MicroPythonREPLPane(mock_repl_connection)
     data = mock.MagicMock
-    data.key = mock.MagicMock(return_value=Qt.Key_Up)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_Up)
     data.text = mock.MagicMock(return_value="")
-    data.modifiers = mock.MagicMock(return_value=Qt.NoModifier)
+    data.modifiers = mock.MagicMock(return_value=Qt.KeyboardModifier.NoModifier)
     rp.keyPressEvent(data)
-    mock_repl_connection.write.assert_called_once_with(
-        mu.interface.panes.VT100_UP
-    )
+    mock_repl_connection.write.assert_called_once_with(mu.interface.panes.VT100_UP)
 
 
 def test_MicroPythonREPLPane_keyPressEvent_down():
@@ -245,13 +246,11 @@ def test_MicroPythonREPLPane_keyPressEvent_down():
     mock_repl_connection = mock.MagicMock()
     rp = mu.interface.panes.MicroPythonREPLPane(mock_repl_connection)
     data = mock.MagicMock
-    data.key = mock.MagicMock(return_value=Qt.Key_Down)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_Down)
     data.text = mock.MagicMock(return_value="")
-    data.modifiers = mock.MagicMock(return_value=Qt.NoModifier)
+    data.modifiers = mock.MagicMock(return_value=Qt.KeyboardModifier.NoModifier)
     rp.keyPressEvent(data)
-    mock_repl_connection.write.assert_called_once_with(
-        mu.interface.panes.VT100_DOWN
-    )
+    mock_repl_connection.write.assert_called_once_with(mu.interface.panes.VT100_DOWN)
 
 
 def test_MicroPythonREPLPane_keyPressEvent_right():
@@ -261,13 +260,11 @@ def test_MicroPythonREPLPane_keyPressEvent_right():
     mock_repl_connection = mock.MagicMock()
     rp = mu.interface.panes.MicroPythonREPLPane(mock_repl_connection)
     data = mock.MagicMock
-    data.key = mock.MagicMock(return_value=Qt.Key_Right)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_Right)
     data.text = mock.MagicMock(return_value="")
-    data.modifiers = mock.MagicMock(return_value=Qt.NoModifier)
+    data.modifiers = mock.MagicMock(return_value=Qt.KeyboardModifier.NoModifier)
     rp.keyPressEvent(data)
-    mock_repl_connection.write.assert_called_once_with(
-        mu.interface.panes.VT100_RIGHT
-    )
+    mock_repl_connection.write.assert_called_once_with(mu.interface.panes.VT100_RIGHT)
 
 
 def test_MicroPythonREPLPane_keyPressEvent_left():
@@ -277,16 +274,14 @@ def test_MicroPythonREPLPane_keyPressEvent_left():
     mock_repl_connection = mock.MagicMock()
     rp = mu.interface.panes.MicroPythonREPLPane(mock_repl_connection)
     data = mock.MagicMock
-    data.key = mock.MagicMock(return_value=Qt.Key_Left)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_Left)
     data.text = mock.MagicMock(return_value="")
-    data.modifiers = mock.MagicMock(return_value=Qt.NoModifier)
+    data.modifiers = mock.MagicMock(return_value=Qt.KeyboardModifier.NoModifier)
     rp.keyPressEvent(data)
-    mock_repl_connection.write.assert_called_once_with(
-        mu.interface.panes.VT100_LEFT
-    )
+    mock_repl_connection.write.assert_called_once_with(mu.interface.panes.VT100_LEFT)
 
 
-@mock.patch("PyQt5.QtWidgets.QTextEdit.keyPressEvent")
+@mock.patch("PyQt6.QtWidgets.QTextEdit.keyPressEvent")
 def test_MicroPythonREPLPane_keyPressEvent_shift_right(
     mock_super_keyPressEvent,
 ):
@@ -297,14 +292,14 @@ def test_MicroPythonREPLPane_keyPressEvent_shift_right(
     mock_serial = mock.MagicMock()
     rp = mu.interface.panes.MicroPythonREPLPane(mock_serial)
     data = mock.MagicMock
-    data.key = mock.MagicMock(return_value=Qt.Key_Right)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_Right)
     data.text = mock.MagicMock(return_value="")
-    data.modifiers = mock.MagicMock(return_value=Qt.ShiftModifier)
+    data.modifiers = mock.MagicMock(return_value=Qt.KeyboardModifier.ShiftModifier)
     rp.keyPressEvent(data)
     mock_super_keyPressEvent.assert_called_once_with(data)
 
 
-@mock.patch("PyQt5.QtWidgets.QTextEdit.keyPressEvent")
+@mock.patch("PyQt6.QtWidgets.QTextEdit.keyPressEvent")
 def test_MicroPythonREPLPane_keyPressEvent_shift_left(
     mock_super_keyPressEvent,
 ):
@@ -315,15 +310,15 @@ def test_MicroPythonREPLPane_keyPressEvent_shift_left(
     mock_serial = mock.MagicMock()
     rp = mu.interface.panes.MicroPythonREPLPane(mock_serial)
     data = mock.MagicMock
-    data.key = mock.MagicMock(return_value=Qt.Key_Left)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_Left)
     data.text = mock.MagicMock(return_value="")
-    data.modifiers = mock.MagicMock(return_value=Qt.ShiftModifier)
+    data.modifiers = mock.MagicMock(return_value=Qt.KeyboardModifier.ShiftModifier)
     rp.keyPressEvent(data)
     mock_super_keyPressEvent.assert_called_once_with(data)
 
 
-@mock.patch("PyQt5.QtGui.QTextCursor.hasSelection", return_value=True)
-@mock.patch("PyQt5.QtGui.QTextCursor.selectionEnd", return_value=30)
+@mock.patch("PyQt6.QtGui.QTextCursor.hasSelection", return_value=True)
+@mock.patch("PyQt6.QtGui.QTextCursor.selectionEnd", return_value=30)
 def test_MicroPythonREPLPane_keyPressEvent_right_with_selection(a, b):
     """
     Ensure right arrows in the REPL when a selection is made, moves the cursor
@@ -332,16 +327,16 @@ def test_MicroPythonREPLPane_keyPressEvent_right_with_selection(a, b):
     mock_serial = mock.MagicMock()
     rp = mu.interface.panes.MicroPythonREPLPane(mock_serial)
     data = mock.MagicMock
-    data.key = mock.MagicMock(return_value=Qt.Key_Right)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_Right)
     data.text = mock.MagicMock(return_value="")
-    data.modifiers = mock.MagicMock(return_value=Qt.NoModifier)
+    data.modifiers = mock.MagicMock(return_value=Qt.KeyboardModifier.NoModifier)
     rp.move_cursor_to = mock.MagicMock()
     rp.keyPressEvent(data)
     rp.move_cursor_to.assert_called_once_with(30)
 
 
-@mock.patch("PyQt5.QtGui.QTextCursor.hasSelection", return_value=True)
-@mock.patch("PyQt5.QtGui.QTextCursor.selectionStart", return_value=20)
+@mock.patch("PyQt6.QtGui.QTextCursor.hasSelection", return_value=True)
+@mock.patch("PyQt6.QtGui.QTextCursor.selectionStart", return_value=20)
 def test_MicroPythonREPLPane_keyPressEvent_left_with_selection(a, b):
     """
     Ensure left arrows in the REPL when a selection is made, moves the cursor
@@ -350,9 +345,9 @@ def test_MicroPythonREPLPane_keyPressEvent_left_with_selection(a, b):
     mock_serial = mock.MagicMock()
     rp = mu.interface.panes.MicroPythonREPLPane(mock_serial)
     data = mock.MagicMock
-    data.key = mock.MagicMock(return_value=Qt.Key_Left)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_Left)
     data.text = mock.MagicMock(return_value="")
-    data.modifiers = mock.MagicMock(return_value=Qt.NoModifier)
+    data.modifiers = mock.MagicMock(return_value=Qt.KeyboardModifier.NoModifier)
     rp.move_cursor_to = mock.MagicMock()
     rp.keyPressEvent(data)
     rp.move_cursor_to.assert_called_once_with(20)
@@ -365,13 +360,11 @@ def test_MicroPythonREPLPane_keyPressEvent_home():
     mock_repl_connection = mock.MagicMock()
     rp = mu.interface.panes.MicroPythonREPLPane(mock_repl_connection)
     data = mock.MagicMock
-    data.key = mock.MagicMock(return_value=Qt.Key_Home)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_Home)
     data.text = mock.MagicMock(return_value="")
-    data.modifiers = mock.MagicMock(return_value=Qt.NoModifier)
+    data.modifiers = mock.MagicMock(return_value=Qt.KeyboardModifier.NoModifier)
     rp.keyPressEvent(data)
-    mock_repl_connection.write.assert_called_once_with(
-        mu.interface.panes.VT100_HOME
-    )
+    mock_repl_connection.write.assert_called_once_with(mu.interface.panes.VT100_HOME)
 
 
 def test_MicroPythonREPLPane_keyPressEvent_end():
@@ -381,13 +374,11 @@ def test_MicroPythonREPLPane_keyPressEvent_end():
     mock_repl_connection = mock.MagicMock()
     rp = mu.interface.panes.MicroPythonREPLPane(mock_repl_connection)
     data = mock.MagicMock
-    data.key = mock.MagicMock(return_value=Qt.Key_End)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_End)
     data.text = mock.MagicMock(return_value="")
-    data.modifiers = mock.MagicMock(return_value=Qt.NoModifier)
+    data.modifiers = mock.MagicMock(return_value=Qt.KeyboardModifier.NoModifier)
     rp.keyPressEvent(data)
-    mock_repl_connection.write.assert_called_once_with(
-        mu.interface.panes.VT100_END
-    )
+    mock_repl_connection.write.assert_called_once_with(mu.interface.panes.VT100_END)
 
 
 def test_MicroPythonREPLPane_keyPressEvent_CTRL_C_Darwin():
@@ -398,9 +389,11 @@ def test_MicroPythonREPLPane_keyPressEvent_CTRL_C_Darwin():
     rp = mu.interface.panes.MicroPythonREPLPane(mock_repl_connection)
     rp.copy = mock.MagicMock()
     data = mock.MagicMock()
-    data.key = mock.MagicMock(return_value=Qt.Key_C)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_C)
     data.text = mock.MagicMock(return_value="")
-    data.modifiers.return_value = Qt.ControlModifier | Qt.ShiftModifier
+    data.modifiers.return_value = (
+        Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier
+    )
     rp.keyPressEvent(data)
     rp.copy.assert_called_once_with()
 
@@ -413,9 +406,11 @@ def test_MicroPythonREPLPane_keyPressEvent_CTRL_V_Darwin():
     rp = mu.interface.panes.MicroPythonREPLPane(mock_repl_connection)
     rp.paste = mock.MagicMock()
     data = mock.MagicMock()
-    data.key = mock.MagicMock(return_value=Qt.Key_V)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_V)
     data.text = mock.MagicMock(return_value="")
-    data.modifiers.return_value = Qt.ControlModifier | Qt.ShiftModifier
+    data.modifiers.return_value = (
+        Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier
+    )
     rp.keyPressEvent(data)
     rp.paste.assert_called_once_with()
 
@@ -428,11 +423,11 @@ def test_MicroPythonREPLPane_keyPressEvent_ctrl_passthrough_darwin():
     mock_repl_connection = mock.MagicMock()
     rp = mu.interface.panes.MicroPythonREPLPane(mock_repl_connection)
     data = mock.MagicMock
-    data.key = mock.MagicMock(return_value=Qt.Key_M)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_M)
     data.text = mock.MagicMock(return_value="a")
-    data.modifiers = mock.MagicMock(return_value=Qt.MetaModifier)
+    data.modifiers = mock.MagicMock(return_value=Qt.KeyboardModifier.MetaModifier)
     rp.keyPressEvent(data)
-    expected = 1 + Qt.Key_M - Qt.Key_A
+    expected = 1 + Qt.Key.Key_M - Qt.Key.Key_A
     mock_repl_connection.write.assert_called_once_with(bytes([expected]))
 
 
@@ -444,11 +439,11 @@ def test_MicroPythonREPLPane_keyPressEvent_ctrl_passthrough_windows():
     mock_repl_connection = mock.MagicMock()
     rp = mu.interface.panes.MicroPythonREPLPane(mock_repl_connection)
     data = mock.MagicMock
-    data.key = mock.MagicMock(return_value=Qt.Key_M)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_M)
     data.text = mock.MagicMock(return_value="a")
-    data.modifiers = mock.MagicMock(return_value=Qt.ControlModifier)
+    data.modifiers = mock.MagicMock(return_value=Qt.KeyboardModifier.ControlModifier)
     rp.keyPressEvent(data)
-    expected = 1 + Qt.Key_M - Qt.Key_A
+    expected = 1 + Qt.Key.Key_M - Qt.Key.Key_A
     mock_repl_connection.write.assert_called_once_with(bytes([expected]))
 
 
@@ -522,7 +517,7 @@ def test_MicroPythonREPLPane_delete_selection():
     # Make a selection, with the cursor placed
     # at selectionStart and anchor at selectionEnd
     tc.setPosition(rp.textCursor().position() + 10)
-    tc.setPosition(0, mode=QTextCursor.KeepAnchor)
+    tc.setPosition(0, mode=QTextCursor.MoveMode.KeepAnchor)
     rp.setTextCursor(tc)
     # Try to delete the selection
     assert rp.delete_selection()
@@ -555,9 +550,9 @@ def test_MicroPythonREPLPane_mouseReleasedEvent_no_selection():
     mouseEvent = QMouseEvent(
         QEvent.MouseButtonRelease,
         QPointF(0.0, 0.0),
-        Qt.LeftButton,
-        Qt.LeftButton,
-        Qt.NoModifier,
+        Qt.MouseButton.LeftButton,
+        Qt.MouseButton.LeftButton,
+        Qt.KeyboardModifier.NoModifier,
     )
     rp.mouseReleaseEvent(mouseEvent)
     # Check set_devicecursor_to_qtcursor was called
@@ -577,15 +572,15 @@ def test_MicroPythonREPLPane_mouseReleasedEvent_with_selection():
     # Make a selection, with the cursor placed
     # at selectionStart and anchor at selectionEnd
     tc.setPosition(rp.textCursor().position() + 10)
-    tc.setPosition(0, mode=QTextCursor.KeepAnchor)
+    tc.setPosition(0, mode=QTextCursor.MoveMode.KeepAnchor)
     rp.setTextCursor(tc)
     # Simulate mouse click
     mouseEvent = QMouseEvent(
         QEvent.MouseButtonRelease,
         QPointF(0.0, 0.0),
-        Qt.LeftButton,
-        Qt.LeftButton,
-        Qt.NoModifier,
+        Qt.MouseButton.LeftButton,
+        Qt.MouseButton.LeftButton,
+        Qt.KeyboardModifier.NoModifier,
     )
     rp.mouseReleaseEvent(mouseEvent)
     # Check set_devicecursor_to_qtcursor was not called
@@ -601,9 +596,7 @@ def test_MicroPythonREPLPane_process_tty_data():
     """
     mock_repl_connection = mock.MagicMock()
     mock_tc = mock.MagicMock()
-    mock_tc.movePosition = mock.MagicMock(
-        side_effect=[True, False, True, True]
-    )
+    mock_tc.movePosition = mock.MagicMock(side_effect=[True, False, True, True])
     mock_tc.deleteChar = mock.MagicMock(return_value=None)
     rp = mu.interface.panes.MicroPythonREPLPane(mock_repl_connection)
     rp.textCursor = mock.MagicMock(return_value=mock_tc)
@@ -613,8 +606,10 @@ def test_MicroPythonREPLPane_process_tty_data():
     bs = bytes([8, 13, 10, 65])  # \b, \r, \n, 'A'
     rp.process_tty_data(bs)
     assert mock_tc.movePosition.call_count == 2
-    assert mock_tc.movePosition.call_args_list[0][0][0] == QTextCursor.Left
-    assert mock_tc.movePosition.call_args_list[1][0][0] == QTextCursor.End
+    assert (
+        mock_tc.movePosition.call_args_list[0][0][0] == QTextCursor.MoveOperation.Left
+    )
+    assert mock_tc.movePosition.call_args_list[1][0][0] == QTextCursor.MoveOperation.End
     assert rp.insertPlainText.call_count == 2
     assert rp.insertPlainText.call_args_list[0][0][0] == chr(10)
     assert rp.insertPlainText.call_args_list[1][0][0] == chr(65)
@@ -650,7 +645,7 @@ def test_MicroPythonREPLPane_process_tty_data_handle_malformed_unicode():
 
     # Test that malformed input are correctly replaced with the standard
     # unicode replacement character (�, U+FFFD)
-    assert rp.insertPlainText.call_args_list[4][0][0] == u"\uFFFD"
+    assert rp.insertPlainText.call_args_list[4][0][0] == "\ufffd"
 
 
 def test_MicroPythonREPLPane_process_tty_data_VT100():
@@ -694,16 +689,23 @@ def test_MicroPythonREPLPane_process_tty_data_VT100():
     )
     rp.process_tty_data(bs)
     assert mock_tc.movePosition.call_count == 5
-    assert mock_tc.movePosition.call_args_list[0][0][0] == QTextCursor.Up
-    assert mock_tc.movePosition.call_args_list[1][0][0] == QTextCursor.Down
-    assert mock_tc.movePosition.call_args_list[2][0][0] == QTextCursor.Right
-    assert mock_tc.movePosition.call_args_list[3][0][0] == QTextCursor.Left
+    assert mock_tc.movePosition.call_args_list[0][0][0] == QTextCursor.MoveOperation.Up
     assert (
-        mock_tc.movePosition.call_args_list[4][0][0] == QTextCursor.EndOfLine
+        mock_tc.movePosition.call_args_list[1][0][0] == QTextCursor.MoveOperation.Down
+    )
+    assert (
+        mock_tc.movePosition.call_args_list[2][0][0] == QTextCursor.MoveOperation.Right
+    )
+    assert (
+        mock_tc.movePosition.call_args_list[3][0][0] == QTextCursor.MoveOperation.Left
+    )
+    assert (
+        mock_tc.movePosition.call_args_list[4][0][0]
+        == QTextCursor.MoveOperation.EndOfLine
     )
     assert (
         mock_tc.movePosition.call_args_list[4][1]["mode"]
-        == QTextCursor.KeepAnchor
+        == QTextCursor.MoveMode.KeepAnchor
     )
     mock_tc.removeSelectedText.assert_called_once_with()
     rp.ensureCursorVisible.assert_called_once_with()
@@ -798,7 +800,7 @@ def test_MicroPythonREPLPane_process_tty_data_vt100_cursor_left():
     rp.device_cursor_position = 5
     rp.set_qtcursor_to_devicecursor()
     # Receive: move 4 times left
-    bs = b"\x1B[4D"
+    bs = b"\x1b[4D"
     rp.process_tty_data(bs)
     assert rp.toPlainText() == "Hello world!"
     assert rp.textCursor().position() == 1
@@ -816,7 +818,7 @@ def test_MicroPythonREPLPane_process_tty_data_vt100_cursor_right():
     rp.device_cursor_position = 5
     rp.set_qtcursor_to_devicecursor()
     # Receive: move 4 times right
-    bs = b"\x1B[4C"
+    bs = b"\x1b[4C"
     rp.process_tty_data(bs)
     assert rp.toPlainText() == "Hello world!"
     assert rp.textCursor().position() == 9
@@ -835,9 +837,9 @@ def test_MicroPythonREPLPane_process_tty_data_partial_reception():
     rp.device_cursor_position = 5
     rp.set_qtcursor_to_devicecursor()
     # Receive: \x1B
-    bs = b"\x1B"
+    bs = b"\x1b"
     rp.process_tty_data(bs)
-    assert rp.unprocessed_input == "\x1B"
+    assert rp.unprocessed_input == "\x1b"
     assert rp.toPlainText() == "Hello world!"
     assert rp.textCursor().position() == 5
     assert rp.device_cursor_position == 5
@@ -862,9 +864,9 @@ def test_MicroPythonREPLPane_process_tty_data_partial_reception2():
     rp.device_cursor_position = 5
     rp.set_qtcursor_to_devicecursor()
     # Receive: \x1B
-    bs = b"\x1B["
+    bs = b"\x1b["
     rp.process_tty_data(bs)
-    assert rp.unprocessed_input == "\x1B["
+    assert rp.unprocessed_input == "\x1b["
     assert rp.toPlainText() == "Hello world!"
     assert rp.textCursor().position() == 5
     assert rp.device_cursor_position == 5
@@ -888,7 +890,7 @@ def test_MicroPythonREPLPane_process_tty_data_unsupported_vt100_command():
     rp.device_cursor_position = 5
     rp.set_qtcursor_to_devicecursor()
     # Receive: \x1B[4X - unknown command X
-    bs = b"\x1B[4X"
+    bs = b"\x1b[4X"
     rp.process_tty_data(bs)
     # Do nothing
     assert rp.unprocessed_input == b""
@@ -909,14 +911,14 @@ def test_MicroPythonREPLPane_process_tty_data_partial_osc_reception():
     rp.device_cursor_position = 5
     rp.set_qtcursor_to_devicecursor()
     # Receive: \x1B
-    bs = b"\x1B]"
+    bs = b"\x1b]"
     rp.process_tty_data(bs)
-    assert rp.unprocessed_input == "\x1B]"
+    assert rp.unprocessed_input == "\x1b]"
     assert rp.toPlainText() == "Hello world!"
     assert rp.textCursor().position() == 5
     assert rp.device_cursor_position == 5
     # Receive the rest of the title
-    bs = b";hello\x1B\\"
+    bs = b";hello\x1b\\"
     rp.process_tty_data(bs)
     assert rp.unprocessed_input == ""
     assert rp.toPlainText() == "Hello world!"
@@ -935,7 +937,7 @@ def test_MicroPythonREPLPane_process_tty_data_osc_title_command():
     rp.device_cursor_position = 5
     rp.set_qtcursor_to_devicecursor()
     # Receive: \x1B[4X - unknown command X
-    bs = b"\x1B]0;hello\x1B\\"
+    bs = b"\x1b]0;hello\x1b\\"
     rp.process_tty_data(bs)
     # Do nothing
     assert rp.unprocessed_input == b""
@@ -955,7 +957,7 @@ def test_MicroPythonREPLPane_process_tty_data_unsupported_osc_command():
     rp.device_cursor_position = 5
     rp.set_qtcursor_to_devicecursor()
     # Receive: \x1B[4X - unknown command X
-    bs = b"\x1B]100;hello\x1B\\"
+    bs = b"\x1b]100;hello\x1b\\"
     rp.process_tty_data(bs)
     # Do nothing
     assert rp.unprocessed_input == b""
@@ -1036,9 +1038,7 @@ def test_JupyterREPLPane_set_zoom():
     jw = mu.interface.panes.JupyterREPLPane()
     jw.set_font_size = mock.MagicMock()
     jw.set_zoom("xxl")
-    jw.set_font_size.assert_called_once_with(
-        mu.interface.panes.PANE_ZOOM_SIZES["xxl"]
-    )
+    jw.set_font_size.assert_called_once_with(mu.interface.panes.PANE_ZOOM_SIZES["xxl"])
 
 
 def test_JupyterREPLPane_set_theme_day():
@@ -1104,7 +1104,7 @@ def test_PythonProcessPane_start_process():
     mock_process = mock.MagicMock()
     mock_process_class = mock.MagicMock(return_value=mock_process)
     mock_merge_chans = mock.MagicMock()
-    mock_process_class.MergedChannels = mock_merge_chans
+    mock_process_class.ProcessChannelMode.MergedChannels = mock_merge_chans
     interpreter = sys.executable
     working_directory = "workspace"
     script_filename = "script.py"
@@ -1116,9 +1116,7 @@ def test_PythonProcessPane_start_process():
     assert ppp.process == mock_process
     ppp.process.setProcessChannelMode.assert_called_once_with(mock_merge_chans)
     ppp.process.setWorkingDirectory.assert_called_once_with(working_directory)
-    ppp.process.readyRead.connect.assert_called_once_with(
-        ppp.try_read_from_stdout
-    )
+    ppp.process.readyRead.connect.assert_called_once_with(ppp.try_read_from_stdout)
     ppp.process.finished.connect.assert_called_once_with(ppp.finished)
     assert ppp.script == script_filepath
     expected_args = ["-i", script_filepath]  # called with interactive flag.
@@ -1133,16 +1131,14 @@ def test_PythonProcessPane_start_process_command_args():
     mock_process = mock.MagicMock()
     mock_process_class = mock.MagicMock(return_value=mock_process)
     mock_merge_chans = mock.MagicMock()
-    mock_process_class.MergedChannels = mock_merge_chans
+    mock_process_class.ProcessChannelMode.MergedChannels = mock_merge_chans
     runner = sys.executable
     script_filename = "script.py"
     script_filepath = os.path.abspath(os.path.normcase(script_filename))
     with mock.patch("mu.interface.panes.QProcess", mock_process_class):
         ppp = mu.interface.panes.PythonProcessPane()
         args = ["foo", "bar"]
-        ppp.start_process(
-            runner, script_filename, "workspace", command_args=args
-        )
+        ppp.start_process(runner, script_filename, "workspace", command_args=args)
     expected_args = ["-i", script_filepath, "foo", "bar"]
     ppp.process.start.assert_called_once_with(runner, expected_args)
 
@@ -1155,7 +1151,7 @@ def test_PythonProcessPane_start_process_debugger():
     mock_process = mock.MagicMock()
     mock_process_class = mock.MagicMock(return_value=mock_process)
     mock_merge_chans = mock.MagicMock()
-    mock_process_class.MergedChannels = mock_merge_chans
+    mock_process_class.ProcessChannelMode.MergedChannels = mock_merge_chans
     interpreter = sys.executable
     script_filename = "script.py"
     script_filepath = os.path.abspath(os.path.normcase(script_filename))
@@ -1185,7 +1181,7 @@ def test_PythonProcessPane_start_process_not_interactive():
     mock_process = mock.MagicMock()
     mock_process_class = mock.MagicMock(return_value=mock_process)
     mock_merge_chans = mock.MagicMock()
-    mock_process_class.MergedChannels = mock_merge_chans
+    mock_process_class.ProcessChannelMode.MergedChannels = mock_merge_chans
     interpreter = sys.executable
     script_filename = "script.py"
     script_filepath = os.path.abspath(os.path.normcase(script_filename))
@@ -1215,16 +1211,16 @@ def test_PythonProcessPane_start_process_user_environment_variables():
     mock_process = mock.MagicMock()
     mock_process_class = mock.MagicMock(return_value=mock_process)
     mock_merge_chans = mock.MagicMock()
-    mock_process_class.MergedChannels = mock_merge_chans
+    mock_process_class.ProcessChannelMode.MergedChannels = mock_merge_chans
     mock_environment = mock.MagicMock()
     mock_environment_class = mock.MagicMock()
     mock_environment_class.systemEnvironment.return_value = mock_environment
     interpreter = sys.executable
     script_filename = "script.py"
-    with mock.patch(
-        "mu.interface.panes.QProcess", mock_process_class
-    ), mock.patch("mu.interface.panes.sys") as mock_sys, mock.patch(
-        "mu.interface.panes.QProcessEnvironment", mock_environment_class
+    with (
+        mock.patch("mu.interface.panes.QProcess", mock_process_class),
+        mock.patch("mu.interface.panes.sys") as mock_sys,
+        mock.patch("mu.interface.panes.QProcessEnvironment", mock_environment_class),
     ):
         mock_sys.platform = "darwin"
         ppp = mu.interface.panes.PythonProcessPane()
@@ -1266,7 +1262,7 @@ def test_PythonProcessPane_start_process_custom_runner():
     mock_process = mock.MagicMock()
     mock_process_class = mock.MagicMock(return_value=mock_process)
     mock_merge_chans = mock.MagicMock()
-    mock_process_class.MergedChannels = mock_merge_chans
+    mock_process_class.ProcessChannelMode.MergedChannels = mock_merge_chans
     with mock.patch("mu.interface.panes.QProcess", mock_process_class):
         ppp = mu.interface.panes.PythonProcessPane()
         args = ["foo", "bar"]
@@ -1290,7 +1286,7 @@ def test_PythonProcessPane_start_process_custom_python_args():
     mock_process = mock.MagicMock()
     mock_process_class = mock.MagicMock(return_value=mock_process)
     mock_merge_chans = mock.MagicMock()
-    mock_process_class.MergedChannels = mock_merge_chans
+    mock_process_class.ProcessChannelMode.MergedChannels = mock_merge_chans
     with mock.patch("mu.interface.panes.QProcess", mock_process_class):
         ppp = mu.interface.panes.PythonProcessPane()
         py_args = ["-m", "pgzero"]
@@ -1359,9 +1355,11 @@ def test_PythonProcessPane_context_menu():
     mock_platform.system.return_value = "WinNT"
     mock_qmenu = mock.MagicMock()
     mock_qmenu_class = mock.MagicMock(return_value=mock_qmenu)
-    with mock.patch("mu.interface.panes.platform", mock_platform), mock.patch(
-        "mu.interface.panes.QMenu", mock_qmenu_class
-    ), mock.patch("mu.interface.panes.QCursor"):
+    with (
+        mock.patch("mu.interface.panes.platform", mock_platform),
+        mock.patch("mu.interface.panes.QMenu", mock_qmenu_class),
+        mock.patch("mu.interface.panes.QCursor"),
+    ):
         ppp = mu.interface.panes.PythonProcessPane()
         ppp.context_menu()
     assert mock_qmenu.addAction.call_count == 2
@@ -1373,7 +1371,7 @@ def test_PythonProcessPane_context_menu():
     assert paste_action[0] == "Paste"
     assert paste_action[1] == ppp.paste
     assert paste_action[2].toString() == "Ctrl+Shift+V"
-    assert mock_qmenu.exec_.call_count == 1
+    assert mock_qmenu.exec.call_count == 1
 
 
 def test_PythonProcessPane_context_menu_darwin():
@@ -1385,9 +1383,11 @@ def test_PythonProcessPane_context_menu_darwin():
     mock_platform.system.return_value = "Darwin"
     mock_qmenu = mock.MagicMock()
     mock_qmenu_class = mock.MagicMock(return_value=mock_qmenu)
-    with mock.patch("mu.interface.panes.platform", mock_platform), mock.patch(
-        "mu.interface.panes.QMenu", mock_qmenu_class
-    ), mock.patch("mu.interface.panes.QCursor"):
+    with (
+        mock.patch("mu.interface.panes.platform", mock_platform),
+        mock.patch("mu.interface.panes.QMenu", mock_qmenu_class),
+        mock.patch("mu.interface.panes.QCursor"),
+    ):
         ppp = mu.interface.panes.PythonProcessPane()
         ppp.context_menu()
     assert mock_qmenu.addAction.call_count == 2
@@ -1399,7 +1399,7 @@ def test_PythonProcessPane_context_menu_darwin():
     assert paste_action[0] == "Paste"
     assert paste_action[1] == ppp.paste
     assert paste_action[2].toString() == "Ctrl+V"
-    assert mock_qmenu.exec_.call_count == 1
+    assert mock_qmenu.exec.call_count == 1
 
 
 def test_PythonProcessPane_paste():
@@ -1470,7 +1470,7 @@ def test_PythonProcessPane_parse_paste_newline():
     mock_timer = mock.MagicMock()
     with mock.patch("mu.interface.panes.QTimer", mock_timer):
         ppp.parse_paste("\nhello")
-    ppp.parse_input.assert_called_once_with(Qt.Key_Enter, "\n", None)
+    ppp.parse_input.assert_called_once_with(Qt.Key.Key_Enter, "\n", None)
     assert mock_timer.singleShot.call_count == 1
 
 
@@ -1484,7 +1484,7 @@ def test_PythonProcessPane_parse_paste_final_character():
     mock_timer = mock.MagicMock()
     with mock.patch("mu.interface.panes.QTimer", mock_timer):
         ppp.parse_paste("\n")
-    ppp.parse_input.assert_called_once_with(Qt.Key_Enter, "\n", None)
+    ppp.parse_input.assert_called_once_with(Qt.Key.Key_Enter, "\n", None)
     assert mock_timer.singleShot.call_count == 0
 
 
@@ -1495,11 +1495,11 @@ def test_PythonProcessPane_keyPressEvent_a():
     ppp = mu.interface.panes.PythonProcessPane()
     ppp.parse_input = mock.MagicMock()
     data = mock.MagicMock
-    data.key = mock.MagicMock(return_value=Qt.Key_A)
+    data.key = mock.MagicMock(return_value=Qt.Key.Key_A)
     data.text = mock.MagicMock(return_value="a")
     data.modifiers = mock.MagicMock(return_value=None)
     ppp.keyPressEvent(data)
-    ppp.parse_input.assert_called_once_with(Qt.Key_A, "a", None)
+    ppp.parse_input.assert_called_once_with(Qt.Key.Key_A, "a", None)
 
 
 def test_PythonProcessPane_on_process_halt():
@@ -1545,7 +1545,7 @@ def test_PythonProcessPane_parse_input_a():
     """
     ppp = mu.interface.panes.PythonProcessPane()
     ppp.insert = mock.MagicMock()
-    key = Qt.Key_A
+    key = Qt.Key.Key_A
     text = "a"
     modifiers = None
     ppp.parse_input(key, text, modifiers)
@@ -1558,7 +1558,7 @@ def test_PythonProcessPane_parse_input_non_ascii():
     """
     ppp = mu.interface.panes.PythonProcessPane()
     ppp.insert = mock.MagicMock()
-    key = Qt.Key_A
+    key = Qt.Key.Key_A
     text = "Å"
     modifiers = None
     ppp.parse_input(key, text, modifiers)
@@ -1573,14 +1573,16 @@ def test_PythonProcessPane_parse_input_ctrl_c():
     ppp.process = mock.MagicMock()
     ppp.process.processId.return_value = 123
     ppp.running = True
-    key = Qt.Key_C
+    key = Qt.Key.Key_C
     text = ""
-    modifiers = Qt.ControlModifier
+    modifiers = Qt.KeyboardModifier.ControlModifier
     mock_kill = mock.MagicMock()
     mock_timer = mock.MagicMock()
-    with mock.patch("mu.interface.panes.os.kill", mock_kill), mock.patch(
-        "mu.interface.panes.QTimer", mock_timer
-    ), mock.patch("mu.interface.panes.platform.system", return_value="win32"):
+    with (
+        mock.patch("mu.interface.panes.os.kill", mock_kill),
+        mock.patch("mu.interface.panes.QTimer", mock_timer),
+        mock.patch("mu.interface.panes.platform.system", return_value="win32"),
+    ):
         ppp.parse_input(key, text, modifiers)
     mock_kill.assert_called_once_with(123, signal.SIGINT)
     ppp.process.readAll.assert_called_once_with()
@@ -1594,13 +1596,14 @@ def test_PythonProcessPane_parse_input_ctrl_d():
     ppp = mu.interface.panes.PythonProcessPane()
     ppp.process = mock.MagicMock()
     ppp.running = True
-    key = Qt.Key_D
+    key = Qt.Key.Key_D
     text = ""
-    modifiers = Qt.ControlModifier
+    modifiers = Qt.KeyboardModifier.ControlModifier
     mock_timer = mock.MagicMock()
-    with mock.patch(
-        "mu.interface.panes.platform.system", return_value="win32"
-    ), mock.patch("mu.interface.panes.QTimer", mock_timer):
+    with (
+        mock.patch("mu.interface.panes.platform.system", return_value="win32"),
+        mock.patch("mu.interface.panes.QTimer", mock_timer),
+    ):
         ppp.parse_input(key, text, modifiers)
         ppp.process.kill.assert_called_once_with()
     ppp.process.readAll.assert_called_once_with()
@@ -1615,12 +1618,13 @@ def test_PythonProcessPane_parse_input_ctrl_c_after_process_finished():
     ppp.process = mock.MagicMock()
     ppp.process.processId.return_value = 123
     ppp.running = False
-    key = Qt.Key_C
+    key = Qt.Key.Key_C
     text = ""
-    modifiers = Qt.ControlModifier
+    modifiers = Qt.KeyboardModifier.ControlModifier
     mock_kill = mock.MagicMock()
-    with mock.patch("mu.interface.panes.os.kill", mock_kill), mock.patch(
-        "mu.interface.panes.platform.system", return_value="win32"
+    with (
+        mock.patch("mu.interface.panes.os.kill", mock_kill),
+        mock.patch("mu.interface.panes.platform.system", return_value="win32"),
     ):
         ppp.parse_input(key, text, modifiers)
     assert mock_kill.call_count == 0
@@ -1633,12 +1637,10 @@ def test_PythonProcessPane_parse_input_ctrl_d_after_process_finished():
     ppp = mu.interface.panes.PythonProcessPane()
     ppp.process = mock.MagicMock()
     ppp.running = False
-    key = Qt.Key_D
+    key = Qt.Key.Key_D
     text = ""
-    modifiers = Qt.ControlModifier
-    with mock.patch(
-        "mu.interface.panes.platform.system", return_value="win32"
-    ):
+    modifiers = Qt.KeyboardModifier.ControlModifier
+    with mock.patch("mu.interface.panes.platform.system", return_value="win32"):
         ppp.parse_input(key, text, modifiers)
         assert ppp.process.kill.call_count == 0
 
@@ -1650,7 +1652,7 @@ def test_PythonProcessPane_parse_input_up_arrow():
     """
     ppp = mu.interface.panes.PythonProcessPane()
     ppp.history_back = mock.MagicMock()
-    key = Qt.Key_Up
+    key = Qt.Key.Key_Up
     text = ""
     modifiers = None
     ppp.parse_input(key, text, modifiers)
@@ -1664,7 +1666,7 @@ def test_PythonProcessPane_parse_input_down_arrow():
     """
     ppp = mu.interface.panes.PythonProcessPane()
     ppp.history_forward = mock.MagicMock()
-    key = Qt.Key_Down
+    key = Qt.Key.Key_Down
     text = ""
     modifiers = None
     ppp.parse_input(key, text, modifiers)
@@ -1679,11 +1681,11 @@ def test_PythonProcessPane_parse_input_right_arrow():
     mock_cursor = mock.MagicMock()
     ppp.textCursor = mock.MagicMock(return_value=mock_cursor)
     ppp.setTextCursor = mock.MagicMock()
-    key = Qt.Key_Right
+    key = Qt.Key.Key_Right
     text = ""
     modifiers = None
     ppp.parse_input(key, text, modifiers)
-    mock_cursor.movePosition.assert_called_once_with(QTextCursor.Right)
+    mock_cursor.movePosition.assert_called_once_with(QTextCursor.MoveOperation.Right)
     ppp.setTextCursor.assert_called_once_with(mock_cursor)
 
 
@@ -1698,11 +1700,11 @@ def test_PythonProcessPane_parse_input_left_arrow():
     ppp.start_of_current_line = 0
     ppp.textCursor = mock.MagicMock(return_value=mock_cursor)
     ppp.setTextCursor = mock.MagicMock()
-    key = Qt.Key_Left
+    key = Qt.Key.Key_Left
     text = ""
     modifiers = None
     ppp.parse_input(key, text, modifiers)
-    mock_cursor.movePosition.assert_called_once_with(QTextCursor.Left)
+    mock_cursor.movePosition.assert_called_once_with(QTextCursor.MoveOperation.Left)
     ppp.setTextCursor.assert_called_once_with(mock_cursor)
 
 
@@ -1717,7 +1719,7 @@ def test_PythonProcessPane_parse_input_left_arrow_at_start_of_line():
     ppp.start_of_current_line = 1
     ppp.textCursor = mock.MagicMock(return_value=mock_cursor)
     ppp.setTextCursor = mock.MagicMock()
-    key = Qt.Key_Left
+    key = Qt.Key.Key_Left
     text = ""
     modifiers = None
     ppp.parse_input(key, text, modifiers)
@@ -1735,7 +1737,7 @@ def test_PythonProcessPane_parse_input_home():
     ppp.start_of_current_line = 0
     ppp.textCursor = mock.MagicMock(return_value=mock_cursor)
     ppp.setTextCursor = mock.MagicMock()
-    key = Qt.Key_Home
+    key = Qt.Key.Key_Home
     text = ""
     modifiers = None
     ppp.parse_input(key, text, modifiers)
@@ -1752,11 +1754,11 @@ def test_PythonProcessPane_parse_input_end():
     mock_cursor = mock.MagicMock()
     ppp.textCursor = mock.MagicMock(return_value=mock_cursor)
     ppp.setTextCursor = mock.MagicMock()
-    key = Qt.Key_End
+    key = Qt.Key.Key_End
     text = ""
     modifiers = None
     ppp.parse_input(key, text, modifiers)
-    mock_cursor.movePosition.assert_called_once_with(QTextCursor.End)
+    mock_cursor.movePosition.assert_called_once_with(QTextCursor.MoveOperation.End)
     ppp.setTextCursor.assert_called_once_with(mock_cursor)
 
 
@@ -1765,9 +1767,9 @@ def test_PythonProcessPane_parse_input_paste():
     Control-Shift-V (paste) character causes a paste to happen.
     """
     ppp = mu.interface.panes.PythonProcessPane()
-    key = Qt.Key_V
+    key = Qt.Key.Key_V
     text = ""
-    modifiers = Qt.ControlModifier | Qt.ShiftModifier
+    modifiers = Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier
     ppp.paste = mock.MagicMock()
     ppp.parse_input(key, text, modifiers)
     ppp.paste.assert_called_once_with()
@@ -1778,9 +1780,9 @@ def test_PythonProcessPane_parse_input_copy():
     Control-Shift-C (copy) character causes copy to happen.
     """
     ppp = mu.interface.panes.PythonProcessPane()
-    key = Qt.Key_C
+    key = Qt.Key.Key_C
     text = ""
-    modifiers = Qt.ControlModifier | Qt.ShiftModifier
+    modifiers = Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier
     ppp.copy = mock.MagicMock()
     ppp.parse_input(key, text, modifiers)
     ppp.copy.assert_called_once_with()
@@ -1793,7 +1795,7 @@ def test_PythonProcessPane_parse_input_backspace():
     """
     ppp = mu.interface.panes.PythonProcessPane()
     ppp.backspace = mock.MagicMock()
-    key = Qt.Key_Backspace
+    key = Qt.Key.Key_Backspace
     text = "\b"
     modifiers = None
     ppp.parse_input(key, text, modifiers)
@@ -1806,7 +1808,7 @@ def test_PythonProcessPane_parse_input_delete():
     """
     ppp = mu.interface.panes.PythonProcessPane()
     ppp.delete = mock.MagicMock()
-    key = Qt.Key_Delete
+    key = Qt.Key.Key_Delete
     text = "\b"
     modifiers = None
     ppp.parse_input(key, text, modifiers)
@@ -1825,7 +1827,7 @@ def test_PythonProcessPane_parse_input_newline():
     ppp.setTextCursor = mock.MagicMock()
     ppp.insert = mock.MagicMock()
     ppp.write_to_stdin = mock.MagicMock()
-    key = Qt.Key_Enter
+    key = Qt.Key.Key_Enter
     text = "\r"
     modifiers = None
     ppp.parse_input(key, text, modifiers)
@@ -1846,7 +1848,7 @@ def test_PythonProcessPane_parse_input_newline_ignore_empty_input_in_history():
     ppp.toPlainText = mock.MagicMock(return_value="   \n")
     ppp.start_of_current_line = 0
     ppp.write_to_stdin = mock.MagicMock()
-    key = Qt.Key_Enter
+    key = Qt.Key.Key_Enter
     text = "\r"
     modifiers = None
     ppp.parse_input(key, text, modifiers)
@@ -1863,8 +1865,8 @@ def test_PythonProcessPane_parse_input_newline_with_cursor_midline():
     ppp = mu.interface.panes.PythonProcessPane()
     ppp.write_to_stdin = mock.MagicMock()
     ppp.parse_input(None, "abc", None)
-    ppp.parse_input(Qt.Key_Left, None, None)
-    ppp.parse_input(Qt.Key_Enter, "\r", None)
+    ppp.parse_input(Qt.Key.Key_Left, None, None)
+    ppp.parse_input(Qt.Key.Key_Enter, "\r", None)
     ppp.write_to_stdin.assert_called_with(b"abc\n")
 
 
@@ -2084,7 +2086,7 @@ def test_PythonProcessPane_insert_within_input_line():
     ppp.setTextCursor = mock.MagicMock()
     ppp.textCursor = mock.MagicMock(return_value=mock_cursor)
     ppp.insert(b"hello")
-    mock_cursor.movePosition.assert_called_once_with(QTextCursor.End)
+    mock_cursor.movePosition.assert_called_once_with(QTextCursor.MoveOperation.End)
     mock_cursor.insertText.assert_called_once_with("hello")
 
 
@@ -2179,7 +2181,7 @@ def test_PythonProcessPane_clear_input_line():
     ppp.textCursor = mock.MagicMock(return_value=mock_cursor)
     ppp.clear_input_line()
     assert mock_cursor.deletePreviousChar.call_count == 5
-    mock_cursor.movePosition.assert_called_once_with(QTextCursor.End)
+    mock_cursor.movePosition.assert_called_once_with(QTextCursor.MoveOperation.End)
     ppp.setTextCursor.assert_called_once_with(mock_cursor)
 
 
@@ -2377,12 +2379,12 @@ def test_PlotterPane_add_data_adjust_values_up():
     pp = mu.interface.panes.PlotterPane()
     pp.series = [mock.MagicMock()]
     pp.chart = mock.MagicMock()
-    with mock.patch("mu.interface.panes.QLineSeries"):
+    with mock.patch("mu.interface.panes.QLineSeries") as mock_qls:
         pp.add_data((1, 2, 3, 4))
     assert len(pp.series) == 4
     assert pp.chart.addSeries.call_count == 3
-    assert pp.chart.setAxisX.call_count == 3
-    assert pp.chart.setAxisY.call_count == 3
+    # Each of the 3 new series is attached to both the x and y axes.
+    assert mock_qls.return_value.attachAxis.call_count == 6
     assert len(pp.data) == 4
 
 
@@ -2511,15 +2513,15 @@ def test_PlotterPane_set_theme():
     pp.chart = mock.MagicMock()
     pp.set_theme("day")
     pp.chart.setTheme.assert_called_once_with(
-        mu.interface.panes.QChart.ChartThemeLight
+        mu.interface.panes.QChart.ChartTheme.ChartThemeLight
     )
     pp.chart.setTheme.reset_mock()
     pp.set_theme("night")
     pp.chart.setTheme.assert_called_once_with(
-        mu.interface.panes.QChart.ChartThemeDark
+        mu.interface.panes.QChart.ChartTheme.ChartThemeDark
     )
     pp.chart.setTheme.reset_mock()
     pp.set_theme("contrast")
     pp.chart.setTheme.assert_called_once_with(
-        mu.interface.panes.QChart.ChartThemeHighContrast
+        mu.interface.panes.QChart.ChartTheme.ChartThemeHighContrast
     )

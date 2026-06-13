@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 import sys
 import os
 import socket
@@ -153,22 +154,14 @@ class Debugger(bdb.Bdb):
                     line_no,
                     {
                         "filename": frame.f_code.co_filename,
-                        "locals": {
-                            k: repr(v) for k, v in frame.f_locals.items()
-                        },
-                        "globals": {
-                            k: repr(v) for k, v in frame.f_globals.items()
-                        },
-                        "builtins": {
-                            k: repr(v) for k, v in frame.f_builtins.items()
-                        },
+                        "locals": {k: repr(v) for k, v in frame.f_locals.items()},
+                        "globals": {k: repr(v) for k, v in frame.f_globals.items()},
+                        "builtins": {k: repr(v) for k, v in frame.f_builtins.items()},
                         "restricted": getattr(frame, "f_restricted", ""),
                         "lasti": repr(frame.f_lasti),
                         "exc_type": repr(getattr(frame, "f_exc_type", "")),
                         "exc_value": repr(getattr(frame, "f_exc_value", "")),
-                        "exc_traceback": repr(
-                            getattr(frame, "f_exc_traceback", "")
-                        ),
+                        "exc_traceback": repr(getattr(frame, "f_exc_traceback", "")),
                         "current": frame is self.curframe,
                     },
                 )
@@ -215,17 +208,13 @@ class Debugger(bdb.Bdb):
                         )
                         self.output("error", message=msg)
                 else:
-                    self.output(
-                        "error", message="Unknown command: {}".format(command)
-                    )
+                    self.output("error", message="Unknown command: {}".format(command))
             except (OSError, AttributeError, ClientClose):
                 # Connection problem; try listening for new connection.
                 client, addr = self.socket.accept()
                 self.client = client
                 self.commands = Queue()
-                self.command_thread = Thread(
-                    target=command_buffer, args=(self,)
-                )
+                self.command_thread = Thread(target=command_buffer, args=(self,))
                 self.command_thread.daemon = True
                 self.command_thread.start()
                 self.output(
@@ -343,9 +332,7 @@ class Debugger(bdb.Bdb):
         """
         bpnum = int(bpnum)
         if not (0 <= bpnum < len(bdb.Breakpoint.bpbynumber)):
-            self.output(
-                "error", message="No breakpoint numbered {}".format(bpnum)
-            )
+            self.output("error", message="No breakpoint numbered {}".format(bpnum))
         else:
             bp = bdb.Breakpoint.bpbynumber[bpnum]
             bp.enable()
@@ -357,9 +344,7 @@ class Debugger(bdb.Bdb):
         """
         bpnum = int(bpnum)
         if not (0 <= bpnum < len(bdb.Breakpoint.bpbynumber)):
-            self.output(
-                "error", message="No breakpoint numbered {}".format(bpnum)
-            )
+            self.output("error", message="No breakpoint numbered {}".format(bpnum))
         else:
             bp = bdb.Breakpoint.bpbynumber[bpnum]
             bp.disable()
@@ -375,9 +360,7 @@ class Debugger(bdb.Bdb):
         except ValueError:
             count = 0
         if not (0 <= bpnum < len(bdb.Breakpoint.bpbynumber)):
-            self.output(
-                "error", message="No breakpoint numbered {}".format(bpnum)
-            )
+            self.output("error", message="No breakpoint numbered {}".format(bpnum))
         else:
             bp = bdb.Breakpoint.bpbynumber[bpnum]
             bp.ignore = count

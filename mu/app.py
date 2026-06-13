@@ -19,6 +19,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
@@ -31,7 +32,7 @@ import urllib
 import webbrowser
 import base64
 
-from PyQt5.QtCore import (
+from PyQt6.QtCore import (
     Qt,
     QEventLoop,
     QThread,
@@ -39,7 +40,7 @@ from PyQt5.QtCore import (
     pyqtSignal,
     QSharedMemory,
 )
-from PyQt5.QtWidgets import QApplication, QSplashScreen
+from PyQt6.QtWidgets import QApplication, QSplashScreen
 
 from . import i18n
 from .virtual_environment import venv, logger as vlogger
@@ -102,7 +103,9 @@ class AnimatedSplash(QSplashScreen):
         Draw text into splash screen.
         """
         if text:
-            self.showMessage(text, Qt.AlignBottom | Qt.AlignLeft)
+            self.showMessage(
+                text, Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignLeft
+            )
 
     def failed(self, text):
         """
@@ -168,7 +171,7 @@ def excepthook(*exc_args):
     # Very important to release shared memory used to signal an app instance is running
     # as we are going to exit below
     _shared_memory.release()
-    if exc_args[0] != KeyboardInterrupt:
+    if exc_args[0] is not KeyboardInterrupt:
         try:
             log_file = base64.standard_b64encode(LOG_FILE.encode("utf-8"))
             error = base64.standard_b64encode(
@@ -179,9 +182,9 @@ def excepthook(*exc_args):
                 "v": __version__,  # version
                 "l": str(i18n.language_code),  # locale
                 "p": base64.standard_b64encode(
-                    " ".join(
-                        [p.system, p.release, p.version, p.machine]
-                    ).encode("utf-8")
+                    " ".join([p.system, p.release, p.version, p.machine]).encode(
+                        "utf-8"
+                    )
                 ),  # platform
                 "f": log_file,  # location of log file
                 "e": error,  # error message
@@ -212,8 +215,7 @@ def setup_logging():
 
     # set logging format
     log_fmt = (
-        "%(asctime)s - %(name)s:%(lineno)d(%(funcName)s) "
-        "%(levelname)s: %(message)s"
+        "%(asctime)s - %(name)s:%(lineno)d(%(funcName)s) %(levelname)s: %(message)s"
     )
     formatter = logging.Formatter(log_fmt)
 
@@ -363,16 +365,13 @@ def run():
     #
     settings.init()
 
-    # Images (such as toolbar icons) aren't scaled nicely on retina/4k displays
-    # unless this flag is set
-    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-    if hasattr(Qt, "AA_EnableHighDpiScaling"):
-        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+    # High-DPI scaling (retina/4k) and high-resolution pixmaps are always
+    # enabled in Qt6, so the AA_EnableHighDpiScaling / AA_UseHighDpiPixmaps
+    # attributes that were needed under Qt5 have been removed.
 
-    # An issue in PyQt5 v5.13.2 to v5.15.1 makes PyQt5 application
-    # hang on Mac OS 11 (Big Sur)
-    # Setting this environment variable fixes the problem.
+    # An issue in PyQt5 v5.13.2 to v5.15.1 made the application hang on
+    # macOS 11 (Big Sur); setting this environment variable fixed it. It's a
+    # no-op under Qt6 but left in place as a harmless safeguard.
     # See issue #1147 for more information
     os.environ["QT_MAC_WANTS_LAYER"] = "1"
 
@@ -396,7 +395,7 @@ def run():
     # Set hint as to the .desktop files name
     app.setDesktopFileName("mu.codewith.editor")
     app.setApplicationVersion(__version__)
-    app.setAttribute(Qt.AA_DontShowIconsInMenus)
+    app.setAttribute(Qt.ApplicationAttribute.AA_DontShowIconsInMenus)
 
     def splash_context():
         """
@@ -461,7 +460,7 @@ def run():
     editor.restore_session(sys.argv[1:])
 
     # Save the exit code for sys.exit call below.
-    exit_status = app.exec_()
+    exit_status = app.exec()
     # Clean up the shared memory used to signal an app instance is running
     _shared_memory.release()
 

@@ -2,6 +2,7 @@
 """
 Tests for the BaseMode class.
 """
+
 import os
 import mu
 import pytest
@@ -13,15 +14,13 @@ from mu.modes.base import (
     REPLConnection,
 )
 import mu.settings
-from PyQt5.QtCore import QIODevice
+from PyQt6.QtCore import QIODevice
 from unittest import mock
 
 
 @pytest.fixture()
 def microbit():
-    return Device(
-        0x0D28, 0x0204, "COM0", "123456", "ARM", "BBC micro:bit", "microbit"
-    )
+    return Device(0x0D28, 0x0204, "COM0", "123456", "ARM", "BBC micro:bit", "microbit")
 
 
 def test_base_mode():
@@ -45,17 +44,18 @@ def test_base_mode():
     assert bm.builtins is None
 
 
-@pytest.mark.skip(
-    "No longer needed now that settings are part of the settings module"
-)
+@pytest.mark.skip("No longer needed now that settings are part of the settings module")
 def test_base_mode_workspace_dir():
     """
     Return settings file workspace value.
     """
     # read from our demo settings.json
-    with mock.patch(
-        "mu.modes.base.get_settings_path", return_value="tests/settings.json"
-    ), mock.patch("os.path.isdir", return_value=True):
+    with (
+        mock.patch(
+            "mu.modes.base.get_settings_path", return_value="tests/settings.json"
+        ),
+        mock.patch("os.path.isdir", return_value=True),
+    ):
         editor = mock.MagicMock()
         view = mock.MagicMock()
         bm = BaseMode(editor, view)
@@ -66,9 +66,7 @@ def test_base_mode_workspace_not_present():
     """
     No workspace key in settings file, return default folder.
     """
-    default_workspace = os.path.join(
-        mu.config.HOME_DIRECTORY, mu.config.WORKSPACE_NAME
-    )
+    default_workspace = os.path.join(mu.config.HOME_DIRECTORY, mu.config.WORKSPACE_NAME)
     mocked_settings = mu.settings.UserSettings()
     del mocked_settings["workspace"]
     assert "workspace" not in mocked_settings
@@ -83,14 +81,13 @@ def test_base_mode_workspace_invalid_value():
     """
     Invalid workspace key in settings file, return default folder.
     """
-    default_workspace = os.path.join(
-        mu.config.HOME_DIRECTORY, mu.config.WORKSPACE_NAME
-    )
+    default_workspace = os.path.join(mu.config.HOME_DIRECTORY, mu.config.WORKSPACE_NAME)
     mocked_settings = mu.settings.UserSettings()
     mocked_settings["workspace"] = "*invalid*"
-    with mock.patch.object(
-        mu.settings, "settings", mocked_settings
-    ), mock.patch("mu.modes.base.logger", return_value=None) as logger:
+    with (
+        mock.patch.object(mu.settings, "settings", mocked_settings),
+        mock.patch("mu.modes.base.logger", return_value=None) as logger,
+    ):
         editor = mock.MagicMock()
         view = mock.MagicMock()
         bm = BaseMode(editor, view)
@@ -105,9 +102,7 @@ def test_base_mode_workspace_invalid_json(tmp_path):
     NB most of the work here is done in the settings.py module so we're
     just testing that we get a suitable default back
     """
-    default_workspace = os.path.join(
-        mu.config.HOME_DIRECTORY, mu.config.WORKSPACE_NAME
-    )
+    default_workspace = os.path.join(mu.config.HOME_DIRECTORY, mu.config.WORKSPACE_NAME)
     mocked_settings = mu.settings.UserSettings()
     settings_filepath = os.path.join(str(tmp_path), "settings.json")
     with open(settings_filepath, "w") as f:
@@ -127,9 +122,7 @@ def test_base_mode_workspace_no_settings_file():
     NB most of the work here is done in the settings.py module so we're
     just testing that we get a suitable default back
     """
-    default_workspace = os.path.join(
-        mu.config.HOME_DIRECTORY, mu.config.WORKSPACE_NAME
-    )
+    default_workspace = os.path.join(mu.config.HOME_DIRECTORY, mu.config.WORKSPACE_NAME)
     mocked_settings = mu.settings.UserSettings()
     with mock.patch.object(mu.settings, "settings", mocked_settings):
         editor = mock.MagicMock()
@@ -178,21 +171,18 @@ def test_base_mode_remove_plotter():
     mock_csv_writer = mock.MagicMock()
     mock_csv = mock.MagicMock()
     mock_csv.writer.return_value = mock_csv_writer
-    with mock.patch(
-        "mu.modes.base.os.path.exists", return_value=False
-    ), mock.patch("mu.modes.base.os.makedirs", mock_mkdir), mock.patch(
-        "builtins.open", mock_open
-    ), mock.patch(
-        "mu.modes.base.csv", mock_csv
+    with (
+        mock.patch("mu.modes.base.os.path.exists", return_value=False),
+        mock.patch("mu.modes.base.os.makedirs", mock_mkdir),
+        mock.patch("builtins.open", mock_open),
+        mock.patch("mu.modes.base.csv", mock_csv),
     ):
         bm.remove_plotter()
     assert bm.plotter is False
     view.remove_plotter.assert_called_once_with()
     dd = os.path.join(bm.workspace_dir(), "data_capture")
     mock_mkdir.assert_called_once_with(dd)
-    mock_csv_writer.writerows.assert_called_once_with(
-        view.plotter_pane.raw_data
-    )
+    mock_csv_writer.writerows.assert_called_once_with(view.plotter_pane.raw_data)
 
 
 def test_base_mode_write_csv(tmp_path):
@@ -280,11 +270,13 @@ def test_micropython_mode_find_device():
             board_name,
             None,
         )
-        with mock.patch(
-            "mu.modes.base.QSerialPortInfo.availablePorts",
-            return_value=[mock_port],
-        ), mock.patch("mu.modes.base.os", mock_os), mock.patch(
-            "mu.modes.base.sys", mock_sys
+        with (
+            mock.patch(
+                "mu.modes.base.QSerialPortInfo.availablePorts",
+                return_value=[mock_port],
+            ),
+            mock.patch("mu.modes.base.os", mock_os),
+            mock.patch("mu.modes.base.sys", mock_sys),
         ):
             assert mm.find_devices() == [device]
 
@@ -296,9 +288,7 @@ def test_micropython_mode_find_device_no_ports():
     editor = mock.MagicMock()
     view = mock.MagicMock()
     mm = MicroPythonMode(editor, view)
-    with mock.patch(
-        "mu.modes.base.QSerialPortInfo.availablePorts", return_value=[]
-    ):
+    with mock.patch("mu.modes.base.QSerialPortInfo.availablePorts", return_value=[]):
         assert mm.find_devices() == []
 
 
@@ -349,11 +339,13 @@ def test_micropython_mode_find_device_darwin_remove_extraneous_devices():
         "microbit",
         None,
     )
-    with mock.patch("sys.platform", "darwin"), mock.patch(
-        "os.name", "posix"
-    ), mock.patch(
-        "mu.modes.base.QSerialPortInfo.availablePorts",
-        return_value=[mock_port, mock_port2],
+    with (
+        mock.patch("sys.platform", "darwin"),
+        mock.patch("os.name", "posix"),
+        mock.patch(
+            "mu.modes.base.QSerialPortInfo.availablePorts",
+            return_value=[mock_port, mock_port2],
+        ),
     ):
         assert mm.find_devices() == [device]
 
@@ -796,7 +788,7 @@ def test_REPLConnection_open():
         conn.open()
     mock_serial.setPortName.assert_called_once_with("COM0")
     mock_serial.setBaudRate.assert_called_once_with(9600)
-    mock_serial.open.assert_called_once_with(QIODevice.ReadWrite)
+    mock_serial.open.assert_called_once_with(QIODevice.OpenModeFlag.ReadWrite)
     mock_serial.readyRead.connect.assert_called_once_with(conn._on_serial_read)
 
 
