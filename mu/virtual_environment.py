@@ -521,10 +521,13 @@ class Uv(object):
         args.append(str(path))
         return self.run_blocking(*args)
 
-    def install(self, packages, slots=Process.Slots(), **kwargs):
+    def install(self, packages, slots=Process.Slots(), upgrade=False, **kwargs):
         """`uv pip install` the given package(s) into the target env."""
         packages = [packages] if isinstance(packages, str) else list(packages)
-        args = ["pip", "install", *self._python_args(), *packages]
+        args = ["pip", "install"]
+        if upgrade:
+            args.append("--upgrade")
+        args += [*self._python_args(), *packages]
         return self.run(*args, slots=slots, **kwargs)
 
     def uninstall(self, packages, slots=Process.Slots(), **kwargs):
@@ -1095,21 +1098,27 @@ class VirtualEnvironment(object):
         """
         return self.settings.get("baseline_packages")
 
+    def _uv(self):
+        """Return a `Uv` proxy targeting this environment's interpreter.
+
+        Built on demand (like `reset_pip`) so locating the `uv` binary is
+        deferred to actual use and always reflects the current interpreter.
+        """
+        return Uv(venv_path=self.interpreter)
+
     def install_user_packages(self, packages, slots=Process.Slots()):
         """
         Install user defined packages.
         """
         logger.info("Installing user packages: %s", ", ".join(packages))
-        self.reset_pip()
-        self.pip.install(packages, slots=slots, upgrade=True)
+        self._uv().install(packages, slots=slots, upgrade=True)
 
     def remove_user_packages(self, packages, slots=Process.Slots()):
         """
         Remove user defined packages.
         """
         logger.info("Removing user packages: %s", ", ".join(packages))
-        self.reset_pip()
-        self.pip.uninstall(packages, slots=slots)
+        self._uv().uninstall(packages, slots=slots)
 
     def installed_packages(self):
         """
@@ -1119,8 +1128,7 @@ class VirtualEnvironment(object):
         logger.info("Discovering installed third party modules in venv.")
         baseline_packages = [name for name, version in self.baseline_packages()]
         user_packages = []
-        self.reset_pip()
-        for package, version in self.pip.installed():
+        for package, version in self._uv().list_packages():
             if package not in baseline_packages:
                 user_packages.append(package)
         logger.info(user_packages)

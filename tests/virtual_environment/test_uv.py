@@ -163,6 +163,15 @@ def test_uv_install_accepts_single_string():
     assert args[1] == ["pip", "install", "requests"]
 
 
+def test_uv_install_upgrade_flag():
+    """upgrade=True injects --upgrade ahead of the package list."""
+    uv = Uv(uv_executable="uv")
+    with mock.patch.object(VE.Process, "run") as run:
+        uv.install(["requests"], upgrade=True)
+    args, _ = run.call_args
+    assert args[1] == ["pip", "install", "--upgrade", "requests"]
+
+
 def test_uv_uninstall_builds_command():
     """uninstall runs `uv pip uninstall` for the given packages."""
     uv = Uv(uv_executable="uv")

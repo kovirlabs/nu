@@ -370,46 +370,44 @@ def test_jupyter_kernel_failure(patched, venv):
             assert output in exc.message
 
 
-def test_install_user_packages(patched, venv):
-    """Ensure that, given a list of packages, we pip install them
+def test_install_user_packages(venv):
+    """Ensure that, given a list of packages, we uv-install them
 
     (Ideally we'd do this by testing the finished result, not caring
-    what sequence of pip invocations got us there, but that's expensive)
+    what sequence of uv invocations got us there, but that's expensive)
     """
     packages = [uuid.uuid1().hex for _ in range(random.randint(1, 10))]
-    with mock.patch.object(PIP, "install") as mock_pip_install:
+    with mock.patch.object(mu.virtual_environment, "Uv") as MockUv:
         venv.install_user_packages(packages)
         #
-        # We call pip with the entire list of packages
+        # We call uv install with the entire list of packages, upgrading
         #
-        args, _ = mock_pip_install.call_args
+        args, kwargs = MockUv.return_value.install.call_args
         assert args[0] == packages
+        assert kwargs.get("upgrade") is True
 
 
-def test_remove_user_packages(patched, venv):
-    """Ensure that, given a list of packages, we pip uninstall them
+def test_remove_user_packages(venv):
+    """Ensure that, given a list of packages, we uv-uninstall them
 
     (Ideally we'd do this by testing the finished result, not caring
-    what sequence of pip invocations got us there, but that's expensive)
+    what sequence of uv invocations got us there, but that's expensive)
     """
     packages = [uuid.uuid1().hex for _ in range(random.randint(1, 10))]
-    with mock.patch.object(PIP, "uninstall") as mock_pip_uninstall:
+    with mock.patch.object(mu.virtual_environment, "Uv") as MockUv:
         venv.remove_user_packages(packages)
         #
-        # We call pip with the entire list of packages
+        # We call uv uninstall with the entire list of packages
         #
-        args, _ = mock_pip_uninstall.call_args
+        args, _ = MockUv.return_value.uninstall.call_args
         assert args[0] == packages
 
 
-def test_installed_packages(patched, venv):
+def test_installed_packages(venv):
     """Ensure that we receive a list of package names in the venv
 
-    NB For now we're just checking that we return whatever pip freeze
-    returns only suitably stripped of versioning and other tags.
-
-    When we've sorted out how this is going to work, we can determine
-    which are pre-installed and which are user-installed
+    The baseline packages come from settings; everything else uv reports as
+    installed is treated as a user package.
     """
     baseline_packages = [("mu-editor", 0)] + [("a", 1), ("b", 2), ("c", 3)]
     user_packages = [("d", 4), ("e", 5), ("f", 6)]
@@ -417,7 +415,8 @@ def test_installed_packages(patched, venv):
     random.shuffle(all_packages)
 
     with mock.patch.object(VE, "baseline_packages", return_value=baseline_packages):
-        with mock.patch.object(PIP, "installed", return_value=all_packages):
+        with mock.patch.object(mu.virtual_environment, "Uv") as MockUv:
+            MockUv.return_value.list_packages.return_value = all_packages
             baseline_result, user_result = venv.installed_packages()
             assert set(baseline_result) == set(
                 ["mu-editor"] + [name for name, _ in baseline_packages]
@@ -658,17 +657,19 @@ def test_reset_pip(venv, pipped):
 
 
 def test_reset_pip_used(venv_dirpath):
+    """The methods still on pip recreate the Pip object on each use.
+
+    (The user-package methods moved to uv in Phase 4a and no longer call
+    reset_pip — they're covered by their own uv-mocking tests above.)
+    """
     with mock.patch("mu.virtual_environment.Pip") as mock_pip:
         mock_pip.installed.return_value = []
         venv = mu.virtual_environment.VirtualEnvironment(venv_dirpath)
         with mock.patch.object(venv, "reset_pip") as mocked_reset:
             venv.relocate(".")
             venv.register_baseline_packages()
-            venv.install_user_packages([])
-            venv.remove_user_packages([])
-            venv.installed_packages()
 
-    assert mocked_reset.call_count == 5
+    assert mocked_reset.call_count == 2
 
 
 #
