@@ -96,7 +96,7 @@ tests = [
     "coverage",
 ]
 docs = ["mkdocs-material", "mkdocstrings[python]"]
-package = ["build", "wheel", "twine"]
+package = ["build", "wheel", "twine", "briefcase>=0.3.19"]
 i18n = ["babel"]
 utils = ["scrapy", "beautifulsoup4", "requests"]
 # ruff is the dev lint+format tool (replaces flake8/pycodestyle/pyflakes/black
@@ -135,6 +135,91 @@ include = [
     "/README.md",
     "/CHANGES.md",
     "/LICENSE",
+]
+
+# ---------------------------------------------------------------------------
+# Briefcase — native installers (Phase 4d, see TODO.md).
+#
+# Replaces the stale pup pipeline (Py3.8-only, 3.10-capped, macOS fork +
+# custom Docker). Briefcase builds the AppImage / .dmg / .msi from this single
+# definition; CI (.github/workflows/build.yml) runs one OS per job. The app
+# ships its third-party deps (PyQt6 + the uv binary via the `uv` wheel) plus
+# the baseline wheels zip (built by `python -m mu.wheels --package`) so the
+# first-run `uv venv` works offline. The packaged interpreter is reused for the
+# user env (`uv venv --python sys.executable`), so no separate CPython download
+# is required at first run.
+# ---------------------------------------------------------------------------
+[tool.briefcase]
+project_name = "Mu Editor"
+bundle = "mu.codewith"
+# Briefcase needs a concrete version string; keep this in sync with
+# mu/__init__.py, which stays the canonical source the rest of the tooling reads.
+version = "1.2.2"
+url = "https://github.com/kovirlabs/nu"
+author = "Nicholas H.Tollervey and the Mu/Nu contributors"
+author_email = "ntoll@ntoll.org"
+license.file = "LICENSE"
+
+[tool.briefcase.app.mu]
+formal_name = "Mu Editor"
+description = "A simple Python editor for beginner programmers."
+long_description = """A simple, modal Python editor for beginner programmers,
+built on PyQt6. Nu is a maintained continuation of the Mu editor.
+
+Mu manages a separate, uv-driven Python environment for the learner's own code,
+keeping it isolated from the editor's own interpreter.
+"""
+icon = "package/icons/mu"
+# Briefcase copies these source trees into the app verbatim (data files
+# included): mu/resources, mu/locale and the mu/wheels/<version>.zip ride along.
+sources = ["mu"]
+# Third-party runtime deps installed into the app bundle. Mirrors
+# [project.dependencies] above (the app's own `mu` package comes from `sources`,
+# not from here). `uv` MUST stay listed: its wheel ships the binary that
+# find_uv()/uv.find_uv_bin() resolves at runtime in the packaged app.
+requires = [
+    "PyQt6>=6.6",
+    "PyQt6-QScintilla>=2.14",
+    "PyQt6-Charts>=6.6",
+    "qtconsole>=5.5",
+    "ipykernel>=6.29",
+    "jupyter-client>=8.0",
+    "pyzmq",
+    "adafruit-board-toolkit~=1.1",
+    "pyserial~=3.5",
+    "nudatus>=0.0.3",
+    "flake8>=3.8.3",
+    "black>=24",
+    "platformdirs>=2.6",
+    "semver>=2.8.0",
+    "uv>=0.5",
+    "wheel",
+]
+
+[tool.briefcase.app.mu.macOS]
+universal_build = false
+
+[tool.briefcase.app.mu.windows]
+# pywin32 is Windows-only; kept out of the cross-platform `requires` above.
+requires = ["pywin32; sys_platform == 'win32'"]
+
+[tool.briefcase.app.mu.linux]
+# Build-time system packages (manylinux/Docker) and runtime shared libs the
+# bundled Qt6 xcb platform plugin needs. Refined against the local Linux build.
+requires = []
+
+[tool.briefcase.app.mu.linux.system.debian]
+system_requires = [
+    "libxcb-cursor0",
+    "libxcb-xinerama0",
+    "libegl1",
+    "libgl1",
+]
+system_runtime_requires = [
+    "libxcb-cursor0",
+    "libxcb-xinerama0",
+    "libegl1",
+    "libgl1",
 ]
 
 [tool.ruff]

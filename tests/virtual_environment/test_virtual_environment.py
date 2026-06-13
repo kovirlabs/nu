@@ -165,7 +165,13 @@ def test_create_virtual_environment_on_disk(venv_dirpath, test_wheels):
     on the disk with wheels installed
     """
     venv = mu.virtual_environment.VirtualEnvironment(venv_dirpath)
-    venv.create()
+    # The Jupyter kernel install now runs via the *venv* interpreter, which
+    # needs ipykernel as a real baseline package. The test wheels deliberately
+    # ship only `arrr`, and the kernel isn't what this test checks (see
+    # test_jupyter_kernel_installed), so mock it out — otherwise create() fails
+    # trying to import ipykernel from the freshly-built venv.
+    with mock.patch.object(VE, "install_jupyter_kernel"):
+        venv.create()
     venv_site_packages = venv.run_python(
         "-c", "import sysconfig; print(sysconfig.get_path('purelib'))"
     ).strip()
@@ -343,10 +349,13 @@ def test_jupyter_kernel_installed(patched, venv):
         with mock.patch.object(VE, "register_baseline_packages"):
             venv.create()
             #
-            # Check that we're calling `ipykernel install`
+            # Check that we're calling `ipykernel install` via the venv
+            # interpreter (which carries ipykernel as a baseline package), not
+            # Mu's own interpreter — the latter can't import ipykernel in a
+            # packaged (Briefcase) build.
             #
             expected_jupyter_args = (
-                mu.virtual_environment.safe_short_path(sys.executable),
+                mu.virtual_environment.safe_short_path(venv.interpreter),
                 "-I",
                 "-m",
                 "ipykernel",

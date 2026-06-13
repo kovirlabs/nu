@@ -53,12 +53,57 @@ def test_find_uv_falls_back_to_path():
     which.assert_called_once_with("uv")
 
 
-def test_find_uv_not_found():
-    """No MU_UV and nothing on PATH raises UvNotFound."""
+def test_find_uv_falls_back_to_bundled_package():
+    """With MU_UV unset and nothing on PATH, use the binary bundled by the
+    `uv` PyPI package (the packaged-app path)."""
+    bundled = "/opt/mu/app_packages/uv/bin/uv"
     with mock.patch.dict(os.environ, {}, clear=True):
         with mock.patch.object(VE.shutil, "which", return_value=None):
-            with pytest.raises(VE.UvNotFound):
-                VE.find_uv()
+            with mock.patch.object(VE, "_uv_from_package", return_value=bundled):
+                assert VE.find_uv() == bundled
+
+
+def test_find_uv_not_found():
+    """No MU_UV, nothing on PATH, and no bundled uv raises UvNotFound."""
+    with mock.patch.dict(os.environ, {}, clear=True):
+        with mock.patch.object(VE.shutil, "which", return_value=None):
+            with mock.patch.object(VE, "_uv_from_package", return_value=None):
+                with pytest.raises(VE.UvNotFound):
+                    VE.find_uv()
+
+
+#
+# _uv_from_package
+#
+def test_uv_from_package_returns_existing_binary(tmp_path):
+    """When the `uv` package is importable and its binary exists, return it."""
+    fake_uv = tmp_path / "uv"
+    fake_uv.write_text("")
+    fake_module = mock.Mock()
+    fake_module.find_uv_bin.return_value = str(fake_uv)
+    with mock.patch.dict("sys.modules", {"uv": fake_module}):
+        assert VE._uv_from_package() == str(fake_uv)
+
+
+def test_uv_from_package_missing_binary(tmp_path):
+    """A reported binary that doesn't exist on disk yields None."""
+    fake_module = mock.Mock()
+    fake_module.find_uv_bin.return_value = str(tmp_path / "nope")
+    with mock.patch.dict("sys.modules", {"uv": fake_module}):
+        assert VE._uv_from_package() is None
+
+
+def test_uv_from_package_not_importable():
+    """When the `uv` package can't be imported, return None (dev checkout)."""
+    with mock.patch.dict("sys.modules", {"uv": None}):
+        assert VE._uv_from_package() is None
+
+
+def test_uv_from_package_without_find_uv_bin():
+    """A `uv` module lacking find_uv_bin (AttributeError) yields None."""
+    fake_module = mock.Mock(spec=[])  # no attributes -> find_uv_bin raises
+    with mock.patch.dict("sys.modules", {"uv": fake_module}):
+        assert VE._uv_from_package() is None
 
 
 #

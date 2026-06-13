@@ -1,89 +1,80 @@
-name: Build Mu
+name: Build installers
+
+# Native installers via Briefcase (Phase 4d, see TODO.md) — replaces the stale
+# pup pipeline. One runner per OS produces an unsigned, downloadable artifact:
+#   windows -> .msi   macOS -> .dmg (ad-hoc signed)   linux -> .AppImage
+#
+# Trigger it by hand from the Actions tab ("Run workflow") to get a build to
+# test, or on a push to master / a version tag. Signing (Authenticode /
+# Apple notarization) is deferred — users will see a SmartScreen / Gatekeeper
+# warning until secrets are wired in (see TODO.md Phase 4d note).
 
 on:
+  workflow_dispatch:
   push:
     branches: 'master'
-  pull_request:
-    branches: '*'
+    tags: 'v*'
 
 jobs:
   build:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.runs-on }}
     strategy:
-      matrix:
-        os: [macos-13, windows-2019]
       fail-fast: false
-    runs-on: ${{ matrix.os }}
-    name: Build ${{ matrix.os }}
+      matrix:
+        include:
+          - label: Windows MSI
+            runs-on: windows-latest
+            briefcase-platform: windows
+            briefcase-format: ''
+            package-args: ''
+            artifact-glob: dist/*.msi
+          # Intel runner on purpose: the baseline wheels (mu/wheels) are fetched
+          # for macosx_11_0_x86_64 (see os_compatibility_flags), so the bundled
+          # app must be x86_64 too. The result runs on Apple Silicon via Rosetta.
+          - label: macOS dmg
+            runs-on: macos-13
+            briefcase-platform: macOS
+            briefcase-format: ''
+            package-args: '--adhoc-sign'
+            artifact-glob: dist/*.dmg
+          - label: Linux AppImage
+            runs-on: ubuntu-latest
+            briefcase-platform: linux
+            briefcase-format: appimage
+            package-args: ''
+            artifact-glob: dist/*.AppImage
     steps:
       - uses: actions/checkout@v4
+
+      # Briefcase bundles a Python support package matching this version, and
+      # the baseline wheels below are fetched for it — keep them in lockstep.
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.8'
-      - name: Display Python info
-        run: |
-          python -c "import sys; print(sys.version)"
-          python -c "import platform, struct; print(platform.machine(), struct.calcsize('P') * 8)"
-          python -c "import sys; print(sys.executable)"
-          python -m pip --version
-          pip --version
-          pip config list
-          pip freeze
-      - name: Install Mu test dependencies
-        run: |
-          pip install .[tests]
-          pip list
-      - run: mkdir upload
-      - name: Build Windows 64 bit
-        if: runner.os == 'Windows'
-        run: |
-          python make.py win64
-          dir dist/*.msi | rename-item -newname {  $_.name  -replace ".msi"," (64 bit).msi"  }
-          mv dist/*.msi upload/
-      - name: Build macOS
-        if: runner.os == 'macOS'
-        run: |
-          make macos
-          mv dist/*.dmg upload/
-      - name: Upload Mu installer
-        uses: actions/upload-artifact@v4
-        with:
-          name: mu-editor-${{ runner.os }}-${{ github.sha }}
-          path: upload
+          python-version: '3.12'
 
-  build-linux:
-    runs-on: ubuntu-20.04
-    container:
-      image: ghcr.io/mu-editor/mu-appimage:2024.12.02
-    name: Build AppImage
-    steps:
-      - uses: actions/checkout@v4
-      - name: Display system info
-        run: |
-          uname -a
-          cat /etc/os-release
-          ldd --version
-          python -c "import sys; print(sys.version)"
-          python -c "import platform, struct; print(platform.machine(), struct.calcsize('P') * 8)"
-          python -c "import sys; print(sys.executable)"
-          python -m pip --version
-          pip --version
-          pip list --verbose
-      - name: Install Mu test dependencies
-        run: |
-          pip install .[tests]
-          pip list
-      - name: Build Linux AppImage
-        run: QT_QPA_PLATFORM=offscreen make linux
-      # GitHub actions upload artifact breaks permissions, workaround using tar
-      # https://github.com/actions/upload-artifact/issues/38
-      - name: Tar AppImage to maintain permissions
-        run: |
-          cd dist/
-          tar -cvf Mu_Editor-AppImage-x86_64-${{ github.sha }}.tar *.AppImage
-          ls -la .
-      - name: Upload Mu AppImage
+      - name: Install Briefcase
+        run: python -m pip install --upgrade pip briefcase
+
+      # Build the offline baseline-wheels zip (pgzero/pygame/ipykernel + deps)
+      # into mu/wheels/<version>.zip so the first-run `uv venv` needs no network.
+      # Briefcase copies it into the app along with the rest of the mu/ sources.
+      - name: Build offline baseline wheels
+        run: python -m mu.wheels --package
+
+      - name: Briefcase create
+        run: briefcase create ${{ matrix.briefcase-platform }} ${{ matrix.briefcase-format }}
+
+      - name: Briefcase build
+        run: briefcase build ${{ matrix.briefcase-platform }} ${{ matrix.briefcase-format }}
+
+      - name: Briefcase package
+        run: briefcase package ${{ matrix.briefcase-platform }} ${{ matrix.briefcase-format }} ${{ matrix.package-args }}
+
+      - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
           name: mu-editor-${{ runner.os }}-${{ github.sha }}
-          path: dist/Mu_Editor-AppImage-x86_64-${{ github.sha }}.tar
+          path: ${{ matrix.artifact-glob }}
+          if-no-files-found: error

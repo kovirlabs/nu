@@ -12,7 +12,8 @@ smaller codebase (less to port, lower risk). Keep the test suite green at every
 step — it's what makes the bigger changes safe.
 
 Baseline test suite (Python 3.8 + PyQt5, pre-changes): **1120 passed, 20 skipped**.
-Current baseline (Python 3.11–3.14 + PyQt6): **889 passed, 20 skipped**.
+Current baseline (Python 3.11–3.14 + PyQt6): **929 passed, 20 skipped**
+(924 after Phase 4a + 5 new `find_uv` tests in the Phase 4 packaging work).
 Run headless with:
 ```
 QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly -q
@@ -193,27 +194,50 @@ feel; offline-first via bundled assets; **Briefcase** for native installers.
 - [ ] Advanced multi-env create/switch, hidden by default.
 
 **4c. Bundle assets for offline:**
-- [ ] Vendor a pinned `uv` binary per platform.
-- [ ] Vendor a python-build-standalone **CPython 3.14** per platform; make it the *primary*
-  source (NOT network-conditional): `uv venv --python <bundled>` or pre-seed
-  `UV_PYTHON_INSTALL_DIR` + `UV_PYTHON_DOWNLOADS=never`.
-- [ ] Build a wheelhouse (extend `mu/wheels/`) and wire `UV_FIND_LINKS` for offline `pip`.
+- [x] Vendor a pinned `uv` binary per platform — achieved via the PyPI **`uv` wheel** in
+  the Briefcase `requires` (so it lands in `app_packages/bin/uv`); `find_uv()` now resolves
+  it through `uv.find_uv_bin()` at runtime, no `MU_UV`/`PATH` needed. (No separate
+  standalone-binary download/MU_UV plumbing required after all.)
+- [x] ~~Vendor a python-build-standalone CPython per platform~~ **not needed as a separate
+  asset**: Briefcase bundles its own support-package CPython, and first-run reuses it
+  (`uv venv --python <sys.executable>`), so there's no CPython download at first run.
+  (The `UV_PYTHON_DOWNLOADS=never` / `UV_PYTHON_INSTALL_DIR` approach is moot.)
+- [x] Build a wheelhouse — `python -m mu.wheels --package` builds `mu/wheels/<version>.zip`
+  (pgzero/pygame/ipykernel + deps), bundled via `sources`; the first-run baseline install
+  is offline (pip from the zip, see `install_from_zipped_wheels`). Bumped the stale
+  `pygame<2.1.3` cap (no 3.12+ wheels) → `pygame>=2.6`. (`UV_FIND_LINKS` not wired: only
+  *new* user-package installs hit the network, which is expected; baseline is already
+  offline.)
 
-**4d. Briefcase packaging:**
-- [ ] Add `[tool.briefcase]` to `pyproject.toml`; declare PyQt6 + Qt plugins/data; include
-  uv + PBS 3.14 + wheelhouse as app resources.
-- [ ] **Build all three in CI** (`build.yml`): ubuntu → AppImage, windows → MSI,
-  macOS → `.dmg` — so cutting a release is push-button. Local builds stay available for dev
-  (Linux here; the maintainer's Windows box for spot-checking the GUI), but are no longer
-  the release path.
-- [ ] Repoint `make.py`/`Makefile` installer targets at Briefcase (dev/local convenience).
-- NOTE: CI *builds* are credential-free, but **signing isn't** — macOS notarization (Apple
-  Developer cert) and Windows Authenticode need secrets wired into `build.yml`, else users
-  hit Gatekeeper / SmartScreen warnings. Land unsigned-but-building first, add signing after.
+**4d. Briefcase packaging:** ✅ (pending maintainer CI validation on Win/macOS)
+- [x] Added `[tool.briefcase]` + `[tool.briefcase.app.mu]` (+ per-OS sections) to
+  `pyproject.toml`: PyQt6 stack + runtime `requires`, `sources=["mu"]`, icon, license. The
+  app starts via `mu/__main__.py` (`python -m mu`), no shim. `briefcase` added to the
+  `package` extra.
+- [x] **Build all three in CI** (`build.yml` rewritten): `windows-latest → MSI`,
+  `macos-13 (Intel) → dmg`, `ubuntu-latest → AppImage`, on `workflow_dispatch` + push to
+  master/tags; uploads each installer as an artifact. macOS on Intel on purpose (matches the
+  `macosx_11_0_x86_64` baseline-wheel arch).
+- [x] Repointed `make.py`/`Makefile` `win64`/`macos`/`linux` at Briefcase (dev/local).
+- [x] **Validated locally on Linux**: `briefcase create`+`build` produce a working AppImage
+  headlessly (no Docker); the bundled interpreter imports PyQt6 + `mu`, and `find_uv()`
+  resolves the bundled `uv` on a uv-less machine. Fixed a packaging-blocker found this way:
+  the Jupyter-kernel install spawned `sys.executable -I -m ipykernel`, which can't import
+  ipykernel in a frozen app (deps live in `app_packages`, off a fresh subprocess's path) and
+  would crash startup — now runs via the **venv** interpreter (which carries ipykernel as a
+  baseline package). Also fixed a tuple `%`-format bug in `mu/wheels` that masked download
+  errors.
+- [ ] **Maintainer to validate**: download the Windows MSI (and macOS dmg) from a
+  `build.yml` run and confirm install + launch + REPL on real hardware. Linux AppImage
+  validated here.
+- [ ] **Signing** (deferred): macOS notarization (Apple Developer cert) + Windows
+  Authenticode need secrets in `build.yml`, else users hit Gatekeeper / SmartScreen.
+  Unsigned-but-building first; signing after.
 
-**4e. Retire pup:**
-- [ ] Remove pup-based targets, the `_PUP_PBS_URLs` table refs, `linux-docker`, and the
-  `carlosperate/pup` fork usage once Briefcase builds are confirmed on all three OSes.
+**4e. Retire pup:** (deferred — gated on 4d CI validation)
+- [ ] Remove pup-based targets, `_PUP_PBS_URLs`, `linux-docker`, and the `carlosperate/pup`
+  fork usage once the Briefcase builds are confirmed on all three OSes. The pup `make`
+  targets are kept as a stopgap, renamed `win32`/`win64-pup`/`macos-pup`/`linux-pup`.
 
 ## Phase 5 — Plugin architecture (shell the core; modes become plugins)
 

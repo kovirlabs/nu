@@ -397,15 +397,58 @@ def _build_windows_msi(bitness=64):
         shutil.rmtree("./venv-pup", ignore_errors=True)
 
 
-@export
-def win32():
-    """Build 32-bit Windows installer"""
-    _build_windows_msi(bitness=32)
+#
+# Briefcase-driven installers (Phase 4d, see TODO.md). These mirror
+# .github/workflows/build.yml so local and CI builds stay in step; CI is the
+# release path, these are for local/dev convenience. The legacy pup targets
+# below are kept (suffixed `_pup`) until the Briefcase builds are confirmed on
+# all three OSes (Phase 4e retires pup).
+#
+def _briefcase(platform, fmt=None, *package_args):
+    """Build a native installer for `platform` with Briefcase.
+
+    Fetches the offline baseline wheels, then runs the Briefcase
+    create/build/package cycle. `fmt` is the output format (e.g. "appimage");
+    `package_args` are passed to `briefcase package` (e.g. "--adhoc-sign").
+    """
+    print("\nFetching baseline wheels")
+    subprocess.check_call([sys.executable, "-m", "mu.wheels", "--package"])
+    fmt_args = [fmt] if fmt else []
+    for step in ("create", "build", "package"):
+        cmd = [sys.executable, "-m", "briefcase", step, platform, *fmt_args]
+        if step == "package":
+            cmd.extend(package_args)
+        print("Running:", " ".join(cmd))
+        subprocess.check_call(cmd)
 
 
 @export
 def win64():
-    """Build 64-bit Windows installer"""
+    """Build a 64-bit Windows MSI installer (Briefcase)"""
+    _briefcase("windows")
+
+
+@export
+def macos():
+    """Build a macOS .app/.dmg (Briefcase, ad-hoc signed)"""
+    _briefcase("macOS", None, "--adhoc-sign")
+
+
+@export
+def linux():
+    """Build a Linux AppImage (Briefcase)"""
+    _briefcase("linux", "appimage")
+
+
+@export
+def win32():
+    """Build 32-bit Windows installer (legacy pup)"""
+    _build_windows_msi(bitness=32)
+
+
+@export
+def win64_pup():
+    """Build 64-bit Windows installer (legacy pup)"""
     _build_windows_msi(bitness=64)
 
 

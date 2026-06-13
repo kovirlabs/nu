@@ -37,11 +37,13 @@ ZIP_FILEPATH = os.path.join(WHEELS_DIRPATH, mu_version + ".zip")
 # Any additional elements are passed to `pip` for specific purposes
 #
 mode_packages = [
-    # pygame is a pgzero dependency, but there is currently an issue where
-    # pygame versions >=2.1.3 have issues in macOS 10.x, so temporarily for
-    # Mu release 1.2.1 pin the max version here
-    # https://github.com/mu-editor/mu/issues/2423
-    ("pgzero", ("pgzero>=1.2.1", "pygame<2.1.3")),
+    # pygame backs pgzero. The old `pygame<2.1.3` cap was a macOS 10.x
+    # workaround (mu-editor/mu#2423); it's obsolete now that we target
+    # macOS 11+ and Python 3.11–3.14, and it actively breaks modern builds —
+    # pygame <2.1.3 ships no wheels for Python 3.12+, so `pip download` would
+    # fall back to building from sdist (and fail). Require a pygame new enough
+    # to have wheels across the supported Python range.
+    ("pgzero", ("pgzero>=1.2.1", "pygame>=2.6")),
     # The version of ipykernel here should match the one used by qtconsole as
     # specified in pyproject.toml. Mirrored from [project].dependencies.
     ("ipykernel", ("ipykernel>=6.29",)),
@@ -127,7 +129,12 @@ def pip_download(dirpath, logger, additional_flags=[]):
         # NB Probably not necessary now that we're using a temp directory
         #
         if process.returncode != 0:
-            raise WheelsDownloadError("Pip was unable to download %s" % pip_identifiers)
+            # NB wrap pip_identifiers in a tuple: it is itself a tuple, and
+            # `"%s" % some_tuple` would otherwise try to map each element to a
+            # placeholder and raise TypeError, masking the real download error.
+            raise WheelsDownloadError(
+                "Pip was unable to download %s" % (pip_identifiers,)
+            )
 
 
 def convert_sdists_to_wheels(dirpath, logger):

@@ -48,7 +48,7 @@ Most workflows go through the `Makefile` (which delegates to `make.py`):
 ```
 QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly -q
 ```
-Current green baseline (Python 3.11–3.14 + PyQt6): **889 passed, 20 skipped**. (`~/.local/share/mu` must exist or you'll see a harmless at-exit settings-save traceback.) On a headless box without Mesa, Qt6's `offscreen` plugin still needs `libEGL.so.1` — put it on `LD_LIBRARY_PATH` (e.g. `apt-get download libegl1 libglvnd0 && dpkg -x` into a local dir). Lint the project's way with `uv run --no-sync python -m ruff check` and reformat with `... ruff format` (config in `pyproject.toml` `[tool.ruff]`; the gettext `_` builtin is declared there as `builtins = ["_"]`, so no env var dance is needed).
+Current green baseline (Python 3.11–3.14 + PyQt6): **929 passed, 20 skipped**. (`~/.local/share/mu` must exist or you'll see a harmless at-exit settings-save traceback.) On a headless box without Mesa, Qt6's `offscreen` plugin still needs `libEGL.so.1` — put it on `LD_LIBRARY_PATH` (e.g. `apt-get download libegl1 libglvnd0 && dpkg -x` into a local dir). Lint the project's way with `uv run --no-sync python -m ruff check` and reformat with `... ruff format` (config in `pyproject.toml` `[tool.ruff]`; the gettext `_` builtin is declared there as `builtins = ["_"]`, so no env var dance is needed).
 
 Test layout mirrors the source tree: `tests/test_logic.py` tests `mu/logic.py`, `tests/modes/` tests `mu/modes/`, etc.
 

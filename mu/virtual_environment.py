@@ -431,12 +431,32 @@ class UvNotFound(VirtualEnvironmentError):
         super().__init__(message)
 
 
+def _uv_from_package():
+    """Return the path to the `uv` binary shipped by the PyPI ``uv`` package.
+
+    The ``uv`` wheel (a runtime dependency) bundles the executable and exposes
+    its location via ``uv.find_uv_bin()``. In a Briefcase-packaged app this is
+    the binary's home: there's no system ``uv`` on ``PATH`` and ``MU_UV`` isn't
+    set, but the wheel is installed into the app, so this resolves it without
+    any path plumbing. Returns ``None`` if the package isn't importable or the
+    binary it points at is missing (e.g. a dev checkout using a standalone uv).
+    """
+    try:
+        import uv as uv_package
+
+        candidate = uv_package.find_uv_bin()
+    except (ImportError, AttributeError, FileNotFoundError):
+        return None
+    return candidate if candidate and os.path.exists(candidate) else None
+
+
 def find_uv():
     """Locate the `uv` executable.
 
-    Packaged builds ship a pinned `uv` binary and point the ``MU_UV``
-    environment variable at it; a dev checkout falls back to whatever ``uv`` is
-    on the ``PATH``. Raise :class:`UvNotFound` if neither is available.
+    Resolution order: the ``MU_UV`` override → a ``uv`` on the ``PATH`` (dev
+    checkouts, and lets a user supply their own) → the binary bundled by the
+    PyPI ``uv`` package (the packaged-app path, see :func:`_uv_from_package`).
+    Raise :class:`UvNotFound` if none of these is available.
     """
     override = os.environ.get(UV_ENV_VAR)
     if override:
@@ -448,9 +468,12 @@ def find_uv():
     found = shutil.which("uv")
     if found:
         return found
+    bundled = _uv_from_package()
+    if bundled:
+        return bundled
     raise UvNotFound(
-        "Could not find a `uv` executable on PATH or via the %s "
-        "environment variable" % UV_ENV_VAR
+        "Could not find a `uv` executable on PATH, via the %s "
+        "environment variable, or bundled with the `uv` package" % UV_ENV_VAR
     )
 
 
@@ -1042,12 +1065,24 @@ class VirtualEnvironment(object):
         """
         Install a Jupyter kernel for Mu (the name of the kernel indicates this
         is a Mu-related kernel).
+
+        Run via the *venv* interpreter, not Mu's own (`sys.executable`):
+        ``ipykernel`` is a baseline package installed into the venv just above
+        (see :meth:`create`), so it sits in the venv's own ``site-packages`` and
+        is importable even under ``-I``. Mu's own interpreter can't be used in a
+        packaged build — Briefcase installs the app's dependencies into a
+        separate ``app_packages`` dir that is *not* on a fresh subprocess's path,
+        so ``sys.executable -I -m ipykernel`` would fail to import ipykernel and
+        take the whole startup down with it. The kernel's interpreter is forced
+        to ``venv.interpreter`` at REPL start time anyway (see
+        ``MuKernelManager`` in ``mu/modes/python3.py``), so pointing the spec at
+        the venv python is also the more consistent choice.
         """
         kernel_name = self.name.replace(" ", "-")
         display_name = '"Python/Mu ({})"'.format(kernel_name)
         logger.info("Installing Jupyter Kernel: %s", kernel_name)
         ok, output = self.run_subprocess(
-            safe_short_path(sys.executable),
+            safe_short_path(self.interpreter),
             "-I",
             "-m",
             "ipykernel",

@@ -1,38 +1,72 @@
 # Packaging Mu
 
-Because our target users (beginner programmers and those who support them) may
-not be confident with the technical requirements for installing packages,
-we need to make obtaining and setting up Mu as simple and easy as possible. 
+Our target users (beginner programmers and those who support them) may not be
+confident with installing software, so obtaining and setting up Mu needs to be
+as simple as possible — and producing the installers needs to be automatic, so
+cutting a release doesn't depend on one volunteer's time.
 
-Furthermore, we aim to make the creation of packages automatic and as simple
-as possible. By automating this process we ensure that the knowledge and steps
-needed to package Mu is stored in software (so everyone can see how we do it)
-and we don't rely on a volunteer to take time and effort to make things happen.
-If you submit code and it is accepted into our master branch, within minutes
-you should have a set of packages for different platforms that includes your
-changes. Such builds can be
-[found here](http://mu-builds.s3-website.eu-west-2.amazonaws.com/). 
+Since **Phase 4** (see `TODO.md`) the native installers are built with
+**[Briefcase](https://briefcase.readthedocs.io/)** (part of the BeeWare suite),
+replacing the previous `pup` pipeline. A single definition in
+`pyproject.toml`'s `[tool.briefcase]` drives all three platforms:
 
-Of course, such builds are not "official" releases. We'll only do that every
-so often when major updates land. These will take the form of
-[releases found in our GitHub repository](https://github.com/mu-editor/mu/releases).
-Such releases will include the "official" installers for supported platforms.
-The installers referenced on [Mu's website](http://codewith.mu/) will always
-be the latest stable release of Mu on GitHub.
+| OS | Format | CI runner |
+|---|---|---|
+| Windows | `.msi` | `windows-latest` |
+| macOS | `.dmg` (ad-hoc signed) | `macos-13` (Intel) |
+| Linux | `.AppImage` | `ubuntu-latest` |
 
-!!! note
-    Huge thanks to [Carlos Pereira Atencio](https://twitter.com/carlosperate)
-    who made considerable efforts to automate and configure the packaging of
-    Mu. Without the contributions of volunteers like Carlos, projects like Mu
-    simply wouldn't exist. If you find Mu useful why not say thank you to
-    Carlos via Twitter..?
+## Building installers (Briefcase)
 
-    Thank you Carlos! :-)
+CI is the release path: `.github/workflows/build.yml` builds one OS per job and
+uploads the installer as a downloadable artifact. **Trigger it from the GitHub
+Actions tab** ("Build installers" → *Run workflow*), or it runs on a push to
+`master` / a `v*` tag. Download the artifact for your OS from the run.
 
-We package Mu in various different ways so it is as widely available as
-possible. What follows is a brief description of how each package is generated
-(some of them require the manual intervention of others outside the Mu
-project).
+Locally (inside a pip-enabled virtualenv with the `package` extra,
+`pip install -e ".[package]"`):
+
+```
+$ make win64     # 64-bit Windows MSI
+$ make macos     # macOS .app/.dmg (ad-hoc signed)
+$ make linux     # Linux AppImage
+```
+
+Each target fetches the offline baseline wheels and runs the Briefcase
+create → build → package cycle (see `make.py`). The build is mostly self-driving
+once the build tools are present (Briefcase fetches WiX for the Windows MSI on
+demand).
+
+### What ships inside the app
+
+- The editor (`mu`) plus its third-party dependencies (PyQt6, etc.), installed
+  into the bundle by Briefcase from `[tool.briefcase.app.mu].requires`.
+- A pinned **`uv`** binary — it rides in via the PyPI `uv` wheel, and
+  `find_uv()` locates it at runtime through `uv.find_uv_bin()` (no `PATH` or
+  `MU_UV` needed in the packaged app).
+- The **baseline wheels zip** (`mu/wheels/<version>.zip`, built by
+  `python -m mu.wheels --package` before packaging), so the first-run
+  `uv venv` sets up the learner's environment **offline**.
+
+At first launch Mu creates the user's environment with
+`uv venv --python <the bundled interpreter>`, so the packaged Python is reused
+for the learner's code — no separate CPython download is required.
+
+### Signing
+
+CI builds are **unsigned** (macOS uses an ad-hoc signature). Users will see a
+SmartScreen (Windows) or Gatekeeper (macOS) warning until code-signing secrets
+(Authenticode / Apple notarization) are wired into `build.yml` — tracked as a
+follow-up in `TODO.md` (Phase 4d).
+
+!!! warning "The sections below are historical"
+    Everything from "Python Package" down is **inherited from upstream Mu** and
+    describes the **retired** toolchain (Appveyor, `pynsist`/NSIS, Travis, the
+    `pup` builder, tkinter assets, `setup.py`). It is kept for reference while
+    the docs are modernized and **does not reflect how this fork builds today** —
+    see the Briefcase flow above. The legacy `pup` `make` targets survive as
+    `win32`, `win64-pup`, `macos-pup`, `linux-pup`, and `linux-docker` until the
+    Briefcase builds are confirmed on all three OSes (Phase 4e).
 
 ## Python Package
 

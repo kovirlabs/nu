@@ -19,9 +19,10 @@ all:
 	@echo "make translate_begin LANG=xx_XX - create/update a mu.po file for translation."
 	@echo "make translate_done LANG=xx_XX - compile translation strings in mu.po to mu.mo file."
 	@echo "make translate_test LANG=xx_XX - run translate_done and launch Mu in the given LANG."
-	@echo "make win32 - create a 32bit Windows installer for Mu."
-	@echo "make win64 - create a 64bit Windows installer for Mu."
-	@echo "make macos - create a macOS native application for Mu."
+	@echo "make win64 - build a 64bit Windows MSI installer (Briefcase)."
+	@echo "make macos - build a macOS native application (Briefcase)."
+	@echo "make linux - build a Linux AppImage (Briefcase)."
+	@echo "  (legacy pup targets: win32, win64-pup, macos-pup, linux-pup, linux-docker)"
 	@echo "make video - create an mp4 video representing code commits.\n"
 
 clean:
@@ -99,18 +100,33 @@ translate_done:
 translate_test:
 	@python make.py translate_test LANG=$(LANG)
 
-win32: check
-	@echo "\nBuilding 32bit Windows MSI installer."
-	python make.py win32
-
 win64: check
-	@echo "\nBuilding 64bit Windows MSI installer."
+	@echo "\nBuilding 64bit Windows MSI installer (Briefcase)."
 	python make.py win64
 
 macos: check
+	@echo "\nBuilding macOS native application (Briefcase)."
+	python make.py macos
+
+linux: check
+	@echo "\nBuilding Linux AppImage (Briefcase)."
+	python make.py linux
+
+# --- Legacy pup installer targets (Phase 4e will retire pup once the
+# --- Briefcase builds above are confirmed on all three OSes). ---
+
+win32: check
+	@echo "\nBuilding 32bit Windows MSI installer (legacy pup)."
+	python make.py win32
+
+win64-pup: check
+	@echo "\nBuilding 64bit Windows MSI installer (legacy pup)."
+	python make.py win64_pup
+
+macos-pup: check
 	@echo "\nFetching wheels."
 	python -m mu.wheels --package
-	@echo "\nPackaging Mu into a macOS native application."
+	@echo "\nPackaging Mu into a macOS native application (legacy pup)."
 	python -m virtualenv venv-pup
 	# Don't activate venv-pup because:
 	# 1. Not really needed.
@@ -123,10 +139,10 @@ macos: check
 	ls -la ./build/pup/
 	ls -la ./dist/
 
-linux: check
+linux-pup: check
 	@echo "\nFetching wheels."
 	python -m mu.wheels --package
-	@echo "\nPackaging Mu into a Linux AppImage."
+	@echo "\nPackaging Mu into a Linux AppImage (legacy pup)."
 	python -m virtualenv venv-pup
 	# Don't activate venv-pup because:
 	# 1. Not really needed.
