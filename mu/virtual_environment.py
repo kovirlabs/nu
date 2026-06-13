@@ -417,8 +417,9 @@ class Pip(object):
 # Mu no longer needs a venv-capable bundled Python) and lets us surface the env
 # to learners as a real, scriptable thing rather than hidden machinery.
 #
-# This is the foundation the VirtualEnvironment swap sits on; nothing is wired
-# into it yet.
+# VirtualEnvironment now creates its environment with `uv venv` (see
+# `create_venv`) and routes user-package install/remove/list through this
+# wrapper; the baseline-wheel install still runs via pip into the seeded venv.
 #
 UV_ENV_VAR = "MU_UV"
 
@@ -976,37 +977,42 @@ class VirtualEnvironment(object):
 
     def create_venv(self):
         """
-        Create a new virtualenv
+        Create a new virtual environment using `uv`.
+
+        ``uv venv --seed`` produces the same ``bin/python`` + ``bin/pip`` +
+        ``pyvenv.cfg`` layout the rest of this module expects (so the
+        pip-based baseline-wheel install downstream is unchanged), but without
+        relying on Mu's own interpreter being able to bootstrap a venv. The
+        base interpreter is pinned with ``--python`` so uv reuses the running
+        interpreter rather than reaching for a downloaded one.
+
+        Run synchronously via ``run_subprocess`` (not the QProcess-based
+        ``Uv`` wrapper) because creation happens on the startup worker thread,
+        before the Qt event loop is available.
         """
         logger.info("Creating virtualenv: {}".format(self.path))
         logger.info("Virtualenv name: {}".format(self.name))
 
-        env = dict(os.environ)
-        args = filter(
-            None,
-            (
-                safe_short_path(sys.executable),
-                "-I",
-                "-m",
-                "virtualenv",
-                "-p",
-                safe_short_path(sys.executable),
-                "-q",
-                "" if self._is_windows else "--symlinks",
-                self.path,
-            ),
+        uv_executable = safe_short_path(find_uv())
+        base_interpreter = safe_short_path(sys.executable)
+        ok, output = self.run_subprocess(
+            uv_executable,
+            "venv",
+            "--python",
+            base_interpreter,
+            "--seed",
+            self.path,
         )
-        ok, output = self.run_subprocess(*args, env=env)
         if ok:
             logger.info(
                 "Created virtual environment using %s at %s",
-                safe_short_path(sys.executable),
+                base_interpreter,
                 self.path,
             )
         else:
             raise VirtualEnvironmentCreateError(
                 "Unable to create a virtual environment using %s at %s\n%s"
-                % (safe_short_path(sys.executable), self.path, compact(output))
+                % (uv_executable, self.path, compact(output))
             )
 
     def install_jupyter_kernel(self):

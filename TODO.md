@@ -156,13 +156,22 @@ manages the kid's-code Python separately. Decisions (maintainer, 2026-06): PEP 7
 feel; offline-first via bundled assets; **Briefcase** for native installers.
 
 **4a. Replace the baked-in venv with uv** (on the current stack — testable before packaging):
-- [ ] Rewrite `mu/virtual_environment.py` internals as thin `QProcess` wrappers around
-  `uv` (`uv venv`, `uv pip`/`uv add`, `uv run`). Resolve a pinned `uv` binary at runtime.
-- [ ] Startup: ensure/create the default env via uv (replaces `venv.ensure_and_create`,
-  same splash/worker flow); "activate" by setting `VIRTUAL_ENV` + `PATH` in the spawned
-  process env; render the UI scoped to that env. (uv also auto-discovers `.venv` in the
-  working dir.)
-- [ ] Keep the suite green; add tests for the uv wrapper.
+- [x] **uv wrapper** (`find_uv` + `Uv` in `mu/virtual_environment.py`): thin QProcess
+  wrappers around `uv venv`, `uv pip install/uninstall/list`, and `uv run`. The binary is
+  resolved at runtime by `find_uv()` (`MU_UV` override → `uv` on `PATH`); pinning/bundling
+  a per-platform `uv` is deferred to 4c.
+- [x] **Venv creation now goes through uv**: `VirtualEnvironment.create_venv` calls
+  `uv venv --python <sys.executable> --seed <path>` (which yields the same
+  `bin/python` + `bin/pip` + `pyvenv.cfg` layout, so the pip-based baseline-wheel install
+  downstream is untouched) instead of `python -m virtualenv`. Dropped the `virtualenv`
+  runtime dep, added `uv>=0.5`, regenerated `uv.lock`. User-package install/remove/list
+  already route through `uv pip` (b267f14).
+- [x] Suite green: **921 passed, 20 skipped**; ruff check + format clean. Added direct
+  tests for the uv wrapper (`find_uv`/`UvNotFound`/`Uv`), which had been entirely uncovered.
+- [ ] **Still to do**: switch the startup flow to "activate" the env (export
+  `VIRTUAL_ENV` + `PATH` into spawned processes, scope the UI to it) — the env is still
+  driven via the old `ensure_and_create` path (now uv-created). Wiring `uv run` to the
+  "Run" action for PEP 723 inline deps lands with 4b.
 
 **4b. Env UX (progressive disclosure):**
 - [ ] "Environment: <name>" indicator + package list scoped to the active env.

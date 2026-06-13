@@ -70,7 +70,11 @@ dependencies = [
     "black>=24",
     "platformdirs>=2.6",
     "semver>=2.8.0",
-    "virtualenv>=20.0.0",
+    # `uv` creates and manages the user's virtual environment (Phase 4a, see
+    # TODO.md) — it replaces the old `python -m virtualenv` call in
+    # mu/virtual_environment.py. The PyPI `uv` package ships the binary, which
+    # `find_uv()` discovers on PATH (a packaged build can override via MU_UV).
+    "uv>=0.5",
     "wheel",
     "pywin32; sys_platform == 'win32'",
 ]

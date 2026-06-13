@@ -36,6 +36,9 @@ import mu.wheels
 VE = mu.virtual_environment.VirtualEnvironment
 VEError = mu.virtual_environment.VirtualEnvironmentError
 PIP = mu.virtual_environment.Pip
+UV = mu.virtual_environment.Uv
+# The real `Slots` namedtuple, grabbed before any test patches out `Process`.
+SLOTS = mu.virtual_environment.Process.Slots
 
 HERE = os.path.dirname(__file__)
 ZIP_FILENAME = "wheels.zip"
@@ -422,6 +425,160 @@ def test_installed_packages(venv):
                 ["mu-editor"] + [name for name, _ in baseline_packages]
             )
             assert set(user_result) == set(name for name, _ in user_packages)
+
+
+#
+# Tests for the `uv` wrapper (find_uv + Uv) underpinning Phase 4a. These never
+# spawn a real `uv`: find_uv is exercised against a patched PATH/environment and
+# the Uv methods are checked for the command line they hand to a mocked Process.
+#
+
+
+@pytest.fixture
+def uv_process():
+    """Patch the QProcess-based Process runner so Uv methods can be exercised
+    without spawning a real `uv` subprocess. Yields the mock process instance
+    every `Process()` call returns."""
+    with mock.patch.object(mu.virtual_environment, "Process") as MockProcess:
+        yield MockProcess.return_value
+
+
+def test_find_uv_from_environment(monkeypatch, tmp_path):
+    """An existing path in MU_UV is used in preference to anything on PATH."""
+    fake_uv = tmp_path / "uv"
+    fake_uv.write_text("")
+    monkeypatch.setenv(mu.virtual_environment.UV_ENV_VAR, str(fake_uv))
+    assert mu.virtual_environment.find_uv() == str(fake_uv)
+
+
+def test_find_uv_from_environment_missing(monkeypatch, tmp_path):
+    """A MU_UV pointing at a non-existent file raises UvNotFound."""
+    monkeypatch.setenv(mu.virtual_environment.UV_ENV_VAR, str(tmp_path / "nope"))
+    with pytest.raises(mu.virtual_environment.UvNotFound):
+        mu.virtual_environment.find_uv()
+
+
+def test_find_uv_from_path(monkeypatch):
+    """With no MU_UV override, fall back to `uv` on the PATH."""
+    monkeypatch.delenv(mu.virtual_environment.UV_ENV_VAR, raising=False)
+    with mock.patch.object(
+        mu.virtual_environment.shutil, "which", return_value="/usr/bin/uv"
+    ) as which:
+        assert mu.virtual_environment.find_uv() == "/usr/bin/uv"
+        which.assert_called_once_with("uv")
+
+
+def test_find_uv_not_found(monkeypatch):
+    """No override and nothing on PATH raises UvNotFound."""
+    monkeypatch.delenv(mu.virtual_environment.UV_ENV_VAR, raising=False)
+    with mock.patch.object(mu.virtual_environment.shutil, "which", return_value=None):
+        with pytest.raises(mu.virtual_environment.UvNotFound):
+            mu.virtual_environment.find_uv()
+
+
+def test_uv_not_found_default_message():
+    """UvNotFound carries a sensible default message."""
+    assert "uv" in mu.virtual_environment.UvNotFound().message
+
+
+def test_uv_defaults_to_find_uv():
+    """An Uv with no explicit executable resolves one via find_uv."""
+    with mock.patch.object(
+        mu.virtual_environment, "find_uv", return_value="/x/uv"
+    ) as find_uv:
+        uv = UV()
+        assert uv.executable == "/x/uv"
+        assert uv.venv_path is None
+        find_uv.assert_called_once()
+
+
+def test_uv_explicit_executable_and_venv():
+    """An explicit executable bypasses find_uv; venv_path is retained."""
+    uv = UV(uv_executable="/custom/uv", venv_path="/venv")
+    assert uv.executable == "/custom/uv"
+    assert uv.venv_path == "/venv"
+
+
+def test_uv_str_mentions_executable_and_venv():
+    uv = UV(uv_executable="/x/uv", venv_path="/venv")
+    rendered = str(uv)
+    assert "/x/uv" in rendered
+    assert "/venv" in rendered
+
+
+def test_uv_python_args():
+    """The --python selector is only emitted when targeting a venv."""
+    assert UV(uv_executable="/x/uv")._python_args() == []
+    assert UV(uv_executable="/x/uv", venv_path="/venv")._python_args() == [
+        "--python",
+        "/venv",
+    ]
+
+
+def test_uv_version(uv_process):
+    uv_process.run_blocking.return_value = "uv 1.2.3\n"
+    assert UV(uv_executable="/x/uv").version() == "uv 1.2.3"
+    (executable, args), _ = uv_process.run_blocking.call_args
+    assert executable == "/x/uv"
+    assert args == ["--version"]
+
+
+def test_uv_create_venv(uv_process):
+    UV(uv_executable="/x/uv").create_venv("/tmp/env", python="3.11")
+    (_, args), _ = uv_process.run_blocking.call_args
+    assert args == ["venv", "--python", "3.11", "/tmp/env"]
+
+
+def test_uv_create_venv_without_python(uv_process):
+    UV(uv_executable="/x/uv").create_venv("/tmp/env")
+    (_, args), _ = uv_process.run_blocking.call_args
+    assert args == ["venv", "/tmp/env"]
+
+
+def test_uv_install_targets_venv_with_upgrade(uv_process):
+    uv = UV(uv_executable="/x/uv", venv_path="/venv")
+    result = uv.install("arrr", upgrade=True)
+    (executable, args), _ = uv_process.run.call_args
+    assert executable == "/x/uv"
+    assert args == ["pip", "install", "--upgrade", "--python", "/venv", "arrr"]
+    # install returns the live Process so the caller can hold a reference
+    assert result is uv_process
+
+
+def test_uv_install_list_without_upgrade(uv_process):
+    UV(uv_executable="/x/uv").install(["a", "b"])
+    (_, args), _ = uv_process.run.call_args
+    assert args == ["pip", "install", "a", "b"]
+
+
+def test_uv_uninstall(uv_process):
+    UV(uv_executable="/x/uv", venv_path="/venv").uninstall("arrr")
+    (_, args), _ = uv_process.run.call_args
+    assert args == ["pip", "uninstall", "--python", "/venv", "arrr"]
+
+
+def test_uv_list_packages(uv_process):
+    uv_process.run_blocking.return_value = (
+        '[{"name": "a", "version": "1"}, {"name": "b", "version": "2"}]'
+    )
+    uv = UV(uv_executable="/x/uv", venv_path="/venv")
+    assert uv.list_packages() == [("a", "1"), ("b", "2")]
+    (_, args), _ = uv_process.run_blocking.call_args
+    assert args == ["pip", "list", "--format=json", "--python", "/venv"]
+
+
+def test_uv_run_connects_supplied_slots(uv_process):
+    """When slots are supplied, Uv.run wires them onto the Process signals."""
+    started, output, finished = mock.Mock(), mock.Mock(), mock.Mock()
+    slots = SLOTS(started=started, output=output, finished=finished)
+    process = UV(uv_executable="/x/uv").run("pip", "list", slots=slots)
+    assert process is uv_process
+    uv_process.started.connect.assert_called_once_with(started)
+    uv_process.output.connect.assert_called_once_with(output)
+    uv_process.finished.connect.assert_called_once_with(finished)
+    (executable, args), _ = uv_process.run.call_args
+    assert executable == "/x/uv"
+    assert args == ["pip", "list"]
 
 
 def test_venv_is_singleton():
