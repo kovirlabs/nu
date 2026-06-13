@@ -53,8 +53,8 @@ coverage.xml
 # Translations
 *.pot
 
-# Sphinx documentation
-docs/_build/
+# MkDocs build output
+site/
 
 # Emacs
 *~

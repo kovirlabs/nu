@@ -171,7 +171,7 @@ def clean():
     _rmtree("build")
     _rmtree("dist")
     _rmtree(".eggs")
-    _rmtree("docs/_build")
+    _rmtree("site")  # MkDocs build output
     _rmtree(".pytest_cache")
     _rmtree("lib")
     _rmtree(".git/avatar/")  # Created with `make video`
@@ -411,19 +411,8 @@ def win64():
 
 @export
 def docs():
-    """Build the docs"""
-    cwd = os.getcwd()
-    os.chdir("docs")
-    if os.name == "nt":
-        cmds = ["cmd", "/c", "make.bat", "html"]
-    else:
-        cmds = ["make", "html"]
-    try:
-        return subprocess.run(cmds).returncode
-    except Exception:
-        return 1
-    finally:
-        os.chdir(cwd)
+    """Build the docs with MkDocs"""
+    return subprocess.run([sys.executable, "-m", "mkdocs", "build"]).returncode
 
 
 @export

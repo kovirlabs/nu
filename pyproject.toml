@@ -15,7 +15,7 @@ build-backend = "hatchling.build"
 name = "mu-editor"
 dynamic = ["version"]
 description = "A simple Python editor for beginner programmers. A maintained continuation of the Mu editor."
-readme = "README.rst"
+readme = "README.md"
 requires-python = ">=3.11"
 license = "GPL-3.0-or-later"
 authors = [{ name = "Nicholas H.Tollervey", email = "ntoll@ntoll.org" }]
@@ -91,7 +91,7 @@ tests = [
     "pytest-timeout",
     "coverage",
 ]
-docs = ["sphinx"]
+docs = ["mkdocs-material", "mkdocstrings[python]"]
 package = ["build", "wheel", "twine"]
 i18n = ["babel"]
 utils = ["scrapy", "beautifulsoup4", "requests"]
@@ -128,8 +128,8 @@ include = [
     "/mu",
     "/conf",
     "/run.py",
-    "/README.rst",
-    "/CHANGES.rst",
+    "/README.md",
+    "/CHANGES.md",
     "/LICENSE",
 ]
 

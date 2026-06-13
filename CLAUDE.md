@@ -66,10 +66,10 @@ Mu is a **modal editor**: a fixed core of always-available features, plus a set 
 
 - **`mu/virtual_environment.py`** — Mu manages a **separate "user" virtualenv** (the `venv` singleton at module bottom) into which it installs third-party packages requested from the UI, isolated from Mu's own environment. `VirtualEnvironment` / `Pip` / `Process` wrap creation and `pip` operations via `QProcess`. Bundled wheels live in `mu/wheels/` (`python -m mu.wheels --package` fetches them for installers).
 
-- **`mu/debugger/`** — the Python3 visual debugger, split into a `client` (in-process, talks to the UI) and a `runner` (the debugged program's subprocess). See `docs/debugger.rst`.
+- **`mu/debugger/`** — the Python3 visual debugger, split into a `client` (in-process, talks to the UI) and a `runner` (the debugged program's subprocess). See `docs/debugger.md`.
 
 Supporting modules: `mu/settings.py` + `mu/config.py` (persisted settings and path constants), `mu/i18n.py` + `mu/locale/` (gettext translations; `make translate_*` workflows), `mu/resources/` (icons, fonts, CSS, web assets).
 
 ## Where to read more
 
-`docs/` is Sphinx source (hosted at mu.readthedocs.io). Most useful for orientation: `docs/architecture.rst`, `docs/modes.rst` (writing a mode), `docs/debugger.rst`, `docs/setup.rst`, `docs/tests.rst`, `docs/translations.rst`, `docs/packaging.rst`. Every class/method carries a human-written docstring; these are extracted into `docs/api.rst`.
+`docs/` is **MkDocs** source (Markdown, Material theme; `mkdocs.yml` at the repo root, published to GitHub Pages via `.github/workflows/docs.yml`). Build with `make docs` or live-preview with `make docs-serve`. Most useful for orientation: `docs/architecture.md`, `docs/modes.md` (writing a mode), `docs/debugger.md`, `docs/setup.md`, `docs/tests.md`, `docs/translations.md`, `docs/packaging.md`. Every class/method carries a human-written docstring; these are extracted into `docs/api.md` via mkdocstrings. NOTE: much of `docs/` is inherited from upstream Mu and still describes the pre-fork toolchain; `setup.md` and `architecture.md` have been refreshed, the rest is being modernized incrementally.

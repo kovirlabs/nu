@@ -1,0 +1,88 @@
+site_name: Nu developer documentation
+site_description: Developer documentation for Nu, a maintained continuation of the Mu editor.
+site_url: https://kovirlabs.github.io/nu/
+repo_url: https://github.com/kovirlabs/nu
+repo_name: kovirlabs/nu
+edit_uri: edit/master/docs/
+copyright: Copyright &copy; Nicholas H. Tollervey and the Mu/Nu contributors
+
+theme:
+  name: material
+  logo: icon.png
+  favicon: icon.png
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - content.code.copy
+    - search.suggest
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: ["."]
+          options:
+            show_root_heading: true
+            show_source: true
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.snippets
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - Developer setup: setup.md
+      - First steps: first-steps.md
+      - Contributing: contributing.md
+      - Code of Conduct: code_of_conduct.md
+  - Architecture:
+      - Overview: architecture.md
+      - Modes: modes.md
+      - Debugger / runner: debugger.md
+      - User experience: user-experience.md
+      - Tests: tests.md
+      - Translations: translations.md
+  - Design decisions:
+      - Overview: design.md
+      - File reading and writing: design/file_reading_and_writing.md
+      - Line endings: design/line-endings.md
+      - Runtime virtual environment: design/runtime_virtual_environment.md
+      - Settings and sessions: design/settings-and-sessions.md
+  - Packaging & release:
+      - Packaging: packaging.md
+      - Release process: release.md
+      - Website: website.md
+  - Reference:
+      - API reference: api.md
+      - Authors: authors.md
+      - Changelog: changes.md
+      - Copyright & image credits: copyright.md
+      - License: license.md

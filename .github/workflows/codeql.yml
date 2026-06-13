@@ -34,7 +34,8 @@ jobs:
           languages: python
           config-file: ./.github/codeql/codeql-config.yml
           queries: +security-and-quality
-          # Manually install deps, as CodeQL tries to install the empty requirements.txt
+          # Dependencies are installed manually above (pip install .[dev]); skip
+          # CodeQL's own dependency auto-install.
           setup-python-dependencies: false
 
       - name: Perform CodeQL Analysis

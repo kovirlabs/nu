@@ -14,7 +14,8 @@ all:
 	@echo "make dist - make a dist/wheel for the project."
 	@echo "make publish-test - publish the project to PyPI test instance."
 	@echo "make publish-live - publish the project to PyPI production."
-	@echo "make docs - run sphinx to create project documentation."
+	@echo "make docs - build the documentation with MkDocs."
+	@echo "make docs-serve - serve the documentation locally with live reload."
 	@echo "make translate_begin LANG=xx_XX - create/update a mu.po file for translation."
 	@echo "make translate_done LANG=xx_XX - compile translation strings in mu.po to mu.mo file."
 	@echo "make translate_test LANG=xx_XX - run translate_done and launch Mu in the given LANG."
@@ -29,7 +30,7 @@ clean:
 	rm -rf .coverage
 	rm -rf .eggs
 	rm -rf *.egg-info
-	rm -rf docs/_build
+	rm -rf site
 	rm -rf .pytest_cache
 	rm -rf lib
 	rm -rf *.mp4
@@ -83,8 +84,11 @@ publish-live: dist
 docs:
 	@python make.py docs
 	@echo "\nDocumentation can be found here:"
-	@echo file://`pwd`/docs/_build/html/index.html
+	@echo file://`pwd`/site/index.html
 	@echo "\n"
+
+docs-serve:
+	@python -m mkdocs serve
 
 translate_begin:
 	@python make.py translate_begin LANG=$(LANG)
