@@ -161,18 +161,24 @@ include = [
 # is required at first run.
 # ---------------------------------------------------------------------------
 [tool.briefcase]
-project_name = "Mu Editor"
-bundle = "mu.codewith"
+project_name = "nu-editor"
+bundle = "org.kovir"
 # Briefcase needs a concrete version string; keep this in sync with
 # mu/__init__.py, which stays the canonical source the rest of the tooling reads.
 version = "2.0.0b1"
 url = "https://github.com/kovirlabs/nu"
-author = "Nicholas H.Tollervey and the Mu/Nu contributors"
-author_email = "ntoll@ntoll.org"
+# `author` is the installer publisher AND the Windows install-path folder
+# (Program Files\<author>\<formal_name>), so this is nu's maintainer — not the
+# original Mu author, who is credited in AUTHORS.md and via the Upstream link.
+author = "Kovir Labs"
+author_email = "kovirlabs@kovir.org"
 license.file = "LICENSE"
 
 [tool.briefcase.app.mu]
-formal_name = "Mu Editor"
+# The program name across all installers: the Windows install-path leaf +
+# Add/Remove entry, the macOS .app, the AppImage filename. (The app key stays
+# `mu`, so the app is still launched as `python -m mu`.)
+formal_name = "nu-editor"
 description = "A simple Python editor for beginner programmers."
 long_description = """A simple, modal Python editor for beginner programmers,
 built on PyQt6. Nu is a maintained continuation of the Mu editor.

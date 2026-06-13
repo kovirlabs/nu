@@ -5,6 +5,7 @@ import os
 import sys
 import glob
 import logging
+import platform
 import subprocess
 import tempfile
 import zipfile
@@ -62,9 +63,12 @@ def os_compatibility_flags():
     # For macOS the oldest supported version follows PyQt6's baseline (macOS
     # 11 Big Sur for the 6.x wheels).
     if sys.platform == "darwin":
+        # Target macOS 11+ for the *runner's* architecture (arm64 on the Apple
+        # Silicon CI runners, x86_64 on Intel). The wheel arch must match the
+        # app the installer bundles, or the baseline wheels won't load.
         extra_flags.extend(
             [
-                "--platform=macosx_11_0_x86_64",
+                "--platform=macosx_11_0_%s" % platform.machine(),
                 "--only-binary=:all:",
             ]
         )

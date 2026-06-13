@@ -35,12 +35,14 @@ jobs:
             docker-arg: ''
             package-args: ''
             artifact-glob: dist/*.msi
-          # Intel runner on purpose: the baseline wheels (mu/wheels) are fetched
-          # for macosx_11_0_x86_64, so the bundled app must be x86_64 too (runs
-          # on Apple Silicon via Rosetta). Package as a zipped .app — the dmg
-          # path uses Finder/AppleScript and hangs on headless CI.
+          # Apple Silicon (arm64): GitHub is retiring the Intel (macos-13)
+          # runners, which left this job stuck waiting for one. arm64 runners are
+          # reliable and native on every modern Mac. The baseline wheels are
+          # fetched arch-aware (see os_compatibility_flags), so they match.
+          # Package as a zipped .app — the dmg path uses Finder/AppleScript and
+          # hangs on headless CI.
           - label: macOS app
-            runs-on: macos-13
+            runs-on: macos-latest
             briefcase-platform: macOS
             briefcase-format: ''
             docker-arg: ''
