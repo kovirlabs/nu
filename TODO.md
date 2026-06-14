@@ -368,3 +368,30 @@ choice; recommended stack below.)
 - Orphaned resource icons / locale strings for removed modes are harmless; sweep later.
 - 100%-coverage mandate is great for the Qt6 port; can relax to "don't regress" afterward
   if it slows iteration.
+- **Translations re-extraction after the in-app "Mu" → "Nu" rename** (i18n follow-up). The
+  user-facing app-name strings were renamed from "Mu" to "Nu" (window title, dialogs,
+  tooltips, error/confirmation messages, the MOTD, and the Jupyter kernel label) across
+  `mu/interface/main.py`, `mu/interface/dialogs.py`, `mu/logic.py`,
+  `mu/modes/{base,circuitpython}.py`, and `mu/virtual_environment.py`. Because each is a
+  gettext `_()` string, renaming changes its `msgid`, so the existing
+  `mu/locale/*/LC_MESSAGES/mu.po` catalogues **no longer match** those strings — they fall
+  back to the (English) "Nu …" source until the catalogues are regenerated. **To do:**
+  re-extract the `.pot` and merge into the per-locale `.po` (the `make translate*` / babel
+  flow), then update the translations. NB heritage strings were intentionally left as "Mu"
+  (e.g. the MOTD credit "Mu was created by Nicholas H. Tollervey."), so they keep their
+  existing translations.
+- **App-ID realignment: `mu.codewith.editor` → Briefcase's `org.kovir.mu`** (Linux desktop
+  integration; deferred out of the Mu→Nu rename because it's app *identity*, not display
+  name). `mu/app.py` calls `setDesktopFileName("mu.codewith.editor")`, and the `conf/`
+  files carry that id (the `mu.codewith.editor.desktop` filename, `Icon=`,
+  `StartupWMClass=`, appdata `<id>`/`<project_group>`) — but Briefcase generates its Linux
+  metadata as `org.kovir.mu` (bundle `org.kovir` + app `mu`), so the running app's
+  desktop-file hint won't match the installed `.desktop` (breaks the taskbar icon/grouping
+  on Wayland). Align the app id and regenerate/rename the `conf/` metadata to match — or
+  drop `conf/` entirely once pup is retired (Phase 4e), since Briefcase already emits its
+  own desktop + AppStream files.
+- **`conf/mu.appdata.xml` `<description>` is stale beyond branding.** It still advertises
+  the **micro:bit mode** (dropped in Phase 1) and the pre-fork framing, so it needs a real
+  rewrite describing nu's actual mode set (python, circuitpython, debugger, pygamezero) —
+  not a find/replace — before it's a truthful AppStream description. (The `<name>` is
+  already flipped to "Nu".)

@@ -102,7 +102,7 @@ class ButtonBar(QToolBar):
         self.addAction(
             name="modes",
             display_name=_("Mode"),
-            tool_text=_("Change Mu's mode of behaviour."),
+            tool_text=_("Change Nu's mode of behaviour."),
         )
         self.addSeparator()
         self.addAction(
@@ -160,10 +160,10 @@ class ButtonBar(QToolBar):
         self.addAction(
             name="help",
             display_name=_("Help"),
-            tool_text=_("Show help about Mu in a browser."),
+            tool_text=_("Show help about Nu in a browser."),
         )
         self.addSeparator()
-        self.addAction(name="quit", display_name=_("Quit"), tool_text=_("Quit Mu."))
+        self.addAction(name="quit", display_name=_("Quit"), tool_text=_("Quit Nu."))
 
     def set_responsive_mode(self, width, height):
         """
@@ -302,7 +302,7 @@ class Window(QMainWindow):
     Defines the look and characteristics of the application's main window.
     """
 
-    title = _("Mu {}").format(__version__)
+    title = _("Nu {}").format(__version__)
     icon = "icon"
     timer = None
     usb_checker = None
@@ -949,7 +949,7 @@ class Window(QMainWindow):
         """
         message_box = QMessageBox(self)
         message_box.setText(message)
-        message_box.setWindowTitle("Mu")
+        message_box.setWindowTitle("Nu")
         if information:
             message_box.setInformativeText(information)
         if icon and hasattr(QMessageBox.Icon, icon):
@@ -975,7 +975,7 @@ class Window(QMainWindow):
         """
         message_box = QMessageBox(self)
         message_box.setText(message)
-        message_box.setWindowTitle(_("Mu"))
+        message_box.setWindowTitle(_("Nu"))
         if information:
             message_box.setInformativeText(information)
         if icon and hasattr(QMessageBox.Icon, icon):
@@ -1291,7 +1291,7 @@ class StatusBar(QStatusBar):
 
         # Mode selector.
         self.mode_label = QLabel()
-        self.mode_label.setToolTip(_("Mu's current mode of behaviour."))
+        self.mode_label.setToolTip(_("Nu's current mode of behaviour."))
         self.addPermanentWidget(self.mode_label)
         self.set_mode(mode)
 
@@ -1304,7 +1304,7 @@ class StatusBar(QStatusBar):
         self.logs_label = QLabel()
         self.logs_label.setObjectName("AdministrationLabel")
         self.logs_label.setPixmap(load_pixmap("logs", size=QSize(24, 24)))
-        self.logs_label.setToolTip(_("Mu Administration"))
+        self.logs_label.setToolTip(_("Nu Administration"))
         self.addPermanentWidget(self.logs_label)
 
     def connect_logs(self, handler, shortcut):

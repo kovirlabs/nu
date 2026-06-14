@@ -319,7 +319,7 @@ class BaseMode(QObject):
         self.plotter = False
         msg = _("Data Flood Detected!")
         info = _(
-            "The plotter is flooded with data which will make Mu "
+            "The plotter is flooded with data which will make Nu "
             "unresponsive and freeze. As a safeguard, the plotter has "
             "been stopped.\n\n"
             "Flooding is when chunks of data of more than 1024 bytes are "

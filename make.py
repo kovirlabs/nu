@@ -382,7 +382,7 @@ def _build_windows_msi(bitness=64):
             "./venv-pup/Scripts/pup.exe",
             "package",
             "--launch-module=mu",
-            "--nice-name=Mu Editor",
+            "--nice-name=Nu Editor",
             "--icon-path=./package/icons/win_icon.ico",
             "--license-path=./LICENSE",
             ".",
