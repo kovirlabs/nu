@@ -40,12 +40,14 @@ jobs:
           python -m pip --version
       - name: Prepare Ubuntu
         if: runner.os == 'Linux'
-        # Qt6's xcb platform plugin needs libxcb-cursor0 (since Qt 6.5) plus the
-        # usual EGL/GL/xkb libraries; xvfb provides the virtual display.
+        # Tests run under Qt's headless "offscreen" platform (QT_QPA_PLATFORM is
+        # set on the check step), which needs only libEGL/libGL — no X server.
+        # Constructing a QApplication under xvfb + the xcb platform plugin
+        # aborts (SIGABRT) on the runners (Qt6 on Ubuntu noble), so we avoid the
+        # xcb/xvfb stack entirely.
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            libxkbcommon-x11-0 libxcb-cursor0 libegl1 libgl1 xvfb
+          sudo apt-get install -y libegl1 libgl1
       - name: Install Mu dependencies
         run: |
           python -m pip install --upgrade pip
@@ -54,7 +56,9 @@ jobs:
         timeout-minutes: 10
       - name: Run checks
         if: runner.os == 'Linux'
-        run: xvfb-run make check
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: make check
         timeout-minutes: 10
       - name: Run checks
         if: runner.os != 'Linux'
