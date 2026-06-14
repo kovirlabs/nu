@@ -498,9 +498,14 @@ def test_find_uv_from_path(monkeypatch):
 
 
 def test_find_uv_not_found(monkeypatch):
-    """No override and nothing on PATH raises UvNotFound."""
+    """No override, nothing on PATH, no bundled `uv` package raises UvNotFound."""
     monkeypatch.delenv(mu.virtual_environment.UV_ENV_VAR, raising=False)
-    with mock.patch.object(mu.virtual_environment.shutil, "which", return_value=None):
+    with (
+        mock.patch.object(mu.virtual_environment.shutil, "which", return_value=None),
+        mock.patch.object(
+            mu.virtual_environment, "_uv_from_package", return_value=None
+        ),
+    ):
         with pytest.raises(mu.virtual_environment.UvNotFound):
             mu.virtual_environment.find_uv()
 
