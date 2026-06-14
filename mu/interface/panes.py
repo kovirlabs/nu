@@ -174,8 +174,13 @@ class MicroPythonREPLPane(QTextEdit):
         self.set_theme(theme)
         self.unprocessed_input = b""  # used by process_bytes
         self.decoder = codecs.getincrementaldecoder("utf8")("replace")
+        # CSI sequence: ESC [ <params> <final letter>, where params are
+        # semicolon-separated numbers. Each repeated parameter is anchored on a
+        # literal ';' (non-capturing) so the digits can't overlap with `count`;
+        # the old `(;?[\d]*)*` form was ambiguous and caused exponential
+        # backtracking on inputs like "\x1B[" + "0" * n with no final letter.
         self.vt100_regex = re.compile(
-            r"\x1B\[(?P<count>[\d]*)(;?[\d]*)*(?P<action>[A-Za-z])"
+            r"\x1B\[(?P<count>\d*)(?:;\d*)*(?P<action>[A-Za-z])"
         )
         self.osc_regex = re.compile(
             r"\x1B\](?P<command>[\d]*);(?P<string>[^\x1B]*)\x1B\\"

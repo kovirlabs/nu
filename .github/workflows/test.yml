@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: '*'
 
+# Minimal default token scope for all jobs (checkout + read only).
+permissions:
+  contents: read
+
 jobs:
   test:
     timeout-minutes: 30
