@@ -17,6 +17,11 @@ on:
   push:
     tags: 'v*'
 
+# Minimal default token scope; the `release` job widens this to
+# `contents: write` for itself to publish the GitHub Release.
+permissions:
+  contents: read
+
 jobs:
   build:
     name: ${{ matrix.label }}

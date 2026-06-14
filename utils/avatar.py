@@ -44,7 +44,7 @@ if not os.path.exists(path):
 
 for username, email in users:
     print(f"Processing {username} {email}")
-    if "users.noreply.github.com" in email:
+    if email.rpartition("@")[2] == "users.noreply.github.com":
         raw_username, _ = email.split("@")
         response = get_github(raw_username)
         _, mime = response.headers["content-type"].split("/")

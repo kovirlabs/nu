@@ -1,130 +1,106 @@
 """
-The scrapy and beautifulsoup4 packages must be installed.
+Generate the Flask API data used for Mu's autocomplete/calltips.
+
+Requires the `beautifulsoup4` and `requests` packages (the `utils` extra).
 
 Usage:
 
-scrapy runspider flask_api.py -o flask.json
+    python flask_api.py [output.json]
 
+Fetches the Flask API reference and writes a JSON list of API entries
+(default: flask.json).
 """
 
-import scrapy
+import json
+import sys
+
+import requests
 from bs4 import BeautifulSoup
 
 
-URL = "http://flask.pocoo.org/docs/1.0/api/"
+# The `en/stable/` alias always tracks the current stable Flask release, so
+# this keeps working across Flask versions without a hard-coded version path.
+URL = "https://flask.palletsprojects.com/en/stable/api/"
 
 
-class BottleSpider(scrapy.Spider):
-    name = "BottleSpider"
-    start_urls = [URL]
+def to_dict(name, args, description):
+    """
+    Returns a dictionary representation of the API element if valid, else
+    returns None.
+    """
+    if name.endswith("__"):
+        return None
+    return {"name": name, "args": args, "description": description}
 
-    def parse(self, response):
-        """
-        Scrapes the list of modules associated with Bottle. Causes
-        scrapy to follow the links to the module docs and uses a different
-        parser to extract the API information contained therein.
-        """
-        # Find all the function definitions on the page:
-        for func in response.css("dl.function"):
-            # Class details are always first items in dl.
-            func_spec = func.css("dt")[0]
-            func_doc = func.css("dd")[0]
-            # Function name is always first dt
-            func_name = BeautifulSoup(
-                func_spec.css("code.descname").extract()[0], "html.parser"
-            ).text
-            # Args into function
-            args = []
-            for ems in func_spec.css("em"):
-                args.append(ems.extract().replace("<em>", "").replace("</em>", ""))
-            # Function description.
-            soup = BeautifulSoup(func_doc.extract(), "html.parser")
-            d = self.to_dict(func_name, args, soup.text)
+
+def descname(spec):
+    """Returns the bare API name from a dt signature (its ``descname`` span)."""
+    name = spec.select_one("span.descname")
+    return name.get_text() if name else ""
+
+
+def sig_params(spec):
+    """Returns the list of parameter strings from a dt signature."""
+    return [em.get_text() for em in spec.select("em.sig-param")]
+
+
+def parse(soup):
+    """
+    Yields the API elements scraped from a parsed Flask API documentation page.
+
+    Targets the modern Sphinx markup (``dl.py.function``, ``span.descname``,
+    ``em.sig-param``) used by the current Flask docs.
+    """
+    # Find all the function definitions on the page:
+    for func in soup.select("dl.py.function"):
+        # Spec and doc are always the first dt/dd in the dl.
+        func_spec = func.select_one("dt")
+        func_doc = func.select_one("dd")
+        d = to_dict(descname(func_spec), sig_params(func_spec), func_doc.get_text())
+        if d:
+            yield d
+    # Find all the class definitions on the page:
+    for classes in soup.select("dl.py.class"):
+        class_spec = classes.select_one("dt")
+        class_doc = classes.select_one("dd")
+        class_name = descname(class_spec)
+        # Class description: the leading paragraphs, up to the first nested
+        # definition list (members) or field list (params/returns).
+        description = ""
+        for child in class_doc.contents:
+            name = getattr(child, "name", None)
+            if name == "p":
+                description += child.get_text() + "\n\n"
+            if name in ("dl", "table"):
+                break
+        d = to_dict(class_name, sig_params(class_spec), description)
+        if d:
+            yield d
+        # Members: methods, then attributes / properties / data.
+        for method in classes.select("dl.py.method"):
+            method_name = descname(method.select_one("dt"))
+            if method_name.startswith("__"):
+                continue
+            method_name = class_name + "." + method_name
+            method_args = sig_params(method.select_one("dt"))
+            d = to_dict(method_name, method_args, method.select_one("dd").get_text())
             if d:
                 yield d
-        # Find all the class definitions on the page:
-        for classes in response.css("dl.class"):
-            # Class details are always first items in dl.
-            class_spec = classes.css("dt")[0]
-            class_doc = classes.css("dd")[0]
-            # Class name is always first dt
-            class_name = BeautifulSoup(
-                class_spec.css("code.descname").extract()[0], "html.parser"
-            ).text
-            # Args into __init__
-            init_args = []
-            for ems in class_spec.css("em"):
-                props = "property" in ems.css("::attr(class)").extract()
-                if not props:
-                    init_args.append(
-                        ems.extract().replace("<em>", "").replace("</em>", "")
-                    )
-            # Class description. Everything up to and including the field-list.
-            soup = BeautifulSoup(class_doc.extract(), "html.parser")
-            contents = soup.contents[0].contents
-            description = ""
-            for child in contents:
-                if child.name == "p":
-                    description += child.text + "\n\n"
-                if child.name == "table":
-                    raw = child.text
-                    rows = [r.strip() for r in raw.split("/n") if r.strip()]
-                    description += "\n"
-                    description += "\n".join(rows)
-                    break
-                if child.name == "dl":
-                    break
-            d = self.to_dict(class_name, init_args, description)
+        for member in classes.select("dl.py.attribute, dl.py.property, dl.py.data"):
+            name = class_name + "." + descname(member.select_one("dt"))
+            d = to_dict(name, None, member.select_one("dd").get_text())
             if d:
                 yield d
-            # Remaining dt are methods or attributes
-            for methods in classes.css("dl.method"):
-                # Parse and yield methods.
-                method_name = BeautifulSoup(
-                    methods.css("code.descname").extract()[0], "html.parser"
-                ).text
-                if method_name.startswith("__"):
-                    break
-                method_name = class_name + "." + method_name
-                method_args = []
-                for ems in methods.css("em"):
-                    method_args.append(
-                        ems.extract().replace("<em>", "").replace("</em>", "")
-                    )
-                description = BeautifulSoup(
-                    methods.css("dd")[0].extract(), "html.parser"
-                ).text
-                d = self.to_dict(method_name, method_args, description)
-                if d:
-                    yield d
-            for data in classes.css("dl.attribute"):
-                name = BeautifulSoup(
-                    data.css("code.descname").extract()[0], "html.parser"
-                ).text
-                name = class_name + "." + name
-                description = BeautifulSoup(
-                    data.css("dd")[0].extract(), "html.parser"
-                ).text
-                d = self.to_dict(name, None, description)
-                if d:
-                    yield d
-            for data in classes.css("dl.data"):
-                name = BeautifulSoup(
-                    data.css("code.descname").extract()[0], "html.parser"
-                ).text
-                name = class_name + "." + name
-                description = BeautifulSoup(
-                    data.css("dd")[0].extract(), "html.parser"
-                ).text
-                d = self.to_dict(name, None, description)
-                if d:
-                    yield d
 
-    def to_dict(self, name, args, description):
-        """
-        Returns a dictionary representation of the API element if valid, else
-        returns None.
-        """
-        if name.endswith("__"):
-            return None
-        return {"name": name, "args": args, "description": description}
+
+def main(output="flask.json"):
+    response = requests.get(URL)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, "html.parser")
+    entries = list(parse(soup))
+    with open(output, "w", encoding="utf-8") as f:
+        json.dump(entries, f, indent=2)
+
+
+if __name__ == "__main__":
+    main(*sys.argv[1:])

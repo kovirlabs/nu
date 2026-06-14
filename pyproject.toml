@@ -109,7 +109,7 @@ tests = [
 docs = ["mkdocs-material", "mkdocstrings[python]"]
 package = ["build", "wheel", "twine", "briefcase>=0.3.19"]
 i18n = ["babel"]
-utils = ["scrapy", "beautifulsoup4", "requests"]
+utils = ["beautifulsoup4", "requests"]
 # ruff is the dev lint+format tool (replaces flake8/pycodestyle/pyflakes/black
 # *as dev tools*; those stay as runtime deps for the in-editor checker and the
 # "Tidy" button — see [project.dependencies] above).
