@@ -37,7 +37,7 @@ def icon_from_app(app_path):
 # filename = 'mu-editor.dmg'
 
 # Uncomment to override the output volume name
-# volume_name = 'Mu Editor'
+# volume_name = 'Nu Editor'
 
 
 # Volume format (see hdiutil create -help)

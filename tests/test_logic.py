@@ -2752,7 +2752,7 @@ def test_rename_tab_avoid_duplicating_other_tab_name():
     ed.rename_tab(1)
     view.show_message.assert_called_once_with(
         "Could not rename file.",
-        "A file of that name is already open in Mu.",
+        "A file of that name is already open in Nu.",
     )
     assert mock_tab.path == "old.py"
 

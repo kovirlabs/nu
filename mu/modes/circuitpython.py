@@ -190,7 +190,7 @@ class CircuitPythonMode(MicroPythonMode):
                     m = _("Permission error running mount command")
                     info = _(
                         'The mount command ("{}") returned an error: '
-                        "{}. Mu will continue as if a device isn't "
+                        "{}. Nu will continue as if a device isn't "
                         "plugged in."
                     ).format(mount_command, repr(e))
                     self.view.show_message(m, info)
@@ -209,7 +209,7 @@ class CircuitPythonMode(MicroPythonMode):
                     m = _(
                         "If your Circuit Python device is plugged in,"
                         + ' you need to "Share with Linux" on the CIRCUITPY drive'
-                        + ' in the "Files" app then restart Mu.'
+                        + ' in the "Files" app then restart Nu.'
                     )
                     self.view.show_message(m)
 
@@ -269,7 +269,7 @@ class CircuitPythonMode(MicroPythonMode):
                     "Python files for CircuitPython devices"
                     " are stored on the device. Therefore, to edit"
                     " these files you need to have the device plugged in."
-                    " Until you plug in a device, Mu will use the"
+                    " Until you plug in a device, Nu will use the"
                     " directory found here:\n\n"
                     " {}\n\n...to store your code."
                 )

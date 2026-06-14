@@ -178,7 +178,7 @@ license.file = "LICENSE"
 # The program name across all installers: the Windows install-path leaf +
 # Add/Remove entry, the macOS .app, the AppImage filename. (The app key stays
 # `mu`, so the app is still launched as `python -m mu`.)
-formal_name = "nu-editor"
+formal_name = "Nu Editor"
 description = "A simple Python editor for beginner programmers."
 long_description = """A simple, modal Python editor for beginner programmers,
 built on PyQt6. Nu is a maintained continuation of the Mu editor.

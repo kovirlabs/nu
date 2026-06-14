@@ -134,7 +134,7 @@ macos-pup: check
 	# Installing pup from a fork with the --pip-platform flag proof of concept
 	# and using it to install wheels for the `macosx_10_12_x86_64` platform
 	./venv-pup/bin/pip install git+https://github.com/carlosperate/pup.git@pip-platform
-	./venv-pup/bin/pup package --launch-module=mu --nice-name="Mu Editor" --icon-path=./package/icons/mac_icon.icns --license-path=./LICENSE --pip-platform=macosx_10_12_x86_64 .
+	./venv-pup/bin/pup package --launch-module=mu --nice-name="Nu Editor" --icon-path=./package/icons/mac_icon.icns --license-path=./LICENSE --pip-platform=macosx_10_12_x86_64 .
 	rm -r venv-pup
 	ls -la ./build/pup/
 	ls -la ./dist/
@@ -148,7 +148,7 @@ linux-pup: check
 	# 1. Not really needed.
 	# 2. Previously active venv would be "gone" on venv-pup deactivation.
 	./venv-pup/bin/pip install pup
-	./venv-pup/bin/pup package --launch-module=mu --nice-name="Mu Editor" --icon-path=./mu/resources/images/icon.png --license-path=./LICENSE .
+	./venv-pup/bin/pup package --launch-module=mu --nice-name="Nu Editor" --icon-path=./mu/resources/images/icon.png --license-path=./LICENSE .
 	rm -r venv-pup
 	ls -la ./build/pup/
 	ls -la ./dist/
@@ -166,7 +166,7 @@ linux-docker: clean
 		pip install virtualenv && \
 		python -m virtualenv venv-pup && \
 		./venv-pup/bin/pip install pup && \
-		./venv-pup/bin/pup package --launch-module=mu --nice-name='Mu Editor' --icon-path=mu/mu/resources/images/icon.png --license-path=mu/LICENSE mu/ && \
+		./venv-pup/bin/pup package --launch-module=mu --nice-name='Nu Editor' --icon-path=mu/mu/resources/images/icon.png --license-path=mu/LICENSE mu/ && \
 		cd dist/ && \
 		find *.AppImage -type f -exec tar -cvf {}.tar {} \; && \
 		cd /home && \

@@ -89,7 +89,7 @@ class ModeSelector(QDialog):
         instructions = QLabel(
             _(
                 "Change mode at any time by clicking "
-                'the "Mode" button containing Mu\'s logo.'
+                'the "Mode" button containing Nu\'s logo.'
             )
         )
         instructions.setWordWrap(True)
@@ -226,8 +226,8 @@ class LocaleWidget(QWidget):
             self.drop_down.setCurrentIndex(index)
         label = QLabel(
             _(
-                "Please select the language for Mu's user interface from the "
-                "choices listed below. <strong>Restart Mu for these changes "
+                "Please select the language for Nu's user interface from the "
+                "choices listed below. <strong>Restart Nu for these changes "
                 "to take effect.</strong>"
             )
         )
@@ -256,7 +256,7 @@ class AdminDialog(QDialog):
 
     def setup(self, log, settings, packages, mode, device_list):
         self.setMinimumSize(600, 400)
-        self.setWindowTitle(_("Mu Administration"))
+        self.setWindowTitle(_("Nu Administration"))
         widget_layout = QVBoxLayout()
         self.setLayout(widget_layout)
         self.tabs = QTabWidget()
