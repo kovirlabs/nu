@@ -91,7 +91,7 @@ MOTD = [  # Candidate phrases for the message of the day (MOTD).
         "This editor is free software written in Python. You can modify it, "
         "add features or fix bugs if you like."
     ),
-    _("This editor is called Mu (you say it 'mew' or 'moo')."),
+    _("This editor is called Nu (you say it 'new')."),
     _("Google, Facebook, NASA, Pixar, Disney and many more use Python."),
     _(
         "Programming is a form of magic. Learn to cast the right spells with "
@@ -959,7 +959,7 @@ class Editor(QObject):
         """
         logger.info("Loading script from: {}".format(path))
         error = _(
-            "The file contains characters Mu expects to be encoded as "
+            "The file contains characters Nu expects to be encoded as "
             "{0} or as the computer's default encoding {1}, but which "
             "are encoded in some other way.\n\nIf this file was saved "
             "in another application, re-save the file via the "
@@ -996,7 +996,7 @@ class Editor(QObject):
                 try:
                     text, newline = read_and_decode(path)
                 except UnicodeDecodeError:
-                    message = _("Mu cannot read the characters in {}")
+                    message = _("Nu cannot read the characters in {}")
                     filename = os.path.basename(path)
                     self._view.show_message(message.format(filename), error)
                     return
@@ -1023,9 +1023,9 @@ class Editor(QObject):
                             file_mode = mode_name
                             break
                 else:
-                    message = _("Mu was not able to open this file")
+                    message = _("Nu was not able to open this file")
                     info = _(
-                        "Currently Mu only works with Python source "
+                        "Currently Nu only works with Python source "
                         "files or hex files created with embedded "
                         "MicroPython code."
                     )
@@ -1045,7 +1045,7 @@ class Editor(QObject):
                 message = _("Is this a {} file?").format(mode_name)
                 info = _(
                     "It looks like this could be a {} file.\n\n"
-                    "Would you like to change Mu to the {}"
+                    "Would you like to change Nu to the {}"
                     "mode?"
                 ).format(mode_name, mode_name)
                 if (
@@ -1532,7 +1532,7 @@ class Editor(QObject):
         m = self.modes[self.mode]
         running = hasattr(m, "runner") and m.runner
         if (self.mode != new_mode and not self.selecting_mode) and not running:
-            msg_body = _("Would you like to change Mu to the {} mode?").format(
+            msg_body = _("Would you like to change Nu to the {} mode?").format(
                 mode_name
             )
             change_confirmation = self._view.show_confirmation(
@@ -1625,10 +1625,10 @@ class Editor(QObject):
                 for other_tab in self._view.widgets:
                     if other_tab.path == new_path:
                         logger.info(
-                            "Cannot rename, a file of that name is already open in Mu"
+                            "Cannot rename, a file of that name is already open in Nu"
                         )
                         message = _("Could not rename file.")
-                        information = _("A file of that name is already open in Mu.")
+                        information = _("A file of that name is already open in Nu.")
                         self._view.show_message(message, information)
                         return
                 # Finally rename

@@ -165,7 +165,7 @@ project_name = "nu-editor"
 bundle = "org.kovir"
 # Briefcase needs a concrete version string; keep this in sync with
 # mu/__init__.py, which stays the canonical source the rest of the tooling reads.
-version = "2.0.0b2"
+version = "2.0.0b3"
 url = "https://github.com/kovirlabs/nu"
 # `author` is the installer publisher AND the Windows install-path folder
 # (Program Files\<author>\<formal_name>), so this is nu's maintainer — not the
@@ -178,7 +178,7 @@ license.file = "LICENSE"
 # The program name across all installers: the Windows install-path leaf +
 # Add/Remove entry, the macOS .app, the AppImage filename. (The app key stays
 # `mu`, so the app is still launched as `python -m mu`.)
-formal_name = "nu-editor"
+formal_name = "Nu Editor"
 description = "A simple Python editor for beginner programmers."
 long_description = """A simple, modal Python editor for beginner programmers,
 built on PyQt6. Nu is a maintained continuation of the Mu editor.

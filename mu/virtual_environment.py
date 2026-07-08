@@ -1090,7 +1090,7 @@ class VirtualEnvironment(object):
         the venv python is also the more consistent choice.
         """
         kernel_name = self.name.replace(" ", "-")
-        display_name = '"Python/Mu ({})"'.format(kernel_name)
+        display_name = '"Python/Nu ({})"'.format(kernel_name)
         logger.info("Installing Jupyter Kernel: %s", kernel_name)
         ok, output = self.run_subprocess(
             safe_short_path(self.interpreter),

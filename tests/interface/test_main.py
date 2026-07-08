@@ -316,7 +316,7 @@ def test_Window_attributes():
     Expect the title and icon to be set correctly.
     """
     w = mu.interface.main.Window()
-    assert w.title == "Mu {}".format(__version__)
+    assert w.title == "Nu {}".format(__version__)
     assert w.icon == "icon"
     assert w.zoom_position == 2
     assert w.zooms == ("xs", "s", "m", "l", "xl", "xxl", "xxxl")
@@ -1453,7 +1453,7 @@ def test_Window_show_message():
     with mock.patch("mu.interface.main.QMessageBox", mock_qmb_class):
         w.show_message(message, information, icon)
     mock_qmb.setText.assert_called_once_with(message)
-    mock_qmb.setWindowTitle.assert_called_once_with("Mu")
+    mock_qmb.setWindowTitle.assert_called_once_with("Nu")
     mock_qmb.setInformativeText.assert_called_once_with(information)
     mock_qmb.setIcon.assert_called_once_with(mock_qmb_class.Icon.Information)
     mock_qmb.exec.assert_called_once_with()
@@ -1477,7 +1477,7 @@ def test_Window_show_message_default():
     with mock.patch("mu.interface.main.QMessageBox", mock_qmb_class):
         w.show_message(message)
     mock_qmb.setText.assert_called_once_with(message)
-    mock_qmb.setWindowTitle.assert_called_once_with("Mu")
+    mock_qmb.setWindowTitle.assert_called_once_with("Nu")
     assert mock_qmb.setInformativeText.call_count == 0
     mock_qmb.setIcon.assert_called_once_with(mock_qmb_class.Icon.Warning)
     mock_qmb.exec.assert_called_once_with()
@@ -1507,7 +1507,7 @@ def test_Window_show_confirmation():
     with mock.patch("mu.interface.main.QMessageBox", mock_qmb_class):
         w.show_confirmation(message, information, icon)
     mock_qmb.setText.assert_called_once_with(message)
-    mock_qmb.setWindowTitle.assert_called_once_with("Mu")
+    mock_qmb.setWindowTitle.assert_called_once_with("Nu")
     mock_qmb.setInformativeText.assert_called_once_with(information)
     mock_qmb.setIcon.assert_called_once_with(mock_qmb_class.Icon.Information)
     mock_qmb.setStandardButtons.assert_called_once_with(
@@ -1541,7 +1541,7 @@ def test_Window_show_confirmation_default():
     with mock.patch("mu.interface.main.QMessageBox", mock_qmb_class):
         w.show_confirmation(message)
     mock_qmb.setText.assert_called_once_with(message)
-    mock_qmb.setWindowTitle.assert_called_once_with("Mu")
+    mock_qmb.setWindowTitle.assert_called_once_with("Nu")
     assert mock_qmb.setInformativeText.call_count == 0
     mock_qmb.setIcon.assert_called_once_with(mock_qmb_class.Icon.Warning)
     mock_qmb.setStandardButtons.assert_called_once_with(
@@ -1558,10 +1558,10 @@ def test_Window_update_title():
     Ensure a passed in title results in the correct call to setWindowTitle.
     """
     w = mu.interface.main.Window()
-    w.title = "Mu"
+    w.title = "Nu"
     w.setWindowTitle = mock.MagicMock(return_value=None)
     w.update_title("foo.py")
-    w.setWindowTitle.assert_called_once_with("Mu - foo.py")
+    w.setWindowTitle.assert_called_once_with("Nu - foo.py")
 
 
 def _primary_screen_mock(width, height):

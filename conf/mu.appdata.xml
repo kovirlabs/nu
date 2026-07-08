@@ -3,7 +3,7 @@
 	<id>mu.codewith.editor.desktop</id>
 	<metadata_license>CC0-1.0</metadata_license>
 	<project_license>GPL-3.0</project_license>
-	<name>Mu</name>
+	<name>Nu</name>
 	<summary>A simple Python editor for beginner programmers</summary>
 	<description>
         <p>Mu is a Python code editor for beginner programmers based on
@@ -22,8 +22,8 @@
 	</description>
 	<url type="homepage">https://codewith.mu/</url>
 	<url type="help">https://codewith.mu/tutorials/</url>
-	<url type="bugtracker">https://github.com/mu-editor/mu/issues</url>
+	<url type="bugtracker">https://github.com/kovirlabs/nu/issues</url>
 	<project_group>mu-editor</project_group>
-	<developer_name>Nicholas H.Tollervey</developer_name>
+	<developer_name>Kovir Labs</developer_name>
 	<translation type="gettext">mu</translation>
 </component>
