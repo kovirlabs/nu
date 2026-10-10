@@ -55,6 +55,7 @@ from .modes import (
     PyGameZeroMode,
 )
 from .plugin import Host
+from .plugin.loader import load_plugins
 from .interface.themes import NIGHT_STYLE, DAY_STYLE, CONTRAST_STYLE
 from . import settings
 
@@ -244,12 +245,14 @@ def setup_modes(editor, view):
     """
     Create a dictionary of the available modes, keyed by short name.
 
-    The built-in modes are registered through a plugin Host -- the same path
-    plugins will use (Phase 5b adds discovery of installed plugins).
+    The built-in modes are registered through a plugin Host, then every
+    installed or dropped-in plugin that is switched on is loaded into it. A
+    plugin that fails to load is logged and skipped.
     """
     host = Host(editor, view)
     for mode_class in (PythonMode, CircuitPythonMode, DebugMode, PyGameZeroMode):
         host.register_mode(mode_class)
+    host.plugin_records = load_plugins(host)
     return host.modes
 
 

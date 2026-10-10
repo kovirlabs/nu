@@ -254,8 +254,25 @@ def test_setup_modes_registers_builtins_through_a_host():
     """
     The built-in modes go through the plugin Host, keyed as before.
     """
-    modes = setup_modes(mock.MagicMock(), mock.MagicMock())
+    with mock.patch("mu.app.load_plugins", return_value=[]):
+        modes = setup_modes(mock.MagicMock(), mock.MagicMock())
     assert list(modes) == ["python", "circuitpython", "debugger", "pygamezero"]
     hosts = {mode.host for mode in modes.values()}
     assert len(hosts) == 1
     assert isinstance(hosts.pop(), Host)
+
+
+def test_setup_modes_adds_plugin_modes():
+    """
+    Plugins are loaded into the same Host after the built-in modes, and what
+    happened to each is kept on the Host.
+    """
+
+    def load_plugins(host):
+        host.load_plugin(AlphaPlugin())
+        return ["record"]
+
+    with mock.patch("mu.app.load_plugins", side_effect=load_plugins):
+        modes = setup_modes(mock.MagicMock(), mock.MagicMock())
+    assert list(modes)[-1] == "alpha"
+    assert modes["alpha"].host.plugin_records == ["record"]

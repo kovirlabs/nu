@@ -80,6 +80,9 @@ class Host:
         self._owners = {}  # short_name -> owning plugin (None for the core)
         self._plugins = []
         self._loading = None  # the plugin whose register() is running
+        #: What happened to each discovered plugin (mu.plugin.loader.PluginRecord),
+        #: filled in at startup by app.setup_modes.
+        self.plugin_records = []
 
     # --- plugin lifecycle (used by the core) ---
 
