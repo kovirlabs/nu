@@ -24,6 +24,7 @@ from PyQt6.QtWidgets import QMessageBox
 from .. import settings
 from ..modes.base import BaseMode
 from .base import PLUGIN_API_VERSION, check_compatible
+from .errors import PluginErrorHandler
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +81,11 @@ class Host:
         self._owners = {}  # short_name -> owning plugin (None for the core)
         self._plugins = []
         self._loading = None  # the plugin whose register() is running
+        #: What happened to each discovered plugin (mu.plugin.loader.PluginRecord),
+        #: filled in at startup by app.setup_modes.
+        self.plugin_records = []
+        # Reports errors in plugin code so they don't crash Nu (see errors.py).
+        self._error_handler = PluginErrorHandler(self)
 
     # --- plugin lifecycle (used by the core) ---
 
@@ -135,6 +141,12 @@ class Host:
             self._plugins.remove(plugin)
         logger.info("Unloaded plugin %s", name)
 
+    def _modes_of(self, plugin):
+        """The mode instances `plugin` registered."""
+        return [
+            self._modes[name] for name, owner in self._owners.items() if owner is plugin
+        ]
+
     def _remove_modes_of(self, plugin):
         for short_name, owner in list(self._owners.items()):
             if owner is plugin:
@@ -162,6 +174,10 @@ class Host:
             )
         mode = mode_class(self._editor, self._view)
         mode.host = self
+        if self._loading is not None:
+            # A plugin's mode: errors in the methods the core calls are
+            # reported instead of crashing Nu.
+            self._error_handler.guard_mode(mode, self._loading)
         self._modes[short_name] = mode
         self._owners[short_name] = self._loading
         return mode

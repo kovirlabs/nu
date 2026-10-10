@@ -37,3 +37,19 @@ def temp_shared_mem_app_name():
     )
     yield
     os.environ.pop("MU_TEST_SUPPORT_RANDOM_APP_NAME_EXT", "")
+
+
+@pytest.fixture(autouse=True)
+def temp_plugins_dir(tmp_path, monkeypatch):
+    """Never discover (or create) the real drop-in plugins folder in tests"""
+    from mu.plugin import loader
+
+    monkeypatch.setattr(loader, "DROPIN_DIR", str(tmp_path / "plugins"))
+
+
+@pytest.fixture(autouse=True)
+def no_plugin_error_handler(monkeypatch):
+    """Don't let one test's plugin error handler leak into another"""
+    from mu.plugin import errors
+
+    monkeypatch.setattr(errors, "_active", None)
