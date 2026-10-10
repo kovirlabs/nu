@@ -1,5 +1,65 @@
 # Release History
 
+## 2.0.0 (unreleased)
+
+The first stable release of **Nu**, a maintained continuation of the
+[Mu editor](https://github.com/mu-editor/mu) by Nicholas H. Tollervey and the Mu
+community, after upstream Mu was archived. It's numbered 2.0.0 because it
+continues Mu's version line (Mu's last release was 1.2.2) with **breaking
+changes**. It's published as `nu-editor`; the app is called **Nu Editor**.
+
+Please report problems at https://github.com/kovirlabs/nu/issues.
+
+### Breaking changes
+
+* Nu runs on **PyQt6** and **Python 3.11–3.14**. The PyQt5 / Python 3.5-era
+  stack is gone.
+* **Modes:** Python 3, the Graphical Debugger, Pygame Zero and CircuitPython.
+  The micro:bit, ESP MicroPython, Raspberry Pi Pico, Pyboard, Lego, Snek and
+  Web modes were removed (their tooling was unmaintained). micro:bit is planned
+  to return as a plugin.
+* Your programs' Python environment is now created and managed with
+  [uv](https://docs.astral.sh/uv/).
+* **Help** opens Nu's own [Using Nu](https://kovirlabs.github.io/nu/help/)
+  page instead of codewith.mu.
+
+### New
+
+* **Native installers** built with Briefcase: Windows `.msi`, macOS `.app`
+  (Apple Silicon) and Linux `.AppImage`, published with each GitHub release.
+* **Works offline from first launch.** The installers carry a Python for your
+  programs' environment, so the first start needs no internet.
+* **Plugins (experimental).** Plugins can add modes. Drop one into Nu's
+  plugins folder, or install one as a package; a plugin that fails is skipped
+  or reported, and Nu keeps running. The plugin API is at version 0.1 and may
+  change. See [Writing a Nu plugin](https://kovirlabs.github.io/nu/plugins/).
+* **Private crash reports.** If Nu crashes it shows the details with a **Copy
+  to clipboard** button. Mu used to open codewith.mu with the details in the
+  address; Nu never sends anything by itself.
+
+### Security
+
+* All open Dependabot and CodeQL alerts are resolved, and the bundled Jupyter
+  stack requires `tornado>=6.5.9` (fixes several advisories in the REPL's
+  server library). If you installed a 2.0.0 beta, please upgrade.
+
+### Known limitations
+
+* **The installers are unsigned**, so your system warns you the first time:
+  * **Windows:** SmartScreen → *More info* → *Run anyway*.
+  * **macOS:** right-click the app and choose *Open*. On macOS 15 and later,
+    open it once, then go to System Settings → Privacy & Security and click
+    *Open Anyway*.
+  * **Linux:** make the AppImage executable (`chmod +x`) and run it.
+* **macOS:** Apple Silicon only; Intel Macs aren't supported yet.
+* **Translations** still say "Mu" in places and some new text isn't
+  translated yet.
+* In the installers, plugins can only be added through the plugins folder.
+
+## Mu 1.2.2 and earlier
+
+The history below is from the original Mu project.
+
 ## 1.2.2
 
 This release fixes some minor bugs, contains some (code) tidy ups, two new

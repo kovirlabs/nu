@@ -27,7 +27,6 @@ from mu.virtual_environment import venv
 from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtCore import pyqtSignal, QObject, Qt
 
-from mu import __version__
 
 SESSION = json.dumps(
     {
@@ -1878,14 +1877,9 @@ def test_show_help():
     """
     view = mock.MagicMock()
     ed = mu.logic.Editor(view)
-    with (
-        mock.patch("mu.logic.webbrowser.open_new", return_value=None) as wb,
-        mock.patch("mu.i18n.language_code", "en_GB"),
-    ):
+    with mock.patch("mu.logic.webbrowser.open_new", return_value=None) as wb:
         ed.show_help()
-        version = ".".join(__version__.split(".")[:2])
-        url = "https://codewith.mu/en/help/{}".format(version)
-        wb.assert_called_once_with(url)
+        wb.assert_called_once_with("https://kovirlabs.github.io/nu/help/")
 
 
 def test_quit_modified_cancelled_from_button():

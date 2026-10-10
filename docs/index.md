@@ -6,7 +6,7 @@ beginner programmers.
 
 !!! note
     **This documentation is for developers** who want to work on Nu itself, not
-    for end users. Much of it is inherited from upstream Mu and still describes
+    for end users (who want [Using Nu](help.md)). Much of it is inherited from upstream Mu and still describes
     the pre-fork toolchain (PyQt5, `setup.py`, Sphinx/ReadTheDocs, and the
     micro:bit/web modes). Nu has since moved to **PyQt6**, **Python 3.11+**,
     **uv** and **ruff**, and trimmed the mode set to Python 3, Pygame Zero,
