@@ -1,6 +1,6 @@
 # Release History
 
-## 2.0.0 (unreleased)
+## 2.0.0
 
 The first stable release of **Nu**, a maintained continuation of the
 [Mu editor](https://github.com/mu-editor/mu) by Nicholas H. Tollervey and the Mu
@@ -27,6 +27,8 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
 
 * **Native installers** built with Briefcase: Windows `.msi`, macOS `.app`
   (Apple Silicon) and Linux `.AppImage`, published with each GitHub release.
+  On Windows, a new installer replaces the installed Nu (including a 2.0.0
+  beta) instead of installing alongside it.
 * **Works offline from first launch.** The installers carry a Python for your
   programs' environment, so the first start needs no internet.
 * **Plugins (experimental).** Plugins can add modes. Drop one into Nu's

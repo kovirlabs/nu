@@ -23,9 +23,15 @@ CI is the release path: `.github/workflows/build.yml` builds one OS per job and
 uploads the installer as a downloadable artifact. **Trigger it from the GitHub
 Actions tab** ("Build installers" → *Run workflow*) and download the artifact
 for your OS from the run. Pushing a `v*` tag also builds all three and
-publishes a GitHub Release with the installers attached (a tag with a
-pre-release segment such as `v2.0.0rc1` publishes as a pre-release). See
-[Release process](release.md).
+publishes a GitHub Release with the installers attached. Release tags are
+plain numeric `vX.Y.Z` (Windows MSI versions can't carry a pre-release
+segment). See [Release process](release.md).
+
+Briefcase is pinned per platform in `build.yml`: Windows uses 0.4.5, whose MSI
+template replaces an installed older (or same-version) Nu instead of
+installing alongside it; macOS and Linux stay on 0.4.2 because 0.4.5 breaks
+the AppImage. The MSI's UpgradeCode is pinned as `guid` in `pyproject.toml`
+— never change it, or Windows will stop treating new installers as upgrades.
 
 Locally (inside a pip-enabled virtualenv with the `package` extra,
 `pip install -e ".[package]"`):

@@ -168,14 +168,16 @@ project_name = "nu-editor"
 bundle = "org.kovir"
 # Briefcase needs a concrete version string; keep this in sync with
 # mu/__init__.py, which stays the canonical source the rest of the tooling reads.
-version = "2.0.0b3"
+version = "2.0.0"
 url = "https://github.com/kovirlabs/nu"
 # `author` is the installer publisher AND the Windows install-path folder
 # (Program Files\<author>\<formal_name>), so this is nu's maintainer — not the
 # original Mu author, who is credited in AUTHORS.md and via the Upstream link.
 author = "Kovir Labs"
 author_email = "kovirlabs@kovir.org"
-license.file = "LICENSE"
+# PEP 639 form, matching [project] (Briefcase warns on the old license.file).
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
 
 [tool.briefcase.app.mu]
 # The program name across all installers: the Windows install-path leaf +
@@ -224,6 +226,11 @@ universal_build = false
 [tool.briefcase.app.mu.windows]
 # pywin32 is Windows-only; kept out of the cross-platform `requires` above.
 requires = ["pywin32; sys_platform == 'win32'"]
+# The MSI UpgradeCode: how Windows recognises a new Nu installer as an upgrade
+# of the installed one (replacing it rather than installing alongside). It's
+# what Briefcase derived from the bundle id (uuid5 of "mu.kovir.org") for every
+# release since 2.0.0b1; pinned so renaming the bundle/app can't change it.
+guid = "55aac296-702c-5595-8b7a-ab9689874020"
 
 [tool.briefcase.app.mu.linux]
 # Build-time system packages (manylinux/Docker) and runtime shared libs the
