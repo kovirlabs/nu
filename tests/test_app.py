@@ -10,6 +10,8 @@ import subprocess
 
 from unittest import mock
 from mu.app import (
+    crash_details,
+    show_crash_dialog,
     excepthook,
     run,
     setup_logging,
@@ -26,6 +28,7 @@ from mu.interface.themes import NIGHT_STYLE, DAY_STYLE, CONTRAST_STYLE
 from mu.logic import LOG_FILE, LOG_DIR, ENCODING
 from mu.resources import load_movie
 from mu import mu_debug
+from mu import __version__ as mu_version
 from mu.virtual_environment import VirtualEnvironment as VE, SplashLogHandler
 from PyQt6.QtCore import Qt
 
@@ -360,7 +363,8 @@ def test_close_splash_screen():
 
 def test_excepthook():
     """
-    Test that custom excepthook logs error and calls sys.exit.
+    Test that custom excepthook logs the error, shows the crash details
+    (without sending them anywhere) and calls sys.exit.
     """
     ex = Exception("BANG")
     exc_args = (type(ex), ex, ex.__traceback__)
@@ -368,33 +372,88 @@ def test_excepthook():
     with (
         mock.patch("mu.app.logging.error") as error,
         mock.patch("mu.app.sys.exit") as exit,
-        mock.patch("mu.app.webbrowser") as browser,
+        mock.patch("mu.app.show_crash_dialog") as show,
     ):
         excepthook(*exc_args)
         error.assert_called_once_with("Unrecoverable error", exc_info=exc_args)
         exit.assert_called_once_with(1)
-        assert browser.open.call_count == 1
+        (details,) = show.call_args.args
+        assert "Exception: BANG" in details
 
 
 def test_excepthook_alamo():
     """
-    If the crash reporting code itself encounters an error, then ensure this
+    If showing the crash details itself encounters an error, then ensure this
     is logged before exiting.
     """
     ex = Exception("BANG")
     exc_args = (type(ex), ex, ex.__traceback__)
 
-    mock_browser = mock.MagicMock()
-    mock_browser.open.side_effect = RuntimeError("BROWSER BANG")
-
     with (
         mock.patch("mu.app.logging.error") as error,
         mock.patch("mu.app.sys.exit") as exit,
-        mock.patch("mu.app.webbrowser", mock_browser),
+        mock.patch("mu.app.show_crash_dialog", side_effect=RuntimeError("DIALOG BANG")),
     ):
         excepthook(*exc_args)
         assert error.call_count == 2
+        assert error.call_args.args == ("Failed to show the crash details",)
         exit.assert_called_once_with(1)
+
+
+def test_excepthook_keyboard_interrupt():
+    """
+    Ctrl-C exits quietly, without the crash dialog.
+    """
+    with (
+        mock.patch("mu.app.logging.error"),
+        mock.patch("mu.app.sys.exit") as exit,
+        mock.patch("mu.app.show_crash_dialog") as show,
+    ):
+        excepthook(KeyboardInterrupt, KeyboardInterrupt(), None)
+    exit.assert_called_once_with(0)
+    show.assert_not_called()
+
+
+def test_crash_details():
+    try:
+        raise ValueError("BANG")
+    except ValueError as ex:
+        details = crash_details(type(ex), ex, ex.__traceback__)
+    lines = details.splitlines()
+    assert lines[0] == "Nu {}".format(mu_version)
+    assert lines[1].startswith("Python ")
+    assert lines[2] == "Log file: {}".format(LOG_FILE)
+    assert "Traceback (most recent call last):" in details
+    assert details.endswith("ValueError: BANG")
+
+
+def test_show_crash_dialog(monkeypatch):
+    monkeypatch.delenv("MU_SUPPRESS_CRASH_REPORT_FORM", raising=False)
+    with mock.patch("mu.app.CrashDialog") as dialog:
+        show_crash_dialog("details")
+    dialog.assert_called_once_with("details")
+    dialog.return_value.exec.assert_called_once_with()
+
+
+def test_show_crash_dialog_suppressed(monkeypatch):
+    monkeypatch.setenv("MU_SUPPRESS_CRASH_REPORT_FORM", "1")
+    with mock.patch("mu.app.CrashDialog") as dialog:
+        show_crash_dialog("details")
+    dialog.assert_not_called()
+
+
+def test_show_crash_dialog_before_qapplication(monkeypatch):
+    """
+    A crash before the QApplication exists can't show a dialog; the details
+    are still logged and printed by the excepthook.
+    """
+    monkeypatch.delenv("MU_SUPPRESS_CRASH_REPORT_FORM", raising=False)
+    with (
+        mock.patch("mu.app.QApplication.instance", return_value=None),
+        mock.patch("mu.app.CrashDialog") as dialog,
+    ):
+        show_crash_dialog("details")
+    dialog.assert_not_called()
 
 
 def test_debug():
