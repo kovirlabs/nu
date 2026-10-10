@@ -175,7 +175,6 @@ def clean():
     _rmtree(".pytest_cache")
     _rmtree("lib")
     _rmtree(".git/avatar/")  # Created with `make video`
-    _rmtree("venv-pup")  # Created with `make macos/win64`
     # TODO: recursive __pycache__ directories
     _rmfiles(".", ".coverage")
     _rmfiles(".", "*.egg-info")
@@ -356,53 +355,10 @@ def publish_live():
     ).returncode
 
 
-_PUP_PBS_URLs = {
-    32: "https://github.com/indygreg/python-build-standalone/releases/download/20200822/cpython-3.7.9-i686-pc-windows-msvc-shared-pgo-20200823T0159.tar.zst",  # noqa: E501
-    64: None,
-}
-
-
-def _build_windows_msi(bitness=64):
-    """Build Windows MSI installer"""
-    try:
-        pup_pbs_url = _PUP_PBS_URLs[bitness]
-    except KeyError:
-        raise ValueError("bitness") from None
-    if check() != 0:
-        raise RuntimeError("Check failed")
-    print("Fetching wheels")
-    subprocess.check_call([sys.executable, "-m", "mu.wheels", "--package"])
-    print("Building {}-bit Windows installer".format(bitness))
-    if pup_pbs_url:
-        os.environ["PUP_PBS_URL"] = pup_pbs_url
-    cmd_sequence = (
-        [sys.executable, "-m", "virtualenv", "venv-pup"],
-        ["./venv-pup/Scripts/pip.exe", "install", "pup"],
-        [
-            "./venv-pup/Scripts/pup.exe",
-            "package",
-            "--launch-module=mu",
-            "--nice-name=Nu Editor",
-            "--icon-path=./package/icons/win_icon.ico",
-            "--license-path=./LICENSE",
-            ".",
-        ],
-        ["cmd.exe", "/c", "dir", r".\dist"],
-    )
-    try:
-        for cmd in cmd_sequence:
-            print("Running:", " ".join(cmd))
-            subprocess.check_call(cmd)
-    finally:
-        shutil.rmtree("./venv-pup", ignore_errors=True)
-
-
 #
 # Briefcase-driven installers (Phase 4d, see TODO.md). These mirror
 # .github/workflows/build.yml so local and CI builds stay in step; CI is the
-# release path, these are for local/dev convenience. The legacy pup targets
-# below are kept (suffixed `_pup`) until the Briefcase builds are confirmed on
-# all three OSes (Phase 4e retires pup).
+# release path, these are for local/dev convenience.
 #
 def _briefcase(platform, fmt=None, *package_args):
     """Build a native installer for `platform` with Briefcase.
@@ -438,18 +394,6 @@ def macos():
 def linux():
     """Build a Linux AppImage (Briefcase)"""
     _briefcase("linux", "appimage")
-
-
-@export
-def win32():
-    """Build 32-bit Windows installer (legacy pup)"""
-    _build_windows_msi(bitness=32)
-
-
-@export
-def win64_pup():
-    """Build 64-bit Windows installer (legacy pup)"""
-    _build_windows_msi(bitness=64)
 
 
 @export

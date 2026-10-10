@@ -392,8 +392,10 @@ def run():
     app = QApplication(sys.argv)
     # By default PyQt uses the script name (run.py)
     app.setApplicationName("mu")
-    # Set hint as to the .desktop files name
-    app.setDesktopFileName("mu.codewith.editor")
+    # Set hint as to the .desktop files name: Briefcase's app id
+    # (`bundle` + app name in pyproject.toml), so the Wayland app id matches
+    # the installed org.kovir.mu.desktop (taskbar icon/grouping).
+    app.setDesktopFileName("org.kovir.mu")
     app.setApplicationVersion(__version__)
     app.setAttribute(Qt.ApplicationAttribute.AA_DontShowIconsInMenus)
 

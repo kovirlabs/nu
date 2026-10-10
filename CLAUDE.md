@@ -12,13 +12,13 @@ The original maintainers archived the upstream GitHub repo. This fork exists so 
 
 ## What this is
 
-This repo is **"nu"** (`github.com/kovirlabs/nu`), a fork of the **Mu editor** (`github.com/mu-editor/mu`, the `upstream` remote). Mu is a modal Python code editor for beginner programmers, built on PyQt5. Upstream was archived/marked unmaintained; this fork's stated goal is to keep it usable and modernize it as needed.
+This repo is **"nu"** (`github.com/kovirlabs/nu`), a fork of the **Mu editor** (`github.com/mu-editor/mu`, the `upstream` remote). Mu is a modal Python code editor for beginner programmers, built on Qt (PyQt5 upstream; PyQt6 here). Upstream was archived/marked unmaintained; this fork's stated goal is to keep it usable and modernize it as needed.
 
 The actual editor lives in `mu/`. The distribution is published as `nu-editor` (the fork's own PyPI identity, renamed from the inherited `mu-editor`); the version is **2.0.0b3** — nu's own line, major-bumped from upstream Mu 1.2.2 to mark the breaking Qt6/Python-3.11+ modernization (a continuation, not a reset). The importable package stays `mu` and the version lives in `mu/__init__.py`. The user-facing display name is **"Nu"**: the in-app strings (window title, dialogs, tooltips, messages) were renamed from the inherited "Mu", and the installer ships under the Briefcase `formal_name` "Nu Editor" (see `pyproject.toml`). Deliberate **heritage/credit references to the original Mu are kept** — AUTHORS, the in-app "Mu was created by Nicholas H. Tollervey" note, upstream links, and internal logs/comments — so "Mu" still appears where it refers to the upstream project rather than this app's name.
 
 `main.py` at the repo root is a stray PyCharm sample — not part of the project; ignore it.
 
-Since **Phase 1d** (see `TODO.md`) `pyproject.toml` is the **single, canonical packaging definition**, built with the **hatchling** backend (`make dist` → `python -m build`); `setup.py` and `setup.cfg` were retired and their config (deps, pytest, coverage, lint) folded into `pyproject.toml`. `uv.lock` pins the resolved dev environment. The version is read from `mu/__init__.py` via `[tool.hatch.version]`. NOTE: the platform **installers** (pup-driven `make win64`/`macos`/`linux`, and `.github/workflows/build.yml`) have **not** yet been re-validated on this base — they still reference old Python (e.g. `build.yml` pins 3.8) and are deferred installer work.
+Since **Phase 1d** (see `TODO.md`) `pyproject.toml` is the **single, canonical packaging definition**, built with the **hatchling** backend (`make dist` → `python -m build`); `setup.py` and `setup.cfg` were retired and their config (deps, pytest, coverage, lint) folded into `pyproject.toml`. `uv.lock` pins the resolved dev environment. The version is read from `mu/__init__.py` via `[tool.hatch.version]`; `[tool.briefcase] version` in `pyproject.toml` duplicates it as a literal, so bump both. Native **installers** are built with **Briefcase** (Phase 4; upstream's `pup` pipeline, `conf/` and `debian/` were retired in 4e): `.github/workflows/build.yml` builds the Windows `.msi`, macOS zipped `.app` and Linux `.AppImage` on a manual run or a `v*` tag, and a tag publishes a GitHub Release. Builds are unsigned for now. See `docs/packaging.md`. The Briefcase app id is **`org.kovir.mu`** (`bundle` + app key); `mu/app.py`'s `setDesktopFileName` must match it.
 
 ## Runtime constraints
 
@@ -30,7 +30,7 @@ As of **Phase 2** (see `TODO.md`) Mu runs on **PyQt6** and **Python 3.11+** (ver
 
 Dev setup with uv (preferred): `uv sync` installs the runtime dependencies into `.venv` using a managed CPython 3.11; add `--extra dev` (or `--all-extras`) for the tests/docs/packaging/i18n tooling. Run things with `uv run python run.py`, `uv run python -m mu`, or `uv run pytest`.
 
-Dev setup the original way (inside a 3.8 virtualenv): `pip install -e ".[dev]"` installs runtime + tests + docs + packaging + i18n extras.
+Dev setup without uv (inside any 3.11+ virtualenv): `pip install -e ".[dev]"` installs runtime + tests + docs + packaging + i18n extras.
 
 Most workflows go through the `Makefile` (which delegates to `make.py`):
 
@@ -40,7 +40,7 @@ Most workflows go through the `Makefile` (which delegates to `make.py`):
 - `make lint` — lint with **ruff**.
 - `make format` — check formatting; `make tidy` — reformat in place with ruff. Ruff wraps and lints at **88** columns (single `line-length` in `pyproject.toml` `[tool.ruff]`; the old black-79/flake8-88 split is gone).
 - `make check` — runs `format` + `lint` + `coverage`; this is the pre-commit gate.
-- `make dist` — build sdist/wheel. `make win32`/`win64`/`macos`/`linux` build platform installers via `pup`.
+- `make dist` — build sdist/wheel. `make win64`/`macos`/`linux` build platform installers locally via Briefcase (CI's `build.yml` is the release path).
 
 **Run a single test** (the Makefile has no target for this): `pytest tests/test_logic.py::test_name`. Note that `addopts = --random-order` is set in `pyproject.toml` (`[tool.pytest.ini_options]`), so test order is randomized by default — add `-p no:randomly` or `--random-order-seed=...` when you need a reproducible order while debugging.
 
@@ -48,23 +48,23 @@ Most workflows go through the `Makefile` (which delegates to `make.py`):
 ```
 QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly -q
 ```
-Current green baseline (Python 3.11–3.14 + PyQt6): **929 passed, 20 skipped**. (`~/.local/share/mu` must exist or you'll see a harmless at-exit settings-save traceback.) On a headless box without Mesa, Qt6's `offscreen` plugin still needs `libEGL.so.1` — put it on `LD_LIBRARY_PATH` (e.g. `apt-get download libegl1 libglvnd0 && dpkg -x` into a local dir). Lint the project's way with `uv run --no-sync python -m ruff check` and reformat with `... ruff format` (config in `pyproject.toml` `[tool.ruff]`; the gettext `_` builtin is declared there as `builtins = ["_"]`, so no env var dance is needed).
+Current green baseline (Python 3.11–3.14 + PyQt6): **928 passed, 21 skipped** (on 3.14; counts can shift by one between Python versions). (`~/.local/share/mu` must exist or you'll see a harmless at-exit settings-save traceback.) On a headless box without Mesa, Qt6's `offscreen` plugin still needs `libEGL.so.1` — put it on `LD_LIBRARY_PATH` (e.g. `apt-get download libegl1 libglvnd0 && dpkg -x` into a local dir). Lint the project's way with `uv run --no-sync python -m ruff check` and reformat with `... ruff format` (config in `pyproject.toml` `[tool.ruff]`; the gettext `_` builtin is declared there as `builtins = ["_"]`, so no env var dance is needed).
 
 Test layout mirrors the source tree: `tests/test_logic.py` tests `mu/logic.py`, `tests/modes/` tests `mu/modes/`, etc.
 
 ## Architecture
 
-Mu is a **modal editor**: a fixed core of always-available features, plus a set of *modes* that retarget the editor at different platforms. This fork has trimmed the upstream set to six (see `TODO.md` for the rationale): **python, circuitpython, microbit, web, debugger, pygamezero** (upstream also shipped esp/pico/pyboard/lego/snek — removed). Understanding the three collaborators below explains most of the codebase.
+Mu is a **modal editor**: a fixed core of always-available features, plus a set of *modes* that retarget the editor at different platforms. This fork has trimmed the upstream set to four (see `TODO.md` for the rationale): **python, circuitpython, debugger, pygamezero** (upstream also shipped esp/pico/pyboard/lego/snek/web/microbit — removed; micro:bit is planned to return as a plugin in Phase 6). Understanding the three collaborators below explains most of the codebase.
 
 - **`mu/app.py`** — entry point (`run()`). Builds the `QApplication`, splash screen, the `Window`, and the `Editor`, registers the list of mode classes, and wires logging. The set of available modes is the import list at the top of this file + `mu/modes/__init__.py`.
 
 - **`mu/logic.py`** — the **`Editor`** controller (non-GUI). Holds `self.modes` (a `dict` of name → mode instance), the current mode, and all the application logic: open/save/run, mode switching (`select_mode` / `change_mode`), flake8/pycodestyle checking, device detection (`Device` / `DeviceList`). The `Editor` talks to the UI only through the `view` object passed in — keep GUI code out of here; that separation is what makes `logic.py` unit-testable.
 
-- **`mu/interface/`** — the Qt view layer. `interface/main.py` defines the **`Window`** class (the `view` the `Editor` drives). `editor.py` is the Scintilla-based text widget, `panes.py` the REPL/file/plotter panes, `dialogs.py` dialogs, `themes.py` the day/night/contrast stylesheets, `workers.py` background threads.
+- **`mu/interface/`** — the Qt view layer. `interface/main.py` defines the **`Window`** class (the `view` the `Editor` drives). `editor.py` is the Scintilla-based text widget, `panes.py` the REPL/process-output/plotter panes, `dialogs.py` dialogs, `themes.py` the day/night/contrast stylesheets, `widgets.py` small shared widgets.
 
 - **`mu/modes/`** — every mode subclasses **`BaseMode`** in `modes/base.py` (MicroPython-family modes subclass `MicroPythonMode`, which adds REPL/serial plumbing). A mode declares `name`, `description`, `icon`, and implements `actions()` (toolbar buttons), `api()` (autocomplete/calltip data), `workspace_dir()`, etc. To add a mode: create the class, then register it in `app.py` and `modes/__init__.py`. `modes/api/` holds generated API stubs (excluded from ruff).
 
-- **`mu/virtual_environment.py`** — Mu manages a **separate "user" virtualenv** (the `venv` singleton at module bottom) into which it installs third-party packages requested from the UI, isolated from Mu's own environment. `VirtualEnvironment` / `Pip` / `Process` wrap creation and `pip` operations via `QProcess`. Bundled wheels live in `mu/wheels/` (`python -m mu.wheels --package` fetches them for installers).
+- **`mu/virtual_environment.py`** — Mu manages a **separate "user" virtualenv** (the `venv` singleton at module bottom) into which it installs third-party packages requested from the UI, isolated from Mu's own environment. Since Phase 4a it is driven by **uv**: `find_uv()` locates the binary (`MU_UV` → `uv` on `PATH` → the bundled `uv` wheel), `create_venv` runs `uv venv --python <X.Y> --seed`, `Uv` wraps `uv pip`/`uv run` via `QProcess`, and `activation_vars()` activates the env for spawned user code (Run and the Jupyter kernel). Bundled wheels live in `mu/wheels/` (`python -m mu.wheels --package` fetches them for installers).
 
 - **`mu/debugger/`** — the Python3 visual debugger, split into a `client` (in-process, talks to the UI) and a `runner` (the debugged program's subprocess). See `docs/debugger.md`.
 
@@ -72,4 +72,4 @@ Supporting modules: `mu/settings.py` + `mu/config.py` (persisted settings and pa
 
 ## Where to read more
 
-`docs/` is **MkDocs** source (Markdown, Material theme; `mkdocs.yml` at the repo root, published to GitHub Pages via `.github/workflows/docs.yml`). Build with `make docs` or live-preview with `make docs-serve`. Most useful for orientation: `docs/architecture.md`, `docs/modes.md` (writing a mode), `docs/debugger.md`, `docs/setup.md`, `docs/tests.md`, `docs/translations.md`, `docs/packaging.md`. Every class/method carries a human-written docstring; these are extracted into `docs/api.md` via mkdocstrings. NOTE: much of `docs/` is inherited from upstream Mu and still describes the pre-fork toolchain; `setup.md` and `architecture.md` have been refreshed, the rest is being modernized incrementally.
+`docs/` is **MkDocs** source (Markdown, Material theme; `mkdocs.yml` at the repo root, published to GitHub Pages via `.github/workflows/docs.yml`). Build with `make docs` or live-preview with `make docs-serve`. Most useful for orientation: `docs/architecture.md`, `docs/modes.md` (writing a mode), `docs/debugger.md`, `docs/setup.md`, `docs/tests.md`, `docs/translations.md`, `docs/packaging.md`. Every class/method carries a human-written docstring; these are extracted into `docs/api.md` via mkdocstrings. NOTE: much of `docs/` is inherited from upstream Mu and still describes the pre-fork toolchain; `setup.md`, `architecture.md` and `packaging.md` have been refreshed (and the CI/packaging sections of `release.md`); the rest is being modernized incrementally.

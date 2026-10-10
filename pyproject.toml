@@ -141,7 +141,6 @@ packages = ["mu"]
 [tool.hatch.build.targets.sdist]
 include = [
     "/mu",
-    "/conf",
     "/run.py",
     "/README.md",
     "/CHANGES.md",
@@ -183,7 +182,7 @@ description = "A simple Python editor for beginner programmers."
 long_description = """A simple, modal Python editor for beginner programmers,
 built on PyQt6. Nu is a maintained continuation of the Mu editor.
 
-Mu manages a separate, uv-driven Python environment for the learner's own code,
+Nu manages a separate, uv-driven Python environment for the learner's own code,
 keeping it isolated from the editor's own interpreter.
 """
 icon = "package/icons/mu"
