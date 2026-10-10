@@ -3,11 +3,13 @@ name: Build installers
 # Native installers via Briefcase (Phase 4d, see TODO.md). One runner per OS:
 #   windows -> .msi   macOS -> zipped .app (ad-hoc signed)   linux -> .AppImage
 #
-# Installers are built on a version tag (`vX.Y.Z[...]`) or a manual run, NOT on
+# Installers are built on a version tag (`vX.Y.Z`) or a manual run, NOT on
 # every push — tests run separately in test.yml. On a tag, the `release` job
-# publishes a GitHub Release with the installers attached: a tag with a
-# prerelease segment (e.g. v1.0.0-beta0.1) publishes as a pre-release; a clean
-# vX.Y.Z tag publishes as a full release.
+# publishes a GitHub Release with the installers attached. Release versions are
+# plain numeric X.Y.Z: Windows MSI versions can't carry a pre-release segment
+# (Briefcase strips it, so 2.0.0b3 and 2.0.0 are the same MSI version). Test
+# installers from a manual run first; ship fixes as the next patch (X.Y.Z+1).
+# A non-numeric tag still publishes, as a GitHub pre-release.
 #
 # Signing (Authenticode / Apple notarization) is deferred — users will see a
 # SmartScreen / Gatekeeper warning until secrets are wired in (TODO.md 4d).
@@ -34,6 +36,7 @@ jobs:
       matrix:
         include:
           - label: Windows MSI
+            briefcase-version: 0.4.5
             runs-on: windows-latest
             briefcase-platform: windows
             briefcase-format: ''
@@ -47,6 +50,7 @@ jobs:
           # Package as a zipped .app — the dmg path uses Finder/AppleScript and
           # hangs on headless CI.
           - label: macOS app
+            briefcase-version: 0.4.2
             runs-on: macos-latest
             briefcase-platform: macOS
             briefcase-format: ''
@@ -58,6 +62,7 @@ jobs:
           # qmake. Building against the host (with the Qt libs installed below)
           # uses the normal binary wheels.
           - label: Linux AppImage
+            briefcase-version: 0.4.2
             runs-on: ubuntu-latest
             briefcase-platform: linux
             briefcase-format: appimage
@@ -83,13 +88,18 @@ jobs:
             libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
             libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0
 
-      # Briefcase is pinned (matching uv.lock) so a new release can't silently
-      # break or alter the installers: 0.4.5's AppImage template fails with
-      # "'collections.OrderedDict object' has no attribute 'host_arch'".
-      # Bump deliberately after a green manual run. uv is only used by the
-      # next step, to look up the CPython download.
+      # Briefcase is pinned per platform (matrix `briefcase-version`) so a new
+      # release can't silently break or alter the installers. Bump deliberately
+      # after a green manual run.
+      # - Windows needs >= 0.4.5: earlier MSI templates have no <MajorUpgrade>,
+      #   so a new installer would install alongside the old one instead of
+      #   replacing it. 0.4.5 adds it with AllowSameVersionUpgrades (the betas
+      #   were all stamped 2.0.0, since MSI versions are numeric-only).
+      # - macOS/Linux stay on 0.4.2: 0.4.5's AppImage template fails with
+      #   "'collections.OrderedDict object' has no attribute 'host_arch'".
+      # uv is only used by the next step, to look up the CPython download.
       - name: Install Briefcase
-        run: python -m pip install --upgrade pip briefcase==0.4.2 uv
+        run: python -m pip install --upgrade pip briefcase==${{ matrix.briefcase-version }} uv
 
       # Bundle what the first launch needs so it works offline: the baseline
       # wheels zip (pgzero/pygame/ipykernel + deps, mu/wheels/<version>.zip)

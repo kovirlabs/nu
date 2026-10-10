@@ -130,16 +130,26 @@ cross platform nature of Mu is consistent):
 
 Installers are built by CI, not by hand (see [Packaging](packaging.md)):
 
+Release versions are **plain numeric `X.Y.Z`** — no `rc`/`b`/`dev` suffixes.
+Windows MSI versions must be numeric, and Briefcase strips any suffix, so
+`2.0.0b3` and `2.0.0` would be the same version to Windows. To try out a
+release before publishing it, use a manual run; once a version is tagged,
+ship fixes as the next patch (`2.0.1`).
+
 1. Bump the version in **both** `mu/__init__.py` (the canonical source) and
-   `[tool.briefcase] version` in `pyproject.toml` (Briefcase needs a literal).
-2. Commit, then push a tag `vX.Y.Z` (or `vX.Y.ZrcN` / `vX.Y.ZbN` for a
-   pre-release). `build.yml` builds all three installers and publishes a GitHub
-   Release; any pre-release segment in the tag publishes it as a pre-release.
-3. Download each installer from the release and check it on real hardware:
-   install, launch, and in each mode run a script, use the REPL, run a Pygame
-   Zero game, step through the debugger, and install a package from the UI.
-   Check at least current Windows 11, current macOS (Apple Silicon) and a
-   current Ubuntu LTS.
+   `[tool.briefcase] version` in `pyproject.toml` (Briefcase needs a literal),
+   and make sure `CHANGES.md` has an entry for the version.
+2. On that branch, run **Build installers** manually (Actions tab → *Run
+   workflow* → pick the branch). This builds all three installers as
+   downloadable artifacts without publishing anything.
+3. Check each installer on real hardware: install (including over the
+   previous release, which it should replace), launch with the network off,
+   and in each mode run a script, use the REPL, run a Pygame Zero game, step
+   through the debugger, install a package from the UI, and click Help. Check
+   at least current Windows 11, current macOS (Apple Silicon) and a current
+   Ubuntu LTS.
+4. Merge, then push the tag `vX.Y.Z` on that commit. `build.yml` rebuilds the
+   installers and publishes them as a GitHub Release.
 
 The installers are currently **unsigned** (macOS is ad-hoc signed), so users
 see a SmartScreen / Gatekeeper warning. Wiring Authenticode and Apple
