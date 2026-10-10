@@ -1299,6 +1299,7 @@ dependencies = [
     { name = "pyzmq" },
     { name = "qtconsole" },
     { name = "semver" },
+    { name = "tornado" },
     { name = "uv" },
     { name = "wheel" },
 ]
@@ -1424,6 +1425,7 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.6" },
     { name = "ruff", marker = "extra == 'lint'", specifier = ">=0.6" },
     { name = "semver", specifier = ">=2.8.0" },
+    { name = "tornado", specifier = ">=6.5.9" },
     { name = "twine", marker = "extra == 'all'" },
     { name = "twine", marker = "extra == 'dev'" },
     { name = "twine", marker = "extra == 'package'" },

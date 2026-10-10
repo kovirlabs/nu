@@ -65,6 +65,10 @@ dependencies = [
     "qtconsole>=5.5",
     "ipykernel>=6.29",
     "jupyter-client>=8.0",
+    # Not imported directly: a security floor for the transitive dep of
+    # ipykernel/jupyter-client (GHSA-c2m8-h5v5-343r, GHSA-chx6-46f5-w4vp and
+    # others fixed in 6.5.9), so an existing env can't keep a vulnerable copy.
+    "tornado>=6.5.9",
     "pyzmq",
     # Serial port discovery / CircuitPython board identification.
     "adafruit-board-toolkit~=1.1",
@@ -200,6 +204,7 @@ requires = [
     "qtconsole>=5.5",
     "ipykernel>=6.29",
     "jupyter-client>=8.0",
+    "tornado>=6.5.9",
     "pyzmq",
     "adafruit-board-toolkit~=1.1",
     "pyserial~=3.5",
