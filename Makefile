@@ -22,7 +22,6 @@ all:
 	@echo "make win64 - build a 64bit Windows MSI installer (Briefcase)."
 	@echo "make macos - build a macOS native application (Briefcase)."
 	@echo "make linux - build a Linux AppImage (Briefcase)."
-	@echo "  (legacy pup targets: win32, win64-pup, macos-pup, linux-pup, linux-docker)"
 	@echo "make video - create an mp4 video representing code commits.\n"
 
 clean:
@@ -36,7 +35,6 @@ clean:
 	rm -rf lib
 	rm -rf *.mp4
 	rm -rf .git/avatar/*
-	rm -rf venv-pup
 	find . \( -name '*.py[co]' -o -name dropin.cache \) -delete
 	find . \( -name '*.bak' -o -name dropin.cache \) -delete
 	find . \( -name '*.tgz' -o -name dropin.cache \) -delete
@@ -111,69 +109,6 @@ macos: check
 linux: check
 	@echo "\nBuilding Linux AppImage (Briefcase)."
 	python make.py linux
-
-# --- Legacy pup installer targets (Phase 4e will retire pup once the
-# --- Briefcase builds above are confirmed on all three OSes). ---
-
-win32: check
-	@echo "\nBuilding 32bit Windows MSI installer (legacy pup)."
-	python make.py win32
-
-win64-pup: check
-	@echo "\nBuilding 64bit Windows MSI installer (legacy pup)."
-	python make.py win64_pup
-
-macos-pup: check
-	@echo "\nFetching wheels."
-	python -m mu.wheels --package
-	@echo "\nPackaging Mu into a macOS native application (legacy pup)."
-	python -m virtualenv venv-pup
-	# Don't activate venv-pup because:
-	# 1. Not really needed.
-	# 2. Previously active venv would be "gone" on venv-pup deactivation.
-	# Installing pup from a fork with the --pip-platform flag proof of concept
-	# and using it to install wheels for the `macosx_10_12_x86_64` platform
-	./venv-pup/bin/pip install git+https://github.com/carlosperate/pup.git@pip-platform
-	./venv-pup/bin/pup package --launch-module=mu --nice-name="Nu Editor" --icon-path=./package/icons/mac_icon.icns --license-path=./LICENSE --pip-platform=macosx_10_12_x86_64 .
-	rm -r venv-pup
-	ls -la ./build/pup/
-	ls -la ./dist/
-
-linux-pup: check
-	@echo "\nFetching wheels."
-	python -m mu.wheels --package
-	@echo "\nPackaging Mu into a Linux AppImage (legacy pup)."
-	python -m virtualenv venv-pup
-	# Don't activate venv-pup because:
-	# 1. Not really needed.
-	# 2. Previously active venv would be "gone" on venv-pup deactivation.
-	./venv-pup/bin/pip install pup
-	./venv-pup/bin/pup package --launch-module=mu --nice-name="Nu Editor" --icon-path=./mu/resources/images/icon.png --license-path=./LICENSE .
-	rm -r venv-pup
-	ls -la ./build/pup/
-	ls -la ./dist/
-
-linux-docker: clean
-	@echo "\nFetching wheels."
-	docker run -v $(CURDIR):/home --rm ghcr.io/mu-editor/mu-appimage:2022.05.01 bash -c "\
-		pip install . && \
-		python -m mu.wheels --package"
-	@echo "\nInstall pup inside the container, build the Linux AppImage, and tar it."
-	# pup build directory is hardcoded to ./build, but the build fails if the build folder is inside the docker mounted volume
-	# So let's mount the Mu repo into a subdirectory and then invoke pup from the parent folder
-	# https://github.com/mu-editor/pup/issues/242
-	docker run -v $(CURDIR):/home/mu --rm ghcr.io/mu-editor/mu-appimage:2022.05.01 bash -c "\
-		pip install virtualenv && \
-		python -m virtualenv venv-pup && \
-		./venv-pup/bin/pip install pup && \
-		./venv-pup/bin/pup package --launch-module=mu --nice-name='Nu Editor' --icon-path=mu/mu/resources/images/icon.png --license-path=mu/LICENSE mu/ && \
-		cd dist/ && \
-		find *.AppImage -type f -exec tar -cvf {}.tar {} \; && \
-		cd /home && \
-		mv build/pup mu/build/pup && \
-		mv dist/ mu/dist"
-	ls -la ./build/pup/
-	ls -la ./dist/
 
 video: clean
 	@echo "\nFetching contributor avatars."

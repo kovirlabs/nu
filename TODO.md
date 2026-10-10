@@ -198,10 +198,15 @@ feel; offline-first via bundled assets; **Briefcase** for native installers.
   the Briefcase `requires` (so it lands in `app_packages/bin/uv`); `find_uv()` now resolves
   it through `uv.find_uv_bin()` at runtime, no `MU_UV`/`PATH` needed. (No separate
   standalone-binary download/MU_UV plumbing required after all.)
-- [x] ~~Vendor a python-build-standalone CPython per platform~~ **not needed as a separate
-  asset**: Briefcase bundles its own support-package CPython, and first-run reuses it
-  (`uv venv --python <sys.executable>`), so there's no CPython download at first run.
-  (The `UV_PYTHON_DOWNLOADS=never` / `UV_PYTHON_INSTALL_DIR` approach is moot.)
+- [ ] **Reopened (offline first-run regressed in b2)**: ~~Vendor a python-build-standalone
+  CPython — not needed~~. The plan reused the bundled CPython via
+  `uv venv --python <sys.executable>`, but in a packaged app `sys.executable` is
+  Briefcase's launcher stub, which uv can't inspect (crashed Windows b1). b2 pins by
+  *version* instead (`uv venv --python X.Y`), so uv finds a system/uv-managed Python **or
+  downloads one**: first launch needs the network on a machine without a matching
+  Python. To restore offline first-run: point uv at the bundled support-package
+  interpreter's real path (not the stub), or vendor a python-build-standalone CPython
+  and set `UV_PYTHON_DOWNLOADS=never` + `UV_PYTHON_INSTALL_DIR`.
 - [x] Build a wheelhouse — `python -m mu.wheels --package` builds `mu/wheels/<version>.zip`
   (pgzero/pygame/ipykernel + deps), bundled via `sources`; the first-run baseline install
   is offline (pip from the zip, see `install_from_zipped_wheels`). Bumped the stale
@@ -215,9 +220,10 @@ feel; offline-first via bundled assets; **Briefcase** for native installers.
   app starts via `mu/__main__.py` (`python -m mu`), no shim. `briefcase` added to the
   `package` extra.
 - [x] **Build all three in CI** (`build.yml` rewritten): `windows-latest → MSI`,
-  `macos-13 (Intel) → dmg`, `ubuntu-latest → AppImage`, on `workflow_dispatch` + push to
-  master/tags; uploads each installer as an artifact. macOS on Intel on purpose (matches the
-  `macosx_11_0_x86_64` baseline-wheel arch).
+  `macos-latest (Apple Silicon) → zipped .app`, `ubuntu-latest → AppImage`, on
+  `workflow_dispatch` + `v*` tags; a tag also publishes a GitHub Release with the
+  installers. (Started on Intel `macos-13`; moved to arm64 in b1 when the Intel runners
+  stalled. The baseline wheels are fetched for the runner's arch.)
 - [x] Repointed `make.py`/`Makefile` `win64`/`macos`/`linux` at Briefcase (dev/local).
 - [x] **Validated locally on Linux**: `briefcase create`+`build` produce a working AppImage
   headlessly (no Docker); the bundled interpreter imports PyQt6 + `mu`, and `find_uv()`
@@ -234,10 +240,18 @@ feel; offline-first via bundled assets; **Briefcase** for native installers.
   Authenticode need secrets in `build.yml`, else users hit Gatekeeper / SmartScreen.
   Unsigned-but-building first; signing after.
 
-**4e. Retire pup:** (deferred — gated on 4d CI validation)
-- [ ] Remove pup-based targets, `_PUP_PBS_URLs`, `linux-docker`, and the `carlosperate/pup`
-  fork usage once the Briefcase builds are confirmed on all three OSes. The pup `make`
-  targets are kept as a stopgap, renamed `win32`/`win64-pup`/`macos-pup`/`linux-pup`.
+**4e. Retire pup:** ✅ DONE (2026-10, after b1–b3 built green on all three OSes)
+- [x] Removed the pup `make` targets (`win32`, `win64-pup`, `macos-pup`, `linux-pup`,
+  `linux-docker`), `_PUP_PBS_URLs` + `_build_windows_msi` in `make.py`, and the
+  `carlosperate/pup` fork usage.
+- [x] Removed pup/PyInstaller-era files from `package/` (`README.rst`, `dmg_settings.py`,
+  `install_pip3.sh`, `qt.conf`, `mac_icon.icns`, `win_icon.ico`); Briefcase uses
+  `package/icons/mu.*`.
+- [x] Removed `conf/` (hand-written `.desktop`/AppStream/micro:bit udev rule) and the
+  2017 Raspberry Pi `debian/` packaging (PyQt5, setup.py-based, unbuildable here) that
+  consumed it. Briefcase emits the AppImage's `org.kovir.mu.desktop` itself (its AppImage
+  template ships no AppStream metainfo; re-add one only if we target software centres).
+- [x] App-ID realigned: `setDesktopFileName("org.kovir.mu")` to match Briefcase.
 
 ## Phase 5 — Plugin architecture (shell the core; modes become plugins)
 
@@ -380,18 +394,7 @@ choice; recommended stack below.)
   flow), then update the translations. NB heritage strings were intentionally left as "Mu"
   (e.g. the MOTD credit "Mu was created by Nicholas H. Tollervey."), so they keep their
   existing translations.
-- **App-ID realignment: `mu.codewith.editor` → Briefcase's `org.kovir.mu`** (Linux desktop
-  integration; deferred out of the Mu→Nu rename because it's app *identity*, not display
-  name). `mu/app.py` calls `setDesktopFileName("mu.codewith.editor")`, and the `conf/`
-  files carry that id (the `mu.codewith.editor.desktop` filename, `Icon=`,
-  `StartupWMClass=`, appdata `<id>`/`<project_group>`) — but Briefcase generates its Linux
-  metadata as `org.kovir.mu` (bundle `org.kovir` + app `mu`), so the running app's
-  desktop-file hint won't match the installed `.desktop` (breaks the taskbar icon/grouping
-  on Wayland). Align the app id and regenerate/rename the `conf/` metadata to match — or
-  drop `conf/` entirely once pup is retired (Phase 4e), since Briefcase already emits its
-  own desktop + AppStream files.
-- **`conf/mu.appdata.xml` `<description>` is stale beyond branding.** It still advertises
-  the **micro:bit mode** (dropped in Phase 1) and the pre-fork framing, so it needs a real
-  rewrite describing nu's actual mode set (python, circuitpython, debugger, pygamezero) —
-  not a find/replace — before it's a truthful AppStream description. (The `<name>` is
-  already flipped to "Nu".)
+- ~~**App-ID realignment**~~ — done in 4e: `setDesktopFileName("org.kovir.mu")` matches
+  Briefcase's generated `.desktop`; `conf/` removed.
+- ~~**Stale `conf/mu.appdata.xml` description**~~ — moot: `conf/` removed in 4e (it
+  wasn't shipped by the Briefcase AppImage anyway).

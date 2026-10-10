@@ -1,14 +1,15 @@
 # Release Process
 
-Our continuous integration setup provides the following automation:
+Our continuous integration setup (GitHub Actions) provides the following
+automation:
 
-* Running of the unit test suite on Windows, OSX and Linux for each commit.
-* Code quality checks via [LGTM.com](https://lgtm.com/projects/g/mu-editor/mu/).
-  Mu has an A+ rating for code quality.
-* Generation of installables for Windows 32bit and Windows 64bit for each
-  commit on our master branch.
-* Creation of a stand-alone .app for Mac OSX for each commit on our master
-  branch.
+* `test.yml` runs the unit test suite on Windows, macOS and Linux for each push
+  and pull request (Python 3.11 and 3.14 everywhere, plus 3.12 and 3.13 on
+  Linux).
+* CodeQL code-scanning on pushes to `master`.
+* `build.yml` builds the native installers with Briefcase (Windows `.msi`,
+  macOS zipped `.app`, Linux `.AppImage`) on a manual run or on a `v*` tag.
+  A tag also publishes a GitHub Release with the installers attached.
 
 However, such automation does not make a release. What follows is a check-list
 of steps needed to cut a release.
@@ -127,36 +128,26 @@ cross platform nature of Mu is consistent):
 
 ## Packaging Processes
 
-Official final releases will be signed by Nicholas H.Tollervey (the creator and
-current maintainer of Mu). This is a manual step only Nicholas can do (since
-only he has the cryptographic keys to make this work). Once the release
-packages for Windows (32bit and 64bit) and OSX have been created and signed
-they should be checked so no warning messages appear about untrusted sources
-during the installation process.
+Installers are built by CI, not by hand (see [Packaging](packaging.md)):
 
-The instructions for signing the Windows installers are explain in
-[this wonderful article on Adafruit's website](https://learn.adafruit.com/how-to-sign-windows-drivers-installer/making-an-installer).
-But the essence is that the command issued should look something like:
+1. Bump the version in **both** `mu/__init__.py` (the canonical source) and
+   `[tool.briefcase] version` in `pyproject.toml` (Briefcase needs a literal).
+2. Commit, then push a tag `vX.Y.Z` (or `vX.Y.ZrcN` / `vX.Y.ZbN` for a
+   pre-release). `build.yml` builds all three installers and publishes a GitHub
+   Release; any pre-release segment in the tag publishes it as a pre-release.
+3. Download each installer from the release and check it on real hardware:
+   install, launch, and in each mode run a script, use the REPL, run a Pygame
+   Zero game, step through the debugger, and install a package from the UI.
+   Check at least current Windows 11, current macOS (Apple Silicon) and a
+   current Ubuntu LTS.
 
-```
-"C:\Program Files (x86)\Windows Kits\10\bin\10.0.17134.0\x86\signtool" sign /v /n "Nicholas H.Tollervey" /tr http://timestamp.globalsign.com/?signature=sha2 /td sha256 mu-editor_1.0.1_win32.exe
-```
+The installers are currently **unsigned** (macOS is ad-hoc signed), so users
+see a SmartScreen / Gatekeeper warning. Wiring Authenticode and Apple
+notarization secrets into `build.yml` is tracked in `TODO.md` (Phase 4d).
 
-Signing the Mac app involves issuing the following two commands:
-
-```
-codesign --deep --force --verbose --sign "CERT_ID" mu-editor.app
-dmgbuild -s package/dmg_settings.py "Mu Editor" dist/mu-editor.dmg
-```
-
-The appropriate installer should be checked on the following operating systems:
-
-* Windows 7 (32bit)
-* Windows 10 (64bit)
-* Latest OSX.
-
-For native Python packaging, ensure Mu is installable via `pip install .` run
-in the root of the source repository in a virtualenv.
+For native Python packaging, ensure Nu is installable via `pip install .` run
+in the root of the source repository in a virtualenv (`make dist` builds the
+sdist and wheel).
 
 ## Pre-Release Checklist
 
