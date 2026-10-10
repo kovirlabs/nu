@@ -39,6 +39,14 @@ The runner code controls the debug process.
 
 ::: mu.debugger.runner
 
+## `mu.plugin`
+
+The public API for plugins. See [Writing a Nu plugin](plugins.md).
+
+::: mu.plugin.base
+
+::: mu.plugin.host
+
 ## `mu.interface`
 
 This module contains all the PyQt related code needed to create the user

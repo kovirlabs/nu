@@ -54,6 +54,7 @@ from .modes import (
     DebugMode,
     PyGameZeroMode,
 )
+from .plugin import Host
 from .interface.themes import NIGHT_STYLE, DAY_STYLE, CONTRAST_STYLE
 from . import settings
 
@@ -241,17 +242,15 @@ def setup_logging():
 
 def setup_modes(editor, view):
     """
-    Create a simple dictionary to hold instances of the available modes.
+    Create a dictionary of the available modes, keyed by short name.
 
-    *PREMATURE OPTIMIZATION ALERT* This may become more complex in future so
-    splitting things out here to contain the mess. ;-)
+    The built-in modes are registered through a plugin Host -- the same path
+    plugins will use (Phase 5b adds discovery of installed plugins).
     """
-    return {
-        "python": PythonMode(editor, view),
-        "circuitpython": CircuitPythonMode(editor, view),
-        "debugger": DebugMode(editor, view),
-        "pygamezero": PyGameZeroMode(editor, view),
-    }
+    host = Host(editor, view)
+    for mode_class in (PythonMode, CircuitPythonMode, DebugMode, PyGameZeroMode):
+        host.register_mode(mode_class)
+    return host.modes
 
 
 class MutexError(BaseException):

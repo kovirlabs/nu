@@ -1,12 +1,13 @@
 # Writing a Nu plugin
 
-!!! warning "Status: proposed — not implemented yet"
+!!! warning "Status: the API exists, loading doesn't yet"
 
-    This page describes the **planned** plugin system (see **Phase 5** in
-    `TODO.md`). The `mu.plugin` package and the host façade below **do not exist
-    yet** — the API surface here is a design proposal and *will* change as
-    Phase 5 is built. Until it lands, new capability is still added as a built-in
-    [mode](modes.md).
+    Phase 5a (see `TODO.md`) added the `mu.plugin` package described below:
+    the versioned API, the `Plugin`/`ModePlugin` classes and the `Host`. Nu's
+    built-in modes are already registered through a `Host`. **Nu does not yet
+    discover installed plugins** (entry points and the drop-in directory are
+    Phase 5b), and the API is at version **0.1**, so it can still change
+    between releases.
 
 ## Why plugins
 
@@ -46,13 +47,22 @@ Two mechanisms (Phase 5b):
 A plugin that fails to import or load is **logged and skipped**; it never takes
 the editor down with it.
 
-## Proposed API surface
+## The API
 
-!!! note
+Everything a plugin needs is imported from `mu.plugin`. Nothing else in `mu`
+is public: `mu.modes`, `mu.logic` and `mu.interface` can change in any
+release.
 
-    Everything below is the **proposed** `mu.plugin` public API. Names and
-    signatures are subject to change during Phase 5a — this is the design target,
-    not a shipped contract.
+| Name | What it is |
+|---|---|
+| `PLUGIN_API_VERSION` | The API version this Nu provides, e.g. `"0.1"`. |
+| `Plugin` | Base class for a plugin. |
+| `ModePlugin` | A `Plugin` that registers one or more modes for you. |
+| `Mode` | Base class for a mode (today's `BaseMode`). |
+| `MicroPythonMode` | A `Mode` with serial REPL, plotter and board detection, for MicroPython devices. |
+| `Host` | What a plugin is handed: the supported way to reach the editor. |
+| `PluginSettings` | A plugin's own persisted settings (from `Host.settings`). |
+| `check_compatible` | The version check `Host` applies when loading a plugin. |
 
 ### The entry point
 
@@ -63,39 +73,41 @@ A packaged plugin advertises itself in its `pyproject.toml`:
 microbit = "nu_microbit:MicrobitPlugin"
 ```
 
-The value points at a `Plugin` subclass (or a factory returning one).
+The value points at a `Plugin` subclass. (Nu reads these from Phase 5b.)
 
-### `PLUGIN_API_VERSION`
+### Versioning: `api_version`
+
+Each plugin declares the `PLUGIN_API_VERSION` it was written against, as a
+literal string. When loading it, the host compares that with its own version:
+
+- **Same MAJOR, and a MINOR no newer than Nu's:** the plugin loads.
+- **While MAJOR is 0:** the MINOR must match exactly, because 0.x releases
+  may break the API.
+- **Anything else, or a missing/malformed `api_version`:** the plugin is
+  logged and skipped. Nu carries on without it.
+
+### `Plugin`
 
 ```python
-from mu.plugin import PLUGIN_API_VERSION   # e.g. "0.1"
-```
-
-A semver-ish string the **core advertises**. Each plugin declares the version it
-was written against (`Plugin.api_version`); at load the host compares the two and
-**warns/skips** on an incompatible major rather than crashing. This is the
-commitment that lets a community plugin keep working across Nu releases.
-
-### `Plugin` — the base class
-
-```python
-from mu.plugin import Plugin, Host
+from mu.plugin import Plugin
 
 class MyPlugin(Plugin):
     name = "My Plugin"
-    api_version = "0.1"          # the mu.plugin version this targets
+    api_version = "0.1"
 
-    def register(self, host: Host) -> None:
-        """Called once when the plugin is enabled. Use `host` to register
-        modes, panes, menu items, etc. Do all wiring here."""
+    def register(self, host):
+        """Called once when the plugin loads. Do all wiring here, through
+        `host`."""
 
-    def unregister(self, host: Host) -> None:
-        """Optional. Called when the plugin is disabled/unloaded; undo anything
-        that won't be cleaned up automatically."""
+    def unregister(self, host):
+        """Optional. Called when the plugin unloads. Modes it registered are
+        removed for you; undo anything else here."""
 ```
 
-For the common case — "I just want to add a mode" — there is a convenience base
-that registers a single mode for you:
+If `register` raises, the plugin is logged and skipped, and any modes it had
+already registered are removed. A broken plugin never stops Nu starting.
+
+For the common case of a plugin that only adds modes, use `ModePlugin`:
 
 ```python
 from mu.plugin import ModePlugin
@@ -103,28 +115,28 @@ from mu.plugin import ModePlugin
 class MicrobitPlugin(ModePlugin):
     name = "micro:bit"
     api_version = "0.1"
-    mode = MicrobitMode          # a mu.plugin.Mode subclass; registered automatically
+    mode = MicrobitMode          # or: modes = (ModeA, ModeB)
 ```
 
-### `Mode` — what a plugin contributes
+### `Mode`
 
-`Mode` is the stable, re-exported form of today's `BaseMode`. Plugins import it
-from `mu.plugin`, never from `mu.modes.base`:
+`Mode` is the mode base class the built-in modes use (see [Modes](modes.md)).
+Set the class attributes and override the methods you need:
 
 ```python
 from mu.plugin import Mode
 
 class MicrobitMode(Mode):
     name = "micro:bit"             # shown in the mode picker
-    short_name = "microbit"        # stable id (settings keys, persisted state)
+    short_name = "microbit"        # stable, unique id (settings and session keys)
     description = "Write MicroPython for the BBC micro:bit."
-    icon = "microbit"              # icon name resolved from the plugin's resources
+    icon = "microbit"              # a built-in icon name, for now
 
-    def actions(self) -> list[dict]:
-        """Toolbar buttons: name / display_name / description / handler / shortcut."""
+    def actions(self):
+        """Toolbar buttons."""
         return [
             {
-                "name": "flash",
+                "name": "flash",            # also the icon name, for now
                 "display_name": "Flash",
                 "description": "Flash your code to the micro:bit.",
                 "handler": self.flash,
@@ -132,55 +144,49 @@ class MicrobitMode(Mode):
             },
         ]
 
-    def api(self) -> list[str]:
-        """API metadata strings powering autocomplete and call tips."""
+    def api(self):
+        """Autocomplete and call tip entries."""
         return MICROBIT_APIS
 
-    def workspace_dir(self) -> str:
-        """Where this mode saves the user's files by default."""
-        ...
-
-    # Optional lifecycle hooks
-    def activate(self) -> None: ...     # this mode was selected
-    def deactivate(self) -> None: ...   # switching away to another mode
-    def stop(self) -> None: ...         # editor is shutting down
+    # Optional hooks: activate(), deactivate(), stop(), workspace_dir()
 ```
 
-### `Host` — the façade
+Inside a mode, `self.host` is the `Host` that registered it. Use it rather
+than `self.editor` and `self.view`, which are the internal objects and are not
+part of the API.
 
-The single supported surface onto the editor. The core may refactor freely
-*behind* this; a plugin only ever sees `Host`.
+For a MicroPython board, subclass `MicroPythonMode` instead and list the
+boards in `valid_boards` as `(vid, pid, manufacturer, board_name)` tuples. Nu
+then detects the board when it's plugged in and offers to switch to your mode.
 
-```python
-class Host:
-    api_version: str                       # the API version this core supports
+### `Host`
 
-    # --- registration (call from Plugin.register) ---
-    def register_mode(self, mode_cls: type[Mode], *, default: bool = False) -> None: ...
-    def add_pane(self, pane, *, area: str = "bottom") -> None: ...
-    def add_menu_item(self, menu: str, text: str, handler) -> None: ...
+| Method | Does |
+|---|---|
+| `register_mode(mode_class)` | Create the mode and add it to the editor. Its `short_name` must be unique. Returns the mode. |
+| `show_message(message, information=None, icon=None)` | Show a modal message. `icon` is `"NoIcon"`, `"Question"`, `"Information"`, `"Warning"` (the default) or `"Critical"`. |
+| `confirm(message, information=None, icon=None)` | Ask OK/Cancel; returns `True` for OK. |
+| `show_status(message, duration=5)` | Show a message in the status bar for `duration` seconds. |
+| `current_text()` | The current tab's text, or `None` if no tab is open. |
+| `current_path()` | The current tab's file path, or `None`. |
+| `workspace_dir()` | The learner's workspace directory. |
+| `open_directory(path)` | Open `path` in the system file manager. |
+| `settings(namespace)` | A `PluginSettings` with `get(key, default=None)` and `set(key, value)`. Values are saved with the user's settings under `plugins.<namespace>` and must be JSON-serialisable. |
+| `logger(name)` | A logger writing to Nu's log as `mu.plugins.<name>`. |
+| `api_version` | The `PLUGIN_API_VERSION` this Nu provides. |
 
-    # --- editor state (read and drive the running editor) ---
-    @property
-    def editor(self) -> "EditorProxy": ...   # current tab, text, open/save, mode switch
-    @property
-    def window(self) -> "WindowProxy": ...   # dialogs, status messages, panes
+The core uses `load_plugin`, `unload_plugin`, `modes` and `plugins`; plugins
+shouldn't need them.
 
-    # --- the uv-managed environment (Phase 4) ---
-    @property
-    def env(self) -> "EnvProxy": ...         # install_packages(), interpreter path, run()
+### Not in the API yet
 
-    # --- housekeeping ---
-    @property
-    def resources(self) -> "ResourceProxy": ...        # the plugin's bundled icons/assets
-    def settings(self, namespace: str) -> "SettingsProxy": ...   # namespaced persisted settings
-    def log(self) -> "logging.Logger": ...
-```
+These are planned, and are deliberately left out until a real plugin needs
+them:
 
-The `*Proxy` types are deliberately narrow, documented *views* — **not** the
-internal `Editor`, `Window`, or `VirtualEnvironment` objects. Their exact
-surfaces are fleshed out in Phase 5a; the rule is that a plugin should never need
-to reach past `Host` into `mu`'s internals.
+- **Icons shipped by the plugin.** Mode and button icons must be built-in icon
+  names for now (Phase 5c).
+- **Panes and settings pages**, e.g. micro:bit's file-transfer pane (Phase 6).
+- **Installing packages into the learner's environment** (Phase 5d).
 
 ## Packaging & distribution
 
@@ -201,16 +207,18 @@ to reach past `Host` into `mu`'s internals.
 
 ## Versioning & compatibility
 
-- The core advertises `PLUGIN_API_VERSION`; each plugin declares `api_version`.
-- Same major ⇒ compatible. The host **warns and skips** on an incompatible major,
-  surfaced in the Plugins tab rather than as a crash.
-- The API is bumped deliberately, with a short compatibility-shim window.
+- The core advertises `PLUGIN_API_VERSION`; each plugin declares `api_version`
+  (the rules are under [Versioning](#versioning-api_version) above).
+- An incompatible plugin is logged and skipped, never a crash. From Phase 5e
+  the Plugins tab will show why it was skipped.
+- The API is bumped deliberately, with a short compatibility-shim window. It
+  stays at 0.x until the micro:bit plugin (Phase 6) has proven it.
 
 ## Trust & safety
 
 Plugins are **arbitrary in-process Python** — there is no sandbox. The trust
 model is the same as `pip`: *you chose to install it.* Install plugins you trust;
-the Plugins tab shows the real `uv` command it runs before installing. (A
+the Plugins tab (Phase 5e) will show the real `uv` command it runs before installing. (A
 curated/signed index is a possible future, not a v1 guarantee.)
 
 ## A minimal example
@@ -222,13 +230,14 @@ my-nu-plugin/
     └── __init__.py         # MyPlugin(Plugin) + MyMode(Mode)
 ```
 
-A runnable template will ship in the Nu repo under `plugins/example/` (Phase 5a).
-Until the plugin system lands, study the built-in modes in `mu/modes/` — the
-plugin `Mode` is a thin re-export of the `BaseMode` they already subclass.
+A runnable template lives in this repo at `plugins/example/`: an "Example"
+mode with one button that counts the lines in the current tab and stores a
+setting. Copy it to start a plugin. The built-in modes in `mu/modes/` are
+worked examples of bigger modes.
 
 ## See also
 
 - [Modes](modes.md) — the mode concept the plugin `Mode` formalizes.
-- [API reference](api.md) — once `mu.plugin` exists, its reference will be
-  generated here via mkdocstrings.
+- [API reference](api.md#muplugin) — generated from the `mu.plugin`
+  docstrings.
 - `TODO.md` — Phase 5 (plugin architecture) and Phase 6 (the micro:bit plugin).
