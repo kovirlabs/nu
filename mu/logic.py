@@ -713,8 +713,14 @@ class DeviceList(QtCore.QAbstractListModel):
         # Detect connected devices.
         for mode_name, mode in self.modes.items():
             if hasattr(mode, "find_devices"):
-                # The mode can detect attached devices.
-                detected = mode.find_devices(with_logging=False)
+                # The mode can detect attached devices. This runs every
+                # second for every mode, including plugin modes the user
+                # isn't using, so a failure is logged rather than fatal.
+                try:
+                    detected = mode.find_devices(with_logging=False)
+                except Exception:
+                    logger.exception("Mode %s failed to look for devices", mode_name)
+                    continue
                 if detected:
                     device_types.add(mode_name)
                     devices.extend(detected)

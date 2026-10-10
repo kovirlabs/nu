@@ -306,13 +306,31 @@ drop-in dir covers them.
   `interface/dialogs.py` (`["python", "pygamezero"]`) and `logic.py` (copies Pygame Zero
   assets); `wheels.mode_packages` is a single global list. Fix these in 5b–5d.
 
-**5b. Plugin discovery + loading:**
-- [ ] Discover installed plugins via `importlib.metadata` entry points (group `mu.plugins`).
-- [ ] Also scan a **drop-in dir** (`<data>/plugins/`) for local/unpackaged plugins.
-- [ ] Replace the hardcoded mode wiring (`app.py` import list + `modes/__init__.py` +
-  `setup_modes`) with discovery + an enabled/disabled **registry** persisted in settings.
-- [ ] **Error isolation**: a plugin that fails to import/load is logged and skipped — never
-  takes down the editor.
+**5b. Plugin discovery + loading:** ✅ DONE
+- [x] `mu/plugin/loader.py` discovers installed plugins via `importlib.metadata` entry
+  points (group `mu.plugins`); the id is the entry point name.
+- [x] Also scans a **drop-in dir** (`config.DATA_DIR/plugins/`, created if missing): each
+  `name.py` / `name/__init__.py` is a plugin with id `name` (its `PLUGIN` attribute, else
+  its single `Plugin` subclass). Imported under its own name so relative imports work; a
+  name that's already importable (`json.py`) is refused instead of shadowing it.
+- [x] `app.setup_modes` registers the built-in modes, then `load_plugins(host)`; a
+  `PluginRecord` per discovered plugin (loaded / disabled / skipped + reason) is kept on
+  `host.plugin_records` for the 5e Plugins tab. Enabled/disabled **registry** persisted as
+  `settings["disabled_plugins"]` (`set_plugin_enabled`); a disabled plugin isn't imported.
+- [x] **Error isolation**: a plugin that's disabled, a duplicate id, fails to import
+  (incl. `SystemExit`), is API-incompatible or fails `register` is logged and skipped.
+  `DeviceList.check_usb` now also survives a mode whose `find_devices` raises (it polls
+  every mode each second, so one broken plugin would otherwise crash Nu via `excepthook`).
+- [x] Verified end to end: the example plugin installed editable + a drop-in plugin both
+  appear in the mode picker; a broken drop-in is skipped. Tests point the drop-in dir at a
+  temp folder (`tests/conftest.py`).
+- NOTE (open): **runtime** isolation is still missing. An exception in a plugin's action
+  handler (or a timer it starts) reaches `app.excepthook`, which treats it as fatal. Wrap
+  plugin-provided handlers in `Editor.change_mode` (log + `show_message`) before shipping
+  third-party plugins (5e at the latest).
+- NOTE (open, 5d): in **installers** Nu runs from Briefcase's bundled env, which users
+  can't install into, so entry-point discovery only sees bundled plugins there; the
+  drop-in folder is the only user route until 5d puts a plugin env on `sys.path`.
 
 **5c. Convert the specialized modes to bundled plugins (proof of the API):**
 - [ ] Scaffold a `plugins/` **uv workspace** (`[tool.uv.workspace]`): each bundled plugin is

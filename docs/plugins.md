@@ -1,13 +1,12 @@
 # Writing a Nu plugin
 
-!!! warning "Status: the API exists, loading doesn't yet"
+!!! warning "Status: working, but early"
 
-    Phase 5a (see `TODO.md`) added the `mu.plugin` package described below:
-    the versioned API, the `Plugin`/`ModePlugin` classes and the `Host`. Nu's
-    built-in modes are already registered through a `Host`. **Nu does not yet
-    discover installed plugins** (entry points and the drop-in directory are
-    Phase 5b), and the API is at version **0.1**, so it can still change
-    between releases.
+    Nu loads plugins at startup, both installed packages and files in the
+    plugins folder (Phases 5a and 5b in `TODO.md`). The API is at version
+    **0.1**, so it can still change between releases. There's no Plugins tab
+    yet (Phase 5e), and in the downloadable installers the plugins folder is
+    the only way to add a plugin (see below).
 
 ## Why plugins
 
@@ -34,18 +33,72 @@ roadmap, see Phase 5 (architecture) and Phase 6 (the micro:bit plugin) in
 
 ## How a plugin is discovered
 
-Two mechanisms (Phase 5b):
+Nu looks for plugins once, at startup, in two places. Changes take effect the
+next time Nu starts.
 
-1. **Entry points** — the normal, shareable path. A plugin registers a
-   `mu.plugins` entry point in its packaging metadata; Nu finds it via
-   `importlib.metadata` once the package is installed (e.g. `uv add nu-microbit`,
-   or the Plugins tab).
-2. **Drop-in directory** — for local/experimental plugins, Nu scans
-   `<data>/plugins/` at startup. No packaging required — ideal for a quick
-   classroom hack before you publish.
+1. **Installed packages.** Any package installed in the environment Nu runs
+   from that declares a `mu.plugins` entry point (see
+   [The entry point](#the-entry-point)). Its id is the entry point's name.
+2. **The plugins folder**, for local plugins that aren't packaged:
 
-A plugin that fails to import or load is **logged and skipped**; it never takes
-the editor down with it.
+    | System | Folder |
+    |---|---|
+    | Windows | `%LOCALAPPDATA%\python\mu\plugins` |
+    | macOS | `~/Library/Application Support/mu/plugins` |
+    | Linux | `~/.local/share/mu/plugins` |
+
+    Nu creates the folder if it's missing. Each `name.py` file, or `name/`
+    folder with an `__init__.py`, is one plugin with id `name`. The plugin is
+    the module's `PLUGIN` attribute if it sets one; otherwise the module must
+    define exactly one `Plugin` subclass. A plugin folder imports its own
+    files with relative imports (`from .modes import MyMode`). Names starting
+    with `.` or `_` are ignored. A name that matches an installed module
+    (`json.py`, say) is refused rather than allowed to replace that module.
+
+Installed packages are found first. If a folder plugin has the same id as an
+installed one, the folder plugin is skipped.
+
+!!! note "Installers and installed packages"
+
+    In the Windows, macOS and Linux installers, Nu runs from its own bundled
+    environment, which you can't install packages into. Until Phase 5d adds
+    plugin installs, use the plugins folder there. Installed packages are
+    picked up in a development checkout (`uv pip install -e path/to/plugin`)
+    or a `pip install nu-editor`.
+
+### When a plugin is skipped
+
+Nu logs the reason (see the log via the cog icon) and starts without the
+plugin if it:
+
+- is switched off;
+- has the same id as a plugin already found;
+- fails to import, including calling `sys.exit()` while importing;
+- declares a missing or incompatible `api_version`; or
+- raises an error in `register`.
+
+Any modes it registered before failing are removed again. An unnamed plugin
+(one that doesn't set `name`) is called by its id.
+
+Once loaded, a plugin runs inside Nu. Nu guards its once-a-second device scan
+(`find_devices`), which runs for every mode, but an uncaught error in, say, a
+button handler is still treated like any other crash in Nu. Catch your own
+errors and report them with `host.show_message`.
+
+### Switching a plugin off
+
+With Nu closed (it rewrites the file when it exits), add the plugin's id to
+`disabled_plugins` in Nu's `settings.json`, which is in the same data folder
+as `plugins/`:
+
+```json
+{
+  "disabled_plugins": ["example"]
+}
+```
+
+A switched-off plugin isn't even imported. The Plugins tab (Phase 5e) will do
+this for you.
 
 ## The API
 
@@ -73,7 +126,8 @@ A packaged plugin advertises itself in its `pyproject.toml`:
 microbit = "nu_microbit:MicrobitPlugin"
 ```
 
-The value points at a `Plugin` subclass. (Nu reads these from Phase 5b.)
+The value points at a `Plugin` subclass, a `Plugin` instance, or a function
+that returns one.
 
 ### Versioning: `api_version`
 
