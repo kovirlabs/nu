@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../icon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#packaging-mu" class="md-skip">
+        <a href="#packaging-nu" class="md-skip">
           Skip to content
         </a>
       
@@ -1061,83 +1061,11 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#python-package" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Python Package
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#raspberry-pi" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Raspberry Pi
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#windows-installer" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Windows Installer
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#osx-app-installer" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        OSX App Installer
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#linux-packages" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Linux Packages
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Linux Packages">
-      <ul class="md-nav__list">
-        
           <li class="md-nav__item">
-  <a href="#debian" class="md-nav__link">
+  <a href="#linux-desktop-integration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Debian
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fedora" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Fedora
+        Linux desktop integration
       
     </span>
   </a>
@@ -1480,83 +1408,11 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#python-package" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Python Package
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#raspberry-pi" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Raspberry Pi
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#windows-installer" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Windows Installer
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#osx-app-installer" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        OSX App Installer
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#linux-packages" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Linux Packages
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Linux Packages">
-      <ul class="md-nav__list">
-        
           <li class="md-nav__item">
-  <a href="#debian" class="md-nav__link">
+  <a href="#linux-desktop-integration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Debian
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fedora" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Fedora
+        Linux desktop integration
       
     </span>
   </a>
@@ -1588,14 +1444,15 @@
   
 
 
-<h1 id="packaging-mu">Packaging Mu<a class="headerlink" href="#packaging-mu" title="Permanent link">&para;</a></h1>
+<h1 id="packaging-nu">Packaging Nu<a class="headerlink" href="#packaging-nu" title="Permanent link">&para;</a></h1>
 <p>Our target users (beginner programmers and those who support them) may not be
-confident with installing software, so obtaining and setting up Mu needs to be
+confident with installing software, so obtaining and setting up Nu needs to be
 as simple as possible — and producing the installers needs to be automatic, so
 cutting a release doesn't depend on one volunteer's time.</p>
-<p>Since <strong>Phase 4</strong> (see <code>TODO.md</code>) the native installers are built with
+<p>The native installers are built with
 <strong><a href="https://briefcase.readthedocs.io/">Briefcase</a></strong> (part of the BeeWare suite),
-replacing the previous <code>pup</code> pipeline. A single definition in
+which replaced upstream Mu's <code>pup</code> pipeline in Phase 4 (see <code>TODO.md</code>). A
+single definition in
 <code>pyproject.toml</code>'s <code>[tool.briefcase]</code> drives all three platforms:</p>
 <table>
 <thead>
@@ -1613,8 +1470,8 @@ replacing the previous <code>pup</code> pipeline. A single definition in
 </tr>
 <tr>
 <td>macOS</td>
-<td><code>.dmg</code> (ad-hoc signed)</td>
-<td><code>macos-13</code> (Intel)</td>
+<td>zipped <code>.app</code> (ad-hoc signed)</td>
+<td><code>macos-latest</code> (Apple Silicon)</td>
 </tr>
 <tr>
 <td>Linux</td>
@@ -1626,8 +1483,11 @@ replacing the previous <code>pup</code> pipeline. A single definition in
 <h2 id="building-installers-briefcase">Building installers (Briefcase)<a class="headerlink" href="#building-installers-briefcase" title="Permanent link">&para;</a></h2>
 <p>CI is the release path: <code>.github/workflows/build.yml</code> builds one OS per job and
 uploads the installer as a downloadable artifact. <strong>Trigger it from the GitHub
-Actions tab</strong> ("Build installers" → <em>Run workflow</em>), or it runs on a push to
-<code>master</code> / a <code>v*</code> tag. Download the artifact for your OS from the run.</p>
+Actions tab</strong> ("Build installers" → <em>Run workflow</em>) and download the artifact
+for your OS from the run. Pushing a <code>v*</code> tag also builds all three and
+publishes a GitHub Release with the installers attached (a tag with a
+pre-release segment such as <code>v2.0.0rc1</code> publishes as a pre-release). See
+<a href="../release/">Release process</a>.</p>
 <p>Locally (inside a pip-enabled virtualenv with the <code>package</code> extra,
 <code>pip install -e ".[package]"</code>):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$ make win64     # 64-bit Windows MSI
@@ -1646,190 +1506,34 @@ demand).</p>
   <code>find_uv()</code> locates it at runtime through <code>uv.find_uv_bin()</code> (no <code>PATH</code> or
   <code>MU_UV</code> needed in the packaged app).</li>
 <li>The <strong>baseline wheels zip</strong> (<code>mu/wheels/&lt;version&gt;.zip</code>, built by
-  <code>python -m mu.wheels --package</code> before packaging), so the first-run
-  <code>uv venv</code> sets up the learner's environment <strong>offline</strong>.</li>
+  <code>python -m mu.wheels --package</code> before packaging), so the learner's
+  baseline packages install without the network.</li>
 </ul>
-<p>At first launch Mu creates the user's environment with
-<code>uv venv --python &lt;the bundled interpreter&gt;</code>, so the packaged Python is reused
-for the learner's code — no separate CPython download is required.</p>
+<p>At first launch Nu creates the user's environment with
+<code>uv venv --python &lt;X.Y&gt; --seed</code>, pinned to the <em>version</em> of the bundled Python
+rather than its path (in a packaged app <code>sys.executable</code> is Briefcase's launcher
+stub, which uv can't inspect). uv then resolves a real interpreter of that
+version: a system install, a uv-managed CPython, or a <strong>download</strong>. So on a
+machine with no matching Python, first launch currently needs the network;
+bundling a CPython for uv to find (with <code>UV_PYTHON_DOWNLOADS=never</code>) is an open
+item in <code>TODO.md</code> (Phase 4c).</p>
 <h3 id="signing">Signing<a class="headerlink" href="#signing" title="Permanent link">&para;</a></h3>
 <p>CI builds are <strong>unsigned</strong> (macOS uses an ad-hoc signature). Users will see a
 SmartScreen (Windows) or Gatekeeper (macOS) warning until code-signing secrets
 (Authenticode / Apple notarization) are wired into <code>build.yml</code> — tracked as a
 follow-up in <code>TODO.md</code> (Phase 4d).</p>
-<div class="admonition warning">
-<p class="admonition-title">The sections below are historical</p>
-<p>Everything from "Python Package" down is <strong>inherited from upstream Mu</strong> and
-describes the <strong>retired</strong> toolchain (Appveyor, <code>pynsist</code>/NSIS, Travis, the
-<code>pup</code> builder, tkinter assets, <code>setup.py</code>). It is kept for reference while
-the docs are modernized and <strong>does not reflect how this fork builds today</strong> —
-see the Briefcase flow above. The legacy <code>pup</code> <code>make</code> targets survive as
-<code>win32</code>, <code>win64-pup</code>, <code>macos-pup</code>, <code>linux-pup</code>, and <code>linux-docker</code> until the
-Briefcase builds are confirmed on all three OSes (Phase 4e).</p>
-</div>
-<h2 id="python-package">Python Package<a class="headerlink" href="#python-package" title="Permanent link">&para;</a></h2>
-<p>If you have Python 3.5 or later installed on Windows, OSX or 64-bit Linux and
-you are familiar with Python's built-in packaging system, you can install Mu
-into a virtual environment with <code>pip</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>$ pip install mu-editor
-</code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>By design, <code>pip</code> will not create any shortcuts for applications that it
-installs.</p>
-<p>If you want to add a shortcut for Mu to your desktop/start menu you can
-use Martin O'Hanlon's amazingly useful
-<a href="https://shortcut.readthedocs.io/en/latest/">Shortcut tool</a> like this:</p>
-<div class="highlight"><pre><span></span><code>$ pip install shortcut
-$ shortcut mu
-</code></pre></div>
-</div>
-<p>As per conventions, the <code>setup.py</code> file contains all the details used by
-<code>pip</code> to install it. We use <a href="https://github.com/pypa/twine">twine</a> to push
-releases to PyPI and I (Nicholas - maintainer) simply use a Makefile to
-automate this:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>$ make publish-test
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>$ make publish-live
-</code></pre></div>
-<p>The <code>make publish-live</code> command is what updates PyPI. The
-<code>make publish-test</code> command uses the test instance of PyPI so we can confirm
-the release looks, behaves and works as expected before pushing to live.</p>
-<h2 id="raspberry-pi">Raspberry Pi<a class="headerlink" href="#raspberry-pi" title="Permanent link">&para;</a></h2>
-<p>Raspberry Pi OS (previously called Raspbian) is the official operating system
-for the Raspberry Pi and features Mu as Recommended Software. Raspberry Pi OS
-uses the Mu packages contributed to Debian by
-<a href="https://twitter.com/nickmorrott">Nick Morrott</a>.</p>
-<p>To install Mu on Raspberry Pi OS from the command line, type:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>$ sudo apt install mu-editor
-</code></pre></div>
-<p>Alternatively, Mu can be installed from the Recommended Software menu in the
-Programming section.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Since Mu for Raspberry Pi OS is packaged by a third party, our latest
-releases may not be immediately available.</p>
-</div>
-<h2 id="windows-installer">Windows Installer<a class="headerlink" href="#windows-installer" title="Permanent link">&para;</a></h2>
-<p>Packaging for Windows is essential for the widespread use of Mu since most
-computers in schools run this operating system. Furthermore, feedback from
-school network administrators tells us that they prefer installers since these
-are easier to install "in bulk" to computing labs.</p>
-<p>There are two versions of the installer: one for 32bit Windows and the other
-for 64bit Windows. The 32bit version has been tested on Windows 7 and the 64bit
-version has been tested on Windows 10. Support for anything other than Windows
-10 is important, but a "best effort" affair. If you find you're having problems
-please <a href="https://github.com/mu-editor/mu/issues/new">submit a bug report</a>.</p>
-<p>The latest <em>unsigned</em> builds for Mu on Windows
-<a href="http://mu-builds.s3-website.eu-west-2.amazonaws.com/?prefix=windows/">can be found here</a>.</p>
-<p>Mu for Windows contains its own version of Python packaged in such a way that
-makes it only usable within the context of Mu (Python's so-called 
-<a href="https://docs.python.org/3.4/whatsnew/3.4.html#whatsnew-isolated-mode">isolated mode</a>).
-Of course, the version of Python in Mu will have as much or little
-access to computing resources as the host operating system will allow.</p>
-<p>Packaging is automated using the <a href="https://www.appveyor.com/">Appveyor</a> cloud
-based continuous integration solution for Windows. The 
-<a href="https://github.com/mu-editor/mu/blob/master/.appveyor.yml">.appveyor.yml</a>
-file found in the root of Mu's repository, configures and describes this
-process. You can see the history of such builds
-<a href="https://ci.appveyor.com/project/carlosperate/mu/history">here</a>.</p>
-<p>We use the <a href="http://nsis.sourceforge.net/Main%5FPage">NSIS</a> tool to build the
-installers. This process if coordinated by the amazing
-<a href="https://pynsist.readthedocs.io/en/latest/">pynsist</a> utility.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Pynsist is the creation of
-<a href="https://twitter.com/takluyver">Thomas Kluyver</a>, who has done an amazing
-job creating many useful tools and utilities for the wider Python
-community (for example, Thomas is also responsible for the Jupyter
-widget Mu uses for the REPL in Python 3 mode).</p>
-<p>On several occasions Thomas has volunteered his time to help Mu. Like
-Carlos, Thomas is another example of the invaluable efforts that go into
-making Mu. Once again, if you find Mu useful, please don't hesitate to
-thank Thomas via Twitter.</p>
-<p>Thank you Thomas!</p>
-</div>
-<p>The required configuration file for <code>pynsist</code> is automatically generated at
-packaging time, under a temporary working directory.
-The motive for that arises from the need to ensure that Mu's dependencies are
-sourced from a single place, which is <code>setup.py</code>.
-The <code>win_installer.py</code> script handles that,
-runs <code>pynsist</code>,
-moves the resulting installer executable to the <code>dist</code> directory,
-and cleans up.
-If you're interested in learning more,
-the script includes comments with detailed notes
-(also, check out the <code>pynsist</code>
-<a href="https://pynsist.readthedocs.io/en/latest/cfgfile.html">specification for configuration files</a>).</p>
-<p>The automated builds are unsigned, so Windows will complain about the software
-coming from an untrusted source. The official releases will be signed by
-me (Nicholas Tollervey - the current maintainer) on my local machine using
-a private key and uploaded to GitHub and associated with the relevant release.
-<a href="https://pynsist.readthedocs.io/en/latest/faq.html#code-signing">The instructions for cryptographically signing installers</a>
-explain this process more fully
-(the details of which are described
-<a href="https://developer.mozilla.org.cach3.com/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Signing_an_executable_with_Authenticode">by Mozilla</a>).</p>
-<p>Use the <code>make</code> command to build your own installers:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>$ make win32
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>$ make win64
-</code></pre></div>
-<p>This will clean the repository before running the <code>win_installer.py</code> command
-for the requested bitness.</p>
-<p>Because Mu depends on the availability of tkinter, part of the build process is
-to download the appropriate tkinter-related resources from
-<a href="https://github.com/mu-editor/mu_tkinter">Mu's tkinter assets repository</a>.</p>
-<p>If asked, the command for automatically installing Mu, system wide, should use
-the following flags:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>mu-editor_win64.exe /S /AllUsers
-</code></pre></div>
-<p>The <code>/S</code> flag tells the installer to work in "silent" mode (i.e. you won't
-see the windows shown in the screenshots above) and the <code>/AllUsers</code> flag
-makes Mu available to all users of the system (i.e. it's installed "system
-wide").</p>
-<h2 id="osx-app-installer">OSX App Installer<a class="headerlink" href="#osx-app-installer" title="Permanent link">&para;</a></h2>
-<p>We use Travis to automate the building of the .app and .dmg installer (see the
-<code>.travis</code> file in the root of Mu's GIT repository for the steps involved). 
-This process is controlled by
-<a href="https://briefcase.readthedocs.io/en/latest/">Briefcase (part of the BeeWare suite of tools</a>)
-which piggy-backs onto the <code>setup.py</code> script to build the necessary assets.
-To ensure Mu has Python 3 available for it to both run and use for evaluating
-users' scripts, we have created a portable/embeddable Python runtime whose
-automated build scripts can be found
-<a href="https://github.com/mu-editor/mu_portable_python_macos">in this repository</a>.
-This is the Python version used by Mu (not the one on the user's machine).</p>
-<p>The end result of submitting a commit to Mu's master branch is an
-automatically generated installable for OSX. These assets are un-signed, so OSX
-will complain about Mu coming from an unknown developer. However, for full
-releases we sign the .app with our Apple developer key (a manual process).</p>
-<h2 id="linux-packages">Linux Packages<a class="headerlink" href="#linux-packages" title="Permanent link">&para;</a></h2>
-<p>We don't automatically create packages for Linux distros. However, we liaise
-with upstream developers to ensure that Mu finds its way into both Debian and
-Fedora based distributions.</p>
-<h3 id="debian">Debian<a class="headerlink" href="#debian" title="Permanent link">&para;</a></h3>
-<p>Mu (and the MicroPython runtime) were packaged for Debian and Ubuntu by
-<a href="https://twitter.com/nickmorrott">Nick Morrott</a> and have been available to
-install since the releases of Debian 10 "buster" and Ubuntu 19.04 "Disco Dingo".</p>
-<p>To install Mu on Debian/Ubuntu from the command line, type:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>$ sudo apt install mu-editor
-</code></pre></div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Since Mu for Debian/Ubuntu is packaged by a third party, our latest
-releases may not be immediately available.</p>
-</div>
-<h3 id="fedora">Fedora<a class="headerlink" href="#fedora" title="Permanent link">&para;</a></h3>
-<p>Mu was packaged by <a href="https://twitter.com/kushaldas">Kushal Das</a> for Fedora.
-However this is an old version of Mu and, as with the Raspberry Pi version,
-relies on a third party to package it so may lag behind the latest version.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Last, but not least, Kushal does a huge amount of work for both the
-Fedora and Python communities and is passionate about sustaining our
-Python community through education outreach. With people like Kushal
-putting in the time and effort to package tools like Mu and mentor
-beginner programmers who use Mu our community would flourish less. If you
-find Mu useful, please don't hesitate to thank Kushal via Twitter.</p>
-<p>Thank you Kushal.</p>
-</div>
+<h3 id="linux-desktop-integration">Linux desktop integration<a class="headerlink" href="#linux-desktop-integration" title="Permanent link">&para;</a></h3>
+<p>Briefcase generates the AppImage's Linux <code>.desktop</code> entry itself, from
+<code>formal_name</code> and <code>description</code> in <code>pyproject.toml</code>, named after the app id:
+<code>bundle</code> + app name, i.e. <strong><code>org.kovir.mu.desktop</code></strong>. (Briefcase's AppImage
+template ships no AppStream metainfo; add one only if we target software
+centres.) <code>mu/app.py</code> passes
+the same id to <code>QApplication.setDesktopFileName()</code> so the running window
+(the Wayland app id) matches the installed <code>.desktop</code> file, which keeps the
+taskbar icon and window grouping working. If <code>bundle</code> or the app key ever
+changes, update that call to match.</p>
+<p>The pre-Briefcase hand-written metadata (<code>conf/</code>) and the upstream Debian
+packaging (<code>debian/</code>) were removed along with the <code>pup</code> pipeline (Phase 4e).</p>
 
 
 
@@ -1892,7 +1596,7 @@ find Mu useful, please don't hesitate to thank Kushal via Twitter.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "navigation.tracking", "content.code.copy", "search.suggest", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

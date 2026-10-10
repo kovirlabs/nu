@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../icon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -1477,15 +1477,16 @@
 
 
 <h1 id="release-process">Release Process<a class="headerlink" href="#release-process" title="Permanent link">&para;</a></h1>
-<p>Our continuous integration setup provides the following automation:</p>
+<p>Our continuous integration setup (GitHub Actions) provides the following
+automation:</p>
 <ul>
-<li>Running of the unit test suite on Windows, OSX and Linux for each commit.</li>
-<li>Code quality checks via <a href="https://lgtm.com/projects/g/mu-editor/mu/">LGTM.com</a>.
-  Mu has an A+ rating for code quality.</li>
-<li>Generation of installables for Windows 32bit and Windows 64bit for each
-  commit on our master branch.</li>
-<li>Creation of a stand-alone .app for Mac OSX for each commit on our master
-  branch.</li>
+<li><code>test.yml</code> runs the unit test suite on Windows, macOS and Linux for each push
+  and pull request (Python 3.11 and 3.14 everywhere, plus 3.12 and 3.13 on
+  Linux).</li>
+<li>CodeQL code-scanning on pushes to <code>master</code>.</li>
+<li><code>build.yml</code> builds the native installers with Briefcase (Windows <code>.msi</code>,
+  macOS zipped <code>.app</code>, Linux <code>.AppImage</code>) on a manual run or on a <code>v*</code> tag.
+  A tag also publishes a GitHub Release with the installers attached.</li>
 </ul>
 <p>However, such automation does not make a release. What follows is a check-list
 of steps needed to cut a release.</p>
@@ -1601,29 +1602,25 @@ cross platform nature of Mu is consistent):</p>
   reference the new version of Mu.</li>
 </ul>
 <h2 id="packaging-processes">Packaging Processes<a class="headerlink" href="#packaging-processes" title="Permanent link">&para;</a></h2>
-<p>Official final releases will be signed by Nicholas H.Tollervey (the creator and
-current maintainer of Mu). This is a manual step only Nicholas can do (since
-only he has the cryptographic keys to make this work). Once the release
-packages for Windows (32bit and 64bit) and OSX have been created and signed
-they should be checked so no warning messages appear about untrusted sources
-during the installation process.</p>
-<p>The instructions for signing the Windows installers are explain in
-<a href="https://learn.adafruit.com/how-to-sign-windows-drivers-installer/making-an-installer">this wonderful article on Adafruit's website</a>.
-But the essence is that the command issued should look something like:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&quot;C:\Program Files (x86)\Windows Kits\10\bin\10.0.17134.0\x86\signtool&quot; sign /v /n &quot;Nicholas H.Tollervey&quot; /tr http://timestamp.globalsign.com/?signature=sha2 /td sha256 mu-editor_1.0.1_win32.exe
-</code></pre></div>
-<p>Signing the Mac app involves issuing the following two commands:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>codesign --deep --force --verbose --sign &quot;CERT_ID&quot; mu-editor.app
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>dmgbuild -s package/dmg_settings.py &quot;Mu Editor&quot; dist/mu-editor.dmg
-</code></pre></div>
-<p>The appropriate installer should be checked on the following operating systems:</p>
-<ul>
-<li>Windows 7 (32bit)</li>
-<li>Windows 10 (64bit)</li>
-<li>Latest OSX.</li>
-</ul>
-<p>For native Python packaging, ensure Mu is installable via <code>pip install .</code> run
-in the root of the source repository in a virtualenv.</p>
+<p>Installers are built by CI, not by hand (see <a href="../packaging/">Packaging</a>):</p>
+<ol>
+<li>Bump the version in <strong>both</strong> <code>mu/__init__.py</code> (the canonical source) and
+   <code>[tool.briefcase] version</code> in <code>pyproject.toml</code> (Briefcase needs a literal).</li>
+<li>Commit, then push a tag <code>vX.Y.Z</code> (or <code>vX.Y.ZrcN</code> / <code>vX.Y.ZbN</code> for a
+   pre-release). <code>build.yml</code> builds all three installers and publishes a GitHub
+   Release; any pre-release segment in the tag publishes it as a pre-release.</li>
+<li>Download each installer from the release and check it on real hardware:
+   install, launch, and in each mode run a script, use the REPL, run a Pygame
+   Zero game, step through the debugger, and install a package from the UI.
+   Check at least current Windows 11, current macOS (Apple Silicon) and a
+   current Ubuntu LTS.</li>
+</ol>
+<p>The installers are currently <strong>unsigned</strong> (macOS is ad-hoc signed), so users
+see a SmartScreen / Gatekeeper warning. Wiring Authenticode and Apple
+notarization secrets into <code>build.yml</code> is tracked in <code>TODO.md</code> (Phase 4d).</p>
+<p>For native Python packaging, ensure Nu is installable via <code>pip install .</code> run
+in the root of the source repository in a virtualenv (<code>make dist</code> builds the
+sdist and wheel).</p>
 <h2 id="pre-release-checklist">Pre-Release Checklist<a class="headerlink" href="#pre-release-checklist" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Create an announcement blog post for <a href="https://madewith.mu/">MadeWithMu</a>.</li>
@@ -1721,7 +1718,7 @@ in the root of the source repository in a virtualenv.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "navigation.tracking", "content.code.copy", "search.suggest", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
