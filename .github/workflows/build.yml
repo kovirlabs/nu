@@ -83,9 +83,13 @@ jobs:
             libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
             libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0
 
-      # uv is only used by the next step, to look up the CPython download.
+      # Briefcase is pinned (matching uv.lock) so a new release can't silently
+      # break or alter the installers: 0.4.5's AppImage template fails with
+      # "'collections.OrderedDict object' has no attribute 'host_arch'".
+      # Bump deliberately after a green manual run. uv is only used by the
+      # next step, to look up the CPython download.
       - name: Install Briefcase
-        run: python -m pip install --upgrade pip briefcase uv
+        run: python -m pip install --upgrade pip briefcase==0.4.2 uv
 
       # Bundle what the first launch needs so it works offline: the baseline
       # wheels zip (pgzero/pygame/ipykernel + deps, mu/wheels/<version>.zip)
