@@ -1505,18 +1505,24 @@ demand).</p>
 <li>A pinned <strong><code>uv</code></strong> binary — it rides in via the PyPI <code>uv</code> wheel, and
   <code>find_uv()</code> locates it at runtime through <code>uv.find_uv_bin()</code> (no <code>PATH</code> or
   <code>MU_UV</code> needed in the packaged app).</li>
-<li>The <strong>baseline wheels zip</strong> (<code>mu/wheels/&lt;version&gt;.zip</code>, built by
-  <code>python -m mu.wheels --package</code> before packaging), so the learner's
+<li>The <strong>baseline wheels zip</strong> (<code>mu/wheels/&lt;version&gt;.zip</code>), so the learner's
   baseline packages install without the network.</li>
+<li>A relocatable <strong>CPython</strong> (the python-build-standalone build uv itself would
+  install, matching the app's Python X.Y and the runner's platform) plus a
+  <strong>pip wheel</strong>, in <code>mu/wheels/python/</code>.</li>
 </ul>
-<p>At first launch Nu creates the user's environment with
-<code>uv venv --python &lt;X.Y&gt; --seed</code>, pinned to the <em>version</em> of the bundled Python
-rather than its path (in a packaged app <code>sys.executable</code> is Briefcase's launcher
-stub, which uv can't inspect). uv then resolves a real interpreter of that
-version: a system install, a uv-managed CPython, or a <strong>download</strong>. So on a
-machine with no matching Python, first launch currently needs the network;
-bundling a CPython for uv to find (with <code>UV_PYTHON_DOWNLOADS=never</code>) is an open
-item in <code>TODO.md</code> (Phase 4c).</p>
+<p><code>python -m mu.wheels --package</code> fetches all three before packaging (it needs
+<code>uv</code> installed, to look up the CPython download).</p>
+<p>At first launch Nu extracts the bundled CPython into its data directory (a
+stable, writable path: the app bundle may be read-only, and an AppImage is
+mounted somewhere new on every launch) and creates the learner's environment
+with <code>uv venv --python &lt;that interpreter&gt; --seed --no-index --find-links
+mu/wheels/python</code>. Nothing touches the network. The app's own interpreter
+can't be the base: in a packaged app <code>sys.executable</code> is Briefcase's launcher
+stub, which uv can't inspect. In a dev checkout without the bundled CPython,
+Nu falls back to <code>uv venv --python &lt;X.Y&gt;</code>, letting uv find or download a
+matching Python.</p>
+<p>This adds about 25 MB to each installer.</p>
 <h3 id="signing">Signing<a class="headerlink" href="#signing" title="Permanent link">&para;</a></h3>
 <p>CI builds are <strong>unsigned</strong> (macOS uses an ad-hoc signature). Users will see a
 SmartScreen (Windows) or Gatekeeper (macOS) warning until code-signing secrets
