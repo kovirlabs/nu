@@ -660,6 +660,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="How a plugin is discovered">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-a-plugin-is-skipped" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When a plugin is skipped
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-a-plugin-has-an-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When a plugin has an error
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#switching-a-plugin-off" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Switching a plugin off
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1526,6 +1565,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="How a plugin is discovered">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-a-plugin-is-skipped" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When a plugin is skipped
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-a-plugin-has-an-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When a plugin has an error
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#switching-a-plugin-off" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Switching a plugin off
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1688,13 +1766,12 @@
 
 <h1 id="writing-a-nu-plugin">Writing a Nu plugin<a class="headerlink" href="#writing-a-nu-plugin" title="Permanent link">&para;</a></h1>
 <div class="admonition warning">
-<p class="admonition-title">Status: the API exists, loading doesn't yet</p>
-<p>Phase 5a (see <code>TODO.md</code>) added the <code>mu.plugin</code> package described below:
-the versioned API, the <code>Plugin</code>/<code>ModePlugin</code> classes and the <code>Host</code>. Nu's
-built-in modes are already registered through a <code>Host</code>. <strong>Nu does not yet
-discover installed plugins</strong> (entry points and the drop-in directory are
-Phase 5b), and the API is at version <strong>0.1</strong>, so it can still change
-between releases.</p>
+<p class="admonition-title">Status: working, but early</p>
+<p>Nu loads plugins at startup, both installed packages and files in the
+plugins folder (Phases 5a and 5b in <code>TODO.md</code>). The API is at version
+<strong>0.1</strong>, so it can still change between releases. There's no Plugins tab
+yet (Phase 5e), and in the downloadable installers the plugins folder is
+the only way to add a plugin (see below).</p>
 </div>
 <h2 id="why-plugins">Why plugins<a class="headerlink" href="#why-plugins" title="Permanent link">&para;</a></h2>
 <p>Nu is shrinking to a lean <strong>core</strong> — text editing, the REPL, the debugger,
@@ -1738,18 +1815,110 @@ roadmap, see Phase 5 (architecture) and Phase 6 (the micro:bit plugin) in
 </tbody>
 </table>
 <h2 id="how-a-plugin-is-discovered">How a plugin is discovered<a class="headerlink" href="#how-a-plugin-is-discovered" title="Permanent link">&para;</a></h2>
-<p>Two mechanisms (Phase 5b):</p>
+<p>Nu looks for plugins once, at startup, in two places. Changes take effect the
+next time Nu starts.</p>
 <ol>
-<li><strong>Entry points</strong> — the normal, shareable path. A plugin registers a
-   <code>mu.plugins</code> entry point in its packaging metadata; Nu finds it via
-   <code>importlib.metadata</code> once the package is installed (e.g. <code>uv add nu-microbit</code>,
-   or the Plugins tab).</li>
-<li><strong>Drop-in directory</strong> — for local/experimental plugins, Nu scans
-   <code>&lt;data&gt;/plugins/</code> at startup. No packaging required — ideal for a quick
-   classroom hack before you publish.</li>
+<li><strong>Installed packages.</strong> Any package installed in the environment Nu runs
+   from that declares a <code>mu.plugins</code> entry point (see
+   <a href="#the-entry-point">The entry point</a>). Its id is the entry point's name.</li>
+<li>
+<p><strong>The plugins folder</strong>, for local plugins that aren't packaged:</p>
+<table>
+<thead>
+<tr>
+<th>System</th>
+<th>Folder</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Windows</td>
+<td><code>%LOCALAPPDATA%\python\mu\plugins</code></td>
+</tr>
+<tr>
+<td>macOS</td>
+<td><code>~/Library/Application Support/mu/plugins</code></td>
+</tr>
+<tr>
+<td>Linux</td>
+<td><code>~/.local/share/mu/plugins</code></td>
+</tr>
+</tbody>
+</table>
+<p>Nu creates the folder if it's missing. Each <code>name.py</code> file, or <code>name/</code>
+folder with an <code>__init__.py</code>, is one plugin with id <code>name</code>. The plugin is
+the module's <code>PLUGIN</code> attribute if it sets one; otherwise the module must
+define exactly one <code>Plugin</code> subclass. A plugin folder imports its own
+files with relative imports (<code>from .modes import MyMode</code>). Names starting
+with <code>.</code> or <code>_</code> are ignored. A name that matches an installed module
+(<code>json.py</code>, say) is refused rather than allowed to replace that module.</p>
+</li>
 </ol>
-<p>A plugin that fails to import or load is <strong>logged and skipped</strong>; it never takes
-the editor down with it.</p>
+<p>Installed packages are found first. If a folder plugin has the same id as an
+installed one, the folder plugin is skipped.</p>
+<div class="admonition note">
+<p class="admonition-title">Installers and installed packages</p>
+<p>In the Windows, macOS and Linux installers, Nu runs from its own bundled
+environment, which you can't install packages into. Until Phase 5d adds
+plugin installs, use the plugins folder there. Installed packages are
+picked up in a development checkout (<code>uv pip install -e path/to/plugin</code>)
+or a <code>pip install nu-editor</code>.</p>
+</div>
+<h3 id="when-a-plugin-is-skipped">When a plugin is skipped<a class="headerlink" href="#when-a-plugin-is-skipped" title="Permanent link">&para;</a></h3>
+<p>Nu logs the reason (see the log via the cog icon) and starts without the
+plugin if it:</p>
+<ul>
+<li>is switched off;</li>
+<li>has the same id as a plugin already found;</li>
+<li>fails to import, including calling <code>sys.exit()</code> while importing;</li>
+<li>declares a missing or incompatible <code>api_version</code>; or</li>
+<li>raises an error in <code>register</code>.</li>
+</ul>
+<p>Any modes it registered before failing are removed again. An unnamed plugin
+(one that doesn't set <code>name</code>) is called by its id.</p>
+<h3 id="when-a-plugin-has-an-error">When a plugin has an error<a class="headerlink" href="#when-a-plugin-has-an-error" title="Permanent link">&para;</a></h3>
+<p>Once loaded, a plugin's errors don't crash Nu. That covers errors in the mode
+methods Nu calls (<code>activate</code>, <code>actions</code>, <code>api</code>, <code>workspace_dir</code>, <code>stop</code>, …)
+and in anything Qt calls for the plugin: button handlers, timers and signal
+handlers. For each error:</p>
+<ul>
+<li><strong>The learner sees a dialog</strong> naming the plugin, with the error for its
+  author. Nu keeps running.</li>
+<li><strong>The log gets the full traceback.</strong> An identical repeat gets a one-line
+  entry instead.</li>
+<li><strong>Nu falls back to something safe</strong> when it was calling the mode: <code>api()</code>
+  and <code>actions()</code> give an empty list, <code>workspace_dir()</code> the usual workspace,
+  and the rest give <code>None</code>.</li>
+<li><strong>Dialogs are rate limited.</strong> Further errors within 30 seconds, or while a
+  dialog is open, go to the status bar instead, so a failing timer can't bury
+  the learner in dialogs.</li>
+<li><strong>A plugin that keeps failing</strong> (3 errors) is offered to be switched off. If
+  the learner agrees, it isn't loaded the next time Nu starts.</li>
+</ul>
+<p>An error counts as the plugin's when the plugin's own modules appear in the
+traceback, or when core code was running on one of its modes (for example
+<code>MicroPythonMode</code> code it inherits).</p>
+<p>For a problem the learner can fix, raise <code>PluginError</code> instead. Nu shows your
+message as is, and doesn't count it against the plugin:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mu.plugin</span><span class="w"> </span><span class="kn">import</span> <span class="n">PluginError</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">flash</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_devices</span><span class="p">():</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        <span class="k">raise</span> <span class="n">PluginError</span><span class="p">(</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>            <span class="s2">"Plug in your micro:bit first."</span><span class="p">,</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>            <span class="s2">"Use a USB cable that carries data, not just power."</span><span class="p">,</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        <span class="p">)</span>
+</code></pre></div>
+<h3 id="switching-a-plugin-off">Switching a plugin off<a class="headerlink" href="#switching-a-plugin-off" title="Permanent link">&para;</a></h3>
+<p>With Nu closed (it rewrites the file when it exits), add the plugin's id to
+<code>disabled_plugins</code> in Nu's <code>settings.json</code>, which is in the same data folder
+as <code>plugins/</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">"disabled_plugins"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"example"</span><span class="p">]</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="p">}</span>
+</code></pre></div>
+<p>A switched-off plugin isn't even imported. The Plugins tab (Phase 5e) will do
+this for you.</p>
 <h2 id="the-api">The API<a class="headerlink" href="#the-api" title="Permanent link">&para;</a></h2>
 <p>Everything a plugin needs is imported from <code>mu.plugin</code>. Nothing else in <code>mu</code>
 is public: <code>mu.modes</code>, <code>mu.logic</code> and <code>mu.interface</code> can change in any
@@ -1791,6 +1960,10 @@ release.</p>
 <td>A plugin's own persisted settings (from <code>Host.settings</code>).</td>
 </tr>
 <tr>
+<td><code>PluginError</code></td>
+<td>Raise it for a problem the learner can fix; Nu shows the message (see <a href="#when-a-plugin-has-an-error">When a plugin has an error</a>).</td>
+</tr>
+<tr>
 <td><code>check_compatible</code></td>
 <td>The version check <code>Host</code> applies when loading a plugin.</td>
 </tr>
@@ -1798,10 +1971,11 @@ release.</p>
 </table>
 <h3 id="the-entry-point">The entry point<a class="headerlink" href="#the-entry-point" title="Permanent link">&para;</a></h3>
 <p>A packaged plugin advertises itself in its <code>pyproject.toml</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">[project.entry-points.</span><span class="s2">"mu.plugins"</span><span class="k">]</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">microbit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"nu_microbit:MicrobitPlugin"</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">[project.entry-points.</span><span class="s2">"mu.plugins"</span><span class="k">]</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">microbit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"nu_microbit:MicrobitPlugin"</span>
 </code></pre></div>
-<p>The value points at a <code>Plugin</code> subclass. (Nu reads these from Phase 5b.)</p>
+<p>The value points at a <code>Plugin</code> subclass, a <code>Plugin</code> instance, or a function
+that returns one.</p>
 <h3 id="versioning-api_version">Versioning: <code>api_version</code><a class="headerlink" href="#versioning-api_version" title="Permanent link">&para;</a></h3>
 <p>Each plugin declares the <code>PLUGIN_API_VERSION</code> it was written against, as a
 literal string. When loading it, the host compares that with its own version:</p>
@@ -1813,58 +1987,58 @@ literal string. When loading it, the host compares that with its own version:</p
   logged and skipped. Nu carries on without it.</li>
 </ul>
 <h3 id="plugin"><code>Plugin</code><a class="headerlink" href="#plugin" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mu.plugin</span><span class="w"> </span><span class="kn">import</span> <span class="n">Plugin</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyPlugin</span><span class="p">(</span><span class="n">Plugin</span><span class="p">):</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">"My Plugin"</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">api_version</span> <span class="o">=</span> <span class="s2">"0.1"</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">):</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">        </span><span class="sd">"""Called once when the plugin loads. Do all wiring here, through</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="sd">        `host`."""</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">unregister</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">):</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">        </span><span class="sd">"""Optional. Called when the plugin unloads. Modes it registered are</span>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="sd">        removed for you; undo anything else here."""</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mu.plugin</span><span class="w"> </span><span class="kn">import</span> <span class="n">Plugin</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyPlugin</span><span class="p">(</span><span class="n">Plugin</span><span class="p">):</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">"My Plugin"</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">api_version</span> <span class="o">=</span> <span class="s2">"0.1"</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">):</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">        </span><span class="sd">"""Called once when the plugin loads. Do all wiring here, through</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="sd">        `host`."""</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">unregister</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">):</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">        </span><span class="sd">"""Optional. Called when the plugin unloads. Modes it registered are</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="sd">        removed for you; undo anything else here."""</span>
 </code></pre></div>
 <p>If <code>register</code> raises, the plugin is logged and skipped, and any modes it had
 already registered are removed. A broken plugin never stops Nu starting.</p>
 <p>For the common case of a plugin that only adds modes, use <code>ModePlugin</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mu.plugin</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModePlugin</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">MicrobitPlugin</span><span class="p">(</span><span class="n">ModePlugin</span><span class="p">):</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">"micro:bit"</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">api_version</span> <span class="o">=</span> <span class="s2">"0.1"</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">mode</span> <span class="o">=</span> <span class="n">MicrobitMode</span>          <span class="c1"># or: modes = (ModeA, ModeB)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mu.plugin</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModePlugin</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">MicrobitPlugin</span><span class="p">(</span><span class="n">ModePlugin</span><span class="p">):</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">"micro:bit"</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">api_version</span> <span class="o">=</span> <span class="s2">"0.1"</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">mode</span> <span class="o">=</span> <span class="n">MicrobitMode</span>          <span class="c1"># or: modes = (ModeA, ModeB)</span>
 </code></pre></div>
 <h3 id="mode"><code>Mode</code><a class="headerlink" href="#mode" title="Permanent link">&para;</a></h3>
 <p><code>Mode</code> is the mode base class the built-in modes use (see <a href="../modes/">Modes</a>).
 Set the class attributes and override the methods you need:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mu.plugin</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mode</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">MicrobitMode</span><span class="p">(</span><span class="n">Mode</span><span class="p">):</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">"micro:bit"</span>             <span class="c1"># shown in the mode picker</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">short_name</span> <span class="o">=</span> <span class="s2">"microbit"</span>        <span class="c1"># stable, unique id (settings and session keys)</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">description</span> <span class="o">=</span> <span class="s2">"Write MicroPython for the BBC micro:bit."</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">icon</span> <span class="o">=</span> <span class="s2">"microbit"</span>              <span class="c1"># a built-in icon name, for now</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">actions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">        </span><span class="sd">"""Toolbar buttons."""</span>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>        <span class="k">return</span> <span class="p">[</span>
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>            <span class="p">{</span>
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>                <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"flash"</span><span class="p">,</span>            <span class="c1"># also the icon name, for now</span>
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>                <span class="s2">"display_name"</span><span class="p">:</span> <span class="s2">"Flash"</span><span class="p">,</span>
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>                <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Flash your code to the micro:bit."</span><span class="p">,</span>
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>                <span class="s2">"handler"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">flash</span><span class="p">,</span>
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>                <span class="s2">"shortcut"</span><span class="p">:</span> <span class="s2">"F3"</span><span class="p">,</span>
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>            <span class="p">},</span>
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>        <span class="p">]</span>
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>
-<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">api</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="w">        </span><span class="sd">"""Autocomplete and call tip entries."""</span>
-<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>        <span class="k">return</span> <span class="n">MICROBIT_APIS</span>
-<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>
-<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>    <span class="c1"># Optional hooks: activate(), deactivate(), stop(), workspace_dir()</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mu.plugin</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mode</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">MicrobitMode</span><span class="p">(</span><span class="n">Mode</span><span class="p">):</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">"micro:bit"</span>             <span class="c1"># shown in the mode picker</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">short_name</span> <span class="o">=</span> <span class="s2">"microbit"</span>        <span class="c1"># stable, unique id (settings and session keys)</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">description</span> <span class="o">=</span> <span class="s2">"Write MicroPython for the BBC micro:bit."</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">icon</span> <span class="o">=</span> <span class="s2">"microbit"</span>              <span class="c1"># a built-in icon name, for now</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">actions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">        </span><span class="sd">"""Toolbar buttons."""</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>        <span class="k">return</span> <span class="p">[</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>            <span class="p">{</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>                <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"flash"</span><span class="p">,</span>            <span class="c1"># also the icon name, for now</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>                <span class="s2">"display_name"</span><span class="p">:</span> <span class="s2">"Flash"</span><span class="p">,</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>                <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Flash your code to the micro:bit."</span><span class="p">,</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>                <span class="s2">"handler"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">flash</span><span class="p">,</span>
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>                <span class="s2">"shortcut"</span><span class="p">:</span> <span class="s2">"F3"</span><span class="p">,</span>
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>            <span class="p">},</span>
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>        <span class="p">]</span>
+<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>
+<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">api</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="w">        </span><span class="sd">"""Autocomplete and call tip entries."""</span>
+<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>        <span class="k">return</span> <span class="n">MICROBIT_APIS</span>
+<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>
+<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>    <span class="c1"># Optional hooks: activate(), deactivate(), stop(), workspace_dir()</span>
 </code></pre></div>
 <p>Inside a mode, <code>self.host</code> is the <code>Host</code> that registered it. Use it rather
 than <code>self.editor</code> and <code>self.view</code>, which are the internal objects and are not
@@ -1970,10 +2144,10 @@ model is the same as <code>pip</code>: <em>you chose to install it.</em> Install
 the Plugins tab (Phase 5e) will show the real <code>uv</code> command it runs before installing. (A
 curated/signed index is a possible future, not a v1 guarantee.)</p>
 <h2 id="a-minimal-example">A minimal example<a class="headerlink" href="#a-minimal-example" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>my-nu-plugin/
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>├── pyproject.toml          # deps + [project.entry-points."mu.plugins"]
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>└── my_nu_plugin/
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    └── __init__.py         # MyPlugin(Plugin) + MyMode(Mode)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>my-nu-plugin/
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>├── pyproject.toml          # deps + [project.entry-points."mu.plugins"]
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>└── my_nu_plugin/
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    └── __init__.py         # MyPlugin(Plugin) + MyMode(Mode)
 </code></pre></div>
 <p>A runnable template lives in this repo at <code>plugins/example/</code>: an "Example"
 mode with one button that counts the lines in the current tab and stores a
