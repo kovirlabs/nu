@@ -83,12 +83,15 @@ jobs:
             libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
             libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0
 
+      # uv is only used by the next step, to look up the CPython download.
       - name: Install Briefcase
-        run: python -m pip install --upgrade pip briefcase
+        run: python -m pip install --upgrade pip briefcase uv
 
-      # Build the offline baseline-wheels zip (pgzero/pygame/ipykernel + deps)
-      # into mu/wheels/<version>.zip so the first-run `uv venv` needs no network.
-      - name: Build offline baseline wheels
+      # Bundle what the first launch needs so it works offline: the baseline
+      # wheels zip (pgzero/pygame/ipykernel + deps, mu/wheels/<version>.zip)
+      # plus a relocatable CPython and a pip wheel (mu/wheels/python/) that the
+      # learner's environment is built from.
+      - name: Build offline baseline wheels and Python
         run: python -m mu.wheels --package
 
       - name: Briefcase create

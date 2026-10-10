@@ -7,6 +7,7 @@ import json
 import logging
 import shutil
 import subprocess
+import tarfile
 import tempfile
 import time
 import zipfile
@@ -1021,6 +1022,54 @@ class VirtualEnvironment(object):
         self.install_jupyter_kernel()
         self.settings["mu_version"] = mu_version
 
+    def ensure_bundled_python(self):
+        """
+        Return the interpreter of the CPython bundled with the installer,
+        extracting it into Mu's data directory on first use; None if this
+        isn't an installer build (no archive) or extraction fails.
+
+        The archive (a python-build-standalone "install_only" build, see
+        ``wheels.download_python``) is extracted to a stable, writable
+        location rather than used in place: the app bundle may be read-only,
+        and a Linux AppImage is mounted at a different path on every launch,
+        which would break a venv based on it.
+        """
+        archive = wheels.bundled_python_archive()
+        if not archive:
+            return None
+        name = os.path.basename(archive)[: -len(".tar.gz")]
+        target = os.path.join(config.DATA_DIR, "python", name)
+        if self._is_windows:
+            interpreter = os.path.join(target, "python", "python.exe")
+        else:
+            interpreter = os.path.join(target, "python", "bin", "python3")
+        if os.path.isfile(interpreter):
+            return interpreter
+
+        logger.info("Extracting bundled Python %s to %s", name, target)
+        try:
+            if os.path.isdir(target):
+                shutil.rmtree(target)
+            # Extract next to the target, then rename into place, so an
+            # interrupted extraction never looks like a usable interpreter.
+            partial = target + ".partial"
+            if os.path.isdir(partial):
+                shutil.rmtree(partial)
+            os.makedirs(partial)
+            with tarfile.open(archive) as tar:
+                try:
+                    tar.extractall(partial, filter="data")
+                except TypeError:  # Python < 3.11.4 has no extraction filters
+                    tar.extractall(partial)
+            os.rename(partial, target)
+        except (OSError, tarfile.TarError) as exc:
+            logger.warning("Unable to extract bundled Python: %s", exc)
+            return None
+        if not os.path.isfile(interpreter):
+            logger.warning("No interpreter at %s after extraction", interpreter)
+            return None
+        return interpreter
+
     def create_venv(self):
         """
         Create a new virtual environment using `uv`.
@@ -1029,19 +1078,18 @@ class VirtualEnvironment(object):
         ``pyvenv.cfg`` layout the rest of this module expects (so the pip-based
         baseline-wheel install downstream is unchanged).
 
-        The base interpreter is pinned by **version** (e.g. ``3.12``), *not* by
-        ``sys.executable``. In a packaged (Briefcase) app ``sys.executable`` is
-        the application *launcher stub*, not a real Python, so ``uv`` can't
-        introspect it (``error: Failed to inspect Python interpreter``). Pinning
-        the version lets uv resolve a genuine interpreter for it — a system
-        install, a uv-managed CPython, or a download — which is also the Phase 4
-        model of uv managing the learner's Python independently of Mu's own. The
-        version is the running app's Python, which is what the baseline wheels
-        were built for.
+        In an installer build the base interpreter is the CPython bundled with
+        the app (see :meth:`ensure_bundled_python`), and pip is seeded from the
+        bundled wheel with ``--no-index``, so the first launch needs no
+        network. The app's own ``sys.executable`` can't be the base: in a
+        packaged (Briefcase) app it's the launcher *stub*, not a real Python,
+        so ``uv`` can't introspect it.
 
-        TODO (Phase 4c): bundle a python-build-standalone CPython and set
-        ``UV_PYTHON_DOWNLOADS=never`` so the very first run works fully offline
-        even with no system Python present.
+        Without a bundled CPython (a dev checkout) the base is pinned by
+        **version** (e.g. ``3.12``) and uv resolves a genuine interpreter for
+        it: a system install, a uv-managed CPython, or a download. Either way
+        the version is the running app's Python, which is what the baseline
+        wheels were built for.
 
         Run synchronously via ``run_subprocess`` (not the QProcess-based
         ``Uv`` wrapper) because creation happens on the startup worker thread,
@@ -1051,19 +1099,26 @@ class VirtualEnvironment(object):
         logger.info("Virtualenv name: {}".format(self.name))
 
         uv_executable = safe_short_path(find_uv())
-        python_version = "%d.%d" % sys.version_info[:2]
+        python = self.ensure_bundled_python()
+        seed_args = ["--seed"]
+        if python:
+            pip_wheels = glob.glob(os.path.join(wheels.PYTHON_DIRPATH, "pip-*.whl"))
+            if pip_wheels:
+                seed_args += ["--no-index", "--find-links", wheels.PYTHON_DIRPATH]
+        else:
+            python = "%d.%d" % sys.version_info[:2]
         ok, output = self.run_subprocess(
             uv_executable,
             "venv",
             "--python",
-            python_version,
-            "--seed",
+            python,
+            *seed_args,
             self.path,
         )
         if ok:
             logger.info(
                 "Created virtual environment for Python %s at %s",
-                python_version,
+                python,
                 self.path,
             )
         else:

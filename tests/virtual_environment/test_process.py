@@ -132,7 +132,9 @@ def test_wait_shows_failure():
     #
     with (
         mock.patch.object(QProcess, "waitForFinished", return_value=False),
-        mock.patch.object(QProcess, "exitStatus", return_value=QProcess.CrashExit),
+        mock.patch.object(
+            QProcess, "exitStatus", return_value=QProcess.ExitStatus.CrashExit
+        ),
         mock.patch.object(QProcess, "start"),
     ):
         p = virtual_environment.Process()

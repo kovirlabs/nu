@@ -198,15 +198,18 @@ feel; offline-first via bundled assets; **Briefcase** for native installers.
   the Briefcase `requires` (so it lands in `app_packages/bin/uv`); `find_uv()` now resolves
   it through `uv.find_uv_bin()` at runtime, no `MU_UV`/`PATH` needed. (No separate
   standalone-binary download/MU_UV plumbing required after all.)
-- [ ] **Reopened (offline first-run regressed in b2)**: ~~Vendor a python-build-standalone
-  CPython — not needed~~. The plan reused the bundled CPython via
-  `uv venv --python <sys.executable>`, but in a packaged app `sys.executable` is
-  Briefcase's launcher stub, which uv can't inspect (crashed Windows b1). b2 pins by
-  *version* instead (`uv venv --python X.Y`), so uv finds a system/uv-managed Python **or
-  downloads one**: first launch needs the network on a machine without a matching
-  Python. To restore offline first-run: point uv at the bundled support-package
-  interpreter's real path (not the stub), or vendor a python-build-standalone CPython
-  and set `UV_PYTHON_DOWNLOADS=never` + `UV_PYTHON_INSTALL_DIR`.
+- [x] **Bundle a CPython for the learner's env** (offline first run; regressed in b2 and
+  fixed 2026-10). The original plan reused the app's interpreter via
+  `uv venv --python <sys.executable>`, but in a packaged app that's Briefcase's launcher
+  stub (crashed Windows b1); b2's `--python X.Y` workaround made uv download a CPython
+  on machines without a matching one. Now `python -m mu.wheels --package` also bundles
+  the python-build-standalone build for the platform + a pip wheel
+  (`mu/wheels/python/`); first launch extracts it to `DATA_DIR/python/<build>/` and runs
+  `uv venv --python <it> --seed --no-index --find-links …`. Verified offline end to end
+  on macOS arm64 (network blocked, empty uv cache, no managed/system Python).
+  Follow-ups: verify on Windows + Linux installers; old extracted builds under
+  `DATA_DIR/python/` aren't cleaned up after upgrades (~70 MB each); check the archive
+  survives Apple notarization once signing lands.
 - [x] Build a wheelhouse — `python -m mu.wheels --package` builds `mu/wheels/<version>.zip`
   (pgzero/pygame/ipykernel + deps), bundled via `sources`; the first-run baseline install
   is offline (pip from the zip, see `install_from_zipped_wheels`). Bumped the stale
