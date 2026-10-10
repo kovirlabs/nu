@@ -177,6 +177,8 @@ class BaseMode(QObject):
     file_extensions = []
     module_names = MODULE_NAMES
     code_template = _("# Write your code here :-)")
+    #: The mu.plugin.Host that registered this mode (set by Host.register_mode).
+    host = None
 
     def __init__(self, editor, view):
         self.editor = editor

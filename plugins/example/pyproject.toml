@@ -1,0 +1,25 @@
+# A minimal Nu plugin: copy this directory to start your own.
+#
+# Nu finds installed plugins through the "mu.plugins" entry point below (that
+# discovery lands in Phase 5b; see docs/plugins.md).
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nu-example-plugin"
+version = "0.1.0"
+description = "A minimal example plugin for the Nu editor."
+readme = "README.md"
+license = "GPL-3.0-or-later"
+requires-python = ">=3.11"
+# No dependency on nu-editor: a plugin is installed into the environment Nu
+# runs from, which already provides mu.plugin. List your own runtime
+# dependencies here.
+dependencies = []
+
+[project.entry-points."mu.plugins"]
+example = "nu_example:ExamplePlugin"
+
+[tool.hatch.build.targets.wheel]
+packages = ["nu_example"]

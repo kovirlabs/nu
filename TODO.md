@@ -282,20 +282,29 @@ community path (same entry-point install), while independent packaging makes "gr
 own repo later" a trivial directory move. Purely-local plugins need no PyPI at all — the
 drop-in dir covers them.
 
-**5a. Define the plugin API + host (no behavior change yet):**
-- [ ] Add a `mu/plugin/` package: a **versioned** public API (`PLUGIN_API_VERSION`) with a
-  `Plugin` base (lifecycle: `register(host)`/`unregister(host)`) and a `ModePlugin` that
-  contributes one or more modes. Today's `BaseMode`
-  (`name`/`icon`/`actions()`/`api()`/`workspace_dir()`) is already ~most of the surface —
-  formalize, re-export as `mu.plugin.Mode`, and freeze it. See `docs/plugins.md` for the
-  proposed surface.
-- [ ] Pass plugins a **host context/façade** (register a mode, add toolbar actions, panes,
-  API stubs, menu items, settings; read the current tab/text) instead of the raw
-  `Editor`/`Window`, so plugins don't couple to internal class layout.
-- [ ] Plugins declare the API version they target; the host checks compatibility and
-  **warns/skips** on mismatch rather than crashing.
-- [ ] Write `docs/plugins.md` + a "writing a plugin" guide (mirror `docs/modes.md`); ship a
-  minimal **example plugin** as the canonical template.
+**5a. Define the plugin API + host (no behavior change yet):** ✅ DONE
+- [x] `mu/plugin/` package: a **versioned** API (`PLUGIN_API_VERSION = "0.1"`), a `Plugin`
+  base (`register(host)`/`unregister(host)`) and a `ModePlugin` that registers `mode` /
+  `modes`. `BaseMode` is re-exported as `mu.plugin.Mode` (and `MicroPythonMode` too, for
+  board plugins like micro:bit); modes get a `host` attribute.
+- [x] **Host façade** (`mu/plugin/host.py`): `register_mode`, `show_message`, `confirm`,
+  `show_status`, `current_text`/`current_path`, `workspace_dir`, `open_directory`,
+  namespaced persisted `settings(ns)` (under `settings["plugins"][ns]`), `logger(name)`.
+  Kept to what the existing modes actually use; panes, plugin-shipped icons and env
+  installs are left out until a plugin needs them (5c/5d/Phase 6).
+- [x] Compatibility: same MAJOR and MINOR ≤ core's (exact MINOR while 0.x); an incompatible
+  plugin, or one whose `register` raises, is **logged and skipped**, and modes it registered
+  are rolled back.
+- [x] The built-in modes are now registered through a `Host` in `app.setup_modes` (same
+  four modes, same keys) — the path plugins will take.
+- [x] `docs/plugins.md` rewritten from proposal to the real API; `mu.plugin` added to
+  `docs/api.md`; a runnable template plugin in `plugins/example/` (entry point + mode using
+  only `mu.plugin`), with tests. 100% coverage of `mu/plugin`.
+- NOTE (gaps found while building 5a, for later steps): mode/action icons are resolved only
+  from `mu/resources/images` (an action's `name` doubles as its icon *and* toolbar slot key,
+  so it can't clash with core buttons); the core still names modes in
+  `interface/dialogs.py` (`["python", "pygamezero"]`) and `logic.py` (copies Pygame Zero
+  assets); `wheels.mode_packages` is a single global list. Fix these in 5b–5d.
 
 **5b. Plugin discovery + loading:**
 - [ ] Discover installed plugins via `importlib.metadata` entry points (group `mu.plugins`).
