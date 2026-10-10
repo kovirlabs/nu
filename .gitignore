@@ -88,3 +88,4 @@ target/
 /baseline_packages.json
 /local-scripts
 /mu/wheels/*.zip
+/mu/wheels/python/

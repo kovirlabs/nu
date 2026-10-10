@@ -154,10 +154,10 @@ include = [
 # custom Docker). Briefcase builds the AppImage / .dmg / .msi from this single
 # definition; CI (.github/workflows/build.yml) runs one OS per job. The app
 # ships its third-party deps (PyQt6 + the uv binary via the `uv` wheel) plus
-# the baseline wheels zip (built by `python -m mu.wheels --package`) so the
-# first-run `uv venv` works offline. The packaged interpreter is reused for the
-# user env (`uv venv --python sys.executable`), so no separate CPython download
-# is required at first run.
+# what `python -m mu.wheels --package` fetches: the baseline wheels zip, a
+# relocatable python-build-standalone CPython and a pip wheel. At first launch
+# the CPython is extracted to Mu's data dir and the learner's env is built from
+# it with `uv venv --python <it> --seed --no-index`, so first run is offline.
 # ---------------------------------------------------------------------------
 [tool.briefcase]
 project_name = "nu-editor"
@@ -187,7 +187,8 @@ keeping it isolated from the editor's own interpreter.
 """
 icon = "package/icons/mu"
 # Briefcase copies these source trees into the app verbatim (data files
-# included): mu/resources, mu/locale and the mu/wheels/<version>.zip ride along.
+# included): mu/resources, mu/locale, mu/wheels/<version>.zip and the bundled
+# CPython in mu/wheels/python/ ride along.
 sources = ["mu"]
 # Third-party runtime deps installed into the app bundle. Mirrors
 # [project.dependencies] above (the app's own `mu` package comes from `sources`,

@@ -48,18 +48,26 @@ demand).
 - A pinned **`uv`** binary — it rides in via the PyPI `uv` wheel, and
   `find_uv()` locates it at runtime through `uv.find_uv_bin()` (no `PATH` or
   `MU_UV` needed in the packaged app).
-- The **baseline wheels zip** (`mu/wheels/<version>.zip`, built by
-  `python -m mu.wheels --package` before packaging), so the learner's
+- The **baseline wheels zip** (`mu/wheels/<version>.zip`), so the learner's
   baseline packages install without the network.
+- A relocatable **CPython** (the python-build-standalone build uv itself would
+  install, matching the app's Python X.Y and the runner's platform) plus a
+  **pip wheel**, in `mu/wheels/python/`.
 
-At first launch Nu creates the user's environment with
-`uv venv --python <X.Y> --seed`, pinned to the *version* of the bundled Python
-rather than its path (in a packaged app `sys.executable` is Briefcase's launcher
-stub, which uv can't inspect). uv then resolves a real interpreter of that
-version: a system install, a uv-managed CPython, or a **download**. So on a
-machine with no matching Python, first launch currently needs the network;
-bundling a CPython for uv to find (with `UV_PYTHON_DOWNLOADS=never`) is an open
-item in `TODO.md` (Phase 4c).
+`python -m mu.wheels --package` fetches all three before packaging (it needs
+`uv` installed, to look up the CPython download).
+
+At first launch Nu extracts the bundled CPython into its data directory (a
+stable, writable path: the app bundle may be read-only, and an AppImage is
+mounted somewhere new on every launch) and creates the learner's environment
+with `uv venv --python <that interpreter> --seed --no-index --find-links
+mu/wheels/python`. Nothing touches the network. The app's own interpreter
+can't be the base: in a packaged app `sys.executable` is Briefcase's launcher
+stub, which uv can't inspect. In a dev checkout without the bundled CPython,
+Nu falls back to `uv venv --python <X.Y>`, letting uv find or download a
+matching Python.
+
+This adds about 25 MB to each installer.
 
 ### Signing
 

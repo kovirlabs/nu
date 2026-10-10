@@ -23,6 +23,8 @@ import random
 import subprocess
 import uuid
 import logging
+import io
+import tarfile
 from unittest import mock
 import zipfile
 
@@ -263,6 +265,170 @@ def test_create_virtual_environment_failure(venv):
             assert isinstance(exc, mu.virtual_environment.VirtualEnvironmentCreateError)
             assert "nable to create" in exc.message
             assert output in exc.message
+
+
+def _uv_venv_args(run_subprocess):
+    """The argv `create_venv` passed to `run_subprocess` (minus the uv path)."""
+    args, _ = run_subprocess.call_args
+    assert args[1] == "venv"
+    return list(args[1:])
+
+
+def test_create_venv_pins_python_version_without_bundled_python(venv):
+    """Without a bundled CPython (a dev checkout) the venv is pinned by version
+    and seeded from the index as usual."""
+    with (
+        mock.patch.object(venv, "ensure_bundled_python", return_value=None),
+        mock.patch.object(mu.virtual_environment, "find_uv", return_value="/x/uv"),
+        mock.patch.object(venv, "run_subprocess", return_value=(True, "")) as run,
+    ):
+        venv.create_venv()
+    version = "%d.%d" % sys.version_info[:2]
+    assert _uv_venv_args(run) == ["venv", "--python", version, "--seed", venv.path]
+
+
+def test_create_venv_uses_bundled_python_offline(venv, tmp_path):
+    """With a bundled CPython and pip wheel, the venv is based on the bundled
+    interpreter and seeded with --no-index from the bundled wheel."""
+    (tmp_path / "pip-26.0-py3-none-any.whl").write_bytes(b"")
+    with (
+        mock.patch.object(
+            venv, "ensure_bundled_python", return_value="/data/python/bin/python3"
+        ),
+        mock.patch.object(mu.wheels, "PYTHON_DIRPATH", str(tmp_path)),
+        mock.patch.object(mu.virtual_environment, "find_uv", return_value="/x/uv"),
+        mock.patch.object(venv, "run_subprocess", return_value=(True, "")) as run,
+    ):
+        venv.create_venv()
+    assert _uv_venv_args(run) == [
+        "venv",
+        "--python",
+        "/data/python/bin/python3",
+        "--seed",
+        "--no-index",
+        "--find-links",
+        str(tmp_path),
+        venv.path,
+    ]
+
+
+def test_create_venv_bundled_python_without_pip_wheel(venv, tmp_path):
+    """A bundled CPython without a pip wheel still seeds (from the index)."""
+    with (
+        mock.patch.object(
+            venv, "ensure_bundled_python", return_value="/data/python/bin/python3"
+        ),
+        mock.patch.object(mu.wheels, "PYTHON_DIRPATH", str(tmp_path)),
+        mock.patch.object(mu.virtual_environment, "find_uv", return_value="/x/uv"),
+        mock.patch.object(venv, "run_subprocess", return_value=(True, "")) as run,
+    ):
+        venv.create_venv()
+    assert _uv_venv_args(run) == [
+        "venv",
+        "--python",
+        "/data/python/bin/python3",
+        "--seed",
+        venv.path,
+    ]
+
+
+def _bundled_interpreter_relpath():
+    if sys.platform == "win32":
+        return ("python", "python.exe")
+    return ("python", "bin", "python3")
+
+
+def _make_python_archive(dirpath, members):
+    """Write a python-build-standalone-shaped .tar.gz holding `members`."""
+    version = "%d.%d" % sys.version_info[:2]
+    archive = os.path.join(
+        dirpath, "cpython-%s.9+20260101-test-install_only.tar.gz" % version
+    )
+    with tarfile.open(archive, "w:gz") as tar:
+        for name in members:
+            info = tarfile.TarInfo(name)
+            info.size = 2
+            tar.addfile(info, io.BytesIO(b"#!"))
+    return archive
+
+
+def test_ensure_bundled_python_none_without_archive(venv):
+    with mock.patch.object(mu.wheels, "bundled_python_archive", return_value=None):
+        assert venv.ensure_bundled_python() is None
+
+
+def test_ensure_bundled_python_extracts_once(venv, tmp_path, workspace_dirpath):
+    """The archive is extracted under DATA_DIR on first use, then reused."""
+    archive = _make_python_archive(
+        str(tmp_path), ["/".join(_bundled_interpreter_relpath())]
+    )
+    name = os.path.basename(archive)[: -len(".tar.gz")]
+    expected = os.path.join(
+        str(workspace_dirpath), "python", name, *_bundled_interpreter_relpath()
+    )
+    # A stale target and a leftover partial extraction are both cleared.
+    stale = os.path.join(str(workspace_dirpath), "python", name)
+    os.makedirs(stale)
+    os.makedirs(stale + ".partial")
+    with mock.patch.object(mu.wheels, "bundled_python_archive", return_value=archive):
+        assert venv.ensure_bundled_python() == expected
+        assert os.path.isfile(expected)
+        assert not os.path.exists(stale + ".partial")
+        with mock.patch.object(mu.virtual_environment.tarfile, "open") as tar_open:
+            assert venv.ensure_bundled_python() == expected
+        tar_open.assert_not_called()
+
+
+def test_ensure_bundled_python_without_data_filter(venv, tmp_path, workspace_dirpath):
+    """Pythons older than 3.11.4 have no tarfile extraction filters."""
+    archive = str(tmp_path / "cpython-3.99.0-old.tar.gz")
+    interpreter_parts = _bundled_interpreter_relpath()
+
+    def extractall(path, **kwargs):
+        if kwargs:
+            raise TypeError("unexpected keyword argument 'filter'")
+        interpreter = os.path.join(path, *interpreter_parts)
+        os.makedirs(os.path.dirname(interpreter))
+        open(interpreter, "w").close()
+
+    tar = mock.MagicMock()
+    tar.__enter__.return_value.extractall.side_effect = extractall
+    with (
+        mock.patch.object(mu.wheels, "bundled_python_archive", return_value=archive),
+        mock.patch.object(mu.virtual_environment.tarfile, "open", return_value=tar),
+    ):
+        assert venv.ensure_bundled_python().endswith(interpreter_parts[-1])
+    assert tar.__enter__.return_value.extractall.call_count == 2
+
+
+def test_ensure_bundled_python_corrupt_archive(venv, tmp_path, workspace_dirpath):
+    """An unreadable archive falls back (None) rather than failing startup."""
+    archive = str(tmp_path / "cpython-3.99.0-broken.tar.gz")
+    with open(archive, "wb") as f:
+        f.write(b"not a tarball")
+    with mock.patch.object(mu.wheels, "bundled_python_archive", return_value=archive):
+        assert venv.ensure_bundled_python() is None
+
+
+def test_ensure_bundled_python_missing_interpreter(venv, tmp_path, workspace_dirpath):
+    """An archive without the expected interpreter falls back (None)."""
+    archive = _make_python_archive(str(tmp_path), ["python/README"])
+    with mock.patch.object(mu.wheels, "bundled_python_archive", return_value=archive):
+        assert venv.ensure_bundled_python() is None
+
+
+def test_bundled_python_archive_matches_running_version(tmp_path):
+    version = "%d.%d" % sys.version_info[:2]
+    for name in (
+        "cpython-3.1.0+1-x-install_only.tar.gz",
+        "cpython-%s.1+1-x-install_only.tar.gz" % version,
+        "pip-26.0-py3-none-any.whl",
+    ):
+        (tmp_path / name).write_bytes(b"")
+    assert mu.wheels.bundled_python_archive(str(tmp_path)) == str(
+        tmp_path / ("cpython-%s.1+1-x-install_only.tar.gz" % version)
+    )
+    assert mu.wheels.bundled_python_archive(str(tmp_path / "missing")) is None
 
 
 def test_download_wheels_if_not_present(venv, test_wheels):

@@ -5,9 +5,13 @@ import os
 import sys
 import glob
 import logging
+import json
 import platform
+import shutil
 import subprocess
 import tempfile
+import urllib.parse
+import urllib.request
 import zipfile
 
 from .. import __version__ as mu_version
@@ -30,6 +34,13 @@ logger = logging.getLogger(__name__)
 
 WHEELS_DIRPATH = os.path.dirname(__file__)
 ZIP_FILEPATH = os.path.join(WHEELS_DIRPATH, mu_version + ".zip")
+#
+# The bundled CPython for the learner's environment (see `download_python`):
+# a python-build-standalone "install_only" archive plus a pip wheel to seed the
+# venv with. Kept in a subdirectory so `remove_dist_files` (which clears
+# top-level *.gz/*.whl) leaves it alone.
+#
+PYTHON_DIRPATH = os.path.join(WHEELS_DIRPATH, "python")
 
 #
 # List of base packages to support modes
@@ -206,3 +217,96 @@ def download(zip_filepath=ZIP_FILEPATH, logger=logger, os_old_compat=False):
         pip_download(temp_dirpath, logger, extra_pip_flags)
         convert_sdists_to_wheels(temp_dirpath, logger)
         zip_wheels(zip_filepath, temp_dirpath, logger)
+
+
+def _uv_executable():
+    """Locate a `uv` binary for the packaging step (the `uv` wheel, else PATH)."""
+    try:
+        from uv import find_uv_bin
+
+        return find_uv_bin()
+    except Exception:
+        return shutil.which("uv")
+
+
+def download_python(dirpath=PYTHON_DIRPATH, logger=logger):
+    """Fetch a relocatable CPython (and a pip wheel) to bundle in installers
+
+    At first launch Mu builds the learner's environment with `uv venv`. In a
+    packaged app the running interpreter can't be used as its base (Briefcase's
+    `sys.executable` is a launcher stub uv can't inspect), and asking uv for a
+    bare version may need a download. So the installer carries the
+    python-build-standalone build uv itself would install for this platform and
+    the running X.Y, which Mu extracts once and points `uv venv` at (see
+    `bundled_python_archive` and `VirtualEnvironment.ensure_bundled_python`).
+    The pip wheel lets `uv venv --seed` run with `--no-index`.
+    """
+    uv = _uv_executable()
+    if not uv:
+        raise WheelsDownloadError("uv is needed to locate a CPython download")
+    version = "%d.%d" % sys.version_info[:2]
+    process = subprocess.run(
+        [uv, "python", "list", version, "--only-downloads", "--output-format", "json"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if process.returncode != 0:
+        raise WheelsDownloadError(
+            "uv could not list Python downloads:\n%s"
+            % compact(process.stderr.decode("utf-8", errors="replace"))
+        )
+    downloads = [
+        d
+        for d in json.loads(process.stdout)
+        if d.get("implementation") == "cpython"
+        and d.get("variant", "default") == "default"
+        and d.get("url")
+    ]
+    if not downloads:
+        raise WheelsDownloadError("No CPython %s download for this platform" % version)
+    url = downloads[0]["url"]
+
+    if os.path.isdir(dirpath):
+        shutil.rmtree(dirpath)
+    os.makedirs(dirpath)
+    filename = os.path.basename(urllib.parse.unquote(urllib.parse.urlparse(url).path))
+    logger.info("Downloading %s", url)
+    # The download host rejects urllib's default User-Agent (HTTP 403).
+    request = urllib.request.Request(url, headers={"User-Agent": "nu-editor-build"})
+    with (
+        urllib.request.urlopen(request) as response,
+        open(os.path.join(dirpath, filename), "wb") as f,
+    ):
+        shutil.copyfileobj(response, f)
+
+    logger.info("Downloading the pip wheel used to seed the venv")
+    process = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "--disable-pip-version-check",
+            "download",
+            "--only-binary=:all:",
+            "--no-deps",
+            "--destination-directory",
+            dirpath,
+            "pip",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    logger.debug(compact(process.stdout.decode("utf-8")))
+    if process.returncode != 0:
+        raise WheelsDownloadError("Pip was unable to download pip")
+
+
+def bundled_python_archive(dirpath=PYTHON_DIRPATH):
+    """Return the bundled CPython archive matching this Python's X.Y, or None
+
+    None means "not an installer build" (e.g. a dev checkout), in which case
+    the caller lets uv resolve an interpreter by version instead.
+    """
+    pattern = "cpython-%d.%d.*.tar.gz" % sys.version_info[:2]
+    matches = sorted(glob.glob(os.path.join(dirpath, pattern)))
+    return matches[-1] if matches else None
