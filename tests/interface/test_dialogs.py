@@ -529,3 +529,35 @@ def test_PackageDialog_append_data():
     assert c.movePosition.call_count == 2
     c.insertText.assert_called_once_with("hello")
     pd.text_area.setTextCursor.assert_called_once_with(c)
+
+
+def test_CrashDialog_shows_details_and_where_to_report():
+    dialog = mu.interface.dialogs.CrashDialog("Nu 2.0\nValueError: BANG")
+    assert dialog.text_area.toPlainText() == "Nu 2.0\nValueError: BANG"
+    assert dialog.text_area.isReadOnly()
+    labels = dialog.findChildren(mu.interface.dialogs.QLabel)
+    assert any(dialog.ISSUES_URL in label.text() for label in labels)
+    assert any("Nothing has been sent" in label.text() for label in labels)
+
+
+def test_CrashDialog_copy_details():
+    """
+    Copy puts the details on the clipboard and doesn't close the dialog.
+    """
+    dialog = mu.interface.dialogs.CrashDialog("ValueError: BANG")
+    clipboard = mock.MagicMock()
+    with mock.patch(
+        "mu.interface.dialogs.QApplication.clipboard", return_value=clipboard
+    ):
+        dialog.copy_button.click()
+    clipboard.setText.assert_called_once_with("ValueError: BANG")
+    assert dialog.copy_button.text() == "Copied"
+
+
+def test_CrashDialog_close():
+    dialog = mu.interface.dialogs.CrashDialog("details")
+    dialog.show()
+    button_box = dialog.findChild(QDialogButtonBox)
+    button_box.button(QDialogButtonBox.StandardButton.Close).click()
+    assert dialog.result() == QDialog.DialogCode.Rejected
+    assert not dialog.isVisible()

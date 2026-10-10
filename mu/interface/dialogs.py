@@ -21,6 +21,8 @@ import logging
 
 from PyQt6.QtCore import QSize, QTimer
 from PyQt6.QtWidgets import (
+    QApplication,
+    QPushButton,
     QVBoxLayout,
     QListWidget,
     QLabel,
@@ -442,3 +444,46 @@ class PackageDialog(QDialog):
                 finished=self.next_pip_command,
             ),
         )
+
+
+class CrashDialog(QDialog):
+    """
+    Shown when Nu hits an error it can't recover from. It shows the crash
+    details and lets the user copy them (e.g. into a bug report); nothing is
+    sent anywhere.
+    """
+
+    ISSUES_URL = "https://github.com/kovirlabs/nu/issues"
+
+    def __init__(self, details, parent=None):
+        super().__init__(parent)
+        self.details = details
+        self.setWindowTitle(_("Nu has crashed"))
+        self.setMinimumSize(600, 400)
+        layout = QVBoxLayout(self)
+        label = QLabel(
+            _(
+                "Sorry, Nu hit an error it couldn't recover from and has to "
+                "close. Nothing has been sent anywhere.<br><br>To report it, "
+                'copy the details below into a new issue at <a href="{url}">'
+                "{url}</a>."
+            ).format(url=self.ISSUES_URL)
+        )
+        label.setWordWrap(True)
+        label.setOpenExternalLinks(True)
+        layout.addWidget(label)
+        self.text_area = QPlainTextEdit()
+        self.text_area.setReadOnly(True)
+        self.text_area.setPlainText(details)
+        layout.addWidget(self.text_area)
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        self.copy_button = QPushButton(_("Copy to clipboard"))
+        button_box.addButton(self.copy_button, QDialogButtonBox.ButtonRole.ActionRole)
+        self.copy_button.clicked.connect(self.copy_details)
+        button_box.rejected.connect(self.reject)
+        layout.addWidget(button_box)
+
+    def copy_details(self):
+        """Put the crash details on the clipboard."""
+        QApplication.clipboard().setText(self.details)
+        self.copy_button.setText(_("Copied"))
