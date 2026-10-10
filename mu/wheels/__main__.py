@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from . import logger, download
+from . import logger, download, download_python
 
 #
 # If run from the command line (eg python -m mu.wheels)
@@ -14,6 +14,10 @@ logger.addHandler(logging.StreamHandler())
 # compatibility with older operating system versions.
 # As there is a single option available sys.argv is used for simplicity,
 # if more options are added in the future we should start using argparse
-os_old_compat = sys.argv[1] == "--package"
+os_old_compat = len(sys.argv) > 1 and sys.argv[1] == "--package"
 
 download(os_old_compat=os_old_compat)
+# Installer builds also bundle a CPython for the learner's environment, so the
+# first launch needs no network (see `download_python`).
+if os_old_compat:
+    download_python()
