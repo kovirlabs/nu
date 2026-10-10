@@ -58,6 +58,7 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Using Nu: help.md
   - Getting started:
       - Developer setup: setup.md
       - First steps: first-steps.md

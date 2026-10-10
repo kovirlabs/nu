@@ -37,7 +37,6 @@ from PyQt6 import QtCore
 from pyflakes.api import check
 from pycodestyle import StyleGuide, Checker
 
-from . import __version__
 from . import i18n
 from .resources import path
 from .debugger.utils import is_breakpoint_line
@@ -49,6 +48,8 @@ from .virtual_environment import venv
 LOG_DIR = platformdirs.user_log_dir(appname="mu", appauthor="python")
 # The path to the log file for the application.
 LOG_FILE = os.path.join(LOG_DIR, "mu.log")
+#: What the Help button opens: the "Using Nu" page (docs/help.md).
+HELP_URL = "https://kovirlabs.github.io/nu/help/"
 # Regex to match pycodestyle (PEP8) output.
 STYLE_REGEX = re.compile(r".*:(\d+):(\d+):\s+(.*)")
 # Regex to match flake8 output.
@@ -1319,14 +1320,10 @@ class Editor(QObject):
 
     def show_help(self):
         """
-        Display browser based help about Mu.
+        Display browser based help about Nu (docs/help.md on the docs site).
         """
-        major_version = ".".join(__version__.split(".")[:2])
-        url = "https://codewith.mu/{}/help/{}".format(
-            i18n.language_code[:2], major_version
-        )
-        logger.info("Showing help at %r.", url)
-        webbrowser.open_new(url)
+        logger.info("Showing help at %r.", HELP_URL)
+        webbrowser.open_new(HELP_URL)
 
     def quit(self, *args, **kwargs):
         """

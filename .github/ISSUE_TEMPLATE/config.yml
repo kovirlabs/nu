@@ -1,11 +1,8 @@
 blank_issues_enabled: true
 contact_links:
-  - name: Request New Features
-    url: https://github.com/mu-editor/mu/discussions/categories/ideas-new-features
-    about: New features are first discussed here.
-  - name: General discussion
-    url: https://github.com/mu-editor/mu/discussions/
-    about: You can talk about anything else in the Discussions section.
-  - name: Tutorials & Guides
-    url: https://codewith.mu
-    about: Have you checked the Mu website for documentation first?
+  - name: Ideas and feature requests
+    url: https://github.com/kovirlabs/nu/discussions
+    about: Suggest a new feature or talk about an idea first.
+  - name: Using Nu
+    url: https://kovirlabs.github.io/nu/help/
+    about: How the buttons and modes work, where files go, and adding packages.

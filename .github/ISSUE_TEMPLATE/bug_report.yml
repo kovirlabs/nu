@@ -1,5 +1,5 @@
 name: Bug Report
-description: Report a problem with the Mu editor.
+description: Report a problem with Nu.
 body:
   - type: markdown
     attributes:
@@ -35,7 +35,8 @@ body:
       required: false
   - type: input
     attributes:
-      label: Mu Version
+      label: Nu Version
+      description: Shown in the window title, e.g. 2.0.0.
     validations:
       required: false
   - type: textarea
@@ -48,18 +49,19 @@ body:
     attributes:
       label: Editor Log
       description: |
-        Please remember to attach a **copy of the full log files for Mu**. You
-        can get the logs by clicking on the cog icon in the bottom right of the
-        editor window.
-        Click on the logs and use CTRL-A to select all, then CTRL-C to copy and
-        CTRL-V to paste the contents into the issue.
-        If Mu doesn't open, you can find the logs in one of these locations,
-        depending on your OS:
+        If Nu crashed, paste the details from its crash window (**Copy to
+        clipboard**) here.
+
+        Otherwise, please paste **Nu's log**: click the cog icon in the bottom
+        right of the editor window, click in the log, then Ctrl-A to select
+        all, Ctrl-C to copy and Ctrl-V to paste it here (Cmd on a Mac).
+        If Nu doesn't open, the log files (`mu.log`; the folder name comes from
+        Mu) are in:
         * Windows: `%LOCALAPPDATA%\python\mu\Logs`
         * macOS: `~/Library/Logs/mu`
-        * Linux: `~/.cache/mu/`
+        * Linux: `~/.local/state/mu/log`
     validations:
       required: false
   - type: markdown
     attributes:
-      value: Thank you for contributing to Mu! :-)
+      value: Thank you for helping to improve Nu! :-)
