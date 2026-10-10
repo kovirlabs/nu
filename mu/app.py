@@ -53,6 +53,7 @@ from .modes import (
     PyGameZeroMode,
 )
 from .plugin import Host
+from .plugin import errors as plugin_errors
 from .plugin.loader import load_plugins
 from .interface.themes import NIGHT_STYLE, DAY_STYLE, CONTRAST_STYLE
 from . import settings
@@ -196,8 +197,12 @@ def show_crash_dialog(details):
 
 def excepthook(*exc_args):
     """
-    Log the exception, show the details to the user, and exit.
+    Log the exception, show the details to the user, and exit -- unless it
+    came from a plugin, in which case it's reported to the user and Nu
+    carries on.
     """
+    if plugin_errors.handle_uncaught(*exc_args):
+        return
     logging.error("Unrecoverable error", exc_info=(exc_args))
     # Very important to release shared memory used to signal an app instance is running
     # as we are going to exit below
@@ -264,6 +269,7 @@ def setup_modes(editor, view):
     for mode_class in (PythonMode, CircuitPythonMode, DebugMode, PyGameZeroMode):
         host.register_mode(mode_class)
     host.plugin_records = load_plugins(host)
+    plugin_errors.install(host._error_handler)
     return host.modes
 
 

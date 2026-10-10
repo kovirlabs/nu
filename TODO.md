@@ -324,10 +324,20 @@ drop-in dir covers them.
 - [x] Verified end to end: the example plugin installed editable + a drop-in plugin both
   appear in the mode picker; a broken drop-in is skipped. Tests point the drop-in dir at a
   temp folder (`tests/conftest.py`).
-- NOTE (open): **runtime** isolation is still missing. An exception in a plugin's action
-  handler (or a timer it starts) reaches `app.excepthook`, which treats it as fatal. Wrap
-  plugin-provided handlers in `Editor.change_mode` (log + `show_message`) before shipping
-  third-party plugins (5e at the latest).
+- [x] **Runtime isolation** (`mu/plugin/errors.py`): plugin errors no longer crash Nu.
+  `Host.register_mode` wraps a plugin mode's core-called methods (`activate`, `actions`,
+  `api`, `workspace_dir`, `stop`, `find_devices`, …) to report and return a safe fallback;
+  `app.excepthook` first asks `plugin_errors.handle_uncaught`, which attributes the
+  traceback to a plugin (its modules, or core code running on one of its modes) so errors
+  in button handlers/timers/signals are reported instead of exiting. The learner gets a
+  rate-limited dialog (30 s / one at a time; status bar otherwise), the log gets the
+  traceback once per distinct error, and after 3 errors Nu offers to switch the plugin off
+  (`disabled_plugins`). `mu.plugin.PluginError(message, information)` is the interface for
+  *expected*, learner-fixable problems. Verified in the real app with a drop-in plugin
+  whose timer raises every 2 s: Nu keeps running.
+- NOTE (open): errors in a plugin's **threads** go to `threading.excepthook` (logged to
+  stderr, not the log file, no dialog) — they can't crash Nu, but they're easy to miss.
+  Route them to the log in 5e.
 - NOTE (open, 5d): in **installers** Nu runs from Briefcase's bundled env, which users
   can't install into, so entry-point discovery only sees bundled plugins there; the
   drop-in folder is the only user route until 5d puts a plugin env on `sys.path`.

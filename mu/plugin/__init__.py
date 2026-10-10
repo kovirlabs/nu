@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from ..modes.base import BaseMode as Mode, MicroPythonMode
 from .base import PLUGIN_API_VERSION, Plugin, ModePlugin, check_compatible
+from .errors import PluginError
 from .host import Host, PluginSettings
 
 __all__ = [
@@ -34,5 +35,6 @@ __all__ = [
     "MicroPythonMode",
     "Host",
     "PluginSettings",
+    "PluginError",
     "check_compatible",
 ]

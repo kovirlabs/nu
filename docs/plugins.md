@@ -80,10 +80,43 @@ plugin if it:
 Any modes it registered before failing are removed again. An unnamed plugin
 (one that doesn't set `name`) is called by its id.
 
-Once loaded, a plugin runs inside Nu. Nu guards its once-a-second device scan
-(`find_devices`), which runs for every mode, but an uncaught error in, say, a
-button handler is still treated like any other crash in Nu. Catch your own
-errors and report them with `host.show_message`.
+### When a plugin has an error
+
+Once loaded, a plugin's errors don't crash Nu. That covers errors in the mode
+methods Nu calls (`activate`, `actions`, `api`, `workspace_dir`, `stop`, …)
+and in anything Qt calls for the plugin: button handlers, timers and signal
+handlers. For each error:
+
+- **The learner sees a dialog** naming the plugin, with the error for its
+  author. Nu keeps running.
+- **The log gets the full traceback.** An identical repeat gets a one-line
+  entry instead.
+- **Nu falls back to something safe** when it was calling the mode: `api()`
+  and `actions()` give an empty list, `workspace_dir()` the usual workspace,
+  and the rest give `None`.
+- **Dialogs are rate limited.** Further errors within 30 seconds, or while a
+  dialog is open, go to the status bar instead, so a failing timer can't bury
+  the learner in dialogs.
+- **A plugin that keeps failing** (3 errors) is offered to be switched off. If
+  the learner agrees, it isn't loaded the next time Nu starts.
+
+An error counts as the plugin's when the plugin's own modules appear in the
+traceback, or when core code was running on one of its modes (for example
+`MicroPythonMode` code it inherits).
+
+For a problem the learner can fix, raise `PluginError` instead. Nu shows your
+message as is, and doesn't count it against the plugin:
+
+```python
+from mu.plugin import PluginError
+
+def flash(self, event=None):
+    if not self.find_devices():
+        raise PluginError(
+            "Plug in your micro:bit first.",
+            "Use a USB cable that carries data, not just power.",
+        )
+```
 
 ### Switching a plugin off
 
@@ -115,6 +148,7 @@ release.
 | `MicroPythonMode` | A `Mode` with serial REPL, plotter and board detection, for MicroPython devices. |
 | `Host` | What a plugin is handed: the supported way to reach the editor. |
 | `PluginSettings` | A plugin's own persisted settings (from `Host.settings`). |
+| `PluginError` | Raise it for a problem the learner can fix; Nu shows the message (see [When a plugin has an error](#when-a-plugin-has-an-error)). |
 | `check_compatible` | The version check `Host` applies when loading a plugin. |
 
 ### The entry point
