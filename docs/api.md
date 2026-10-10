@@ -49,6 +49,8 @@ The public API for plugins. See [Writing a Nu plugin](plugins.md).
 
 ::: mu.plugin.loader
 
+::: mu.plugin.errors
+
 ## `mu.interface`
 
 This module contains all the PyQt related code needed to create the user
