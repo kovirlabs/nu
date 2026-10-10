@@ -28,9 +28,6 @@ import platform
 import traceback
 import struct
 import sys
-import urllib
-import webbrowser
-import base64
 
 from PyQt6.QtCore import (
     Qt,
@@ -47,6 +44,7 @@ from .virtual_environment import venv, logger as vlogger
 from . import __version__
 from .logic import Editor, LOG_FILE, LOG_DIR, ENCODING
 from .interface import Window
+from .interface.dialogs import CrashDialog
 from .resources import load_icon, load_movie, load_pixmap
 from .modes import (
     PythonMode,
@@ -164,9 +162,40 @@ class StartupWorker(QObject):
                 vlogger.removeHandler(handler)
 
 
+def crash_details(exc_type, exc_value, exc_traceback):
+    """
+    The text a user can copy into a bug report after a crash: versions,
+    platform, where the log is, and the traceback.
+    """
+    return "\n".join(
+        [
+            "Nu {}".format(__version__),
+            "Python {} on {}".format(platform.python_version(), platform.platform()),
+            "Log file: {}".format(LOG_FILE),
+            "",
+            "".join(
+                traceback.format_exception(exc_type, exc_value, exc_traceback)
+            ).rstrip(),
+        ]
+    )
+
+
+def show_crash_dialog(details):
+    """
+    Show the crash details so the user can copy them. Nothing is sent
+    anywhere. Skipped if there's no QApplication yet (a crash during
+    start-up) or MU_SUPPRESS_CRASH_REPORT_FORM is set (tests and CI).
+    """
+    if "MU_SUPPRESS_CRASH_REPORT_FORM" in os.environ:
+        return
+    if QApplication.instance() is None:
+        return
+    CrashDialog(details).exec()
+
+
 def excepthook(*exc_args):
     """
-    Log exception and exit cleanly.
+    Log the exception, show the details to the user, and exit.
     """
     logging.error("Unrecoverable error", exc_info=(exc_args))
     # Very important to release shared memory used to signal an app instance is running
@@ -174,27 +203,9 @@ def excepthook(*exc_args):
     _shared_memory.release()
     if exc_args[0] is not KeyboardInterrupt:
         try:
-            log_file = base64.standard_b64encode(LOG_FILE.encode("utf-8"))
-            error = base64.standard_b64encode(
-                "".join(traceback.format_exception(*exc_args)).encode("utf-8")
-            )[-1800:]
-            p = platform.uname()
-            params = {
-                "v": __version__,  # version
-                "l": str(i18n.language_code),  # locale
-                "p": base64.standard_b64encode(
-                    " ".join([p.system, p.release, p.version, p.machine]).encode(
-                        "utf-8"
-                    )
-                ),  # platform
-                "f": log_file,  # location of log file
-                "e": error,  # error message
-            }
-            args = urllib.parse.urlencode(params)
-            if "MU_SUPPRESS_CRASH_REPORT_FORM" not in os.environ:
-                webbrowser.open("https://codewith.mu/crash/?" + args)
+            show_crash_dialog(crash_details(*exc_args))
         except Exception as e:  # The Alamo of crash handling.
-            logging.error("Failed to report crash", exc_info=e)
+            logging.error("Failed to show the crash details", exc_info=e)
         sys.__excepthook__(*exc_args)
         sys.exit(1)
     else:  # It's harmless, don't sound the alarm.
