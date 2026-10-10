@@ -58,7 +58,8 @@ mode_packages = [
     ("pgzero", ("pgzero>=1.2.1", "pygame>=2.6")),
     # The version of ipykernel here should match the one used by qtconsole as
     # specified in pyproject.toml. Mirrored from [project].dependencies.
-    ("ipykernel", ("ipykernel>=6.29",)),
+    # tornado is a security floor for ipykernel's dependency (see pyproject.toml).
+    ("ipykernel", ("ipykernel>=6.29", "tornado>=6.5.9")),
 ]
 
 
