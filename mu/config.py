@@ -15,6 +15,10 @@ VENV_NAME = "mu_venv"
 # The directory containing default virtual environment.
 VENV_DIR = os.path.join(DATA_DIR, VENV_NAME)
 
+# The directory holding the learner's extra, named environments (one folder
+# each, named after the environment); the default one stays at VENV_DIR-….
+ENVS_DIR = os.path.join(DATA_DIR, "envs")
+
 # Maximum line length for using both in Check and Tidy
 MAX_LINE_LENGTH = 88
 

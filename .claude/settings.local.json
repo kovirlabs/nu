@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv sync *)",
+      "Bash(uv run *)",
+      "Bash(mkdir -p ~/.local/share/mu)",
+      "Bash(QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly -q)",
+      "Bash(awk 'NR>=515 && NR<=600 {print NR\": \"$0}' mu/interface/panes.py)",
+      "Bash(awk -F: '$1>=515 || /Snek/')",
+      "Bash(git rm *)",
+      "Bash(cd *)",
+      "Bash(python3 -)",
+      "Bash(awk 'NR>=1000 && NR<=1006 {print NR\": \"$0}' tests/interface/test_panes.py)",
+      "Bash(awk 'NR>1437 && /^def /{print NR\": \"$0}' tests/interface/test_panes.py)",
+      "Bash(PYFLAKES_BUILTINS=_ uv run --no-sync python -m flake8 mu/ tests/)",
+      "Bash(echo \"flake8 clean \\(exit $?\\)\")",
+      "Bash(QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly -q tests/interface/test_dialogs.py tests/interface/test_panes.py tests/interface/test_main.py)",
+      "Bash(QT_QPA_PLATFORM=offscreen uv run --no-sync python -c ' *)",
+      "Bash(grep -v \"Unable to write\\\\|Traceback\\\\|FileNotFound\\\\|venv.json\\\\|^{$\\\\|^}$\\\\|dirpath\\\\|File \\\\\"\\\\|with open\")",
+      "Bash(git diff *)",
+      "Bash(awk '{del+=$2; add+=$1} END {print \"added:\", add, \" deleted:\", del, \" net:\", add-del}')",
+      "Bash(git checkout *)",
+      "Bash(git reset *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(awk 'NR>=1352 && NR<=1432 && \\(/def [a-z]/ || /^    def /\\) {print NR\": \"$0}' mu/interface/main.py)",
+      "Bash(awk 'NR>=225 && /^class /{print NR\": \"$0}' mu/interface/dialogs.py)",
+      "Bash(awk 'NR>=40 && NR<=50 {print NR\": \"$0}' mu/wheels/__init__.py)",
+      "Bash(PYFLAKES_BUILTINS=_ uv run --no-sync python -m flake8 mu/)",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(git merge *)",
+      "Bash(python3 *)",
+      "Bash(echo \"lint exit: $?\")",
+      "Bash(echo \"format exit: $?\")",
+      "Bash(find / -name 'libEGL.so.1')",
+      "Bash(uv python *)",
+      "Bash(uv pip *)",
+      "Bash(gh pr *)",
+      "Bash(git log *)"
+    ]
+  }
+}
