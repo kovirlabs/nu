@@ -561,3 +561,70 @@ def test_plotter_available(host, charts):
     """
     with mock.patch("mu.interface.panes.CHARTS", charts):
         assert host.plotter_available is charts
+
+
+# --- 0.5: what the micro:bit plugin needs ---
+
+
+def test_log_command(host, monkeypatch):
+    """
+    A plugin's equivalent commands go into the same "What Nu ran" log as
+    uv's, so the learner sees (and can type) them; the plugin finishes the
+    record it gets back.
+    """
+    from mu.command_log import CommandLog
+
+    log = CommandLog()
+    monkeypatch.setattr("mu.plugin.host.command_log", log)
+    record = host.log_command(
+        ["mpremote", "connect", "/dev/ttyACM0", "fs", "cp", "a b.py", ":main.py"],
+        note="Nu did this itself.",
+    )
+    record.finish(0, "done")
+    (logged,) = log.records()
+    assert logged is record
+    assert logged.display(windows=False) == (
+        "mpremote connect /dev/ttyACM0 fs cp 'a b.py' :main.py"
+    )
+    assert logged.note == "Nu did this itself."
+    assert logged.output_tail() == ["done"]
+    assert "$ mpremote connect" in log.render()
+
+
+def test_log_command_with_folder(host, monkeypatch):
+    from mu.command_log import CommandLog
+
+    log = CommandLog()
+    monkeypatch.setattr("mu.plugin.host.command_log", log)
+    host.log_command(["cp", "x.hex", "/media/MICROBIT/"], cwd="/tmp")
+    assert log.records()[0].cwd == "/tmp"
+
+
+def test_current_device(host):
+    """
+    The board picked in the device selector, without reaching into the
+    editor.
+    """
+    device = mock.MagicMock()
+    host._editor.current_device = device
+    assert host.current_device is device
+    host._editor.current_device = None
+    assert host.current_device is None
+
+
+def test_data_dir(host, tmp_path, monkeypatch):
+    """
+    A plugin gets a folder of its own in Nu's data folder, made if missing.
+    """
+    monkeypatch.setattr("mu.config.DATA_DIR", str(tmp_path))
+    path = host.data_dir("microbit")
+    assert path == str(tmp_path / "microbit")
+    assert (tmp_path / "microbit").is_dir()
+    assert host.data_dir("microbit") == path  # already there: fine
+
+
+@pytest.mark.parametrize("name", ["", ".", "..", "a/b", "a\\b", "../up", None])
+def test_data_dir_needs_a_plain_name(host, tmp_path, monkeypatch, name):
+    monkeypatch.setattr("mu.config.DATA_DIR", str(tmp_path))
+    with pytest.raises(ValueError):
+        host.data_dir(name)

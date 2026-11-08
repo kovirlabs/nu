@@ -5,7 +5,7 @@
     Nu loads plugins at startup, both installed packages and files in the
     plugins folder (Phases 5a and 5b in `TODO.md`), CircuitPython and Pygame
     Zero ship as plugins (5c), and the **Plugins** tab lists them and switches
-    them on and off (5e). The API is at version **0.4**, so it can still
+    them on and off (5e). The API is at version **0.5**, so it can still
     change between releases. In the downloadable installers the plugins
     folder is the only way to add a plugin (see
     [Roadmap: installing plugins](#roadmap-installing-plugins)).
@@ -201,7 +201,7 @@ release.
 
 | Name | What it is |
 |---|---|
-| `PLUGIN_API_VERSION` | The API version this Nu provides, e.g. `"0.4"`. |
+| `PLUGIN_API_VERSION` | The API version this Nu provides, e.g. `"0.5"`. |
 | `Plugin` | Base class for a plugin. |
 | `ModePlugin` | A `Plugin` that registers one or more modes for you. |
 | `Mode` | Base class for a mode (today's `BaseMode`). |
@@ -243,7 +243,7 @@ from mu.plugin import Plugin
 class MyPlugin(Plugin):
     name = "My Plugin"
     description = "Adds My mode, for doing my thing."
-    api_version = "0.4"
+    api_version = "0.5"
 
     def register(self, host):
         """Called once when the plugin loads. Do all wiring here, through
@@ -269,7 +269,7 @@ from mu.plugin import ModePlugin
 class MicrobitPlugin(ModePlugin):
     name = "micro:bit"
     description = "Adds micro:bit mode, for the BBC micro:bit."
-    api_version = "0.4"
+    api_version = "0.5"
     mode = MicrobitMode          # or: modes = (ModeA, ModeB)
     # Optional: the folder of icons the modes use (see "Icons and images").
     images = os.path.join(os.path.dirname(__file__), "images")
@@ -356,6 +356,9 @@ tell the learner if there's none). Offer the Plotter only if
 | `python_apis()` | The Python 3 mode's autocomplete entries, as a new list to add yours to. *(0.2)* |
 | `shared_apis()` | The autocomplete entries every Python has, MicroPython and CircuitPython included (built-ins, `str`/`list`/`dict` methods), as a new list: what a board mode's `api()` builds on. *(0.3)* |
 | `plotter_available` | `True` if Nu can show the plotter (the optional Qt Charts package is installed). A property. *(0.3)* |
+| `current_device` | The board picked in the device selector (a `Device`), or `None`. A property; use it instead of `self.editor.current_device`. *(0.5)* |
+| `data_dir(name)` | A folder of your plugin's own in Nu's data folder, `<data folder>/<name>`, made if missing (`name` is a plain folder name, normally your plugin's id). For downloads and caches, not the learner's work. *(0.5)* |
+| `log_command(argv, cwd=None, note=None)` | Add a command to **What Nu ran** (and Nu's log), next to uv's: `argv` as the learner could type it, `note` for anything they should know (e.g. "Nu did this through mpremote's Python API"). Returns a record: call `add_output(text)` as output arrives and `finish(exit_code, output=None)` when done (0 for success). Safe from any thread. *(0.5)* |
 | `settings(namespace)` | A `PluginSettings` with `get(key, default=None)` and `set(key, value)`. Values are saved with the user's settings under `plugins.<namespace>` and must be JSON-serialisable. |
 | `logger(name)` | A logger writing to Nu's log as `mu.plugins.<name>`. |
 | `api_version` | The `PLUGIN_API_VERSION` this Nu provides. |
@@ -414,6 +417,14 @@ them:
 - **Translations for plugins.** Bundled plugins use Nu's own message catalog
   (their strings are extracted with Nu's); a community plugin's strings aren't
   translated yet.
+
+### What changed in 0.5
+
+0.5 adds what the micro:bit plugin needs to stay on the API: `Host.log_command`
+(so a plugin's equivalent commands show in **What Nu ran**, as uv's do),
+`Host.current_device` (the selected board, without `self.editor`) and
+`Host.data_dir` (a folder for downloads such as firmware). Nothing was removed,
+but a 0.4 plugin needs its `api_version` changed to `"0.5"`.
 
 ### What changed in 0.4
 
