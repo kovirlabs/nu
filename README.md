@@ -31,24 +31,38 @@ Raspberry Pi.
 Nu currently ships these modes:
 
 * **Python 3** — write and run desktop Python, with a built-in REPL and plotter.
+* **Debugger** — a visual debugger for stepping through Python code.
 * **Pygame Zero** — make games the beginner-friendly way.
 * **CircuitPython** — work with Adafruit CircuitPython boards via the
   `CIRCUITPY` drive and serial REPL.
-* **Debugger** — a visual debugger for stepping through Python code.
+* **BBC micro:bit** (opt-in for now) — flash MicroPython programs to a
+  micro:bit and use its REPL and plotter. It's new, built on maintained tools,
+  and not in the installers until it has been tried on real micro:bits: run
+  from source with `uv sync --extra microbit`.
+
+Python 3 and the Debugger are Nu's core. The other modes are **plugins**:
+Pygame Zero and CircuitPython come with Nu and are switched on, and anyone
+can write more. Learners see and switch them on the **Plugins** tab.
+
+Your programs run in a **Python environment** of their own, made with
+[uv](https://docs.astral.sh/uv/), and Nu shows it rather than hiding it: the
+status bar names it, and one click shows where it is, how to use it from a
+terminal, and every command Nu ran in it.
 
 To keep Nu nimble and easy to maintain, the more niche, hardware-specific modes
-inherited from upstream Mu (micro:bit, ESP, Pyboard, Lego, Pico, Snek and the
-Flask/web deploy mode) — along with their vendored, unmaintained device tooling —
-have been removed.
+inherited from upstream Mu (ESP, Pyboard, Lego, Pico, Snek and the Flask/web
+deploy mode), Mu's old micro:bit mode, and their vendored, unmaintained device
+tooling have been removed.
 
 ## Project status
 
-Nu is under active modernization. It now runs on **PyQt6** and **Python 3.11+**
-(verified through 3.14), with development managed by
-[uv](https://docs.astral.sh/uv/). The remaining work — uv-driven user
-environments and consolidated [Briefcase](https://briefcase.readthedocs.io/)
-installers — is tracked in [`TODO.md`](TODO.md). Guidance for working in this
-repository lives in [`CLAUDE.md`](CLAUDE.md).
+Nu **2.0.0** is in beta: native installers for Windows, macOS and Linux are
+published with each [GitHub release](https://github.com/kovirlabs/nu/releases).
+It runs on **PyQt6** and **Python 3.11+** (verified through 3.14). The plan and
+what's left (installer signing, installing plugins from the app, the micro:bit
+hardware pass) are tracked in [`TODO.md`](TODO.md); what changed since Mu is in
+[`CHANGES.md`](CHANGES.md). Guidance for working in this repository lives in
+[`CLAUDE.md`](CLAUDE.md).
 
 ## Running from source
 
@@ -61,6 +75,9 @@ uv sync                  # downloads a managed CPython and the pinned deps
 uv run python -m mu      # launch Nu
 ```
 
+Add `--extra dev` to `uv sync` for the test, lint, docs and translation tools,
+or `--all-extras` to include the opt-in micro:bit plugin.
+
 ## Development
 
 Run the test suite (add `QT_QPA_PLATFORM=offscreen` to run the Qt tests
@@ -69,6 +86,9 @@ headlessly, without a display):
 ```
 uv run pytest
 ```
+
+The tests never touch your real Nu settings or `mu_code` folder. See
+[Tests](https://kovirlabs.github.io/nu/tests/) for the full headless command.
 
 Lint and format with [ruff](https://docs.astral.sh/ruff/) (config lives in
 `pyproject.toml`):
@@ -80,13 +100,20 @@ uv run --no-sync python -m ruff format    # reformat in place
 
 ## Documentation
 
-The developer documentation lives in [`docs/`](docs/), is built with
-[MkDocs](https://www.mkdocs.org/) and is published with GitHub Pages at
-<https://kovirlabs.github.io/nu/>. Build it locally with `make docs` (or
-`make docs-serve` for a live preview).
+Nu's documentation, for learners and teachers as well as developers, is at
+<https://kovirlabs.github.io/nu/>: start with
+[Using Nu](https://kovirlabs.github.io/nu/help/) (what Nu's **Help** button
+opens) or the [developer setup](https://kovirlabs.github.io/nu/setup/). Its
+source is in [`docs/`](docs/), built with [MkDocs](https://www.mkdocs.org/);
+build it locally with `make docs` (or `make docs-serve` for a live preview).
 
-Note that much of this documentation is inherited from upstream Mu and predates
-this fork — it is being modernized incrementally.
+## Reporting problems
+
+Please report bugs and suggest ideas at
+<https://github.com/kovirlabs/nu/issues>. Nu's log (the cog in the status bar,
+then **Current Log**) helps us a lot; if Nu crashed, its crash window has a
+**Copy to clipboard** button for the details. Nu never sends anything by
+itself. Contributions are welcome: see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Code of Conduct
 
