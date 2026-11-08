@@ -503,6 +503,9 @@ def run(hostname, port, filename, args):
         file=sys.stderr,
     )
 
+    # The script's exit code, as Python would give it: 1 if it ended with an
+    # error, so the learner isn't told "exit code: 0" for a crash.
+    exit_code = 0
     while True:
         try:
             debugger._runscript(filename)
@@ -512,14 +515,25 @@ def run(hostname, port, filename, args):
         except Restart:
             # TODO: Log restart.
             debugger.output("restart")
-        except (KeyboardInterrupt, SystemExit, OSError):
+        except SystemExit as ex:
+            if ex.code is None or isinstance(ex.code, int):
+                exit_code = ex.code or 0
+            else:  # sys.exit("message") prints the message and exits with 1.
+                print(ex.code, file=sys.stderr)
+                exit_code = 1
+            debugger.client = None
+            break
+        except (KeyboardInterrupt, OSError):
+            exit_code = 1
             debugger.client = None
             break
         except Exception:
             msg = traceback.format_exc()
             debugger.output("postmortem", exception=msg)
             debugger.client = None
+            exit_code = 1
             break
     # Close connection in a tidy manner.
     if debugger.client:
         debugger.client.shutdown(socket.SHUT_WR)
+    return exit_code

@@ -554,10 +554,11 @@ def test_debug():
     """
     args = ("foo", "bar", "baz")
     filename = "foo.py"
-    expected_filename = os.path.normcase(os.path.abspath(filename))
-    mock_runner = mock.MagicMock()
+    # The path keeps its case: it's what the learner sees in tracebacks.
+    expected_filename = os.path.abspath(filename)
+    mock_runner = mock.MagicMock(return_value=1)
     with mock.patch("mu.debugger.runner.run", mock_runner):
-        mu_debug.debug(filename, *args)
+        assert mu_debug.debug(filename, *args) == 1
         mock_runner.assert_called_once_with(
             "localhost", DEBUGGER_PORT, expected_filename, args
         )
@@ -571,7 +572,7 @@ def test_debug_no_args():
     expected_msg = "Debugger requires a Python script filename to run."
     mock_print = mock.MagicMock()
     with mock.patch("builtins.print", mock_print):
-        mu_debug.debug()
+        assert mu_debug.debug() == 2
         mock_print.assert_called_once_with(expected_msg)
 
 
