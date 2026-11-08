@@ -38,7 +38,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: [".", "plugins/circuitpython", "plugins/pygamezero"]
+          paths: [".", "plugins/circuitpython", "plugins/pygamezero", "plugins/microbit"]
           options:
             show_root_heading: true
             show_source: true
