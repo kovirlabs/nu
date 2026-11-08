@@ -1408,7 +1408,15 @@ def test_Window_show_admin():
         result = w.show_admin("log", "envars", "packages", "mode", "devices")
         mock_admin_display.assert_called_once_with(w)
         mock_admin_box.setup.assert_called_once_with(
-            "log", "envars", "packages", "mode", "devices", environment=None, focus=None
+            "log",
+            "envars",
+            "packages",
+            "mode",
+            "devices",
+            environment=None,
+            focus=None,
+            plugins=None,
+            open_directory=w.open_directory_from_os,
         )
         mock_admin_box.exec.assert_called_once_with()
         assert result == "this is the expected result"
@@ -1428,9 +1436,18 @@ def test_Window_show_admin_focus():
             "devices",
             environment={"a": 1},
             focus="environment",
+            plugins={"plugins": []},
         )
     mock_admin_display().setup.assert_called_once_with(
-        "log", "s", "p", "mode", "devices", environment={"a": 1}, focus="environment"
+        "log",
+        "s",
+        "p",
+        "mode",
+        "devices",
+        environment={"a": 1},
+        focus="environment",
+        plugins={"plugins": []},
+        open_directory=w.open_directory_from_os,
     )
 
 
@@ -1448,7 +1465,15 @@ def test_Window_show_admin_cancelled():
         result = w.show_admin("log", "envars", "packages", "mode", "devices")
         mock_admin_display.assert_called_once_with(w)
         mock_admin_box.setup.assert_called_once_with(
-            "log", "envars", "packages", "mode", "devices", environment=None, focus=None
+            "log",
+            "envars",
+            "packages",
+            "mode",
+            "devices",
+            environment=None,
+            focus=None,
+            plugins=None,
+            open_directory=w.open_directory_from_os,
         )
         mock_admin_box.exec.assert_called_once_with()
         assert result == {}

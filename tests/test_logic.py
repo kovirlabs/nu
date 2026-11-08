@@ -2270,6 +2270,86 @@ def test_show_admin_passes_the_environment_and_what_nu_ran():
     assert "$ uv pip install cowsay" in kwargs["environment"]["commands"]
 
 
+PLUGIN_ROWS = [
+    {"id": "pygamezero", "enabled": True, "can_switch": True},
+    {"id": "flaky", "enabled": False, "can_switch": True},
+    {"id": "dup", "enabled": True, "can_switch": True},
+    {"id": "dup", "enabled": True, "can_switch": False},
+]
+
+
+def admin_editor(new_settings):
+    view = mock.MagicMock()
+    view.show_admin.return_value = new_settings
+    ed = mu.logic.Editor(view)
+    ed.modes = {"python": mock.MagicMock()}
+    ed.plugin_host = mock.MagicMock()
+    ed.plugin_host.describe_plugins.return_value = PLUGIN_ROWS
+    ed.plugin_host.plugins_folder = "/data/mu/plugins"
+    ed.show_status_message = mock.MagicMock()
+    return ed, view
+
+
+def show_admin(ed):
+    with (
+        mock.patch.object(venv, "installed_packages", return_value=([], [])),
+        mock.patch.object(venv, "describe", return_value={"name": "mu_venv"}),
+        mock.patch("builtins.open", mock.mock_open(read_data="the log")),
+    ):
+        ed.show_admin()
+
+
+def test_show_admin_passes_the_plugins():
+    """The Plugins tab gets every plugin, the plugins folder and the docs."""
+    ed, view = admin_editor({})
+    show_admin(ed)
+    assert view.show_admin.call_args.kwargs["plugins"] == {
+        "plugins": PLUGIN_ROWS,
+        "folder": "/data/mu/plugins",
+        "help_url": "https://kovirlabs.github.io/nu/plugins/",
+    }
+
+
+def test_show_admin_without_plugins():
+    """No plugin host (e.g. in tests of the editor alone): no Plugins tab."""
+    ed, view = admin_editor({})
+    ed.plugin_host = None
+    show_admin(ed)
+    assert view.show_admin.call_args.kwargs["plugins"] is None
+
+
+def test_show_admin_switches_plugins():
+    """
+    Only the plugins whose checkbox changed are switched, and the learner is
+    told it happens when they restart Nu.
+    """
+    ed, view = admin_editor(
+        {
+            "locale": "",
+            "plugins": {"pygamezero": False, "flaky": True, "dup": True},
+        }
+    )
+    show_admin(ed)
+    assert ed.plugin_host.set_plugin_enabled.call_args_list == [
+        mock.call("pygamezero", False),
+        mock.call("flaky", True),
+    ]
+    message, duration = ed.show_status_message.call_args.args
+    assert "restart Nu" in message
+
+
+def test_show_admin_no_plugin_changes():
+    ed, view = admin_editor(
+        {
+            "locale": "",
+            "plugins": {"pygamezero": True, "flaky": False, "dup": True},
+        }
+    )
+    show_admin(ed)
+    ed.plugin_host.set_plugin_enabled.assert_not_called()
+    ed.show_status_message.assert_not_called()
+
+
 def test_sync_package_state():
     """
     Ensure that the expected set operations are carried out so that the

@@ -286,6 +286,14 @@ def test_describe_plugins(host):
     assert [(r["id"], r["modes"]) for r in rows] == [("alpha", ["Alpha"]), ("off", [])]
 
 
+def test_plugins_folder(host, tmp_path, monkeypatch):
+    """Where drop-in plugins go, for the Plugins tab's button."""
+    from mu.plugin import loader
+
+    monkeypatch.setattr(loader, "DROPIN_DIR", str(tmp_path / "p"))
+    assert host.plugins_folder == str(tmp_path / "p")
+
+
 def test_set_plugin_enabled(host):
     """
     Switching a plugin back on forgets its errors this session, so if it

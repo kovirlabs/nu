@@ -798,3 +798,320 @@ def test_PackageDialog_next_pip_command_and_finish():
     pd.next_pip_command()
     assert pd.text_area.toPlainText().endswith("FINISHED")
     assert pd.button_box.button(QDialogButtonBox.StandardButton.Ok).isEnabled()
+
+
+#
+# The Plugins tab.
+#
+def plugin_row(**overrides):
+    """A row as Host.describe_plugins gives it."""
+    row = {
+        "id": "pygamezero",
+        "name": "Pygame Zero",
+        "description": "Adds Pygame Zero mode, for making games.",
+        "kind": "bundled",
+        "origin": "nu-pygamezero 0.1.0",
+        "status": "loaded",
+        "problem": "",
+        "reason": "",
+        "detail": "",
+        "enabled": True,
+        "switched_off_after_errors": False,
+        "can_switch": True,
+        "modes": ["Pygame Zero"],
+    }
+    row.update(overrides)
+    return row
+
+
+PLUGINS = {
+    "plugins": [
+        plugin_row(),
+        plugin_row(
+            id="circuitpython",
+            name="circuitpython",
+            description="The CircuitPython mode for the Nu editor.",
+            origin="nu-circuitpython 0.1.0",
+            status="disabled",
+            enabled=False,
+            modes=[],
+        ),
+        plugin_row(
+            id="cows",
+            name="Cows",
+            description="",
+            kind="package",
+            origin="nu-cows 2.0",
+            modes=["Cow", "Calf"],
+        ),
+        plugin_row(
+            id="broken",
+            name="broken",
+            description="",
+            kind="folder",
+            origin="/data/mu/plugins/broken.py",
+            status="skipped",
+            problem="import-failed",
+            reason="it failed to import: NameError: name 'x' is not defined",
+            detail="Traceback (most recent call last):\n  ...\nNameError: x",
+            modes=[],
+        ),
+        plugin_row(
+            id="flaky",
+            name="flaky",
+            description="",
+            kind="folder",
+            origin="/data/mu/plugins/flaky.py",
+            status="disabled",
+            enabled=False,
+            switched_off_after_errors=True,
+            modes=[],
+        ),
+        plugin_row(
+            id="cows",
+            name="cows",
+            description="",
+            kind="folder",
+            origin="/data/mu/plugins/cows.py",
+            status="skipped",
+            problem="duplicate",
+            reason="another plugin is already called 'cows'",
+            can_switch=False,
+            modes=[],
+        ),
+    ],
+    "folder": "/data/mu/plugins",
+    "help_url": "https://example.org/plugins/",
+}
+
+
+@pytest.fixture
+def plugins_widget():
+    widget = mu.interface.dialogs.PluginsWidget()
+    open_directory = mock.MagicMock()
+    widget.setup(PLUGINS, open_directory=open_directory)
+    widget.open_directory = open_directory
+    return widget
+
+
+def cells(widget, column):
+    return [
+        widget.tree.topLevelItem(i).text(column)
+        for i in range(widget.tree.topLevelItemCount())
+    ]
+
+
+def test_PluginsWidget_lists_every_plugin(plugins_widget):
+    """
+    Bundled plugins first, then installed packages, then the plugins
+    folder; each with where it comes from, its status and its modes.
+    """
+    w = plugins_widget
+    C = mu.interface.dialogs.PluginsWidget
+    assert cells(w, C.NAME) == [
+        "circuitpython",
+        "Pygame Zero",
+        "Cows",
+        "broken",
+        "cows",
+        "flaky",
+    ]
+    assert cells(w, C.FROM) == [
+        "Bundled with Nu",
+        "Bundled with Nu",
+        "Installed package",
+        "Plugins folder",
+        "Plugins folder",
+        "Plugins folder",
+    ]
+    assert cells(w, C.STATUS) == [
+        "Off",
+        "On",
+        "On",
+        "Couldn't load",
+        "Couldn't load",
+        "Switched off after errors; see the log",
+    ]
+    assert cells(w, C.MODES) == ["", "Pygame Zero", "Cow, Calf", "", "", ""]
+    # Where exactly, on hover.
+    assert w.tree.topLevelItem(1).toolTip(C.FROM) == "nu-pygamezero 0.1.0"
+    assert w.tree.topLevelItem(3).toolTip(C.FROM) == "/data/mu/plugins/broken.py"
+
+
+def test_PluginsWidget_checkboxes(plugins_widget):
+    w = plugins_widget
+    C = mu.interface.dialogs.PluginsWidget
+    states = [
+        w.tree.topLevelItem(i).checkState(C.ON)
+        for i in range(w.tree.topLevelItemCount())
+    ]
+    Checked, Unchecked = Qt.CheckState.Checked, Qt.CheckState.Unchecked
+    assert states == [Unchecked, Checked, Checked, Checked, Unchecked, Unchecked]
+    # A duplicate id is switched along with the first plugin of that name.
+    duplicate = w.tree.topLevelItem(4)
+    assert not duplicate.flags() & Qt.ItemFlag.ItemIsUserCheckable
+    assert w.enabled_plugins() == {
+        "circuitpython": False,
+        "pygamezero": True,
+        "cows": True,
+        "broken": True,
+        "flaky": False,
+    }
+
+
+@pytest.mark.parametrize(
+    "row, expected",
+    [
+        (1, "On until you restart Nu"),
+        (0, "Off until you restart Nu"),
+        (3, "Couldn't load; switched off"),
+        (5, "Off until you restart Nu"),
+    ],
+)
+def test_PluginsWidget_toggling_says_when_it_happens(plugins_widget, row, expected):
+    """Ticking or unticking a plugin says it takes effect at the next start."""
+    w = plugins_widget
+    C = mu.interface.dialogs.PluginsWidget
+    item = w.tree.topLevelItem(row)
+    before = item.text(C.STATUS)
+    checked = item.checkState(C.ON) == Qt.CheckState.Checked
+    item.setCheckState(
+        C.ON, Qt.CheckState.Unchecked if checked else Qt.CheckState.Checked
+    )
+    assert item.text(C.STATUS) == expected
+    item.setCheckState(
+        C.ON, Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
+    )
+    assert item.text(C.STATUS) == before
+
+
+def test_PluginsWidget_details_of_a_loaded_plugin(plugins_widget):
+    w = plugins_widget
+    w.tree.setCurrentItem(w.tree.topLevelItem(1))
+    summary = w.summary.text()
+    assert "Pygame Zero" in summary
+    assert "Adds Pygame Zero mode, for making games." in summary
+    assert "nu-pygamezero 0.1.0" in summary
+    assert "pygamezero" in summary
+    assert w.details.isHidden()
+
+
+def test_PluginsWidget_details_of_a_plugin_that_failed(plugins_widget):
+    """
+    A plain first line for the learner, then the full details (the
+    traceback) for whoever fixes it, which can be copied.
+    """
+    w = plugins_widget
+    C = mu.interface.dialogs.PluginsWidget
+    item = w.tree.topLevelItem(3)
+    w.tree.setCurrentItem(item)
+    assert "It has an error in its code, so Nu couldn't start it." in (w.summary.text())
+    assert not w.details.isHidden()
+    details = w.details.toPlainText()
+    assert details.startswith("it failed to import: NameError")
+    assert "Traceback (most recent call last)" in details
+    tooltip = item.toolTip(C.STATUS)
+    assert tooltip.startswith("It has an error in its code")
+    assert "NameError" in tooltip
+
+
+@pytest.mark.parametrize(
+    "problem, expected",
+    [
+        ("duplicate", "Another plugin has the same name"),
+        ("incompatible", "written for a different version of Nu"),
+        ("register-failed", "had an error while setting itself up"),
+        ("something-new", "Nu couldn't load it."),
+    ],
+)
+def test_PluginsWidget_explains_each_problem(problem, expected):
+    widget = mu.interface.dialogs.PluginsWidget()
+    row = plugin_row(status="skipped", problem=problem, reason="why", modes=[])
+    widget.setup({"plugins": [row], "folder": "/p", "help_url": ""})
+    assert expected in widget.summary.text()
+    assert widget.details.toPlainText() == "why"
+
+
+def test_PluginsWidget_details_switched_off_after_errors(plugins_widget):
+    w = plugins_widget
+    w.tree.setCurrentItem(w.tree.topLevelItem(5))
+    assert "kept having errors" in w.summary.text()
+    assert "Current Log" in w.summary.text()
+
+
+def test_PluginsWidget_details_switched_off(plugins_widget):
+    w = plugins_widget
+    w.tree.setCurrentItem(w.tree.topLevelItem(0))
+    assert "switched off" in w.summary.text()
+
+
+def test_PluginsWidget_says_changes_need_a_restart(plugins_widget):
+    assert "next time you start Nu" in plugins_widget.intro.text()
+
+
+def test_PluginsWidget_trust_note(plugins_widget):
+    note = plugins_widget.trust_note.text()
+    assert "Only add plugins you trust" in note
+
+
+def test_PluginsWidget_open_folder(plugins_widget, tmp_path):
+    """The plugins folder is created if it's missing, then opened."""
+    w = plugins_widget
+    folder = tmp_path / "plugins"
+    w.folder = str(folder)
+    w.open_folder_button.click()
+    assert folder.is_dir()
+    w.open_directory.assert_called_once_with(str(folder))
+
+
+def test_PluginsWidget_open_folder_that_cant_be_made(plugins_widget, tmp_path):
+    w = plugins_widget
+    w.folder = str(tmp_path / "plugins")
+    with mock.patch("os.makedirs", side_effect=PermissionError("no")):
+        w.open_folder_button.click()
+    w.open_directory.assert_not_called()
+    assert "Couldn't open" in w.summary.text()
+
+
+def test_PluginsWidget_how_to_write_a_plugin(plugins_widget):
+    with mock.patch("webbrowser.open_new") as open_new:
+        plugins_widget.help_button.click()
+    open_new.assert_called_once_with("https://example.org/plugins/")
+
+
+def test_PluginsWidget_no_plugins():
+    widget = mu.interface.dialogs.PluginsWidget()
+    widget.setup({"plugins": [], "folder": "/p", "help_url": ""})
+    assert widget.enabled_plugins() == {}
+    assert "didn't find any plugins" in widget.summary.text()
+    assert not widget.help_button.isEnabled()
+    widget.open_folder_button.click()  # no way to open it: nothing happens
+
+
+def test_AdminDialog_plugins_tab():
+    parent = QWidget()
+    ad = mu.interface.dialogs.AdminDialog(parent)
+    opener = mock.MagicMock()
+    ad.setup(
+        "log",
+        {"envars": "", "locale": ""},
+        "",
+        _python_mode(),
+        None,
+        plugins=PLUGINS,
+        open_directory=opener,
+    )
+    titles = [ad.tabs.tabText(i) for i in range(ad.tabs.count())]
+    assert titles == ["Current Log", "Environment", "Plugins", "Select Language"]
+    assert ad.plugins_tab.open_directory is opener
+    assert ad.settings()["plugins"] == ad.plugins_tab.enabled_plugins()
+
+
+def test_AdminDialog_focus_plugins():
+    mode = mock.MagicMock()
+    mode.uses_user_environment = False
+    parent = QWidget()
+    ad = mu.interface.dialogs.AdminDialog(parent)
+    ad.setup("log", {"locale": ""}, "", mode, None, focus="plugins", plugins=PLUGINS)
+    assert ad.tabs.currentWidget() is ad.plugins_tab
+    assert "plugins" in ad.settings()

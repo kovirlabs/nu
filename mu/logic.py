@@ -51,6 +51,8 @@ LOG_DIR = platformdirs.user_log_dir(appname="mu", appauthor="python")
 LOG_FILE = os.path.join(LOG_DIR, "mu.log")
 #: What the Help button opens: the "Using Nu" page (docs/help.md).
 HELP_URL = "https://kovirlabs.github.io/nu/help/"
+#: The docs page about plugins: managing them, and writing your own.
+PLUGINS_HELP_URL = "https://kovirlabs.github.io/nu/plugins/"
 # Regex to match pycodestyle (PEP8) output.
 STYLE_REGEX = re.compile(r".*:(\d+):(\d+):\s+(.*)")
 # Regex to match flake8 output.
@@ -1358,6 +1360,14 @@ class Editor(QObject):
         # the packages just above being the latest), for the Environment tab.
         environment = venv.describe()
         environment["commands"] = command_log.render()
+        # Every plugin Nu found, for the Plugins tab.
+        plugins = None
+        if self.plugin_host is not None:
+            plugins = {
+                "plugins": self.plugin_host.describe_plugins(),
+                "folder": self.plugin_host.plugins_folder,
+                "help_url": PLUGINS_HELP_URL,
+            }
         with open(LOG_FILE, "r", encoding="utf8") as logfile:
             new_settings = self._view.show_admin(
                 logfile.read(),
@@ -1367,6 +1377,7 @@ class Editor(QObject):
                 self.connected_devices,
                 environment=environment,
                 focus=focus,
+                plugins=plugins,
             )
         if new_settings:
             if "envars" in new_settings:
@@ -1379,10 +1390,35 @@ class Editor(QObject):
                 self.sync_package_state(old_packages, new_packages)
             if "locale" in new_settings:
                 self.user_locale = new_settings["locale"]
+            if "plugins" in new_settings:
+                self.switch_plugins(plugins["plugins"], new_settings["plugins"])
             # Ensure mode UI is updated given settings.
             self.modes[self.mode].ensure_state()
         else:
             logger.info("No admin settings changed.")
+
+    def switch_plugins(self, rows, enabled):
+        """
+        Switch on or off, from the next start, each plugin whose checkbox in
+        the Plugins tab changed. `rows` are what the tab showed (from
+        `Host.describe_plugins`), `enabled` its {id: bool} result.
+        """
+        changed = False
+        for row in rows:
+            if not row["can_switch"] or row["id"] not in enabled:
+                continue
+            if enabled[row["id"]] != row["enabled"]:
+                logger.info(
+                    "Switching plugin %s %s from the next start",
+                    row["id"],
+                    "on" if enabled[row["id"]] else "off",
+                )
+                self.plugin_host.set_plugin_enabled(row["id"], enabled[row["id"]])
+                changed = True
+        if changed:
+            self.show_status_message(
+                _("Plugin changes take effect when you restart Nu."), 10
+            )
 
     def sync_package_state(self, old_packages, new_packages):
         """

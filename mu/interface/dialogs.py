@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import logging
+import os
+import webbrowser
 
 from PyQt6.QtCore import QSize, QTimer, Qt
 from PyQt6.QtGui import QTextCursor, QTextOption
@@ -38,6 +40,10 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QLineEdit,
     QComboBox,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QHeaderView,
+    QAbstractItemView,
 )
 from mu.resources import load_icon
 from .themes import Font
@@ -352,6 +358,263 @@ class EnvironmentWidget(QWidget):
         widget_layout.addWidget(self.sections, stretch=1)
 
 
+class PluginsWidget(QWidget):
+    """
+    The Plugins tab: every plugin Nu found, where it comes from, whether it
+    loaded (and if not, why), and an On/Off checkbox. Switching takes effect
+    the next time Nu starts.
+    """
+
+    # Columns.
+    ON, NAME, FROM, STATUS, MODES = range(5)
+
+    #: Where a plugin comes from (PluginRecord.kind), in the order shown.
+    KINDS = {
+        "bundled": _("Bundled with Nu"),
+        "package": _("Installed package"),
+        "folder": _("Plugins folder"),
+    }
+
+    #: Why a plugin couldn't load (PluginRecord.problem), for the learner.
+    PROBLEMS = {
+        "duplicate": _(
+            "Another plugin has the same name, so Nu left this one out. "
+            "Rename one of them."
+        ),
+        "import-failed": _("It has an error in its code, so Nu couldn't start it."),
+        "incompatible": _(
+            "It was written for a different version of Nu. Look for an update to it."
+        ),
+        "register-failed": _("It had an error while setting itself up."),
+    }
+
+    def setup(self, plugins, open_directory=None):
+        """
+        `plugins` holds the rows from `Host.describe_plugins` under
+        "plugins", the plugins folder under "folder" and the page about
+        writing plugins under "help_url". `open_directory(path)` shows a
+        folder in the system's file manager.
+        """
+        self.rows = sorted(
+            plugins.get("plugins", []),
+            key=lambda row: (
+                list(self.KINDS).index(row["kind"])
+                if row["kind"] in self.KINDS
+                else len(self.KINDS),
+                row["name"].lower(),
+            ),
+        )
+        self.folder = plugins.get("folder")
+        self.help_url = plugins.get("help_url")
+        self.open_directory = open_directory
+        widget_layout = QVBoxLayout()
+        self.setLayout(widget_layout)
+        self.intro = QLabel(
+            _(
+                "Plugins add modes to Nu. Untick a plugin to switch it off, or "
+                "tick it to switch it back on. <b>Changes take effect the "
+                "next time you start Nu.</b>"
+            )
+        )
+        self.intro.setWordWrap(True)
+        widget_layout.addWidget(self.intro)
+        # The list.
+        self.tree = QTreeWidget()
+        self.tree.setColumnCount(5)
+        self.tree.setHeaderLabels(
+            [_("On"), _("Plugin"), _("From"), _("Status"), _("Modes")]
+        )
+        self.tree.setRootIsDecorated(False)
+        self.tree.setUniformRowHeights(True)
+        self.tree.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        header = self.tree.header()
+        header.setStretchLastSection(False)
+        for column in (self.ON, self.NAME, self.FROM, self.MODES):
+            header.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(self.STATUS, QHeaderView.ResizeMode.Stretch)
+        self.items = []
+        for row in self.rows:
+            item = QTreeWidgetItem()
+            item.setData(self.ON, Qt.ItemDataRole.UserRole, row)
+            if row["can_switch"]:
+                item.setCheckState(
+                    self.ON,
+                    Qt.CheckState.Checked
+                    if row["enabled"]
+                    else Qt.CheckState.Unchecked,
+                )
+                item.setToolTip(
+                    self.ON, _("Tick to switch it on, untick to switch it off")
+                )
+            else:
+                # Switched with the first plugin of the same id.
+                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsUserCheckable)
+            item.setText(self.NAME, row["name"])
+            item.setToolTip(self.NAME, row["description"] or row["name"])
+            item.setText(self.FROM, self.KINDS.get(row["kind"], row["kind"]))
+            item.setToolTip(self.FROM, row["origin"])
+            item.setText(self.MODES, ", ".join(row["modes"]))
+            self._show_status(item)
+            self.tree.addTopLevelItem(item)
+            self.items.append(item)
+        self.tree.itemChanged.connect(self._item_changed)
+        self.tree.currentItemChanged.connect(self._show_details)
+        widget_layout.addWidget(self.tree, stretch=2)
+        # About the selected plugin: a plain summary, then (when there are
+        # any) the technical details for whoever can fix it.
+        self.summary = QLabel()
+        self.summary.setWordWrap(True)
+        self.summary.setTextFormat(Qt.TextFormat.PlainText)
+        self.summary.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        widget_layout.addWidget(self.summary)
+        self.details = QPlainTextEdit()
+        self.details.setReadOnly(True)
+        self.details.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+        self.details.setFont(code_font())
+        self.details_copy = CopyButton(self.details)
+        details_row = QHBoxLayout()
+        details_row.addWidget(self.details, stretch=1)
+        details_row.addWidget(self.details_copy, alignment=Qt.AlignmentFlag.AlignTop)
+        widget_layout.addLayout(details_row, stretch=1)
+        # Buttons and the trust note.
+        buttons = QHBoxLayout()
+        self.open_folder_button = QPushButton(_("Open plugins folder"))
+        self.open_folder_button.setToolTip(self.folder or "")
+        self.open_folder_button.clicked.connect(self.open_folder)
+        buttons.addWidget(self.open_folder_button)
+        self.help_button = QPushButton(_("How to write a plugin"))
+        self.help_button.setEnabled(bool(self.help_url))
+        self.help_button.clicked.connect(self.show_help)
+        buttons.addWidget(self.help_button)
+        buttons.addStretch()
+        widget_layout.addLayout(buttons)
+        self.trust_note = QLabel(
+            _(
+                "A plugin is Python code that runs inside Nu, with the same "
+                "access to your computer as Nu itself. Only add plugins you "
+                "trust, just as you'd only install programs you trust."
+            )
+        )
+        self.trust_note.setWordWrap(True)
+        widget_layout.addWidget(self.trust_note)
+        if self.items:
+            self.tree.setCurrentItem(self.items[0])
+        else:
+            self._show_details(None)
+
+    def _row(self, item):
+        return item.data(self.ON, Qt.ItemDataRole.UserRole)
+
+    def _checked(self, item):
+        return item.checkState(self.ON) == Qt.CheckState.Checked
+
+    def _status(self, item):
+        """The status to show: what's true now, and what changes at restart."""
+        row = self._row(item)
+        on_next_start = self._checked(item) if row["can_switch"] else row["enabled"]
+        if row["status"] == "loaded":
+            return _("On") if on_next_start else _("On until you restart Nu")
+        if row["status"] == "disabled":
+            if on_next_start:
+                return _("Off until you restart Nu")
+            if row["switched_off_after_errors"]:
+                return _("Switched off after errors; see the log")
+            return _("Off")
+        if on_next_start:
+            return _("Couldn't load")
+        return _("Couldn't load; switched off")
+
+    def _problem(self, row):
+        """The first line about why a plugin couldn't load, for the learner."""
+        return self.PROBLEMS.get(row["problem"], _("Nu couldn't load it."))
+
+    def _show_status(self, item):
+        row = self._row(item)
+        item.setText(self.STATUS, self._status(item))
+        if row["status"] == "skipped":
+            item.setToolTip(
+                self.STATUS, "{}\n\n{}".format(self._problem(row), row["reason"])
+            )
+
+    def _item_changed(self, item, column):
+        if column == self.ON:
+            self._show_status(item)
+            if item is self.tree.currentItem():
+                self._show_details(item)
+
+    def _show_details(self, item, previous=None):
+        """Describe the selected plugin under the list."""
+        if item is None:
+            self.summary.setText(_("Nu didn't find any plugins."))
+            self.details.hide()
+            self.details_copy.hide()
+            return
+        row = self._row(item)
+        lines = [row["name"]]
+        if row["description"]:
+            lines[0] += " \u2014 " + row["description"]
+        lines.append(
+            _("From: {kind} ({origin})").format(
+                kind=self.KINDS.get(row["kind"], row["kind"]).lower(),
+                origin=row["origin"],
+            )
+        )
+        lines.append(_("Id: {id}").format(id=row["id"]))
+        if row["modes"]:
+            lines.append(_("Modes: {modes}").format(modes=", ".join(row["modes"])))
+        lines.append(_("Status: {status}").format(status=self._status(item)))
+        details = ""
+        if row["status"] == "skipped":
+            lines.append(self._problem(row))
+            details = "\n\n".join(
+                part for part in (row["reason"], row["detail"]) if part
+            )
+        elif row["status"] == "disabled" and row["switched_off_after_errors"]:
+            lines.append(
+                _(
+                    "Nu switched it off because it kept having errors. They're "
+                    "in the log (the Current Log tab). Tick it to switch it "
+                    "back on."
+                )
+            )
+        elif row["status"] == "disabled":
+            lines.append(_("It's switched off, so Nu didn't load it."))
+        self.summary.setText("\n".join(lines))
+        self.details.setPlainText(details)
+        self.details.setVisible(bool(details))
+        self.details_copy.setVisible(bool(details))
+
+    def enabled_plugins(self):
+        """Whether each plugin should load at the next start: {id: bool}."""
+        return {
+            self._row(item)["id"]: self._checked(item)
+            for item in self.items
+            if self._row(item)["can_switch"]
+        }
+
+    def open_folder(self):
+        """Show the plugins folder, making it first if it's missing."""
+        if not (self.folder and self.open_directory):
+            return
+        try:
+            os.makedirs(self.folder, exist_ok=True)
+        except OSError as ex:
+            logger.exception("Can't make the plugins folder %s", self.folder)
+            self.summary.setText(
+                _("Couldn't open the plugins folder {folder}: {error}").format(
+                    folder=self.folder, error=ex
+                )
+            )
+            return
+        self.open_directory(self.folder)
+
+    def show_help(self):
+        """Open the page about writing plugins in the web browser."""
+        webbrowser.open_new(self.help_url)
+
+
 class LocaleWidget(QWidget):
     """
     Used for manually setting the locale (and thus the language) used by Mu.
@@ -414,15 +677,26 @@ class AdminDialog(QDialog):
         self.package_widget = None
         self.envar_widget = None
         self.environment_tab = None
+        self.plugins_tab = None
 
     def setup(
-        self, log, settings, packages, mode, device_list, environment=None, focus=None
+        self,
+        log,
+        settings,
+        packages,
+        mode,
+        device_list,
+        environment=None,
+        focus=None,
+        plugins=None,
+        open_directory=None,
     ):
         """
         Build the tabs. `environment` holds the facts about the learner's
-        Python environment (see `EnvironmentWidget.setup`); `focus` names the
-        tab to open on ("environment" for that environment), otherwise the
-        log is shown.
+        Python environment (see `EnvironmentWidget.setup`); `plugins` what
+        the Plugins tab shows (see `PluginsWidget.setup`, which also gets
+        `open_directory`). `focus` names the tab to open on ("environment"
+        or "plugins"), otherwise the log is shown.
         """
         self.setMinimumSize(600, 400)
         self.setWindowTitle(_("Nu Administration"))
@@ -450,6 +724,12 @@ class AdminDialog(QDialog):
             self.package_widget = self.environment_tab.package_widget
             # Room for the environment's facts above its editors.
             self.setMinimumSize(760, 620)
+        if plugins is not None:
+            self.plugins_tab = PluginsWidget(self)
+            self.plugins_tab.setup(plugins, open_directory=open_directory)
+            self.tabs.addTab(self.plugins_tab, _("Plugins"))
+            # Room for the list, the details and the trust note.
+            self.setMinimumSize(760, 620)
         # Configure local.
         self.locale_widget = LocaleWidget(self)
         self.locale_widget.setup(settings.get("locale"))
@@ -460,6 +740,9 @@ class AdminDialog(QDialog):
         if focus == "environment" and self.environment_tab:
             self.tabs.setCurrentWidget(self.environment_tab)
             self.environment_tab.sections.setFocus()
+        elif focus == "plugins" and self.plugins_tab:
+            self.tabs.setCurrentWidget(self.plugins_tab)
+            self.plugins_tab.tree.setFocus()
 
     def settings(self):
         """
@@ -473,6 +756,8 @@ class AdminDialog(QDialog):
         if self.package_widget:
             settings["packages"] = self.package_widget.text_area.toPlainText()
         settings["locale"] = self.locale_widget.get_locale()
+        if self.plugins_tab:
+            settings["plugins"] = self.plugins_tab.enabled_plugins()
         return settings
 
 

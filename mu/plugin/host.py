@@ -159,6 +159,11 @@ class Host:
             modes_of=lambda plugin: [mode.name for mode in self._modes_of(plugin)],
         )
 
+    @property
+    def plugins_folder(self):
+        """The folder Nu loads drop-in plugins from."""
+        return loader.DROPIN_DIR
+
     def set_plugin_enabled(self, plugin_id, enabled):
         """
         Switch the plugin `plugin_id` on or off from the next start. Switching
