@@ -1,20 +1,21 @@
-# Mu API Reference
+# API reference
 
 This API reference is automatically generated from the docstrings found within
-the source code. It's meant as an easy to use and easy to share window into the
+the source code of Nu and its bundled plugins. It's meant as an easy to use and easy to share window into the
 code base.
 
 Take a look around! The code is simple and short.
 
 ## `mu.app`
 
-The Mu application is created and configured in this module.
+The Nu application is created and configured in this module (see
+[how Nu starts](architecture.md#how-nu-starts)).
 
 ::: mu.app
 
 ## `mu.logic`
 
-Most of the fundamental logic for Mu is in this module.
+Most of the fundamental logic for Nu is in this module: the `Editor` class.
 
 ::: mu.logic
 
@@ -22,14 +23,14 @@ Most of the fundamental logic for Mu is in this module.
 
 The debugger consists of two parts:
 
-* Client - used by Mu to process messages from the process being debugged.
+* Client - used by Nu to process messages from the process being debugged.
 * Runner - created in a new process to run the code to be debugged.
 
 Messages are passed via inter-process communication.
 
 ### `mu.debugger.client`
 
-Code used by the Mu application to communicate with the process being debugged.
+Code used by Nu to communicate with the process being debugged.
 
 ::: mu.debugger.client
 
@@ -41,7 +42,12 @@ The runner code controls the debug process.
 
 ## `mu.plugin`
 
-The public API for plugins. See [Writing a Nu plugin](plugins.md).
+The public API for plugins. See [Writing a Nu plugin](plugins.md). Plugins
+import from `mu.plugin` only; it re-exports the names below.
+
+::: mu.plugin
+    options:
+      members: false
 
 ::: mu.plugin.base
 
@@ -54,7 +60,7 @@ The public API for plugins. See [Writing a Nu plugin](plugins.md).
 ## `mu.interface`
 
 This module contains all the PyQt related code needed to create the user
-interface for Mu. All interaction with the user interface is done via the
+interface for Nu. All interaction with the user interface is done via the
 `Window` class in `mu.interface.main`.
 
 All the other sub-modules contain different bespoke aspects of the user
@@ -68,7 +74,7 @@ Contains the core user interface assets used by other parts of the application.
 
 ### `mu.interface.dialogs`
 
-Bespoke modal dialogs required by Mu.
+Bespoke modal dialogs required by Nu, including the admin dialog's tabs.
 
 ::: mu.interface.dialogs
 
@@ -94,12 +100,13 @@ Theme related code so Qt changes for each pre-defined theme.
 
 ## `mu.modes`
 
-Contains the definitions of the various modes Mu into which Mu can be put. All
-the core functionality is in the `mu.modes.base` module.
+Contains the core's two modes (every other mode comes from a plugin). All the
+core functionality is in the `mu.modes.base` module.
 
 ### `mu.modes.base`
 
-Core functionality and base classes for all Mu's modes. The definitions of
+Core functionality and base classes for all modes (plugins get them as
+`mu.plugin.Mode` and `mu.plugin.MicroPythonMode`). The definitions of
 API autocomplete and call tips can be found in the `mu.modes.api` namespace.
 
 ::: mu.modes.base
@@ -137,6 +144,40 @@ The Pygame Zero / pygame mode, as a bundled plugin (`plugins/pygamezero`).
 
 ::: nu_pygamezero.mode
 
+### `nu_microbit`
+
+The BBC micro:bit mode, as an opt-in plugin (`plugins/microbit`; see
+[The BBC micro:bit](microbit.md)).
+
+::: nu_microbit
+
+::: nu_microbit.mode
+
+::: nu_microbit.board
+
+::: nu_microbit.firmware
+
+::: nu_microbit.flash
+
+::: nu_microbit.worker
+
+## `mu.virtual_environment`
+
+The learner's Python environment, made and managed with uv (see
+[Your Python environment](environment.md) and the
+[design notes](design/runtime_virtual_environment.md#nu-today)).
+
+::: mu.virtual_environment
+
+## `mu.settings` and `mu.config`
+
+Settings files and where they live (see
+[settings and sessions](design/settings-and-sessions.md#nu-today)).
+
+::: mu.settings
+
+::: mu.config
+
 ## `mu.command_log`
 
 The log of the uv commands Nu runs in the learner's Python environment, shown
@@ -152,7 +193,7 @@ Finds PEP 723 `# /// script` blocks, so Run can use `uv run` for them.
 
 ## `mu.resources`
 
-Contains utility functions for working with binary assets used by Mu (mainly
+Contains utility functions for working with binary assets used by Nu (mainly
 images).
 
 ::: mu.resources
