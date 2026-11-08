@@ -12,7 +12,7 @@ build-backend = "hatchling.build"
 [project]
 name = "nu-pygamezero"
 version = "0.1.0"
-description = "The Pygame Zero mode for the Nu editor: make games with Pygame Zero."
+description = "Adds Pygame Zero mode, for making games."
 readme = "README.md"
 license = "GPL-3.0-or-later"
 requires-python = ">=3.11"
