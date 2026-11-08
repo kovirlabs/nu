@@ -304,6 +304,23 @@ def test_set_plugin_enabled_defaults_to_user_settings():
     assert store["disabled_plugins"] == ["x"]
 
 
+def test_set_plugin_enabled_saves_at_once():
+    """
+    The change is written straight away, so it survives Nu crashing before
+    it exits normally.
+    """
+    store = settings.UserSettings()
+    with mock.patch.object(store, "save") as save:
+        loader.set_plugin_enabled("x", False, store)
+    save.assert_called_once_with()
+
+
+def test_set_plugin_enabled_with_a_plain_dict():
+    store = {}
+    loader.set_plugin_enabled("x", False, store)
+    assert store == {"disabled_plugins": ["x"]}
+
+
 # --- load_plugins ---
 
 

@@ -218,7 +218,10 @@ def disabled_plugins(store=None):
 
 
 def set_plugin_enabled(plugin_id, enabled, store=None):
-    """Switch a plugin on or off; takes effect the next time Nu starts."""
+    """
+    Switch a plugin on or off; takes effect the next time Nu starts. The
+    settings are saved straight away, so the change survives Nu crashing.
+    """
     store = settings.settings if store is None else store
     disabled = disabled_plugins(store)
     if enabled:
@@ -226,6 +229,13 @@ def set_plugin_enabled(plugin_id, enabled, store=None):
     else:
         disabled.add(plugin_id)
     store[DISABLED_SETTING] = sorted(disabled)
+    _save(store)
+
+
+def _save(store):
+    save = getattr(store, "save", None)
+    if save is not None:
+        save()
 
 
 def load_plugins(host, sources=None, store=None):
