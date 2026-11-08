@@ -95,6 +95,13 @@ PyQt6 and uv, found by checking Nu against Mu:
 * Opening a file Nu can't handle no longer suggests micro:bit `.hex` files.
 * When a program finishes, the footer shows `status: 0` again rather than
   `status: ExitStatus.NormalExit`.
+* **Translations restored for the renamed strings.** Text that changed when
+  Mu became Nu (the admin dialog's title, the Quit and Help tooltips, file
+  and mode messages, and more) had fallen back to English in every language;
+  it's translated again in 13 of them. Recent fixes to the French and Russian
+  translations that never reached the app are now included too.
+* **Ukrainian is selectable** in the admin dialog's **Select Language** tab;
+  before, it was only used if your computer was set to Ukrainian.
 
 ### Security
 
@@ -111,8 +118,10 @@ PyQt6 and uv, found by checking Nu against Mu:
     *Open Anyway*.
   * **Linux:** make the AppImage executable (`chmod +x`) and run it.
 * **macOS:** Apple Silicon only; Intel Macs aren't supported yet.
-* **Translations** still say "Mu" in places and some new text isn't
-  translated yet.
+* **Translations** are incomplete: about a third of the text, including most
+  that's new in Nu, still appears in English, and the Ukrainian translation
+  needs a review for the new name. To help, see
+  [Translating Nu](https://kovirlabs.github.io/nu/translations/).
 * In the installers, plugins can only be added through the plugins folder.
 
 ## Mu 1.2.2 and earlier
