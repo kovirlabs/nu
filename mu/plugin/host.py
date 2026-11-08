@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import logging
 import os
 
+from packaging.utils import canonicalize_name
 from PyQt6.QtWidgets import QMessageBox
 
 from .. import config, resources, settings
@@ -27,7 +28,7 @@ from ..command_log import command_log
 from ..modes.api import PI_APIS, PYTHON3_APIS, SHARED_APIS
 from ..modes.base import BaseMode
 from ..virtual_environment import venv
-from . import loader
+from . import loader, plugin_env
 from .base import PLUGIN_API_VERSION, check_compatible
 from .errors import PluginErrorHandler
 
@@ -91,6 +92,9 @@ class Host:
         #: What happened to each discovered plugin (mu.plugin.loader.PluginRecord),
         #: filled in at startup by app.setup_modes.
         self.plugin_records = []
+        #: The plugin environment's status at startup (plugin_env.MISSING,
+        #: READY or PYTHON_CHANGED), set by app.setup_modes.
+        self.plugin_env_status = None
         # Reports errors in plugin code so they don't crash Nu (see errors.py).
         self._error_handler = PluginErrorHandler(self)
 
@@ -155,10 +159,20 @@ class Host:
         Every discovered plugin as the Plugins tab shows it (see
         `loader.describe`), with the names of the modes each one added.
         """
-        return loader.describe(
+        rows = loader.describe(
             self.plugin_records,
             modes_of=lambda plugin: [mode.name for mode in self._modes_of(plugin)],
         )
+        environment = plugin_env.plugin_env
+        for row in rows:
+            added = row["kind"] == "added" and bool(row["distribution"])
+            # Plugins the learner added can be removed, and updated from PyPI
+            # unless they came from a file.
+            row["removable"] = added
+            row["updatable"] = added and not environment.installed_from_file(
+                row["distribution"]
+            )
+        return rows
 
     @property
     def plugins_folder(self):
@@ -176,6 +190,109 @@ class Host:
             for record in self.plugin_records:
                 if record.id == plugin_id and record.plugin is not None:
                     self._error_handler.forget(record.plugin)
+
+    # --- adding and removing plugins (for the core's Plugins tab) ---
+
+    def plugin_environment_state(self):
+        """
+        What the Plugins tab says about the plugin environment: its "status"
+        at startup (see plugin_env), the "python" it was made with and Nu's
+        ("nu_python"), the names of the plugins the learner "added", and its
+        "path".
+        """
+        environment = plugin_env.plugin_env
+        return {
+            "status": self.plugin_env_status,
+            "python": environment.python(),
+            "nu_python": plugin_env.python_version(),
+            "added": [entry["name"] for entry in environment.added()],
+            "path": environment.path,
+        }
+
+    def check_plugin_name(self, text):
+        """
+        The requirement (a packaging Requirement) for the plugin package the
+        learner typed, if Nu can add it. Raises plugin_env.PluginInputError
+        with a sentence for them if it's not a plain package name, or if Nu
+        already has it.
+        """
+        requirement = plugin_env.parse_requirement(text)
+        self._check_not_already_there(requirement.name)
+        return requirement
+
+    def check_plugin_file(self, path):
+        """
+        The (name, version) of the plugin wheel file at `path`, if Nu can add
+        it. Raises plugin_env.PluginInputError as `check_plugin_name` does. A
+        file of a plugin the learner already added replaces it.
+        """
+        name, version = plugin_env.wheel_name(path)
+        self._check_not_already_there(name, added_ok=True)
+        return name, version
+
+    def look_up_plugin(self, name):
+        """
+        What PyPI says about the package `name` (see
+        plugin_env.fetch_pypi_info), or None if there's no such package.
+        Blocks, and raises OSError without the internet: call it off the GUI
+        thread.
+        """
+        return plugin_env.fetch_pypi_info(name)
+
+    def _check_not_already_there(self, name, added_ok=False):
+        environment = plugin_env.plugin_env
+        key = canonicalize_name(name)
+        if key in plugin_env.NU_DISTRIBUTIONS or key in environment.nu_distributions():
+            raise plugin_env.PluginInputError(
+                _("Nu already has {name}: it's part of Nu.").format(name=name)
+            )
+        if not added_ok and environment.exists() and environment.distribution(name):
+            raise plugin_env.PluginInputError(
+                _(
+                    "You've already added {name}. To get its latest version, "
+                    "pick it in the list and click Update."
+                ).format(name=name)
+            )
+
+    @staticmethod
+    def _learner_uv():
+        """The Uv for the learner's Python environment, if it's there."""
+        if not os.path.isfile(venv.interpreter):
+            return None
+        return venv._uv()
+
+    def add_plugin(self, requirement=None, wheel=None):
+        """
+        A plugin_env.PluginJob that adds the plugin `requirement` (from
+        `check_plugin_name`) or the wheel file `wheel` to the plugin
+        environment, then its learner-env packages to the learner's. The
+        Plugins tab runs it; it takes effect at the next start.
+        """
+        return plugin_env.add_job(
+            plugin_env.plugin_env,
+            requirement=requirement,
+            wheel=wheel,
+            learner_uv=self._learner_uv,
+        )
+
+    def update_plugin(self, distribution):
+        """A job updating the added plugin package `distribution`."""
+        return plugin_env.update_job(
+            plugin_env.plugin_env, distribution, learner_uv=self._learner_uv
+        )
+
+    def remove_plugin(self, distribution):
+        """A job removing the added plugin package `distribution`."""
+        return plugin_env.remove_job(plugin_env.plugin_env, distribution)
+
+    def reinstall_plugins(self):
+        """
+        A job making the plugin environment again with Nu's Python, with
+        every plugin the learner added (for after Nu moved to a new Python).
+        """
+        return plugin_env.reinstall_job(
+            plugin_env.plugin_env, learner_uv=self._learner_uv
+        )
 
     def _modes_of(self, plugin):
         """The mode instances `plugin` registered."""

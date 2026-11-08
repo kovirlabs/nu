@@ -628,3 +628,167 @@ def test_data_dir_needs_a_plain_name(host, tmp_path, monkeypatch, name):
     monkeypatch.setattr("mu.config.DATA_DIR", str(tmp_path))
     with pytest.raises(ValueError):
         host.data_dir(name)
+
+
+# --- adding and removing plugins (the core's Plugins tab) ---
+
+
+def test_setup_modes_puts_the_plugin_environment_on_sys_path_first(
+    temp_plugin_env,
+):
+    """
+    The plugin environment goes on sys.path before plugins are discovered,
+    and the Host remembers how that went.
+    """
+    calls = []
+    with (
+        mock.patch.object(
+            temp_plugin_env,
+            "add_to_sys_path",
+            side_effect=lambda: calls.append("sys.path") or "ready",
+        ),
+        mock.patch(
+            "mu.app.load_plugins", side_effect=lambda host: calls.append("load") or []
+        ),
+    ):
+        editor = mock.MagicMock()
+        setup_modes(editor, mock.MagicMock())
+    assert calls == ["sys.path", "load"]
+    assert editor.plugin_host.plugin_env_status == "ready"
+
+
+def test_describe_plugins_says_which_can_be_removed(host, temp_plugin_env):
+    """
+    Plugins the learner added can be removed, and updated unless they were
+    added from a file.
+    """
+    from mu.plugin import loader
+
+    temp_plugin_env.record_added("nu-file", wheel="/w/nu_file-1-py3-none-any.whl")
+    host.plugin_records = [
+        loader.PluginRecord(
+            "named", "added", "nu-named 1", loader.LOADED, distribution="nu-named"
+        ),
+        loader.PluginRecord(
+            "file", "added", "nu-file 1", loader.LOADED, distribution="nu-file"
+        ),
+        loader.PluginRecord(
+            "pkg", "package", "nu-pkg 1", loader.LOADED, distribution="nu-pkg"
+        ),
+        loader.PluginRecord("dropped", "folder", "/d.py", loader.LOADED),
+    ]
+    with mock.patch.object(settings, "settings", settings.UserSettings()):
+        rows = host.describe_plugins()
+    assert [(r["id"], r["removable"], r["updatable"]) for r in rows] == [
+        ("named", True, True),
+        ("file", True, False),
+        ("pkg", False, False),
+        ("dropped", False, False),
+    ]
+
+
+def test_plugin_environment_state(host, temp_plugin_env):
+    from mu.plugin import plugin_env
+
+    temp_plugin_env.record_added("nu-cows")
+    host.plugin_env_status = plugin_env.PYTHON_CHANGED
+    with mock.patch.object(temp_plugin_env, "python", return_value="3.11"):
+        state = host.plugin_environment_state()
+    assert state == {
+        "status": plugin_env.PYTHON_CHANGED,
+        "python": "3.11",
+        "nu_python": plugin_env.python_version(),
+        "added": ["nu-cows"],
+        "path": temp_plugin_env.path,
+    }
+
+
+def test_check_plugin_name(host, temp_plugin_env):
+    from mu.plugin.plugin_env import PluginInputError
+
+    with mock.patch.object(temp_plugin_env, "nu_distributions", return_value={}):
+        assert str(host.check_plugin_name(" nu-cows ")) == "nu-cows"
+        with pytest.raises(PluginInputError, match="isn't a package name"):
+            host.check_plugin_name("--index-url=x")
+        with pytest.raises(PluginInputError, match="Nu already has nu-editor"):
+            host.check_plugin_name("nu-editor")
+
+
+def test_check_plugin_name_already_in_nu(host):
+    """A package Nu already has (a bundled plugin, PyQt6) can't be added."""
+    from mu.plugin.plugin_env import PluginInputError
+
+    with pytest.raises(PluginInputError, match="Nu already has Nu_PygameZero"):
+        host.check_plugin_name("Nu_PygameZero")
+
+
+def test_check_plugin_name_already_added(host, temp_plugin_env):
+    from mu.plugin.plugin_env import PluginInputError
+
+    with (
+        mock.patch.object(temp_plugin_env, "nu_distributions", return_value={}),
+        mock.patch.object(temp_plugin_env, "exists", return_value=True),
+        mock.patch.object(temp_plugin_env, "distribution", return_value=object()),
+    ):
+        with pytest.raises(PluginInputError, match="already added nu-cows"):
+            host.check_plugin_name("nu-cows")
+
+
+def test_check_plugin_file(host, temp_plugin_env, tmp_path):
+    """A file of a plugin the learner already added replaces it."""
+    from mu.plugin.plugin_env import PluginInputError
+
+    wheel = tmp_path / "nu_cows-2.0-py3-none-any.whl"
+    wheel.write_text("")
+    with (
+        mock.patch.object(temp_plugin_env, "nu_distributions", return_value={}),
+        mock.patch.object(temp_plugin_env, "exists", return_value=True),
+        mock.patch.object(temp_plugin_env, "distribution", return_value=object()),
+    ):
+        assert host.check_plugin_file(str(wheel)) == ("nu-cows", "2.0")
+    with pytest.raises(PluginInputError, match="can't find"):
+        host.check_plugin_file(str(tmp_path / "nope.whl"))
+
+
+def test_look_up_plugin(host):
+    with mock.patch(
+        "mu.plugin.plugin_env.fetch_pypi_info", return_value={"name": "x"}
+    ) as fetch:
+        assert host.look_up_plugin("x") == {"name": "x"}
+    fetch.assert_called_once_with("x")
+
+
+def test_plugin_jobs(host, temp_plugin_env):
+    """The Host makes the jobs the Plugins tab runs, for the plugin env."""
+    from mu.plugin import plugin_env
+
+    requirement = plugin_env.parse_requirement("nu-cows")
+    with mock.patch.object(plugin_env, "add_job") as add_job:
+        assert host.add_plugin(requirement=requirement) is add_job.return_value
+    add_job.assert_called_once_with(
+        temp_plugin_env,
+        requirement=requirement,
+        wheel=None,
+        learner_uv=host._learner_uv,
+    )
+    with mock.patch.object(plugin_env, "update_job") as update_job:
+        assert host.update_plugin("nu-cows") is update_job.return_value
+    update_job.assert_called_once_with(
+        temp_plugin_env, "nu-cows", learner_uv=host._learner_uv
+    )
+    with mock.patch.object(plugin_env, "remove_job") as remove_job:
+        assert host.remove_plugin("nu-cows") is remove_job.return_value
+    remove_job.assert_called_once_with(temp_plugin_env, "nu-cows")
+    with mock.patch.object(plugin_env, "reinstall_job") as reinstall_job:
+        assert host.reinstall_plugins() is reinstall_job.return_value
+    reinstall_job.assert_called_once_with(temp_plugin_env, learner_uv=host._learner_uv)
+
+
+def test_learner_uv(host, tmp_path):
+    """The learner's environment's Uv, once there is one."""
+    python = tmp_path / "python"
+    with mock.patch.object(venv, "interpreter", str(python)):
+        assert host._learner_uv() is None
+        python.write_text("")
+        with mock.patch.object(venv, "_uv", return_value="the uv"):
+            assert host._learner_uv() == "the uv"

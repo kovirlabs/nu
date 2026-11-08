@@ -50,6 +50,7 @@ from .resources import load_icon, load_movie, load_pixmap
 from .modes import PythonMode, DebugMode
 from .plugin import Host
 from .plugin import errors as plugin_errors
+from .plugin import plugin_env
 from .plugin.loader import load_plugins
 from .interface.themes import NIGHT_STYLE, DAY_STYLE, CONTRAST_STYLE
 from . import settings
@@ -283,12 +284,14 @@ def setup_modes(editor, view):
 
     The built-in modes are registered through a plugin Host, then every
     installed or dropped-in plugin that is switched on is loaded into it
-    (including the bundled ones, which are installed with Nu). A plugin that
-    fails to load is logged and skipped.
+    (including the bundled ones, which are installed with Nu, and the ones the
+    learner added to the plugin environment, which goes on `sys.path` first).
+    A plugin that fails to load is logged and skipped.
     """
     host = Host(editor, view)
     for mode_class in (PythonMode, DebugMode):
         host.register_mode(mode_class)
+    host.plugin_env_status = plugin_env.plugin_env.add_to_sys_path()
     host.plugin_records = load_plugins(host)
     plugin_errors.install(host._error_handler)
     # The admin dialog's Plugins tab shows what happened to each plugin.

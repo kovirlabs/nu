@@ -90,7 +90,9 @@ dependencies = [
     # TODO.md) — it replaces the old `python -m virtualenv` call in
     # mu/virtual_environment.py. The PyPI `uv` package ships the binary, which
     # `find_uv()` discovers on PATH (a packaged build can override via MU_UV).
-    "uv>=0.5",
+    # 0.9.8 added `uv pip install --excludes`, which keeps a second PyQt6 (and
+    # everything else Nu has) out of the plugin environment (mu/plugin/plugin_env.py).
+    "uv>=0.9.8",
     "wheel",
     "pywin32; sys_platform == 'win32'",
     # Bundled plugins (Phase 5c): separate packages under plugins/, installed
