@@ -703,6 +703,7 @@ class AdminDialog(QDialog):
         self.package_widget = None
         self.envar_widget = None
         self.environment_tab = None
+        self.commands_tab = None
         self.plugins_tab = None
 
     def setup(
@@ -750,6 +751,12 @@ class AdminDialog(QDialog):
             self.package_widget = self.environment_tab.package_widget
             # Room for the environment's facts above its editors.
             self.setMinimumSize(760, 620)
+        elif environment is not None and "commands" in environment:
+            # No learner environment in this mode (a board's), but Nu may
+            # still have run commands for it (e.g. micro:bit's mpremote).
+            self.commands_tab = CommandLogWidget(self)
+            self.commands_tab.setup(environment["commands"])
+            self.tabs.addTab(self.commands_tab, _("What Nu ran"))
         if plugins is not None:
             self.plugins_tab = PluginsWidget(self)
             self.plugins_tab.setup(plugins, open_directory=open_directory)
