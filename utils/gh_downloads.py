@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
 Retrieves the GH releases stats from their open API and counts the total number
-of asset downloads, which so far are all Mu installers.
+of asset downloads, which so far are all Nu installers.
 """
 
 import datetime
 import requests
 
 
-releases = requests.get("https://api.github.com/repos/mu-editor/mu/releases").json()
+releases = requests.get("https://api.github.com/repos/kovirlabs/nu/releases").json()
 
 # First generate date objects for each release and add them to their dictionary
 for release in releases:

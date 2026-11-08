@@ -178,11 +178,9 @@ def clean():
     _rmtree("site")  # MkDocs build output
     _rmtree(".pytest_cache")
     _rmtree("lib")
-    _rmtree(".git/avatar/")  # Created with `make video`
     # TODO: recursive __pycache__ directories
     _rmfiles(".", ".coverage")
     _rmfiles(".", "*.egg-info")
-    _rmfiles(".", "*.mp4")  # Created with `make video`
     _rmfiles(".", "*.pyc")
     _rmfiles("mu/locale", "*.pot")
     _rmfiles("mu/wheels", "*.zip")
@@ -344,7 +342,7 @@ def translate_status():
 
 @export
 def translate_test(lang=""):
-    """Run translate_done and launch Mu in the given LANG."""
+    """Run translate_done and launch Nu in the given LANG."""
     result = translate_done(lang)
     if result != 0:
         raise RuntimeError("Failed compiling the mu.po file.")
@@ -356,10 +354,10 @@ def translate_test(lang=""):
 
 @export
 def run():
-    """Run Mu from within a virtual environment"""
+    """Run Nu from within a virtual environment"""
     clean()
     if not os.environ.get("VIRTUAL_ENV"):
-        raise RuntimeError("Cannot run Mu;your Python virtualenv is not activated")
+        raise RuntimeError("Cannot run Nu; your Python virtualenv is not activated")
     return subprocess.run([sys.executable, "-m", "mu"]).returncode
 
 
