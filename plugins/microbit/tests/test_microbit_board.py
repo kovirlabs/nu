@@ -353,7 +353,10 @@ def test_find_serial_port():
         comport("/dev/ttyUSB0", vid=0x1A86, pid=0x7523),
         comport("/dev/ttyACM0", serial="99040001"),
     ]
-    with mock.patch("nu_microbit.board.list_ports.comports", return_value=ports):
+    with (
+        mock.patch("nu_microbit.board.list_ports.comports", return_value=ports),
+        mock.patch("nu_microbit.board.sys.platform", "linux"),
+    ):
         assert board.find_serial_port() == "/dev/ttyACM0"
         assert board.find_serial_port("99040001") == "/dev/ttyACM0"
         assert board.find_serial_port("99060002") is None
@@ -364,7 +367,10 @@ def test_find_serial_port_prefers_the_same_board():
         comport("/dev/ttyACM0", serial="99010001"),
         comport("/dev/ttyACM1", serial="99040001"),
     ]
-    with mock.patch("nu_microbit.board.list_ports.comports", return_value=ports):
+    with (
+        mock.patch("nu_microbit.board.list_ports.comports", return_value=ports),
+        mock.patch("nu_microbit.board.sys.platform", "linux"),
+    ):
         assert board.find_serial_port("99040001") == "/dev/ttyACM1"
 
 
