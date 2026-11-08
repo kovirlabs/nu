@@ -1567,10 +1567,12 @@ single definition in
 <p>The repo is a <strong>uv workspace</strong> (<code>[tool.uv.workspace] members = ["plugins/*"]</code>
 in <code>pyproject.toml</code>). Each bundled plugin is its own package under
 <code>plugins/&lt;name&gt;/</code>, with its own <code>pyproject.toml</code>, version and <code>mu.plugins</code>
-entry point, sharing the repo's <code>uv.lock</code>. Today that's <strong><code>nu-pygamezero</code></strong>
-(<code>plugins/pygamezero</code>); <code>plugins/example</code> is a member too, so it's locked and
-buildable, but it's a template and nothing depends on it.</p>
-<p><code>nu-editor</code> depends on each bundled plugin by name (<code>nu-pygamezero&gt;=0.1</code>), and
+entry point, sharing the repo's <code>uv.lock</code>. Today that's <strong><code>nu-circuitpython</code></strong>
+(<code>plugins/circuitpython</code>) and <strong><code>nu-pygamezero</code></strong> (<code>plugins/pygamezero</code>);
+<code>plugins/example</code> is a member too, so it's locked and buildable, but it's a
+template and nothing depends on it.</p>
+<p><code>nu-editor</code> depends on each bundled plugin by name (<code>nu-circuitpython&gt;=0.1</code>,
+<code>nu-pygamezero&gt;=0.1</code>), and
 <code>[tool.uv.sources]</code> resolves that name from the workspace, so:</p>
 <ul>
 <li><strong>Development:</strong> <code>uv sync</code> installs the bundled plugins editable into <code>.venv</code>,
@@ -1579,20 +1581,25 @@ buildable, but it's a template and nothing depends on it.</p>
   with Nu's.</li>
 <li><strong>pip from a checkout</strong> (as CI's test job does): pip doesn't read
   <code>[tool.uv.sources]</code>, so give it the paths too:
-  <code>pip install ./plugins/pygamezero ".[dev]"</code>.</li>
+  <code>pip install ./plugins/circuitpython ./plugins/pygamezero ".[dev]"</code>.</li>
 <li><strong>Installers:</strong> <code>[tool.briefcase.app.mu].requires</code> lists each bundled plugin
-  as a local path, relative to the project root (<code>"./plugins/pygamezero"</code>).
+  as a local path, relative to the project root (<code>"./plugins/circuitpython"</code>,
+  <code>"./plugins/pygamezero"</code>).
   Briefcase turns a requirement containing a path separator into an absolute
   path from the project root and pip-installs it into the app, entry points and
-  package data (icons, demo assets) included. (Checked against Briefcase
+  package data (icons, demo assets) and the plugin's own dependencies
+  (CircuitPython's <code>adafruit-board-toolkit</code>) included. (Checked against Briefcase
   0.4.2's <code>briefcase/commands/create.py</code>: <code>_is_local_path</code> and
   <code>_write_requirements_file</code>.)</li>
 <li><strong>Publishing to PyPI:</strong> <code>[tool.uv.sources]</code> is uv-only; the built <code>nu-editor</code>
-  sdist/wheel just says <code>Requires-Dist: nu-pygamezero&gt;=0.1</code>. So <strong>each bundled
-  plugin must be published to PyPI before the <code>nu-editor</code> release that needs
-  it</strong> (or <code>pip install nu-editor</code> can't resolve). Build and upload a plugin
-  from its folder (<code>uv build plugins/pygamezero</code>, then upload as usual); bump
-  its own version when it changes, independently of Nu's.</li>
+  sdist/wheel just says <code>Requires-Dist: nu-circuitpython&gt;=0.1</code> and
+  <code>Requires-Dist: nu-pygamezero&gt;=0.1</code>. So <strong>each bundled plugin must be
+  published to PyPI before the <code>nu-editor</code> release that needs it</strong> (or
+  <code>pip install nu-editor</code> can't resolve). The order is: <code>nu-circuitpython</code> and
+  <code>nu-pygamezero</code> (in either order: neither depends on the other or on
+  <code>nu-editor</code>), then <code>nu-editor</code>. Build and upload a plugin from its folder
+  (<code>uv build plugins/circuitpython</code>, then upload as usual); bump its own
+  version when it changes, independently of Nu's.</li>
 </ul>
 <h3 id="what-the-learners-environment-gets-from-plugins">What the learner's environment gets from plugins<a class="headerlink" href="#what-the-learners-environment-gets-from-plugins" title="Permanent link">&para;</a></h3>
 <p>A plugin lists the packages its modes need <em>in the learner's environment</em>
@@ -1612,7 +1619,7 @@ publishes a GitHub Release with the installers attached (a tag with a
 pre-release segment such as <code>v2.0.0rc1</code> publishes as a pre-release). See
 <a href="../release/">Release process</a>.</p>
 <p>Locally (inside a pip-enabled virtualenv with the <code>package</code> extra,
-<code>uv sync --extra package</code>, or with pip <code>pip install -e ./plugins/pygamezero -e ".[package]"</code>):</p>
+<code>uv sync --extra package</code>, or with pip <code>pip install -e ./plugins/circuitpython -e ./plugins/pygamezero -e ".[package]"</code>):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$ make win64     # 64-bit Windows MSI
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>$ make macos     # macOS .app/.dmg (ad-hoc signed)
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>$ make linux     # Linux AppImage
@@ -1632,7 +1639,8 @@ demand).</p>
   paths in <code>requires</code>.</li>
 <li>The <strong>baseline wheels zip</strong> (<code>mu/wheels/&lt;version&gt;.zip</code>), so the learner's
   baseline packages install without the network: the core's (<code>ipykernel</code>)
-  plus the bundled plugins' <code>learner-env</code> packages (<code>pgzero</code>, <code>pygame</code>).</li>
+  plus the bundled plugins' <code>learner-env</code> packages (Pygame Zero's <code>pgzero</code>
+  and <code>pygame</code>; CircuitPython declares none, as its code runs on the board).</li>
 <li>A relocatable <strong>CPython</strong> (the python-build-standalone build uv itself would
   install, matching the app's Python X.Y and the runner's platform) plus a
   <strong>pip wheel</strong>, in <code>mu/wheels/python/</code>.</li>
@@ -1640,7 +1648,8 @@ demand).</p>
 <p><code>python -m mu.wheels --package</code> fetches all three before packaging (it needs
 <code>uv</code> installed, to look up the CPython download, and the bundled plugins
 installed, to read their <code>learner-env</code> needs; CI's build job installs them
-with <code>pip install --no-deps ./plugins/pygamezero</code>, which needs no PyQt6).</p>
+with <code>pip install --no-deps ./plugins/circuitpython ./plugins/pygamezero</code>,
+which needs no PyQt6).</p>
 <p>At first launch Nu extracts the bundled CPython into its data directory (a
 stable, writable path: the app bundle may be read-only, and an AppImage is
 mounted somewhere new on every launch) and creates the learner's environment

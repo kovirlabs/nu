@@ -641,10 +641,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#adafruit-mode" class="md-nav__link">
+  <a href="#circuitpython-mode" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Adafruit Mode
+        CircuitPython Mode
       
     </span>
   </a>
@@ -1497,10 +1497,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#adafruit-mode" class="md-nav__link">
+  <a href="#circuitpython-mode" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Adafruit Mode
+        CircuitPython Mode
       
     </span>
   </a>
@@ -1654,21 +1654,28 @@ is available). It's also possible for one mode to transition to another and
 some modes are only available as transitional modes (i.e. they may not be
 selected by the user). A good example of such a "transitional" mode is the
 Python 3 debugger, which can only be accessed from the standard Python 3 mode.</p>
-<p>Nu's <strong>core</strong> modes are <strong>Python 3</strong>, the <strong>Debugger</strong> and (until it moves to a
-plugin too, Phase 5c part 2) <strong>CircuitPython</strong>. Everything else is a
-<a href="../plugins/">plugin</a>: <strong>Pygame Zero</strong> is a <em>bundled</em> plugin, shipped and switched
-on by default, that lives in this repo under <code>plugins/pygamezero/</code>. The
-descriptions below are inherited from Mu and include modes this fork has dropped
-(the images below are used with permission, see <a href="../copyright/">copyright</a>).</p>
-<h3 id="adafruit-mode">Adafruit Mode<a class="headerlink" href="#adafruit-mode" title="Permanent link">&para;</a></h3>
+<p>Nu's <strong>core</strong> has just two modes: <strong>Python 3</strong> and the <strong>Debugger</strong>. Every
+other mode is a <a href="../plugins/">plugin</a>. <strong>CircuitPython</strong> and <strong>Pygame Zero</strong> are
+<em>bundled</em> plugins, shipped and switched on by default, that live in this repo
+under <code>plugins/circuitpython/</code> and <code>plugins/pygamezero/</code>. The descriptions
+below are inherited from Mu and include micro:bit, which this fork dropped and
+plans to bring back as a plugin (Phase 6 in <code>TODO.md</code>). The images are used with
+permission, see <a href="../copyright/">copyright</a>.</p>
+<h3 id="circuitpython-mode">CircuitPython Mode<a class="headerlink" href="#circuitpython-mode" title="Permanent link">&para;</a></h3>
 <p><img alt="" src="../circuit_playground.jpg" /></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>CircuitPython is a bundled plugin: the <code>nu-circuitpython</code> package in
+<code>plugins/circuitpython/</code>, built on the public <a href="../plugins/">plugin API</a> only.
+It's the worked example of a mode for a board with a serial REPL.</p>
+</div>
 <p><a href="http://adafruit.com/">Adafruit</a> make extraordinarily awesome boards for
-embedded development. Many of these boards run Adafruit's own flavour of 
+embedded development. Many of these boards run Adafruit's own flavour of
 <a href="http://micropython.org/">MicroPython</a> called
-<a href="https://www.adafruit.com/circuitpython">CircuitPython</a>.</p>
-<p>The Adafruit mode
+<a href="https://circuitpython.org/">CircuitPython</a>.</p>
+<p>The CircuitPython mode
 inherits from a base MicroPython mode that provides USB/serial connectivity to
-the board. Because source code is stored directly on the Adafruit boards,
+the board. Because source code is stored directly on the CircuitPython boards,
 this mode ensures that filesystem based operations actually happen on the
 connected device. If no such device is found, the mode will warn you.</p>
 <h3 id="bbc-microbit-mode">BBC micro:bit Mode<a class="headerlink" href="#bbc-microbit-mode" title="Permanent link">&para;</a></h3>
@@ -1677,7 +1684,7 @@ connected device. If no such device is found, the mode will warn you.</p>
 young coders that is capable of running MicroPython. Mu was originally created
 as volunteer led effort as part of the Python Software Foundation's
 contribution to the project.</p>
-<p>Just like the Adafruit mode, micro:bit mode inherits from a base MicroPython
+<p>Just like the CircuitPython mode, micro:bit mode inherits from a base MicroPython
 mode so there's a REPL based interface to the device. It also provides
 functionality to "flash" (i.e. copy) your code onto the device and a simple
 user interface to the simple file system on the device.</p>
@@ -1734,64 +1741,77 @@ discover where there may be bugs.</p>
 <p>Once the code has finished the debug mode transitions back to standard
 Python mode.</p>
 <h2 id="create-a-new-mode">Create a New Mode<a class="headerlink" href="#create-a-new-mode" title="Permanent link">&para;</a></h2>
-<div class="admonition note">
-<p class="admonition-title">Write new modes as plugins</p>
-<p>A new mode should be a <a href="../plugins/">plugin</a>: a package with a <code>mu.plugins</code>
-entry point that imports only <code>mu.plugin</code>, starting from the template in
-<code>plugins/example/</code>. The class, attributes, actions and <code>api</code> described
-below are the same for a plugin mode (<code>mu.plugin.Mode</code> <em>is</em> <code>BaseMode</code>),
-but instead of registering it in <code>mu/app.py</code> you register it from your
-plugin, its icons live in your plugin's own <code>images</code> folder, and you reach
-the editor through <code>self.host</code> rather than <code>self.editor</code> and <code>self.view</code>.
-The Pygame Zero mode (<code>plugins/pygamezero/nu_pygamezero/mode.py</code>) shows all
-of this. The steps below describe the built-in, in-core route used by the
-core's own modes.</p>
-</div>
-<p>It's very easy to create new mode for Mu. The following tutorial explains how
-we created the Pygame Zero mode (it has since become a bundled plugin, so its
-code now lives in <code>plugins/pygamezero/</code>).</p>
+<p>A new mode is a <a href="../plugins/">plugin</a>: a Python package with a <code>mu.plugins</code>
+entry point, whose mode class subclasses <code>mu.plugin.Mode</code> (or
+<code>mu.plugin.MicroPythonMode</code> for a board with a serial REPL) and which imports
+nothing from Nu except <code>mu.plugin</code>. <a href="../plugins/">Writing a Nu plugin</a> is the
+contract; this section is about the mode itself. Start from the template in
+<code>plugins/example/</code>, and use the two bundled plugins as worked examples:</p>
+<ul>
+<li><strong>Pygame Zero</strong> (<code>plugins/pygamezero/nu_pygamezero/mode.py</code>) runs the
+  learner's program in their Python environment, toggles a toolbar button
+  while it runs, opens folders, puts demo files in the workspace and needs
+  packages in the learner's environment.</li>
+<li><strong>CircuitPython</strong> (<code>plugins/circuitpython/nu_circuitpython/mode.py</code>) is a
+  <code>MicroPythonMode</code>: it recognises its boards when they're plugged in, keeps
+  the learner's files on the board's drive, and gets Serial and Plotter
+  buttons that talk to the board's REPL.</li>
+</ul>
+<p>The core's own two modes, Python 3 and the Debugger (<code>mu/modes/python3.py</code>
+and <code>mu/modes/debugger.py</code>), are the exception: they're built in, registered
+in <code>setup_modes</code> in <code>mu/app.py</code>, and use Nu's internals directly. Don't add
+another mode that way.</p>
 <h3 id="create-a-class">Create a Class<a class="headerlink" href="#create-a-class" title="Permanent link">&para;</a></h3>
 <p>The most important aspects of a mode are encapsulated in a class that
-represents the mode. These classes live in the <code>mu.modes</code> namespace and
-<strong>must</strong> inherit from the <code>mu.modes.base.BaseMode</code> class. If your new mode
-is for a MicroPython based device, you should inherit from the
-<code>mu.modes.base.MicroPythonMode</code> class, since this includes various helpful
+represents the mode. It <strong>must</strong> inherit from <code>mu.plugin.Mode</code> (Nu's
+<code>BaseMode</code>). If your new mode is for a MicroPython based device, inherit from
+<code>mu.plugin.MicroPythonMode</code> instead, since this includes various helpful
 utilities for such things as finding a connected device and running a REPL
 over a USB-serial connection.</p>
-<p>The naming convention is to create a new module in which is found the class
-representing the mode. For example, for Pygame Zero, the new module is
-<code>mu.modes.pygamezero</code> in which is found the <code>PyGameZeroMode</code> class that
-inherits form <code>BaseMode</code>.</p>
+<p>The convention is a module of its own for the mode, next to the plugin that
+registers it. For example, the Pygame Zero plugin's <code>nu_pygamezero/mode.py</code>
+holds the <code>PyGameZeroMode</code> class, and <code>nu_pygamezero/__init__.py</code> the
+<code>PygameZeroPlugin</code> that registers it.</p>
 <h3 id="integrate-the-mode">Integrate the Mode<a class="headerlink" href="#integrate-the-mode" title="Permanent link">&para;</a></h3>
-<p>Mu needs to know that the new mode is available to use. This is fulfilled by
-a couple of relatively simple steps:</p>
+<p>Nu needs to know that the new mode is available to use. A plugin does this in
+two steps:</p>
 <ul>
-<li>Add the mode's class to the <code>__all__</code> list in the <code>__init__.py</code> file for
-  the <code>mu.modes</code> namespace.</li>
-<li>In <code>mu.app.py</code> import the new mode from <code>mu.modes</code> and add an instance of
-  the mode's class to the dictionary returned by the <code>setup_modes</code> function.
-  (All modes are instantiated with the available <code>editor</code> and <code>view</code>
-  objects that represent the editor's logic and UI layer respectively.)</li>
+<li>Register the mode from the plugin: a <code>ModePlugin</code> with <code>mode = YourMode</code>
+  does it for you (and <code>images</code> registers the folder of icons your mode
+  uses).</li>
+<li>Advertise the plugin with a <code>mu.plugins</code> entry point in your package's
+  <code>pyproject.toml</code>, and install the package into the environment Nu runs
+  from. Nu finds it the next time it starts.</li>
 </ul>
+<p>Nu creates the mode with its internal <code>editor</code> and <code>view</code> objects and sets
+<code>self.host</code> to the <code>Host</code> that registered it. Reach the editor through
+<code>self.host</code>: <code>self.editor</code> and <code>self.view</code> are internal and can change in
+any release.</p>
 <h3 id="update-the-classs-behaviour">Update the Class's Behaviour<a class="headerlink" href="#update-the-classs-behaviour" title="Permanent link">&para;</a></h3>
 <p>The core elements of your new mode's class that need updating include some
 attributes and three methods.</p>
 <p>The attributes that must be changed are:</p>
 <ul>
-<li><code>name</code> -- the full name of the mode, for example, "PyGame Zero".</li>
+<li><code>name</code> -- the full name of the mode, for example, "Pygame Zero".</li>
+<li><code>short_name</code> -- a stable, unique id, used as a key in the settings and
+  saved sessions. Don't change it once people use your mode.</li>
 <li><code>description</code> -- a short description of the mode to be displayed in the
   mode picker. For example, "Make games with Pygame Zero".</li>
-<li><code>icon</code> -- an icon used to represent the mode in the mode picker. This must
-  be a <code>.png</code> (or <code>.svg</code>) image file found in the <code>mu/resources/images</code>
-  directory, or in a plugin's registered images folder.</li>
+<li><code>icon</code> -- an icon used to represent the mode in the mode picker: the name
+  of a <code>.png</code> (or <code>.svg</code>) image in your plugin's registered images folder
+  (or one of Nu's own in <code>mu/resources/images</code>).</li>
 </ul>
-<p>Additional attritbutes with safe default values set in the <code>BaseMode</code> class
+<p>Additional attributes with safe default values set in the <code>Mode</code> class
 which may be of value for you to change are:</p>
 <ul>
 <li><code>save_timeout</code> -- the number of seconds to wait before auto-saving work. If
-  this value is 0 (zero) Mu will not auto-save changed files when in this mode.</li>
-<li><code>builtins</code> -- a list of strings defining symbols that Mu's code checker
+  this value is 0 (zero) Nu will not auto-save changed files when in this mode
+  (CircuitPython sets it: a board restarts whenever a file on it is saved).</li>
+<li><code>builtins</code> -- a list of strings defining symbols that Nu's code checker
   must assume are builtins (above and beyond Python's standard builtins).</li>
+<li><code>module_names</code> -- the module names the learner mustn't use for their own
+  files, because they'd hide a real module (CircuitPython lists the modules
+  built into CircuitPython).</li>
 <li><code>uses_user_environment</code> -- set it to <code>True</code> if the mode runs the learner's
   programs in Nu's Python environment, so the admin dialog shows that
   environment's variables and third-party packages.</li>
@@ -1807,25 +1827,28 @@ the conventions for internationalization (i18n). Put simply, enclose your
 strings in a call to <code>_</code> like this:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>_('This string will be translated automatically')
 </code></pre></div>
-<p>Please see <a href="../translations/">translations</a> for more details.</p>
+<p>Please see <a href="../translations/">translations</a> for more details. (Only the
+bundled plugins' strings are translated today: they share Nu's catalog.)</p>
 </div>
 <p>You should pay attention to three methods of your class: <code>actions</code>,
 <code>api</code> and <code>workspace_dir</code>. You must override <code>actions</code> and <code>api</code> (see
 below) and <em>may</em> want to override <code>workspace_dir</code>.</p>
 <p>The purpose of the <code>workspace_dir</code> method is to return a string
 representation of the path to the directory containing the code created with
-this mode. The default implementation in <code>BaseMode</code> is generally safe to use
-although some CircuitPython based boards may want to use this method to point
-to a connected device (if attached) or a safe default on the user's filesystem
-(if no device is attached). See how it's done in the <code>AdafruitMode</code> class.
-If in doubt, just use the method inherited from <code>BaseMode</code>.</p>
+this mode. The default implementation is generally safe to use, but a board
+that stores the learner's code on itself may want to point to the connected
+device (if attached) or a safe default on the user's filesystem (if no device
+is attached). See how the CircuitPython mode does it. If in doubt, just use
+the inherited method.</p>
 <p>However, you <strong>must</strong> override the <code>actions</code> method. It must return a list
-of dictionaries that describe the buttons to be added to Mu's user interface.
+of dictionaries that describe the buttons to be added to Nu's user interface.
 Each dictionary must contain the following key/value pairs:</p>
 <ul>
-<li><code>name</code> -- the name of the button which doubles as the name of the icon
-  found in <code>mu/resources/images</code> used as the visual representation of the
-  button. To create a new button start with the blank <code>button.png</code> image
+<li><code>name</code> -- the name of the button, which doubles as the name of its icon
+  (in your plugin's images folder, or one of Nu's) and as its id, so it must
+  be unique. Prefix your own icons' names with your plugin's name (the
+  CircuitPython mode's Serial button is <code>circuitpython-serial</code>). To create a
+  new button start with the blank <code>button.png</code> image in <code>mu/resources/images</code>
   and use either an icon from the
   <a href="https://fontawesome.bootstrapcheatsheets.com/">FontAwesome</a> set of icons,
   or some other graphical device that looks visually similar. Make sure that
@@ -1833,7 +1856,7 @@ Each dictionary must contain the following key/value pairs:</p>
   remember to centre it within the button and make sure it has the same sort
   of scale as the existing buttons.</li>
 <li><code>display_name</code> -- the string displayed immediately underneath the button
-  in Mu's user interface.</li>
+  in Nu's user interface.</li>
 <li><code>description</code> -- the string displayed as a tool-top when the mouse
   pointer hovers over the button, but the button remains unclicked.</li>
 <li><code>handler</code> -- a reference to a method you have created in your mode's class
@@ -1843,46 +1866,40 @@ Each dictionary must contain the following key/value pairs:</p>
   <code>'Ctrl+Shift+I'</code> (for control-shift-I).</li>
 </ul>
 <p>By way of illustration, here's the list of dictionaries returned in the
-Pygame Zero mode:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>[
+CircuitPython mode. It only offers a Plotter button when Nu can show the
+plotter, and that button uses Nu's own <code>plotter</code> icon:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>buttons = [
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    {
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        'name': 'play', 
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        'display_name': _('Play'),
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        'description': _('Play your PyGame Zero game.'),
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        'handler': self.play_toggle,
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        'shortcut': 'F5',
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    },
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    {
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>        'name': 'images',
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>        'display_name': _('Images'),
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        'description': _('Show the images used by PyGame Zero.'),
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>        'handler': self.show_images,
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>        'shortcut': 'Ctrl+Shift+I',
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    },
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    {
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        'name': 'sounds',
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        'display_name': _('Sounds'),
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>        'description': _('Show the sounds used by PyGame Zero.'),
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>        'handler': self.show_sounds,
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>        'shortcut': 'Ctrl+Shift+S',
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    },
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>]
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        "name": "circuitpython-serial",
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        "display_name": _("Serial"),
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        "description": _("Open a serial connection to your device."),
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        "handler": self.toggle_repl,
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        "shortcut": "CTRL+Shift+U",
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    }
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>]
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>if self.host.plotter_available:
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    buttons.append(
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        {
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>            "name": "plotter",
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>            "display_name": _("Plotter"),
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>            "description": _("Plot incoming REPL data."),
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>            "handler": self.toggle_plotter,
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>            "shortcut": "CTRL+Shift+P",
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        }
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    )
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>return buttons
 </code></pre></div>
-<p>Notice how the handlers are references to methods of the <code>PyGameZeroMode</code>
-class, the details of which are left to the creator of the mode. Mu simply
-calls the handler and expects the author of the mode to know what they're
-doing.</p>
-<p>Interactions with the Mu editor are via two objects referenced within the
-class:</p>
-<ul>
-<li><code>self.editor</code> -- represents an object containing the core logic of the
-  editor (an instance of <code>mu.logic.Editor</code>).</li>
-<li><code>self.view</code> -- references the main GUI object through which all display
-  and user interface related operations should pass (an instance of
-  <code>mu.interface.main.Window</code>).</li>
-</ul>
-<p>Please see the <a href="../api/">api</a> for specific details of what these two objects
-offer.</p>
+<p>Notice how the handlers are references to methods of the mode (here,
+<code>toggle_repl</code> and <code>toggle_plotter</code> come with <code>MicroPythonMode</code>); the details
+of your own are left to you. Nu simply calls the handler and expects the
+author of the mode to know what they're doing. Errors in handlers are
+reported to the learner rather than crashing Nu (see
+<a href="../plugins/#when-a-plugin-has-an-error">plugins</a>).</p>
+<p>Interactions with the editor go through <code>self.host</code>, the <code>mu.plugin.Host</code>
+that registered the mode: showing messages, the current tab, saving it,
+running the learner's program, changing a toolbar button, and so on. Its
+methods are listed in <a href="../plugins/#host">plugins</a>, and its docstrings are in
+the <a href="../api/#muplugin">api</a> reference.</p>
 <p>Finally, you <strong>must</strong> also override the <code>api</code> method, whose role is to
 provide a list of strings that conform to Scintilla's protocol for defining
 and documenting API's to be used with autocomplete and call-tips. The protocol
@@ -1897,7 +1914,9 @@ very quick and easy to revise such data as APIs change in the future.</p>
 extracting such information from Python modules. Three modules for Python's
 standard library (<code>json</code>, <code>inspect</code> and <code>importlib</code>) are used to import
 the modules we're interested in, inspect the signatures of the callable objects
-found therein and emit a JSON based output (called <code>pgzero_api.json</code>).</p>
+found therein and emit a JSON based output (called <code>pgzero_api.json</code>).
+(<code>adafruit_api.py</code> does the same for CircuitPython by reading its online
+documentation.)</p>
 <p>The resulting JSON is a list of JSON objects containing three attributes:</p>
 <ul>
 <li><code>name</code> -- the module name + object name.</li>
@@ -1921,24 +1940,34 @@ Scintilla's protocol to be used by autocomplete and call-tips.</p>
 <p>In the case of the Pygame Zero mode, the output from the <code>mkapi.py</code> command
 ended up in <code>PYGAMEZERO_APIS</code>. The list itself is in the plugin's
 <code>nu_pygamezero/api/pygamezero.py</code> file, and the <code>__init__.py</code> found therein
-exposes it via the <code>__all__</code> list. (The core's own modes keep theirs in
-<code>mu/modes/api</code>.)</p>
-<p>Back in the <code>PyGameZeroMode</code> class the <code>api</code> method simply returns a
-concatenated list of the APIs that a user of the mode may use: the Python 3
-mode's entries, which the plugin gets from its host, plus its own:</p>
+exposes it via the <code>__all__</code> list. (CircuitPython's is <code>ADAFRUIT_APIS</code>, in
+<code>nu_circuitpython/api/adafruit.py</code>.)</p>
+<p>The mode's <code>api</code> method then returns the APIs that a user of the mode may
+use: the entries it gets from its host, plus its own. A mode whose programs
+run in Python 3 starts from <code>self.host.python_apis()</code> (Python's built-ins and
+standard library); a MicroPython-family mode starts from
+<code>self.host.shared_apis()</code> (just what every Python has):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>from .api import PYGAMEZERO_APIS
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>... later in the PyGameZeroMode class ...
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>def api(self):
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    return self.host.python_apis() + PYGAMEZERO_APIS
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>... and in the CircuitPythonMode class ...
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>def api(self):
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    return self.host.shared_apis() + ADAFRUIT_APIS
 </code></pre></div>
 <p>With these relatively simple steps, it's possible to create quite powerful
-modes. Most importantly, taking a look at the existing modes in the
-<code>mu.modes</code> namespace will reveal how to do most of the things you'll need.</p>
+modes. Most importantly, taking a look at the bundled plugins in <code>plugins/</code>
+will reveal how to do most of the things you'll need.</p>
 <p>However, there is one final aspect of creating a mode that we need to address.</p>
 <h3 id="unit-test-the-mode">Unit Test the Mode<a class="headerlink" href="#unit-test-the-mode" title="Permanent link">&para;</a></h3>
 <p><strong>We will not accept any new modes without 100% unit test coverage.</strong></p>
+<p>A bundled plugin keeps its tests in <code>plugins/&lt;name&gt;/tests</code>, where they run
+with Nu's own (each bundled plugin's tests show how to test a mode through a
+mock <code>Host</code>).</p>
 <p>Please read the guide about <a href="../tests/">tests</a> for how Mu is tested and the various
 expectations we have when it comes to writing tests.</p>
 <p>If you are unsure about the best way to go about testing your mode please feel

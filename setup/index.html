@@ -1534,7 +1534,7 @@ the <code>[tests]</code>, <code>[docs]</code>, <code>[package]</code>, <code>[i1
 <p>If you prefer not to use uv, any Python 3.11+ virtual environment works:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python3 -m venv .venv
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>source .venv/bin/activate          # Windows: .\.venv\Scripts\activate
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>pip install -e ./plugins/pygamezero -e ".[dev]"
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>pip install -e ./plugins/circuitpython -e ./plugins/pygamezero -e ".[dev]"
 </code></pre></div>
 <p>pip doesn't know about the uv workspace, so the bundled plugins (which
 <code>nu-editor</code> depends on) are given as paths.</p>
