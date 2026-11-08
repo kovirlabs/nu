@@ -115,6 +115,21 @@ def test_CommandBufferHandler_worker_break_loop():
     with mock.patch("mu.debugger.client.socket", mock_socket_factory):
         cbh.worker()
     mock_socket.recv.assert_called_once_with(1024)
+    # The session is over, so the listener thread ends too (left running, Qt
+    # aborts Nu when it destroys the thread with the window at exit).
+    mock_debugger.listener_thread.quit.assert_called_once_with()
+
+
+def test_CommandBufferHandler_worker_ends_the_thread_when_it_fails():
+    """A connection that fails (or any error) ends the listener thread too."""
+    mock_debugger = mock.MagicMock()
+    cbh = mu.debugger.client.CommandBufferHandler(mock_debugger)
+    with (
+        mock.patch.object(cbh, "_listen", side_effect=RuntimeError("bang")),
+        pytest.raises(RuntimeError),
+    ):
+        cbh.worker()
+    mock_debugger.listener_thread.quit.assert_called_once_with()
 
 
 def test_CommandBufferHandler_worker_exception_breaks_loop():

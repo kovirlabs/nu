@@ -146,6 +146,10 @@ class DebugMode(BaseMode):
         if self.runner:
             self.runner.stop_process()
             self.runner = None
+            if getattr(self, "debugger", None):
+                # With the runner gone the debugger's listener thread ends;
+                # wait for it, so it isn't still running if Nu is quitting.
+                self.debugger.listener_thread.wait(2000)
             self.debugger = None
             self.view.remove_python_runner()
             self.view.remove_debug_inspector()

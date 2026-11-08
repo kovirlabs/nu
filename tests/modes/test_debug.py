@@ -128,6 +128,20 @@ def test_debug_stop():
     view.set_read_only.assert_called_once_with(False)
 
 
+def test_debug_stop_waits_for_the_debugger_listener():
+    """
+    Stopping waits (briefly) for the debugger client's listener thread to
+    end, so it's never still running when Nu quits.
+    """
+    dm = DebugMode(mock.MagicMock(), mock.MagicMock())
+    dm.runner = mock.MagicMock()
+    debugger = mock.MagicMock()
+    dm.debugger = debugger
+    dm.stop()
+    debugger.listener_thread.wait.assert_called_once_with(2000)
+    assert dm.debugger is None
+
+
 def test_debug_finished():
     """
     Ensure the end-state of the mode is enacted when the running script has
