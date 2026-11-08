@@ -1691,9 +1691,6 @@ class VirtualEnvironment(object):
         """
         logger.info("Installing baseline packages.")
         logger.info("pip version: %s", compact(self.pip.version()))
-        #
-        # TODO: Add semver check to ensure filepath is safe
-        #
         zipped_wheels_filepath = os.path.join(wheels_dirpath, "%s.zip" % mu_version)
         logger.info("Expecting zipped wheels at %s", zipped_wheels_filepath)
         if not os.path.exists(zipped_wheels_filepath):

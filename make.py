@@ -8,7 +8,7 @@ import subprocess
 
 PYTEST = "pytest"
 RUFF = "ruff"
-# Paths ruff lints and formats. Excludes (mu/contrib, the API stubs, docs) are
+# Paths ruff lints and formats. Excludes (the API stubs, docs) are
 # configured in pyproject.toml's [tool.ruff].
 RUFF_TARGETS = [
     "make.py",
@@ -26,7 +26,6 @@ INCLUDE_PATTERNS = {"*.py"}
 EXCLUDE_PATTERNS = {
     "build/*",
     "docs/*",
-    "mu/contrib/*",
     "mu/modes/api/*",
     "utils/*",
 }

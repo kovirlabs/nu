@@ -1327,7 +1327,6 @@ dependencies = [
     { name = "jupyter-client" },
     { name = "nu-circuitpython" },
     { name = "nu-pygamezero" },
-    { name = "nudatus" },
     { name = "packaging" },
     { name = "platformdirs" },
     { name = "pyqt6" },
@@ -1336,7 +1335,6 @@ dependencies = [
     { name = "pyserial" },
     { name = "pyzmq" },
     { name = "qtconsole" },
-    { name = "semver" },
     { name = "tornado" },
     { name = "uv" },
     { name = "wheel" },
@@ -1438,7 +1436,6 @@ requires-dist = [
     { name = "nu-circuitpython", editable = "plugins/circuitpython" },
     { name = "nu-microbit", marker = "extra == 'microbit'", editable = "plugins/microbit" },
     { name = "nu-pygamezero", editable = "plugins/pygamezero" },
-    { name = "nudatus", specifier = ">=0.0.3" },
     { name = "packaging", specifier = ">=22" },
     { name = "platformdirs", specifier = ">=2.6" },
     { name = "pyqt6", specifier = ">=6.6" },
@@ -1467,7 +1464,6 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'all'", specifier = ">=0.6" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.6" },
     { name = "ruff", marker = "extra == 'lint'", specifier = ">=0.6" },
-    { name = "semver", specifier = ">=2.8.0" },
     { name = "tornado", specifier = ">=6.5.9" },
     { name = "twine", marker = "extra == 'all'", specifier = ">=7" },
     { name = "twine", marker = "extra == 'dev'", specifier = ">=7" },
@@ -1516,15 +1512,6 @@ requires-dist = [
     { name = "pygame", marker = "extra == 'learner-env'", specifier = ">=2.6" },
 ]
 provides-extras = ["learner-env"]
-
-[[package]]
-name = "nudatus"
-version = "0.0.5"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/23/4d/cf8a2c68ef1f6653e3fb677e35e2fb3c549092853780a0cf6014beb83ec9/nudatus-0.0.5.tar.gz", hash = "sha256:ba84a8e022cb4af0f995176383f5ff9fa83d57ded3cedc6aa4db1687f88cacec", size = 4810, upload-time = "2021-02-03T00:42:54.947Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ab/30/014b1a127a66c93a7fbf18992aff1fd3478fd6385a68c4055e67b8c2b8b0/nudatus-0.0.5-py3-none-any.whl", hash = "sha256:00284890d3b09aa90297eadcf9142504e13efc6e0ac5e5e8e8eb1947545296d1", size = 5300, upload-time = "2021-02-03T00:42:53.39Z" },
-]
 
 [[package]]
 name = "numpy"
@@ -2421,15 +2408,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/1c/03/e834bcd866f2f8a49a85eaff47340affa3bfa391ee9912a952a1faa68c7b/secretstorage-3.5.0.tar.gz", hash = "sha256:f04b8e4689cbce351744d5537bf6b1329c6fc68f91fa666f60a380edddcd11be", size = 19884, upload-time = "2025-11-23T19:02:53.191Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b7/46/f5af3402b579fd5e11573ce652019a67074317e18c1935cc0b4ba9b35552/secretstorage-3.5.0-py3-none-any.whl", hash = "sha256:0ce65888c0725fcb2c5bc0fdb8e5438eece02c523557ea40ce0703c266248137", size = 15554, upload-time = "2025-11-23T19:02:51.545Z" },
-]
-
-[[package]]
-name = "semver"
-version = "3.0.4"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/72/d1/d3159231aec234a59dd7d601e9dd9fe96f3afff15efd33c1070019b26132/semver-3.0.4.tar.gz", hash = "sha256:afc7d8c584a5ed0a11033af086e8af226a9c0b206f313e0301f8dd7b6b589602", size = 269730, upload-time = "2025-01-24T13:19:27.617Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a6/24/4d91e05817e92e3a61c8a21e08fd0f390f5301f1c448b137c57c4bc6e543/semver-3.0.4-py3-none-any.whl", hash = "sha256:9c824d87ba7f7ab4a1890799cec8596f15c1241cb473404ea1cb0c55e4b04746", size = 17912, upload-time = "2025-01-24T13:19:24.949Z" },
 ]
 
 [[package]]
