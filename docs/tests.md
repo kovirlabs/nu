@@ -55,7 +55,9 @@ QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -q --basetemp=
   yourself when the dependencies change).
 * `-q` is optional: one line of dots instead of a line per test.
 * `--basetemp=...` puts pytest's own temporary folders (`tmp_path`) under a
-  folder you choose; pytest empties it at the start of each run.
+  folder you choose (pytest empties it at the start of each run). You need it
+  where `/tmp` is mounted `noexec`: one test makes a real environment in its
+  `tmp_path` and runs its Python.
 
 The whole suite takes under a minute.
 
