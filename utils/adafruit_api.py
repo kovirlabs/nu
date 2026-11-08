@@ -8,7 +8,9 @@ Usage:
     python adafruit_api.py [output.json]
 
 Fetches the CircuitPython shared-bindings index, follows the per-module doc
-links, and writes a JSON list of API entries (default: adafruit.json).
+links, and writes a JSON list of API entries (default: adafruit.json). Turned
+into Python by mkapi.py, the entries live in the CircuitPython plugin's
+plugins/circuitpython/nu_circuitpython/api/adafruit.py.
 """
 
 import json

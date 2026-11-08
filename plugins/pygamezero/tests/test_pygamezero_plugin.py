@@ -63,7 +63,7 @@ def test_loaded_by_setup_modes_from_its_entry_point():
     and settings use.
     """
     host_modes = setup_modes(mock.MagicMock(), mock.MagicMock())
-    assert list(host_modes)[:3] == ["python", "circuitpython", "debugger"]
+    assert list(host_modes)[:2] == ["python", "debugger"]
     mode = host_modes["pygamezero"]
     assert isinstance(mode, PyGameZeroMode)
     (record,) = [r for r in mode.host.plugin_records if r.id == "pygamezero"]

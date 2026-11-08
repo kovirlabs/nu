@@ -1,5 +1,5 @@
 """
-A mode for working with Circuit Python boards.
+The CircuitPython mode for Nu: working with CircuitPython boards.
 
 Copyright (c) 2015-2017 Nicholas H.Tollervey and others (see the AUTHORS file).
 
@@ -21,11 +21,12 @@ import os
 import ctypes
 import logging
 from subprocess import check_output
-from mu.modes.base import MicroPythonMode
-from mu.modes.api import ADAFRUIT_APIS, SHARED_APIS
-from mu.interface.panes import CHARTS
-from mu.logic import Device
+
 from adafruit_board_toolkit import circuitpython_serial
+
+from mu.plugin import Device, MicroPythonMode
+
+from .api import ADAFRUIT_APIS
 
 logger = logging.getLogger(__name__)
 
@@ -139,14 +140,15 @@ class CircuitPythonMode(MicroPythonMode):
         """
         buttons = [
             {
-                "name": "serial",
+                # Also the icon: images/circuitpython-serial.svg.
+                "name": "circuitpython-serial",
                 "display_name": _("Serial"),
                 "description": _("Open a serial connection to your device."),
                 "handler": self.toggle_repl,
                 "shortcut": "CTRL+Shift+U",
             }
         ]
-        if CHARTS:
+        if self.host.plotter_available:
             buttons.append(
                 {
                     "name": "plotter",
@@ -193,7 +195,7 @@ class CircuitPythonMode(MicroPythonMode):
                         "{}. Nu will continue as if a device isn't "
                         "plugged in."
                     ).format(mount_command, repr(e))
-                    self.view.show_message(m, info)
+                    self.host.show_message(m, info)
                 # Avoid crashing Mu, the workspace dir will be set to default
                 except Exception as e:
                     logger.error(
@@ -211,7 +213,7 @@ class CircuitPythonMode(MicroPythonMode):
                         + ' you need to "Share with Linux" on the CIRCUITPY drive'
                         + ' in the "Files" app then restart Nu.'
                     )
-                    self.view.show_message(m)
+                    self.host.show_message(m)
 
         elif os.name == "nt":
             # We're on Windows.
@@ -273,7 +275,7 @@ class CircuitPythonMode(MicroPythonMode):
                     " directory found here:\n\n"
                     " {}\n\n...to store your code."
                 )
-                self.view.show_message(m, info.format(wd))
+                self.host.show_message(m, info.format(wd))
                 self.connected = False
             return wd
 
@@ -310,4 +312,4 @@ class CircuitPythonMode(MicroPythonMode):
         Return a list of API specifications to be used by auto-suggest and call
         tips.
         """
-        return SHARED_APIS + ADAFRUIT_APIS
+        return self.host.shared_apis() + ADAFRUIT_APIS

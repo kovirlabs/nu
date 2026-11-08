@@ -13,9 +13,18 @@ from unittest import mock
 from mu import virtual_environment
 from mu.modes import (
     PythonMode,
-    CircuitPythonMode,
     DebugMode,
 )
+from mu.modes.base import BaseMode
+
+
+class BoardMode(BaseMode):
+    """A selectable mode besides Python 3, as a plugin would add."""
+
+    name = "Board"
+    short_name = "board"
+    description = "Write code for a board."
+    icon = "help"
 
 
 def test_ModeItem_init():
@@ -53,7 +62,7 @@ def test_ModeSelector_setup():
     view = mock.MagicMock()
     modes = {
         "python": PythonMode(editor, view),
-        "circuitpython": CircuitPythonMode(editor, view),
+        "board": BoardMode(editor, view),
         "debugger": DebugMode(editor, view),
     }
     current_mode = "python"

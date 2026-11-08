@@ -70,8 +70,7 @@ dependencies = [
     # others fixed in 6.5.9), so an existing env can't keep a vulnerable copy.
     "tornado>=6.5.9",
     "pyzmq",
-    # Serial port discovery / CircuitPython board identification.
-    "adafruit-board-toolkit~=1.1",
+    # Serial connections to MicroPython-family boards (MicroPythonMode).
     "pyserial~=3.5",
     "nudatus>=0.0.3",
     # flake8 brings pycodestyle + pyflakes, which are runtime dependencies
@@ -85,7 +84,6 @@ dependencies = [
     "black>=24",
     "platformdirs>=2.6",
     "semver>=2.8.0",
-    "packaging>=22",
     # Reads the learner-env requirements plugins declare (mu/wheels).
     "packaging>=22",
     # `uv` creates and manages the user's virtual environment (Phase 4a, see
@@ -99,8 +97,9 @@ dependencies = [
     # with Nu and found through their `mu.plugins` entry points like any other
     # plugin. In this repo uv resolves them from the workspace (see
     # [tool.uv.sources]); a published nu-editor needs them on PyPI first (see
-    # docs/packaging.md). pip installs from a checkout need the path too:
-    # `pip install ./plugins/pygamezero .`
+    # docs/packaging.md). pip installs from a checkout need the paths too:
+    # `pip install ./plugins/circuitpython ./plugins/pygamezero .`
+    "nu-circuitpython>=0.1",
     "nu-pygamezero>=0.1",
 ]
 
@@ -156,8 +155,9 @@ all = [
 members = ["plugins/*"]
 
 # uv-only: resolve the bundled plugins from this checkout. Built metadata (the
-# sdist/wheel on PyPI) keeps the plain `nu-pygamezero>=0.1` requirement.
+# sdist/wheel on PyPI) keeps the plain `nu-<name>>=0.1` requirements.
 [tool.uv.sources]
+nu-circuitpython = { workspace = true }
 nu-pygamezero = { workspace = true }
 
 [tool.hatch.version]
@@ -228,6 +228,7 @@ sources = ["mu"]
 # Briefcase pip-installs them from the checkout (so their entry points and
 # package data are in the app), not from PyPI.
 requires = [
+    "./plugins/circuitpython",
     "./plugins/pygamezero",
     "PyQt6>=6.6",
     "PyQt6-QScintilla>=2.14",
@@ -237,7 +238,6 @@ requires = [
     "jupyter-client>=8.0",
     "tornado>=6.5.9",
     "pyzmq",
-    "adafruit-board-toolkit~=1.1",
     "pyserial~=3.5",
     "nudatus>=0.0.3",
     "flake8>=3.8.3",
@@ -304,7 +304,7 @@ addopts = "--random-order"
 # plugins' sources go on sys.path so their tests (and coverage) use this
 # checkout even when the plugin is installed non-editable (e.g. by pip in CI).
 testpaths = ["tests", "plugins"]
-pythonpath = ["plugins/pygamezero", "plugins/example"]
+pythonpath = ["plugins/circuitpython", "plugins/pygamezero", "plugins/example"]
 
 [tool.coverage.run]
 omit = [
