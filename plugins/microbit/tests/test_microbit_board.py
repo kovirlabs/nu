@@ -103,7 +103,8 @@ def test_parse_details_v1():
 
 def test_parse_details_old_daplink_with_crlf():
     """Older DAPLink (0234) has fewer lines, and Windows-style line ends."""
-    details = board.parse_details(fixture_text("details_v1_old_crlf.txt"))
+    text = fixture_text("details_v1_old.txt").replace("\r\n", "\n")
+    details = board.parse_details(text.replace("\n", "\r\n"))
     assert (details.board_id, details.version, details.daplink_version) == (
         "9900",
         1,
