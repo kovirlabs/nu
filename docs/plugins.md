@@ -3,11 +3,70 @@
 !!! warning "Status: working, but early"
 
     Nu loads plugins at startup, both installed packages and files in the
-    plugins folder (Phases 5a and 5b in `TODO.md`), and CircuitPython and
-    Pygame Zero ship as plugins (5c). The API is at version **0.3**, so it can still change
-    between releases. There's no Plugins tab yet (Phase 5e), and in the
-    downloadable installers the plugins folder is the only way to add a plugin
-    (see below).
+    plugins folder (Phases 5a and 5b in `TODO.md`), CircuitPython and Pygame
+    Zero ship as plugins (5c), and the **Plugins** tab lists them and switches
+    them on and off (5e). The API is at version **0.4**, so it can still
+    change between releases. In the downloadable installers the plugins
+    folder is the only way to add a plugin (see
+    [Roadmap: installing plugins](#roadmap-installing-plugins)).
+
+## Managing plugins
+
+*This part is for learners and teachers; the rest of the page is for people
+writing plugins.*
+
+Click the **cog** in the bottom-right corner of Nu's window and choose the
+**Plugins** tab. It lists every plugin Nu found when it started:
+
+| Column | What it shows |
+|---|---|
+| **On** | Tick to switch the plugin on, untick to switch it off. |
+| **Plugin** | Its name. Hover over it to see what it adds. |
+| **From** | *Bundled with Nu* (it comes with Nu: CircuitPython and Pygame Zero), *Installed package* (installed into the Python that Nu runs from), or *Plugins folder* (a file or folder put in Nu's plugins folder). Hover over it for the exact package or file. |
+| **Status** | *On*, *Off*, *Couldn't load*, or *Switched off after errors; see the log*. |
+| **Modes** | The modes it adds to the mode picker. |
+
+Click a plugin to see more about it under the list. If it couldn't load,
+there's a plain sentence saying why (for example *It has an error in its code,
+so Nu couldn't start it*), then the error itself, with a **Copy** button so
+you can send it to whoever wrote the plugin.
+
+**Switching a plugin off, or back on.** Untick it and click **OK**. Bundled
+plugins can be switched off too: a class that only uses Python 3 can take
+CircuitPython and Pygame Zero out of the mode picker. Changes take effect the
+**next time you start Nu**; until then the plugin keeps working, and the tab
+says *On until you restart Nu*. A switched-off plugin isn't loaded at all.
+
+**Adding a plugin.** Click **Open plugins folder**, put the plugin's `.py`
+file (or its folder) there, and restart Nu. Installing plugins from inside Nu
+is planned (see the [roadmap](#roadmap-installing-plugins)).
+
+**When a plugin keeps failing**, Nu tells you each time and carries on. After
+three errors it offers to switch the plugin off; if you agree, the Plugins tab
+shows it as *Switched off after errors; see the log* from the next start, and
+the errors are on the **Current Log** tab. Tick it to give it another go.
+
+**Only add plugins you trust.** A plugin is Python code that runs inside Nu,
+with the same access to your computer as Nu itself: it can read and change
+your files, like any program you install. Nu can't check what a plugin does.
+
+**How to write a plugin** on the tab opens this page.
+
+!!! note "For teachers: where the choice is kept"
+
+    Nu keeps the ids of switched-off plugins (the **Id** in a plugin's
+    details) in its `settings.json`, in the same data folder as `plugins/`,
+    and saves it as soon as you click **OK**:
+
+    ```json
+    {
+      "disabled_plugins": ["pygamezero"]
+    }
+    ```
+
+    To prepare several computers, you can write that file yourself while Nu
+    is closed. `plugins_switched_off_after_errors` lists the plugins Nu
+    switched off because they kept failing; leave it out.
 
 ## Why plugins
 
@@ -69,8 +128,8 @@ installed one, the folder plugin is skipped.
 
 ### When a plugin is skipped
 
-Nu logs the reason (see the log via the cog icon) and starts without the
-plugin if it:
+Nu logs the reason, shows it on the Plugins tab (*Couldn't load*, with the
+details), and starts without the plugin if it:
 
 - is switched off;
 - has the same id as a plugin already found;
@@ -99,11 +158,20 @@ handlers. For each error:
   dialog is open, go to the status bar instead, so a failing timer can't bury
   the learner in dialogs.
 - **A plugin that keeps failing** (3 errors) is offered to be switched off. If
-  the learner agrees, it isn't loaded the next time Nu starts.
+  the learner agrees, it isn't loaded the next time Nu starts, and the
+  Plugins tab says it was switched off after errors. Switching it back on
+  there starts the count afresh.
 
 An error counts as the plugin's when the plugin's own modules appear in the
 traceback, or when core code was running on one of its modes (for example
 `MicroPythonMode` code it inherits).
+
+**Threads** are covered too. If an error ends a thread your plugin started
+(a `threading.Thread`, a `QThread` or a `QRunnable`), it's reported the same
+way, with the thread's name in the log. The dialog itself is always shown
+from Nu's main thread, so it's safe. Errors in threads that aren't a plugin's
+go to Nu's log as well. As ever, never touch Qt widgets from your own
+threads: send a signal to the main thread instead.
 
 For a problem the learner can fix, raise `PluginError` instead. Nu shows your
 message as is, and doesn't count it against the plugin:
@@ -121,18 +189,9 @@ def flash(self, event=None):
 
 ### Switching a plugin off
 
-With Nu closed (it rewrites the file when it exits), add the plugin's id to
-`disabled_plugins` in Nu's `settings.json`, which is in the same data folder
-as `plugins/`:
-
-```json
-{
-  "disabled_plugins": ["example"]
-}
-```
-
-A switched-off plugin isn't even imported. The Plugins tab (Phase 5e) will do
-this for you.
+Learners do it on the Plugins tab (see [Managing plugins](#managing-plugins)),
+which keeps the plugin's id in `disabled_plugins` in Nu's `settings.json`. A
+switched-off plugin isn't even imported, so its `register` isn't called.
 
 ## The API
 
@@ -301,8 +360,10 @@ tell the learner if there's none). Offer the Plotter only if
 | `logger(name)` | A logger writing to Nu's log as `mu.plugins.<name>`. |
 | `api_version` | The `PLUGIN_API_VERSION` this Nu provides. |
 
-The core uses `load_plugin`, `unload_plugin`, `modes` and `plugins`; plugins
-shouldn't need them.
+The core uses `load_plugin`, `unload_plugin`, `modes`, `plugins`,
+`plugin_records`, `describe_plugins`, `set_plugin_enabled` and
+`plugins_folder` (the last four for the Plugins tab); plugins shouldn't need
+them.
 
 ### Icons and images
 
@@ -348,7 +409,8 @@ These are planned, and are deliberately left out until a real plugin needs
 them:
 
 - **Panes and settings pages**, e.g. micro:bit's file-transfer pane (Phase 6).
-- **Installing a plugin and its learner-env packages from Nu** (Phase 5d/5e).
+- **Installing a plugin and its learner-env packages from Nu** (Phase 5d; see
+  the [roadmap](#roadmap-installing-plugins)).
 - **Translations for plugins.** Bundled plugins use Nu's own message catalog
   (their strings are extracted with Nu's); a community plugin's strings aren't
   translated yet.
@@ -398,17 +460,127 @@ until it is).
 
 - The core advertises `PLUGIN_API_VERSION`; each plugin declares `api_version`
   (the rules are under [Versioning](#versioning-api_version) above).
-- An incompatible plugin is logged and skipped, never a crash. From Phase 5e
-  the Plugins tab will show why it was skipped.
+- An incompatible plugin is logged and skipped, never a crash. The Plugins
+  tab shows it as *Couldn't load*, saying it was written for a different
+  version of Nu, with the exact versions in its details.
 - The API is bumped deliberately, with a short compatibility-shim window. It
   stays at 0.x until the micro:bit plugin (Phase 6) has proven it.
 
 ## Trust & safety
 
 Plugins are **arbitrary in-process Python** — there is no sandbox. The trust
-model is the same as `pip`: *you chose to install it.* Install plugins you trust;
-the Plugins tab (Phase 5e) will show the real `uv` command it runs before installing. (A
-curated/signed index is a possible future, not a v1 guarantee.)
+model is the same as `pip`: *you chose to install it.* The Plugins tab says so
+in plain words: a plugin runs inside Nu with the same access to your computer
+as Nu itself, so only add plugins you trust, as you'd only install programs
+you trust. When Nu can install plugins (see below), it will show the real `uv`
+command before running it. (A curated/signed index is a possible future, not a
+v1 guarantee.) In-process plugins can't be meaningfully sandboxed without a
+far larger redesign, which is out of scope.
+
+## Roadmap: installing plugins
+
+!!! note "Design only"
+
+    This is the plan for Phase 5d. None of it is built yet: today a learner
+    adds a plugin by putting it in the plugins folder.
+
+**The constraint.** In the installers, Nu runs from the environment Briefcase
+bundled into the app. It can't be installed into: it's read-only (`Program
+Files`, a signed `.app`, an AppImage's squashfs), and changing it would break
+Nu's signature and its next upgrade. So entry-point discovery only sees the
+bundled plugins there, and a plugin from PyPI needs somewhere else to live.
+
+**1. A plugin environment.** A virtual environment of its own under Nu's data
+folder (`DATA_DIR/plugin-env`, next to the learner's `mu_venv-…`), made the
+first time a plugin is added with
+
+```bash
+uv venv --python <Nu's own Python> <DATA_DIR>/plugin-env
+```
+
+Using Nu's own interpreter (`sys.executable`; in the installers, the Python
+Briefcase bundled) gives it exactly Nu's Python version and ABI, so a plugin's
+compiled extensions match the process that imports them. It's separate from
+the learner's environment on purpose: plugin code runs *inside* Nu, the
+learner's programs run in their own process, and a learner removing a package
+must never break Nu. A small `plugin-env.json` records the Python version and
+the plugins the learner added, so the environment can be rebuilt (see the open
+questions).
+
+**2. On `sys.path` before discovery.** At startup, before `discover()`, Nu
+adds the plugin environment's `site-packages` to `sys.path` with
+`site.addsitedir` (so `.pth` files work), *after* Nu's own entries, so Nu's
+own packages (PyQt6 above all) always win. `importlib.metadata` then finds the
+plugin's `mu.plugins` entry point like any installed package's; the Plugins
+tab shows it as *Installed package*. Nothing else about loading changes:
+disabling, error isolation and the tab work as they do now.
+
+**3. Installing.** The Plugins tab grows an **Add a plugin…** button. It asks
+for a package name (for example `nu-microbit`), shows what PyPI says about it
+(summary, author, homepage) with the trust note, and the exact command it will
+run:
+
+```bash
+uv pip install --python <DATA_DIR>/plugin-env/bin/python nu-microbit
+```
+
+The command goes through the same `Uv` wrapper as the learner's packages, so
+it's in **What Nu ran** and the log, and its output streams into the same
+progress window. Like switching, an added plugin loads at the next start.
+**Add from a file…** takes a `.whl` the teacher downloaded, which works
+offline.
+
+**4. The plugin's packages for the learner.** A plugin's `learner-env` extra
+(see [Packages for the learner's environment](#packages-for-the-learners-environment))
+is read from the newly installed package's metadata and installed into the
+learner's environment straight away, through the same command log:
+
+```bash
+uv pip install --python <the learner's environment's Python> <its learner-env requirements>
+```
+
+`wheels.baseline_packages()` already includes every installed plugin's extra,
+so a rebuilt learner environment gets them too, once the plugin environment is
+on `sys.path`.
+
+**5. Removing.** A plugin in the plugin environment gets a **Remove** button
+(bundled and plugins-folder plugins don't: switch them off, or delete the
+file):
+
+```bash
+uv pip uninstall --python <DATA_DIR>/plugin-env/bin/python nu-microbit
+```
+
+### Open questions
+
+- **PyQt6 and the other packages Nu already has.** A plugin depends on Nu, and
+  so, through it, on PyQt6. Installing it must not put a second PyQt6 (or a
+  different QScintilla) into the plugin environment: Nu's copy is the one
+  imported, and a mismatched one could only cause confusion. Candidates, to
+  prototype: a `--constraint` file pinning every package Nu has to its exact
+  version (from `importlib.metadata`) together with a `--no-deps` install of
+  the packages Nu provides, or a `.pth` file in the plugin environment that
+  makes Nu's own packages visible so uv treats them as already installed.
+  Plugins should not list `nu-editor` itself as a dependency.
+- **Upgrading Nu.** A new Nu may bring a new Python (3.11 → 3.12): the plugin
+  environment then has to be rebuilt and its plugins reinstalled, as the
+  learner's environment already is. A new plugin API version skips plugins
+  that haven't caught up, with the reason on the tab; an **Update** button
+  (`uv pip install --upgrade`) would help.
+- **Offline.** Installing by name needs PyPI; a wheel file doesn't. Should
+  the installers carry a small set of vetted plugins' wheels, as they carry
+  the bundled ones?
+- **Uninstalling leaves dependencies behind** (`uv pip uninstall` removes only
+  what it's given). Rebuilding the plugin environment from the recorded list
+  is cheap with uv and may be simpler than tracking dependencies. The
+  learner-env packages a plugin brought stay too, since the learner's own
+  programs may use them.
+- **Trust when installing by name:** typosquatting on PyPI. Showing the
+  package's metadata before confirming helps; a curated list is a possible
+  future.
+- **Same id twice.** An installed plugin and a plugins-folder plugin with the
+  same id: the installed one wins today. Is that still right when the learner
+  installed one themselves?
 
 ## A minimal example
 

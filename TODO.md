@@ -355,12 +355,13 @@ drop-in dir covers them.
   (`disabled_plugins`). `mu.plugin.PluginError(message, information)` is the interface for
   *expected*, learner-fixable problems. Verified in the real app with a drop-in plugin
   whose timer raises every 2 s: Nu keeps running.
-- NOTE (open): errors in a plugin's **threads** go to `threading.excepthook` (logged to
-  stderr, not the log file, no dialog) — they can't crash Nu, but they're easy to miss.
-  Route them to the log in 5e.
+- NOTE: errors in a plugin's **threads** went to `threading.excepthook` (stderr only, no
+  log entry, no dialog). → Fixed in 5e: `app.thread_excepthook` (chained) routes them
+  through `PluginErrorHandler`, marshalled to the GUI thread.
 - NOTE (open, 5d): in **installers** Nu runs from Briefcase's bundled env, which users
   can't install into, so entry-point discovery only sees bundled plugins there; the
-  drop-in folder is the only user route until 5d puts a plugin env on `sys.path`.
+  drop-in folder is the only user route until 5d puts a plugin env on `sys.path`
+  (designed in 5d below).
 
 **5c. Convert the specialized modes to bundled plugins (proof of the API):** ✅ DONE
 - [x] Scaffold a `plugins/` **uv workspace** (`[tool.uv.workspace]`): each bundled plugin is
@@ -408,6 +409,30 @@ drop-in dir covers them.
 - [ ] A plugin declares its PyPI runtime deps; installing the plugin **uv-installs** the
   package + deps into the user env (or a dedicated plugin env). "Add a plugin" reuses the
   Phase 4b uv buttons and echoes the real command.
+  **Design (written in 5e, not built; full text in `docs/plugins.md` → "Roadmap:
+  installing plugins"):**
+  - A dedicated **plugin env** at `DATA_DIR/plugin-env`, made on the first install with
+    `uv venv --python <Nu's own interpreter>` (same version + ABI as the process that
+    imports plugins), separate from the learner env (plugin code runs in Nu's process; a
+    learner's package changes must never break Nu). `plugin-env.json` records its Python
+    and the plugins the learner added, so it can be rebuilt.
+  - At startup, **before `discover()`**, its `site-packages` goes on `sys.path` via
+    `site.addsitedir`, *after* Nu's own entries (Nu's PyQt6 always wins); entry points
+    then find its plugins as ordinary installed packages (kind "package").
+  - **Add a plugin…** on the Plugins tab: package name → PyPI summary/author + trust note
+    + the exact command → `uv pip install --python <plugin env> <pkg>` through `Uv`, so it
+    is in "What Nu ran" and streams into the package progress window. **Add from a file…**
+    (`.whl`) for offline. Takes effect at the next start, like switching.
+  - The new package's `learner-env` extra is read from its metadata and installed into
+    the learner env right away (same command log); `wheels.baseline_packages()` already
+    covers rebuilds once the plugin env is on `sys.path`.
+  - **Remove** (plugin-env plugins only): `uv pip uninstall --python <plugin env> <pkg>`.
+  - Open: keeping a second PyQt6/QScintilla out of the plugin env (constraints from
+    Nu's exact versions + `--no-deps` for Nu's own packages, or a `.pth` exposing Nu's
+    packages so uv sees them installed; prototype both); rebuild on a Nu upgrade that
+    changes Python, plus an Update button for API bumps; offline (ship vetted wheels?);
+    uninstall leaves deps (rebuild from the recorded list instead?); typosquatting;
+    same id installed + dropped in (installed wins today).
 - [ ] Offline-first: bundled plugins' wheels ship in the installer wheelhouse (`mu/wheels`).
   Minimal version done in 5c part 1: `wheels.baseline_packages()` adds every installed
   plugin's `learner-env` requirements (read from metadata, so it works for switched-off
@@ -418,8 +443,30 @@ drop-in dir covers them.
   core's packages are verified by `ensure_key_modules`; drop-in plugins can't declare any.
 
 **5e. Plugin management UX:**
-- [ ] A **"Plugins"** admin tab: list bundled / installed / available, enable/disable,
-  install/remove — surfacing the real uv command (transparency, as in 4b).
+- [x] A **"Plugins"** admin tab: every discovered plugin (bundled first, then installed
+  packages, then the drop-in folder) with its name/description (plugin API **0.4** adds
+  `Plugin.description`), where it comes from (`PluginRecord.kind`: bundled / package /
+  folder; exact origin on hover), status (On / Off / Couldn't load / Switched off after
+  errors) with a beginner-readable first line and the full reason + traceback (trimmed to
+  the plugin's own frames, copyable) under the list, and the modes it adds. An On/Off
+  checkbox per plugin (bundled ones too) persisted via `Host.set_plugin_enabled` when the
+  dialog is accepted (`disabled_plugins` unchanged); takes effect at the next start
+  (said in the tab, live per row, and in the status bar after OK). Buttons: **Open
+  plugins folder** (made if missing), **How to write a plugin** (docs). Plain trust note.
+  Checkbox styling added to all three themes (`QTreeView::indicator`).
+- [x] The error handler's switch-off and the tab agree: it marks the plugin in
+  `plugins_switched_off_after_errors`, the tab shows "Switched off after errors; see the
+  log", and switching from the tab clears the mark (re-enabling a loaded plugin also
+  resets its error count this session).
+- [x] Plugin thread errors reach Nu's log and the learner (see the 5b note).
+- [x] Found while building it: user settings were **never saved** (`UserSettings.autosave`
+  was off and nothing called `save()`), so `disabled_plugins` and `PluginSettings` didn't
+  persist. Now autosaved on exit, and `set_plugin_enabled` saves at once.
+- [ ] Install / remove from the tab — surfacing the real uv command (transparency, as in
+  4b). Designed under 5d; not built.
+- NOTE (future): no **live** unload/load. `Host.unload_plugin` exists, but the mode picker,
+  the session's current mode, and running panes/REPLs/timers a plugin owns make live
+  removal risky; changes apply at the next start.
 - NOTE on **trust**: plugins are arbitrary in-process Python; the trust model is "you chose
   to install it" (same as pip) — document this plainly. A curated/signed plugin index is a
   possible *future*, not a v1 gate. In-process plugins can't be meaningfully sandboxed
