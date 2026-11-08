@@ -288,6 +288,58 @@
   
   
   
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using Nu
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Using Nu
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../help/" class="md-nav__link">
         
@@ -305,6 +357,42 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../environment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your Python environment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -1437,6 +1525,16 @@ fit together.</p>
 <li>Interacting with the UI layer is done via the <code>Window</code> class in the <code>interface.main</code> module. Mu specific UI code used by the <code>Window</code> class found in the other modules in the namespace.</li>
 <li>Internationalization (I18n) related assets are found under <code>locale</code>. Learn how this works via <a href="../translations/">translations</a>.</li>
 <li>Modes are found under the <code>modes</code> namespace. They all inherit from a <code>BaseMode</code> class and there's a tutorial for <a href="../modes/">modes</a>. The core's modes are Python 3 and the Debugger; every other mode comes from a plugin.</li>
+<li>The learner's Python environment (where Python 3 and Pygame Zero programs
+  run) is managed in <code>virtual_environment.py</code>: <code>VirtualEnvironment</code> (the <code>venv</code>
+  singleton) and the <code>Uv</code> wrapper around <a href="https://docs.astral.sh/uv/">uv</a>.
+  Every uv command goes through <code>Uv</code>, which records it in the GUI-free
+  <code>command_log.py</code> (shown to the learner as "What Nu ran", and logged at
+  INFO). <code>script_metadata.py</code> finds <a href="https://peps.python.org/pep-0723/">PEP 723</a>
+  <code># /// script</code> blocks: the Python 3 mode's <strong>Run</strong> uses
+  <code>uv run --python &lt;env python&gt; --script &lt;file&gt;</code> for a file with one. The
+  status bar's environment indicator and the admin dialog's Environment tab
+  show it all; see <a href="../environment/">Your Python environment</a>.</li>
 <li>The plugin host is the <code>plugin</code> namespace: the public, versioned <code>mu.plugin</code> API, plugin discovery (<code>plugin.loader</code>) and error isolation (<code>plugin.errors</code>). See <a href="../plugins/">plugins</a>.</li>
 <li>Graphical assets, fonts and CSS descriptions for the themes are all found under <code>resources</code>.</li>
 </ul>

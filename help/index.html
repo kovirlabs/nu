@@ -16,7 +16,7 @@
         <link rel="prev" href="..">
       
       
-        <link rel="next" href="../setup/">
+        <link rel="next" href="../environment/">
       
       
         
@@ -290,6 +290,60 @@
   
   
   
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using Nu
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Using Nu
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
     <li class="md-nav__item md-nav__item--active">
       
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
@@ -467,6 +521,42 @@
     </ul>
   
 </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../environment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your Python environment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
       
     </li>
   
@@ -1709,11 +1799,15 @@ save.</p>
 comes from Mu, the editor Nu continues). It's what <strong>Load</strong> and <strong>Save</strong> show
 first.</p>
 <h2 id="adding-python-packages">Adding Python packages<a class="headerlink" href="#adding-python-packages" title="Permanent link">&para;</a></h2>
-<p>Your programs run in their own Python environment, separate from Nu. To use a
-package such as <code>requests</code>, click the <strong>cog</strong> in the bottom-right corner, open
-<strong>Third Party Packages</strong>, put the package's name on its own line, and click
-<strong>OK</strong>. The cog also has Nu's log, environment variables, and the language
-setting.</p>
+<p>Your programs run in their own Python environment, separate from Nu; the
+status bar shows which (<code>Environment: mu_venv · Python 3.11</code>). To use a
+package such as <code>requests</code>, click that, open <strong>Packages</strong> on the
+<strong>Environment</strong> tab, put the package's name on its own line, and click
+<strong>OK</strong>. Nu shows you the real <code>uv</code> command it runs. A program can also list
+the packages it needs in a <code># /// script</code> block, and <strong>Run</strong> fetches them. See
+<a href="../environment/">Your Python environment</a>.</p>
+<p>The <strong>cog</strong> in the bottom-right corner opens the same window, which also has
+Nu's log and the language setting.</p>
 <h2 id="plugins">Plugins<a class="headerlink" href="#plugins" title="Permanent link">&para;</a></h2>
 <p>Plugins add new modes to Nu. To try one, put its <code>.py</code> file (or folder) in
 Nu's plugins folder and restart Nu:</p>
