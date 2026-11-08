@@ -8,6 +8,7 @@ on:
       - "docs/**"
       - "mkdocs.yml"
       - "mu/**"
+      - "plugins/**"
       - ".github/workflows/docs.yml"
   workflow_dispatch:
 
@@ -24,7 +25,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      # Bundled plugins (plugins/*) are nu-editor dependencies uv resolves from
+      # the workspace; pip needs their paths.
       - name: Install docs dependencies
-        run: pip install -e ".[docs]"
+        run: pip install -e ./plugins/pygamezero -e ".[docs]"
       - name: Build and deploy
         run: mkdocs gh-deploy --force
