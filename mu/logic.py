@@ -28,7 +28,6 @@ import tempfile
 import webbrowser
 import random
 import locale
-import shutil
 
 import platformdirs
 from PyQt6.QtWidgets import QMessageBox
@@ -38,7 +37,6 @@ from pyflakes.api import check
 from pycodestyle import StyleGuide, Checker
 
 from . import i18n
-from .resources import path
 from .debugger.utils import is_breakpoint_line
 from .config import DATA_DIR, VENV_DIR, MAX_LINE_LENGTH
 from . import settings
@@ -797,16 +795,6 @@ class Editor(QObject):
         # Let each mode put what it needs in the workspace.
         for mode in self.modes.values():
             mode.ensure_workspace_assets(wd)
-        # Ensure Web based assets are copied over.
-        template_path = os.path.join(wd, "templates")
-        static_path = os.path.join(wd, "static")
-        if not os.path.exists(template_path):
-            logger.debug("Creating directory: {}".format(template_path))
-            shutil.copytree(path("templates", "web/"), template_path)
-        if not os.path.exists(static_path):
-            logger.debug("Creating directory: {}".format(static_path))
-            shutil.copytree(path("static", "web/"), static_path)
-            # Copy all the static directories.
         # Start the timer to poll every second for an attached or removed
         # USB device.
         self._view.set_usb_checker(1, self.connected_devices.check_usb)
