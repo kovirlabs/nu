@@ -19,6 +19,7 @@ all:
 	@echo "make translate_begin LANG=xx_XX - create/update a mu.po file for translation."
 	@echo "make translate_done LANG=xx_XX - compile translation strings in mu.po to mu.mo file."
 	@echo "make translate_test LANG=xx_XX - run translate_done and launch Mu in the given LANG."
+	@echo "make translate_status - show how complete each translation is."
 	@echo "make win64 - build a 64bit Windows MSI installer (Briefcase)."
 	@echo "make macos - build a macOS native application (Briefcase)."
 	@echo "make linux - build a Linux AppImage (Briefcase)."
@@ -97,6 +98,9 @@ translate_done:
 
 translate_test:
 	@python make.py translate_test LANG=$(LANG)
+
+translate_status:
+	@python make.py translate_status
 
 win64: check
 	@echo "\nBuilding 64bit Windows MSI installer (Briefcase)."
