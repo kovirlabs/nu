@@ -5,1432 +5,2134 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-06-08 11:00+0300\n"
+"POT-Creation-Date: 2026-11-08 06:07+0000\n"
 "PO-Revision-Date: 2022-06-08 12:00+0300\n"
+"Last-Translator: \n"
 "Language: uk_UA\n"
 "Language-Team: uk_UA <LL@li.org>\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.9.1\n"
-"Last-Translator: \n"
-"X-Generator: Poedit 3.0\n"
+"Generated-By: Babel 2.18.0\n"
 
-#: mu/debugger/client.py:118
+#: mu/command_log.py:147
+msgid "still running"
+msgstr ""
+
+#: mu/command_log.py:149
+#, fuzzy
+msgid "finished"
+msgstr "Прошивання закінчено."
+
+#: mu/command_log.py:151
+msgid "finished OK (exit code 0)"
+msgstr ""
+
+#: mu/command_log.py:152
+#, python-brace-format
+msgid "failed (exit code {})"
+msgstr ""
+
+#: mu/command_log.py:200
+msgid "Nu hasn't run any uv commands yet."
+msgstr ""
+
+#: mu/command_log.py:205
+#, fuzzy, python-brace-format
+msgid "in {}"
+msgstr "Виконання: {}"
+
+#: mu/debugger/client.py:116
 msgid ""
 "Connection timed out. Is your machine slow or busy? Free up some of the "
 "machine's resources and try again."
-msgstr "Час очікування з 'єднання закінчився. Ваш комп' ютер повільний або зайнятий? Звільніть деякі ресурси машини та спробуйте ще раз."
+msgstr ""
+"Час очікування з 'єднання закінчився. Ваш комп' ютер повільний або "
+"зайнятий? Звільніть деякі ресурси машини та спробуйте ще раз."
 
-#: mu/debugger/client.py:132
+#: mu/debugger/client.py:130
+#, fuzzy
 msgid ""
 "Could not find localhost.\n"
-"Ensure you have '127.0.0.1 localhost' in your /etc /hosts file."
-msgstr "Не вдалося знайти localhost.\nПереконайтеся, що у вашому файлі /etc/hosts є \"127.0.0.1 localhost\"."
+"Ensure you have '127.0.0.1 localhost' in your /etc/hosts file."
+msgstr ""
+"Не вдалося знайти localhost.\n"
+"Переконайтеся, що у вашому файлі /etc/hosts є \"127.0.0.1 localhost\"."
 
-#: mu/interface/dialogs.py:75
+#: mu/interface/dialogs.py:81
 msgid "Select Mode"
 msgstr "Виберіть режим"
 
-#: mu/interface/dialogs.py:78
+#: mu/interface/dialogs.py:85
 msgid ""
-"Please select the desired mode then click \"OK\". Otherwise, click \"Cancel\"."
-msgstr "Виберіть потрібний режим, а потім натисніть \"OK\". В іншому випадку натисніть \"Скасувати\"."
+"Please select the desired mode then click \"OK\". Otherwise, click "
+"\"Cancel\"."
+msgstr ""
+"Виберіть потрібний режим, а потім натисніть \"OK\". В іншому випадку "
+"натисніть \"Скасувати\"."
 
-#: mu/interface/dialogs.py:99
+#: mu/interface/dialogs.py:104
+#, fuzzy
 msgid ""
-"Change mode at any time by clicking the \"Mode\" button containing Mu's logo."
-msgstr "Ви можете змінити режим у будь-який час, натискнучи кнопку \"Режим\", що містить логотип М'ю."
+"Change mode at any time by clicking the \"Mode\" button containing Nu's "
+"logo."
+msgstr ""
+"Ви можете змінити режим у будь-який час, натискнучи кнопку \"Режим\", що "
+"містить логотип М'ю."
 
-#: mu/interface/dialogs.py:138
+#: mu/interface/dialogs.py:143
 msgid ""
-"When reporting a bug, copy and paste the content of the following log file."
-msgstr "Повідомляючи про помилку, скопіюйте та вставте вміст наступного файла журналу."
+"When reporting a bug, copy and paste the content of the following log "
+"file."
+msgstr ""
+"Повідомляючи про помилку, скопіюйте та вставте вміст наступного файла "
+"журналу."
 
-#: mu/interface/dialogs.py:162
+#: mu/interface/dialogs.py:167
+#, fuzzy
 msgid ""
-"The environment variables shown below will be set each time you run a Python 3 "
-"script.\n"
+"The environment variables shown below will be set each time you run a "
+"Python 3 script.\n"
 "\n"
-"Each separate enviroment variable should be on a new line and of the form:\n"
+"Each separate environment variable should be on a new line and of the "
+"form:\n"
 "NAME=VALUE"
-msgstr "Змінні середовища, показані нижче, встановлюватимуться кожного разу, коли ви запускатимете скрипт Python 3.\n\nКожна окрема змінна середовища повинна містити новий рядок і форму:\nNAME=VALUE"
-
-#: mu/interface/dialogs.py:188
-msgid "Minify Python code before flashing?"
-msgstr "Мінімізувати код Python перед записом у пам'ять?"
-
-#: mu/interface/dialogs.py:192
-msgid ""
-"Override the built-in MicroPython runtime with the following hex file (empty "
-"means use the default):"
-msgstr "Перевизначення вбудованого середовища виконання MicroPython за допомогою наступного шістнадцяткового файла (порожній означає використання типового):"
-
-#: mu/interface/dialogs.py:218
-msgid ""
-"The packages shown below will be available to import in Python 3 mode. Delete a "
-"package from the list to remove its availability.\n"
+msgstr ""
+"Змінні середовища, показані нижче, встановлюватимуться кожного разу, коли"
+" ви запускатимете скрипт Python 3.\n"
 "\n"
-"Each separate package name should be on a new line. Packages are installed from "
-"PyPI (see: https://pypi.org/)."
-msgstr "Пакунки, показані нижче, будуть доступні для імпорту в режимі Python 3. Видаліть пакунок зі списку, щоб вилучити його доступність. Назва\n\nкожного окремого пакунка має бути в новому рядку. Пакети встановлюються з PyPI (див.: https://pypi.org/)."
+"Кожна окрема змінна середовища повинна містити новий рядок і форму:\n"
+"NAME=VALUE"
 
-#: mu/interface/dialogs.py:239
-msgid "Automatically detect"
-msgstr "Автоматично визначати"
-
-#: mu/interface/dialogs.py:264
+#: mu/interface/dialogs.py:194
 msgid ""
-"Please select the language for Mu's user interface from the choices listed "
-"below. <strong>Restart Mu for these changes to take effect.</strong>"
-msgstr "Будь ласка, виберіть мову для інтерфейсу користувача М'ю з перелічених нижче варіантів. <strong>Перезапустіть М'ю, щоб ці зміни набули чинності.</strong>"
+"The packages shown below will be available to import in Python 3 mode. "
+"Delete a package from the list to remove its availability.\n"
+"\n"
+"Each separate package name should be on a new line. Packages are "
+"installed from PyPI (see: https://pypi.org/)."
+msgstr ""
+"Пакунки, показані нижче, будуть доступні для імпорту в режимі Python 3. "
+"Видаліть пакунок зі списку, щоб вилучити його доступність. Назва\n"
+"\n"
+"кожного окремого пакунка має бути в новому рядку. Пакети встановлюються з"
+" PyPI (див.: https://pypi.org/)."
 
-#: mu/interface/dialogs.py:295
-msgid "How to flash MicroPython to your device"
-msgstr "Як записати файл прошивки MicroPython на ваш пристрій"
+#: mu/interface/dialogs.py:224
+msgid "Copy"
+msgstr ""
 
-#: mu/interface/dialogs.py:302
+#: mu/interface/dialogs.py:226
+msgid "Copy to the clipboard"
+msgstr ""
+
+#: mu/interface/dialogs.py:234 mu/interface/dialogs.py:979
+#, fuzzy
+msgid "Copied"
+msgstr "Відкрийти"
+
+#: mu/interface/dialogs.py:248
 msgid ""
-"&nbsp;1. Determine the type of device (ESP8266 or ESP32)<br />&nbsp;2. Download "
-"firmware from the <a href=\"https://micropython.org/download\" style=\"color:"
-"#039be5;\">https://micropython.org/download</a><br/>&nbsp;3. Connect your "
-"device<br/>&nbsp;4. Load the .bin file below using the 'Browse' button<br/"
-">&nbsp;5. Press 'Erase & write firmware'"
-msgstr "1. Визначте тип пристрою (ESP8266 або ESP32) 2<br />. Завантажте прошивку з https://micropython.org/download <a href=\"https://micropython.org/download\" style=\"color:#039be5;\">3</a><br/>. Підключіть пристрій 4.<br/>Завантажте файл .bin нижче за допомогою кнопки \"Перегляд\" 5.<br/>Натисніть \"Видалити та записати мікропрограмне забезпечення\""
+"These are the commands Nu has run in your environment since it started, "
+"newest last. You can type them in a terminal yourself."
+msgstr ""
 
-#: mu/interface/dialogs.py:334 mu/modes/web.py:82
-msgid "Browse"
-msgstr "Огляд"
+#: mu/interface/dialogs.py:267
+#, python-brace-format
+msgid ""
+"“uv” is Nu's copy of uv, at:\n"
+"{}"
+msgstr ""
 
-#: mu/interface/dialogs.py:335
-msgid "Erase && write firmware"
-msgstr "Стирання і запис мікропрограмного забезпечення"
+#: mu/interface/dialogs.py:303
+msgid ""
+"Nu runs your programs with this Python environment: a folder with its own"
+" Python and the packages you add. It's an ordinary Python environment, so"
+" you can use it from a terminal too."
+msgstr ""
 
-#: mu/interface/dialogs.py:509 mu/interface/main.py:1381
-msgid "Mu Administration"
-msgstr "Адміністрування М'ю"
+#: mu/interface/dialogs.py:316
+#, python-brace-format
+msgid "{name} (Python {version})"
+msgstr ""
 
-#: mu/interface/dialogs.py:523
-msgid "Current Log"
-msgstr "Поточний журнал"
-
-#: mu/interface/dialogs.py:527
-msgid "Python3 Environment"
-msgstr "Середовище Python3"
-
-#: mu/interface/dialogs.py:534
-msgid "BBC micro:bit Settings"
-msgstr "Налаштування BBC micro:bit"
-
-#: mu/interface/dialogs.py:538
-msgid "Third Party Packages"
-msgstr "Програмне забезпечення інших провайдерів"
-
-#: mu/interface/dialogs.py:542
-msgid "ESP Firmware flasher"
-msgstr "Завантажувач прошивки ESP"
-
-#: mu/interface/dialogs.py:547
-msgid "Select Language"
-msgstr "Оберіть мову"
-
-#: mu/interface/dialogs.py:585
-msgid "Find / Replace"
-msgstr "Пошук і заміна ..."
-
-#: mu/interface/dialogs.py:589
-msgid "Find:"
-msgstr "Знайти:"
-
-#: mu/interface/dialogs.py:596
-msgid "Replace (optional):"
-msgstr "Замінити (необов’язково):"
-
-#: mu/interface/dialogs.py:602
-msgid "Replace all?"
-msgstr "Замінити всі?"
-
-#: mu/interface/dialogs.py:651
-msgid "Third Party Package Status"
-msgstr "Статус програмного забезпечення інших провайдерів"
-
-#: mu/interface/editor.py:319 mu/logic.py:1324
-msgid "untitled"
-msgstr "Без назви"
-
-#: mu/interface/main.py:99
-msgid "Mode"
-msgstr "Режим"
-
-#: mu/interface/main.py:100
-msgid "Change Mu's mode of behaviour."
-msgstr "Змінити режим поведінки М'ю."
-
-#: mu/interface/main.py:105
-msgid "New"
-msgstr "Новий"
-
-#: mu/interface/main.py:106
-msgid "Create a new Python script."
-msgstr "Створити новий скрипт Python."
-
-#: mu/interface/main.py:110
-msgid "Load"
-msgstr "Завантажити"
-
-#: mu/interface/main.py:111
-msgid "Load a Python script."
-msgstr "Завантажити скрипт Python."
-
-#: mu/interface/main.py:115
-msgid "Save"
-msgstr "Зберегти"
-
-#: mu/interface/main.py:116
-msgid "Save the current Python script."
-msgstr "Зберегти поточний скрипт Python."
-
-#: mu/interface/main.py:130
-msgid "Zoom-in"
-msgstr "Збільшити"
-
-#: mu/interface/main.py:131
-msgid "Zoom in (to make the text bigger)."
-msgstr "Збільшити (щоб текст був більшим)."
-
-#: mu/interface/main.py:135
-msgid "Zoom-out"
-msgstr "Зменшити"
-
-#: mu/interface/main.py:136
-msgid "Zoom out (to make the text smaller)."
-msgstr "Зменшити масштаб (щоб зменшити текст)."
-
-#: mu/interface/main.py:140
-msgid "Theme"
-msgstr "Тема"
-
-#: mu/interface/main.py:141
-msgid "Toggle theme between day, night or high contrast."
-msgstr "Перемикач теми між днем, ніччю або високою контрастністю."
-
-#: mu/interface/main.py:148
-msgid "Check"
-msgstr "Перевірити"
-
-#: mu/interface/main.py:149
-msgid "Check your code for mistakes."
-msgstr "Перевірити свій код на помилки."
-
-#: mu/interface/main.py:154
-msgid "Tidy"
-msgstr "Форматувати код"
-
-#: mu/interface/main.py:155
-msgid "Tidy up the layout of your code."
-msgstr "Форматувати код скрипта."
-
-#: mu/interface/main.py:159
-msgid "Help"
-msgstr "Допомога"
-
-#: mu/interface/main.py:160
-msgid "Show help about Mu in a browser."
-msgstr "Показати довідку про М'ю в браузері."
-
-#: mu/interface/main.py:164
-msgid "Quit"
-msgstr "Вихід"
-
-#: mu/interface/main.py:164
-msgid "Quit Mu."
-msgstr "Вийти з М'ю."
-
-#: mu/interface/main.py:275
-msgid "Close file"
-msgstr "Закрити файл"
-
-#: mu/interface/main.py:316
-msgid "Mu {}"
-msgstr "М'ю {}"
-
-#: mu/interface/main.py:554
-msgid "Copy selected text to REPL"
-msgstr "Скопіювати вибраний текст до REPL"
-
-#: mu/interface/main.py:617
-msgid "Filesystem on "
-msgstr "Файлова система на "
-
-#: mu/interface/main.py:668
-msgid "Python3 data tuple"
-msgstr "Кортеж даних Python3"
-
-#: mu/interface/main.py:680
-msgid "Python3 (Jupyter)"
-msgstr "Python3 (Jupyter)"
-
-#: mu/interface/main.py:687
-msgid "{} REPL"
-msgstr "{} REPL"
-
-#: mu/interface/main.py:706
-msgid "{} Plotter"
-msgstr "{} Plotter"
-
-#: mu/interface/main.py:756
-msgid "Running: {}"
-msgstr "Виконання: {}"
-
-#: mu/interface/main.py:805
-msgid "Debug Inspector"
-msgstr "Інспектор налагодження"
-
-#: mu/interface/main.py:817
+#: mu/interface/dialogs.py:320 mu/interface/main.py:756
 msgid "Name"
 msgstr "Назва"
 
-#: mu/interface/main.py:817
+#: mu/interface/dialogs.py:321
+#, fuzzy
+msgid "Folder"
+msgstr "Режим"
+
+#: mu/interface/dialogs.py:322
+#, fuzzy
+msgid "Python"
+msgstr "Python 3"
+
+#: mu/interface/dialogs.py:323
+msgid "Activate it"
+msgstr ""
+
+#: mu/interface/dialogs.py:324
+#, fuzzy
+msgid "Add a package"
+msgstr "Програмне забезпечення інших провайдерів"
+
+#: mu/interface/dialogs.py:325
+#, fuzzy
+msgid "Run a program"
+msgstr "Програмувати весело та захоплююче."
+
+#: mu/interface/dialogs.py:326
+msgid "Nu's uv"
+msgstr ""
+
+#: mu/interface/dialogs.py:326
+msgid "(not found)"
+msgstr ""
+
+#: mu/interface/dialogs.py:349
+msgid "Packages"
+msgstr ""
+
+#: mu/interface/dialogs.py:352
+msgid "Environment variables"
+msgstr ""
+
+#: mu/interface/dialogs.py:357
+msgid "What Nu ran"
+msgstr ""
+
+#: mu/interface/dialogs.py:373
+msgid "Bundled with Nu"
+msgstr ""
+
+#: mu/interface/dialogs.py:374
+msgid "Installed package"
+msgstr ""
+
+#: mu/interface/dialogs.py:375
+msgid "Plugins folder"
+msgstr ""
+
+#: mu/interface/dialogs.py:381
+msgid ""
+"Another plugin has the same name, so Nu left this one out. Rename one of "
+"them."
+msgstr ""
+
+#: mu/interface/dialogs.py:384
+msgid "It has an error in its code, so Nu couldn't start it."
+msgstr ""
+
+#: mu/interface/dialogs.py:386
+msgid "It was written for a different version of Nu. Look for an update to it."
+msgstr ""
+
+#: mu/interface/dialogs.py:388
+msgid "It had an error while setting itself up."
+msgstr ""
+
+#: mu/interface/dialogs.py:414
+msgid ""
+"Plugins add modes to Nu. Untick a plugin to switch it off, or tick it to "
+"switch it back on. <b>Changes take effect the next time you start Nu.</b>"
+msgstr ""
+
+#: mu/interface/dialogs.py:425 mu/interface/dialogs.py:522
+#, fuzzy
+msgid "On"
+msgstr "Відкрийти"
+
+#: mu/interface/dialogs.py:425
+msgid "Plugin"
+msgstr ""
+
+#: mu/interface/dialogs.py:425
+msgid "From"
+msgstr ""
+
+#: mu/interface/dialogs.py:425
+msgid "Status"
+msgstr ""
+
+#: mu/interface/dialogs.py:425
+#, fuzzy
+msgid "Modes"
+msgstr "Режим"
+
+#: mu/interface/dialogs.py:447
+msgid "Tick to switch it on, untick to switch it off"
+msgstr ""
+
+#: mu/interface/dialogs.py:487
+msgid "Open plugins folder"
+msgstr ""
+
+#: mu/interface/dialogs.py:491
+msgid "How to write a plugin"
+msgstr ""
+
+#: mu/interface/dialogs.py:499
+msgid ""
+"A plugin is Python code that runs inside Nu, with the same access to your"
+" computer as Nu itself. Only add plugins you trust, just as you'd only "
+"install programs you trust."
+msgstr ""
+
+#: mu/interface/dialogs.py:522
+msgid "On until you restart Nu"
+msgstr ""
+
+#: mu/interface/dialogs.py:525
+msgid "Off until you restart Nu"
+msgstr ""
+
+#: mu/interface/dialogs.py:527
+msgid "Switched off after errors; see the log"
+msgstr ""
+
+#: mu/interface/dialogs.py:528
+msgid "Off"
+msgstr ""
+
+#: mu/interface/dialogs.py:530
+#, fuzzy, python-brace-format
+msgid "Couldn't load"
+msgstr "Не вдалося завантажити  {}"
+
+#: mu/interface/dialogs.py:531
+msgid "Couldn't load; switched off"
+msgstr ""
+
+#: mu/interface/dialogs.py:535
+#, fuzzy, python-brace-format
+msgid "Nu couldn't load it."
+msgstr "Не вдалося завантажити  {}"
+
+#: mu/interface/dialogs.py:566
+msgid "Nu didn't find any plugins."
+msgstr ""
+
+#: mu/interface/dialogs.py:574
+#, python-brace-format
+msgid "Status: {status}"
+msgstr ""
+
+#: mu/interface/dialogs.py:583
+msgid ""
+"Nu switched it off because it kept having errors. They're in the log (the"
+" Current Log tab). Tick it to switch it back on."
+msgstr ""
+
+#: mu/interface/dialogs.py:591
+msgid ""
+"It kept having errors, so it will be off the next time you start Nu. "
+"They're in the log (the Current Log tab)."
+msgstr ""
+
+#: mu/interface/dialogs.py:596
+msgid "It's switched off, so Nu didn't load it."
+msgstr ""
+
+#: mu/interface/dialogs.py:598
+#, python-brace-format
+msgid "From: {kind} ({origin})"
+msgstr ""
+
+#: mu/interface/dialogs.py:602
+#, python-brace-format
+msgid "Id: {id}"
+msgstr ""
+
+#: mu/interface/dialogs.py:604
+#, python-brace-format
+msgid "Modes: {modes}"
+msgstr ""
+
+#: mu/interface/dialogs.py:629
+#, python-brace-format
+msgid "Couldn't open the plugins folder {folder}: {error}"
+msgstr ""
+
+#: mu/interface/dialogs.py:649
+msgid "Automatically detect"
+msgstr "Автоматично визначати"
+
+#: mu/interface/dialogs.py:677
+#, fuzzy
+msgid ""
+"Please select the language for Nu's user interface from the choices "
+"listed below. <strong>Restart Nu for these changes to take "
+"effect.</strong>"
+msgstr ""
+"Будь ласка, виберіть мову для інтерфейсу користувача М'ю з перелічених "
+"нижче варіантів. <strong>Перезапустіть М'ю, щоб ці зміни набули "
+"чинності.</strong>"
+
+#: mu/interface/dialogs.py:727 mu/interface/main.py:1344
+#, fuzzy
+msgid "Nu Administration"
+msgstr "Адміністрування М'ю"
+
+#: mu/interface/dialogs.py:741
+msgid "Current Log"
+msgstr "Поточний журнал"
+
+#: mu/interface/dialogs.py:747
+#, fuzzy
+msgid "Environment"
+msgstr "Середовище Python3"
+
+#: mu/interface/dialogs.py:755
+msgid "Plugins"
+msgstr ""
+
+#: mu/interface/dialogs.py:762
+msgid "Select Language"
+msgstr "Оберіть мову"
+
+#: mu/interface/dialogs.py:803
+msgid "Find / Replace"
+msgstr "Пошук і заміна ..."
+
+#: mu/interface/dialogs.py:807
+msgid "Find:"
+msgstr "Знайти:"
+
+#: mu/interface/dialogs.py:814
+msgid "Replace (optional):"
+msgstr "Замінити (необов’язково):"
+
+#: mu/interface/dialogs.py:820
+msgid "Replace all?"
+msgstr "Замінити всі?"
+
+#: mu/interface/dialogs.py:869
+msgid "Third Party Package Status"
+msgstr "Статус програмного забезпечення інших провайдерів"
+
+#: mu/interface/dialogs.py:951
+msgid "Nu has crashed"
+msgstr ""
+
+#: mu/interface/dialogs.py:956
+#, python-brace-format
+msgid ""
+"Sorry, Nu hit an error it couldn't recover from and has to close. Nothing"
+" has been sent anywhere.<br><br>To report it, copy the details below into"
+" a new issue at <a href=\"{url}\">{url}</a>."
+msgstr ""
+
+#: mu/interface/dialogs.py:970
+msgid "Copy to clipboard"
+msgstr ""
+
+#: mu/interface/editor.py:321 mu/logic.py:1258
+msgid "untitled"
+msgstr "Без назви"
+
+#: mu/interface/main.py:104
+msgid "Mode"
+msgstr "Режим"
+
+#: mu/interface/main.py:105
+#, fuzzy
+msgid "Change Nu's mode of behaviour."
+msgstr "Змінити режим поведінки М'ю."
+
+#: mu/interface/main.py:110
+msgid "New"
+msgstr "Новий"
+
+#: mu/interface/main.py:111
+msgid "Create a new Python script."
+msgstr "Створити новий скрипт Python."
+
+#: mu/interface/main.py:115
+msgid "Load"
+msgstr "Завантажити"
+
+#: mu/interface/main.py:116
+msgid "Load a Python script."
+msgstr "Завантажити скрипт Python."
+
+#: mu/interface/main.py:120
+msgid "Save"
+msgstr "Зберегти"
+
+#: mu/interface/main.py:121
+msgid "Save the current Python script."
+msgstr "Зберегти поточний скрипт Python."
+
+#: mu/interface/main.py:135
+msgid "Zoom-in"
+msgstr "Збільшити"
+
+#: mu/interface/main.py:136
+msgid "Zoom in (to make the text bigger)."
+msgstr "Збільшити (щоб текст був більшим)."
+
+#: mu/interface/main.py:140
+msgid "Zoom-out"
+msgstr "Зменшити"
+
+#: mu/interface/main.py:141
+msgid "Zoom out (to make the text smaller)."
+msgstr "Зменшити масштаб (щоб зменшити текст)."
+
+#: mu/interface/main.py:145
+msgid "Theme"
+msgstr "Тема"
+
+#: mu/interface/main.py:146
+msgid "Toggle theme between day, night or high contrast."
+msgstr "Перемикач теми між днем, ніччю або високою контрастністю."
+
+#: mu/interface/main.py:151
+msgid "Check"
+msgstr "Перевірити"
+
+#: mu/interface/main.py:152
+msgid "Check your code for mistakes."
+msgstr "Перевірити свій код на помилки."
+
+#: mu/interface/main.py:157
+msgid "Tidy"
+msgstr "Форматувати код"
+
+#: mu/interface/main.py:158
+msgid "Tidy up the layout of your code."
+msgstr "Форматувати код скрипта."
+
+#: mu/interface/main.py:162
+msgid "Help"
+msgstr "Допомога"
+
+#: mu/interface/main.py:163
+#, fuzzy
+msgid "Show help about Nu in a browser."
+msgstr "Показати довідку про М'ю в браузері."
+
+#: mu/interface/main.py:166
+msgid "Quit"
+msgstr "Вихід"
+
+#: mu/interface/main.py:166
+#, fuzzy
+msgid "Quit Nu."
+msgstr "Вийти з М'ю."
+
+#: mu/interface/main.py:264
+msgid "Close file"
+msgstr "Закрити файл"
+
+#: mu/interface/main.py:305
+#, fuzzy, python-brace-format
+msgid "Nu {}"
+msgstr "М'ю {}"
+
+#: mu/interface/main.py:524
+msgid "Copy selected text to REPL"
+msgstr "Скопіювати вибраний текст до REPL"
+
+#: mu/interface/main.py:603
+msgid "Python3 data tuple"
+msgstr "Кортеж даних Python3"
+
+#: mu/interface/main.py:614
+msgid "Python3 (Jupyter)"
+msgstr "Python3 (Jupyter)"
+
+#: mu/interface/main.py:621
+#, python-brace-format
+msgid "{} REPL"
+msgstr "{} REPL"
+
+#: mu/interface/main.py:640
+#, python-brace-format
+msgid "{} Plotter"
+msgstr "{} Plotter"
+
+#: mu/interface/main.py:694
+#, python-brace-format
+msgid "Running: {}"
+msgstr "Виконання: {}"
+
+#: mu/interface/main.py:744
+msgid "Debug Inspector"
+msgstr "Інспектор налагодження"
+
+#: mu/interface/main.py:756
 msgid "Value"
 msgstr "Значення"
 
-#: mu/interface/main.py:855
+#: mu/interface/main.py:793
+#, python-brace-format
 msgid "(A list of {} items.)"
 msgstr "(Список {} елементів.)"
 
-#: mu/interface/main.py:874
+#: mu/interface/main.py:810
+#, python-brace-format
 msgid "(A dict of {} items.)"
 msgstr "(Словник {} елементів.)"
 
-#: mu/interface/main.py:1057
-msgid "Mu"
-msgstr "М'ю"
+#: mu/interface/main.py:1007
+msgid "Nu"
+msgstr ""
 
-#: mu/interface/main.py:1368
-msgid "Mu's current mode of behaviour."
+#: mu/interface/main.py:1331
+#, fuzzy
+msgid "Nu's current mode of behaviour."
 msgstr "Поточний спосіб поведінки М'ю."
 
-#: mu/interface/main.py:1423
+#: mu/interface/main.py:1378
+#, python-brace-format
+msgid "Environment: {name}"
+msgstr ""
+
+#: mu/interface/main.py:1381
+#, fuzzy, python-brace-format
+msgid "Python {version}"
+msgstr "Середовище Python3"
+
+#: mu/interface/main.py:1385
+#, python-brace-format
+msgid ""
+"Your programs run with this Python environment:\n"
+"{path}\n"
+"\n"
+"Click to see it, and to add or remove packages."
+msgstr ""
+
+#: mu/interface/main.py:1415
+#, python-brace-format
 msgid "Detected new {} device: {}."
 msgstr "Виявлено новий {} пристрій {}."
 
-#: mu/interface/main.py:1427 mu/logic.py:1616
+#: mu/interface/main.py:1419 mu/logic.py:1577
+#, python-brace-format
 msgid "Detected new {} device."
 msgstr "Виявлено новий {} пристрій."
 
-#: mu/interface/panes.py:495
-msgid "File already exists; overwrite it?"
-msgstr "Файл вже існує. Перезаписати його?"
-
-#: mu/interface/panes.py:496
-msgid "File already exists"
-msgstr "Файл вже існує"
-
-#: mu/interface/panes.py:529
-msgid "Copying '{}' to device."
-msgstr "Копіювання '{}' на пристрій."
-
-#: mu/interface/panes.py:538
-msgid "'{}' successfully copied to device."
-msgstr "'{}' успішно скопійовано на пристрій."
-
-#: mu/interface/panes.py:547
-msgid "Delete (cannot be undone)"
-msgstr "Видалити (неможливо скасувати)"
-
-#: mu/interface/panes.py:553
-msgid "Deleting '{}' from device."
-msgstr "Видалення '{}' з пристрою."
-
-#: mu/interface/panes.py:562
-msgid "'{}' successfully deleted from device."
-msgstr "'{}' успішно видалено з пристрою."
-
-#: mu/interface/panes.py:595
-msgid "Getting '{}' from device. Copying to '{}'."
-msgstr "Отримання '{}' з пристрою. Копіювання до '{}'."
-
-#: mu/interface/panes.py:606
-msgid "Successfully copied '{}' from the device to your computer."
-msgstr "Успішно скопійовано '{}' з пристрою на комп 'ютер."
-
-#: mu/interface/panes.py:623
-msgid "Open in Mu"
-msgstr "Відкрити в М'ю"
-
-#: mu/interface/panes.py:626
-msgid "Write to main.py on device"
-msgstr "Запис до main.py на пристрої"
-
-#: mu/interface/panes.py:629
-msgid "Open"
-msgstr "Відкрийти"
-
-#: mu/interface/panes.py:635
-msgid "Opening '{}'"
-msgstr "Відкривання '{}'"
-
-#: mu/interface/panes.py:678
-msgid "Files on your device:"
-msgstr "Файли на вашому пристрої:"
-
-#: mu/interface/panes.py:680
-msgid "Files on your computer:"
-msgstr "Файли на вашому комп’ютері:"
-
-#: mu/interface/panes.py:752
-msgid ""
-"There was a problem getting the list of files on the device. Please check Mu's "
-"logs for technical information. Alternatively, try unplugging/plugging-in your "
-"device and/or restarting Mu."
-msgstr "Виникла проблема з отриманням списку файлів на пристрої. Будь ласка, перевірте журнали М'ю для отримання технічної інформації. Крім того, спробуйте вимкнути/підключити пристрій та/або перезапустити М'ю."
-
-#: mu/interface/panes.py:767
-msgid ""
-"There was a problem copying the file '{}' onto the device. Please check Mu's "
-"logs for more information."
-msgstr "Виникла проблема з копіюванням файлу '{}' на пристрій. Будь ласка, перевірте журнали М'ю для отримання додаткової інформації."
-
-#: mu/interface/panes.py:779
-msgid ""
-"There was a problem deleting '{}' from the device. Please check Mu's logs for "
-"more information."
-msgstr "Під час видалення \" '{}' з пристрою сталася помилка. Будь ласка, перевірте журнали М'ю для отримання додаткової інформації."
-
-#: mu/interface/panes.py:791
-msgid ""
-"There was a problem getting '{}' from the device. Please check Mu's logs for "
-"more information."
-msgstr "Виникла проблема з отриманням  '{}' з пристрою. Будь ласка, перевірте журнали М'ю для отримання додаткової інформації."
-
-#: mu/interface/widgets.py:70 mu/interface/widgets.py:141
-#: mu/interface/widgets.py:154
+#: mu/interface/widgets.py:71 mu/interface/widgets.py:142
+#: mu/interface/widgets.py:153
 msgid "No device connected."
 msgstr "Немає підключених пристроїв"
 
-#: mu/logic.py:90
+#: mu/logic.py:74
 msgid "Hello, World!"
 msgstr "Вітаю, світе!"
 
-#: mu/logic.py:91
+#: mu/logic.py:76
 msgid ""
-"This editor is free software written in Python. You can modify it, add features "
-"or fix bugs if you like."
-msgstr "Цей редактор є вільним програмним забезпеченням, написаним на мові Python. Ви можете змінити його, додати функції або виправити помилки, якщо хочете."
+"This editor is free software written in Python. You can modify it, add "
+"features or fix bugs if you like."
+msgstr ""
+"Цей редактор є вільним програмним забезпеченням, написаним на мові "
+"Python. Ви можете змінити його, додати функції або виправити помилки, "
+"якщо хочете."
 
-#: mu/logic.py:95
-msgid "This editor is called Mu (you say it 'mew' or 'moo')."
+#: mu/logic.py:79
+#, fuzzy
+msgid "This editor is called Nu (you say it 'new')."
 msgstr "Цей редактор називається Mu (вимовляється як \"м'ю\" або \"мю\")."
 
-#: mu/logic.py:96
+#: mu/logic.py:80
 msgid "Google, Facebook, NASA, Pixar, Disney and many more use Python."
-msgstr "Google, Facebook, NASA, Pixar, Disney та багато інших використовують Python."
+msgstr ""
+"Google, Facebook, NASA, Pixar, Disney та багато інших використовують "
+"Python."
 
-#: mu/logic.py:97
+#: mu/logic.py:82
 msgid ""
-"Programming is a form of magic. Learn to cast the right spells with code and "
-"you'll be a wizard."
-msgstr "Програмування - форма магії. Навчіться робити правильні 'заклинання' за допомогою коду, і ви станете чарівником."
+"Programming is a form of magic. Learn to cast the right spells with code "
+"and you'll be a wizard."
+msgstr ""
+"Програмування - форма магії. Навчіться робити правильні 'заклинання' за "
+"допомогою коду, і ви станете чарівником."
 
-#: mu/logic.py:101
+#: mu/logic.py:86
 msgid ""
-"REPL stands for read, evaluate, print, loop. It's a fun way to talk to your "
-"computer! :-)"
-msgstr "REPL - читати(read), опрацювати(evaluate), друкувати(print), повторити(loop). Це цікавий спосіб спілкуватися з комп'ютером! :-)"
+"REPL stands for read, evaluate, print, loop. It's a fun way to talk to "
+"your computer! :-)"
+msgstr ""
+"REPL - читати(read), опрацювати(evaluate), друкувати(print), "
+"повторити(loop). Це цікавий спосіб спілкуватися з комп'ютером! :-)"
 
-#: mu/logic.py:105
+#: mu/logic.py:89
 msgid "Be brave, break things, learn and have fun!"
 msgstr "Будьте сміливі, змінюйте світ, вчіться та отримуйте задоволення!"
 
-#: mu/logic.py:106
+#: mu/logic.py:90
 msgid "Make your software both useful AND fun. Empower your users."
-msgstr "Зробіть своє програмне забезпечення і корисним, і цікавим. Розширюйте можливості ваших користувачів."
+msgstr ""
+"Зробіть своє програмне забезпечення і корисним, і цікавим. Розширюйте "
+"можливості ваших користувачів."
 
-#: mu/logic.py:107
+#: mu/logic.py:91
 msgid "For the Zen of Python: import this"
 msgstr "По Zen для Python: import this"
 
-#: mu/logic.py:108
+#: mu/logic.py:92
 msgid "Diversity promotes creativity."
 msgstr "Різноманітність сприяє творчості."
 
-#: mu/logic.py:109
+#: mu/logic.py:93
 msgid "An open mind, spirit of adventure and respect for diversity are key."
 msgstr "Відкритий розум, дух пригод та повага до різноманітності є ключовими."
 
-#: mu/logic.py:110
+#: mu/logic.py:94
 msgid ""
-"Don't worry if it doesn't work. Learn the lesson, fix it and try again! :-)"
-msgstr "Не хвилюйтесь, якщо це не працює. Перегляньте зроблене, виправте його та спробуйте ще раз! :-)"
+"Don't worry if it doesn't work. Learn the lesson, fix it and try again! "
+":-)"
+msgstr ""
+"Не хвилюйтесь, якщо це не працює. Перегляньте зроблене, виправте його та "
+"спробуйте ще раз! :-)"
 
-#: mu/logic.py:114
+#: mu/logic.py:95
 msgid "Coding is collaboration."
 msgstr "Кодування - це співпраця."
 
-#: mu/logic.py:115
+#: mu/logic.py:96
 msgid "Compliment and amplify the good things with code."
 msgstr "Компліментуйте і підсилюйте хороші речі кодом."
 
-#: mu/logic.py:116
+#: mu/logic.py:97
 msgid "In theory, theory and practice are the same. In practice, they're not. ;-)"
 msgstr "У теорії - теорія та практика однакові. На практиці це не так. ;-)"
 
-#: mu/logic.py:120
+#: mu/logic.py:98
 msgid "Debugging is twice as hard as writing the code in the first place."
 msgstr "Виправлення коду вдвічі важче, ніж його написання."
 
-#: mu/logic.py:121
+#: mu/logic.py:99
 msgid "It's fun to program."
 msgstr "Програмувати весело та захоплююче."
 
-#: mu/logic.py:122
+#: mu/logic.py:100
 msgid "Programming has more to do with problem solving than writing code."
-msgstr "Програмування більше пов'язане з вирішенням проблем, ніж з написанням коду."
+msgstr ""
+"Програмування більше пов'язане з вирішенням проблем, ніж з написанням "
+"коду."
 
-#: mu/logic.py:123
+#: mu/logic.py:101
 msgid "Start with your users' needs."
 msgstr "Почніть з потреб своїх користувачів."
 
-#: mu/logic.py:124
+#: mu/logic.py:102
 msgid "Try to see things from your users' point of view."
 msgstr "Спробуйте побачити речі з точки зору користувачів."
 
-#: mu/logic.py:125
+#: mu/logic.py:103
 msgid "Put yourself in your users' shoes."
 msgstr "Поставте себе на місце користувачів."
 
-#: mu/logic.py:126
+#: mu/logic.py:104
 msgid ""
-"Explaining a programming problem to a friend often reveals the solution. :-)"
-msgstr "Пояснення другові проблеми у програмуванні часто допомагає знайти рішення. :-)"
+"Explaining a programming problem to a friend often reveals the solution. "
+":-)"
+msgstr ""
+"Пояснення другові проблеми у програмуванні часто допомагає знайти "
+"рішення. :-)"
 
-#: mu/logic.py:130
+#: mu/logic.py:105
 msgid "If you don't know, ask. Nobody to ask? Just look it up."
-msgstr "Якщо ви чогось не знаєте - запитайте. Немає кого запитати? Просто озирніться навколо."
+msgstr ""
+"Якщо ви чогось не знаєте - запитайте. Немає кого запитати? Просто "
+"озирніться навколо."
 
-#: mu/logic.py:131
+#: mu/logic.py:106
 msgid "Complexity is the enemy. KISS - keep it simple, stupid!"
 msgstr "Складність - ворог. Гарні речі не можуть бути складними!"
 
-#: mu/logic.py:132
+#: mu/logic.py:107
 msgid "Beautiful is better than ugly."
 msgstr "Красиве краще, ніж потворне."
 
-#: mu/logic.py:133
+#: mu/logic.py:108
 msgid "Explicit is better than implicit."
 msgstr "Явне краще, ніж неявне."
 
-#: mu/logic.py:134
+#: mu/logic.py:109
 msgid "Simple is better than complex. Complex is better than complicated."
 msgstr "Просте - краще, ніж складне. Складне краще, ніж заплутане."
 
-#: mu/logic.py:135
+#: mu/logic.py:110
 msgid "Flat is better than nested."
 msgstr "Плоске краще, ніж вкладене."
 
-#: mu/logic.py:136
+#: mu/logic.py:111
 msgid "Sparse is better than dense."
 msgstr "Розріджене краще, ніж щільне."
 
-#: mu/logic.py:137
+#: mu/logic.py:112
 msgid "Readability counts."
 msgstr "Читабельність має значення."
 
-#: mu/logic.py:138
+#: mu/logic.py:114
 msgid ""
-"Special cases aren't special enough to break the rules. Although practicality "
-"beats purity."
-msgstr "Особливі випадки не настільки особливі, щоб порушувати правила.\nПри цьому практичність важливіша за бездоганність."
+"Special cases aren't special enough to break the rules. Although "
+"practicality beats purity."
+msgstr ""
+"Особливі випадки не настільки особливі, щоб порушувати правила.\n"
+"При цьому практичність важливіша за бездоганність."
 
-#: mu/logic.py:142
+#: mu/logic.py:117
 msgid "Errors should never pass silently. Unless explicitly silenced."
 msgstr "Помилки ніколи не повинні замовчуватися. Якщо вони не замовчуються явно."
 
-#: mu/logic.py:143
+#: mu/logic.py:118
 msgid "In the face of ambiguity, refuse the temptation to guess."
 msgstr "В умовах неоднозначності не покладайтеся на свої здогадки."
 
-#: mu/logic.py:144
+#: mu/logic.py:119
 msgid "There should be one-- and preferably only one --obvious way to do it."
 msgstr "Повинен бути один, і бажано лише один, очевидний спосіб це зробити."
 
-#: mu/logic.py:145
+#: mu/logic.py:120
 msgid "Now is better than never. Although never is often better than *right* now."
 msgstr "Зараз краще, ніж ніколи. Але часто ніколи краще, ніж прямо зараз."
 
-#: mu/logic.py:149
+#: mu/logic.py:121
 msgid "If the implementation is hard to explain, it's a bad idea."
 msgstr "Якщо реалізацію важко пояснити, це погана ідея."
 
-#: mu/logic.py:150
+#: mu/logic.py:122
 msgid "If the implementation is easy to explain, it may be a good idea."
 msgstr "Якщо реалізацію легко пояснити, це може бути гарною ідеєю."
 
-#: mu/logic.py:151
+#: mu/logic.py:123
 msgid "Namespaces are one honking great idea -- let's do more of those!"
 msgstr "Простори імен - це чудова ідея - давайте зробимо більше таких!"
 
-#: mu/logic.py:152
+#: mu/logic.py:124
 msgid "Mu was created by Nicholas H.Tollervey."
 msgstr "М'ю створив Ніколас Х.Толлервей."
 
-#: mu/logic.py:153
+#: mu/logic.py:125
 msgid "To understand what recursion is, you must first understand recursion."
 msgstr "Щоб зрозуміти, що таке рекурсія, потрібно спочатку зрозуміти рекурсію."
 
-#: mu/logic.py:154
+#: mu/logic.py:127
 msgid ""
-"Algorithm: a word used by programmers when they don't want to explain what they "
-"did."
-msgstr "Алгоритм: слово, яке використовують програмісти, коли вони не хочуть пояснювати, що зробили."
+"Algorithm: a word used by programmers when they don't want to explain "
+"what they did."
+msgstr ""
+"Алгоритм: слово, яке використовують програмісти, коли вони не хочуть "
+"пояснювати, що зробили."
 
-#: mu/logic.py:158
+#: mu/logic.py:130
 msgid "Programmers count from zero."
 msgstr "Програмісти рахують від нуля."
 
-#: mu/logic.py:159
+#: mu/logic.py:131
 msgid "Simplicity is the ultimate sophistication."
 msgstr "Простота - це найвища витонченість."
 
-#: mu/logic.py:160
+#: mu/logic.py:132
 msgid "A good programmer is humble."
 msgstr "Хороший програміст - скромний."
 
-#: mu/logic.py:161
+#: mu/logic.py:133
 msgid "A good programmer is playful."
 msgstr "Хороший програміст дотепний."
 
-#: mu/logic.py:162
+#: mu/logic.py:134
 msgid "A good programmer learns to learn."
 msgstr "Хороший програміст вчиться вчитися."
 
-#: mu/logic.py:163
+#: mu/logic.py:135
 msgid "A good programmer thinks beyond the obvious."
 msgstr "Хороший програміст мислить за межами очевидного."
 
-#: mu/logic.py:164
+#: mu/logic.py:136
 msgid "A good programmer promotes simplicity."
 msgstr "Хороший програміст сприяє простоті."
 
-#: mu/logic.py:165
+#: mu/logic.py:137
 msgid "A good programmer avoids complexity."
 msgstr "Хороший програміст уникає складності."
 
-#: mu/logic.py:166
+#: mu/logic.py:138
 msgid "A good programmer is patient."
 msgstr "Хороший програміст - терплячий."
 
-#: mu/logic.py:167
+#: mu/logic.py:139
 msgid "A good programmer asks questions."
 msgstr "Хороший програміст ставить запитання."
 
-#: mu/logic.py:168
+#: mu/logic.py:140
 msgid "A good programmer is willing to say, 'I don't know'."
 msgstr "Хороший програміст готовий сказати: 'Я не знаю'."
 
-#: mu/logic.py:169
+#: mu/logic.py:141
 msgid "Wisest are they that know they know nothing."
 msgstr "Наймудріші ті, хто знає, що нічого не знає."
 
-#: mu/logic.py:464
+#: mu/logic.py:142
+msgid "Computers aren’t the thing. They’re the thing that gets us to the thing."
+msgstr ""
+
+#: mu/logic.py:143
+msgid "Don't stare at a blank screen - try something out."
+msgstr ""
+
+#: mu/logic.py:144
+msgid "If you're stuck - try explaining it to a rubber duck."
+msgstr ""
+
+#: mu/logic.py:145
+msgid "It's ok to be stuck, go for a walk and then try again (:"
+msgstr ""
+
+#: mu/logic.py:146 mu/logic.py:150
+msgid "It's not a mistake to make an error."
+msgstr ""
+
+#: mu/logic.py:147
+msgid "Errors are there to learn from them. Then avoid them."
+msgstr ""
+
+#: mu/logic.py:148
+msgid "Don't look backwards for very long. We keep moving forward."
+msgstr ""
+
+#: mu/logic.py:149
+msgid "Keep moving forward."
+msgstr ""
+
+#: mu/logic.py:151
+msgid "Do not pass silently."
+msgstr ""
+
+#: mu/logic.py:152
+msgid "Computers are not humans. There is no need arguing with them."
+msgstr ""
+
+#: mu/logic.py:153
+msgid "Embrace change and seek growth."
+msgstr ""
+
+#: mu/logic.py:154
+msgid "Live, laugh, learn!"
+msgstr ""
+
+#: mu/logic.py:155
+msgid "Let's get coding!"
+msgstr ""
+
+#: mu/logic.py:156
+msgid "Don't be afraid of coding, we all learn by making mistakes!"
+msgstr ""
+
+#: mu/logic.py:446
 msgid " above this line"
 msgstr "вище цього рядка"
 
-#: mu/logic.py:509
+#: mu/logic.py:493
 msgid ""
-"Syntax error. Python cannot understand this line. Check for missing characters!"
-msgstr "Синтаксична помилка. Python не може зрозуміти цей рядок. Перевірте наявність відсутніх символів!"
+"Syntax error. Python cannot understand this line. Check for missing "
+"characters!"
+msgstr ""
+"Синтаксична помилка. Python не може зрозуміти цей рядок. Перевірте "
+"наявність відсутніх символів!"
 
-#: mu/logic.py:995
+#: mu/logic.py:557
+#, python-brace-format
+msgid "{} compatible"
+msgstr ""
+
+#: mu/logic.py:939
+#, fuzzy, python-brace-format
 msgid ""
-"The file contains characters Mu expects to be encoded as {0} or as the "
-"computer's default encoding {1}, but which are encoded in some other way.\n"
+"The file contains characters Nu expects to be encoded as {0} or as the "
+"computer's default encoding {1}, but which are encoded in some other way."
 "\n"
-"If this file was saved in another application, re-save the file via the 'Save "
-"as' option and set the encoding to {0}"
-msgstr "Файл містить символи М'ю, які, як очікується, будуть закодовані як {0} або як типове кодування комп 'ютера {1}, але які закодовані якимось іншим чином.\n\nЯкщо цей файл було збережено в іншій програмі, повторно збережіть файл за допомогою параметра «Зберегти як» і встановіть кодування на {0}"
+"\n"
+"If this file was saved in another application, re-save the file via the "
+"'Save as' option and set the encoding to {0}"
+msgstr ""
+"Файл містить символи М'ю, які, як очікується, будуть закодовані як {0} "
+"або як типове кодування комп 'ютера {1}, але які закодовані якимось іншим"
+" чином.\n"
+"\n"
+"Якщо цей файл було збережено в іншій програмі, повторно збережіть файл за"
+" допомогою параметра «Зберегти як» і встановіть кодування на {0}"
 
-#: mu/logic.py:1023
+#: mu/logic.py:964
+#, python-brace-format
 msgid "The file \"{}\" is already open."
 msgstr "Файл \"{}\" вже відкрито."
 
-#: mu/logic.py:1035
-msgid "Mu cannot read the characters in {}"
+#: mu/logic.py:976
+#, fuzzy, python-brace-format
+msgid "Nu cannot read the characters in {}"
 msgstr "М'ю не може прочитати символи у {}"
 
-#: mu/logic.py:1061
-msgid "Mu was not able to open this file"
+#: mu/logic.py:1003
+#, fuzzy
+msgid "Nu was not able to open this file"
 msgstr "М'ю не може відкрити цей файл"
 
-#: mu/logic.py:1062
-msgid ""
-"Currently Mu only works with Python source files or hex files created with "
-"embedded MicroPython code."
-msgstr "В даний час М'ю працює лише з вихідними файлами Python або шістнадцятковими файлами, створеними з вбудованим кодом MicroPython."
+#: mu/logic.py:1004
+#, fuzzy
+msgid "Currently Nu only works with Python source files."
+msgstr ""
+"В даний час М'ю працює лише з вихідними файлами Python або "
+"шістнадцятковими файлами, створеними з вбудованим кодом MicroPython."
 
-#: mu/logic.py:1070
+#: mu/logic.py:1008
+#, python-brace-format
 msgid "Could not load {}"
 msgstr "Не вдалося завантажити  {}"
 
-#: mu/logic.py:1072
+#: mu/logic.py:1011
 msgid ""
 "Does this file exist?\n"
 "If it does, do you have permission to read it?\n"
 "\n"
 "Please check and try again."
-msgstr "Чи існує цей файл?\nЯкщо це так, чи маєте ви дозвіл на його читання?\n\nПеревірте і повторіть спробу."
+msgstr ""
+"Чи існує цей файл?\n"
+"Якщо це так, чи маєте ви дозвіл на його читання?\n"
+"\n"
+"Перевірте і повторіть спробу."
 
-#: mu/logic.py:1080
+#: mu/logic.py:1018
+#, python-brace-format
 msgid "Is this a {} file?"
 msgstr "Це {} файл?"
 
-#: mu/logic.py:1081
+#: mu/logic.py:1020
+#, fuzzy, python-brace-format
 msgid ""
 "It looks like this could be a {} file.\n"
 "\n"
-"Would you like to change Mu to the {}mode?"
-msgstr "Схоже, це може бути файл {}.\n\nЧи хотіли б ви змінити М'ю на режим {}?"
+"Would you like to change Nu to the {}mode?"
+msgstr ""
+"Схоже, це може бути файл {}.\n"
+"\n"
+"Чи хотіли б ви змінити М'ю на режим {}?"
 
-#: mu/logic.py:1208
+#: mu/logic.py:1142
 msgid "Could not save file (disk problem)"
 msgstr "Не вдалось зберегти файл (проблема с диском)"
 
-#: mu/logic.py:1209
+#: mu/logic.py:1144
 msgid ""
-"Error saving file to disk. Ensure you have permission to write the file and "
-"sufficient disk space."
-msgstr "Помилка збереження файлу на диску. Переконайтеся, що у вас є дозвіл на запис файлу та достатньо місця на диску."
+"Error saving file to disk. Ensure you have permission to write the file "
+"and sufficient disk space."
+msgstr ""
+"Помилка збереження файлу на диску. Переконайтеся, що у вас є дозвіл на "
+"запис файлу та достатньо місця на диску."
 
-#: mu/logic.py:1215
+#: mu/logic.py:1149
 msgid "Could not save file (encoding problem)"
 msgstr "Не вдалося зберегти файл (проблема кодування)"
 
-#: mu/logic.py:1217
+#: mu/logic.py:1152
 msgid ""
-"Unable to convert all the characters. If you have an encoding line at the top "
-"of the file, remove it and try again."
-msgstr "Неможливо конвертувати всі символи. Якщо у верхній частині файлу є рядок кодування, видаліть його та спробуйте ще раз."
+"Unable to convert all the characters. If you have an encoding line at the"
+" top of the file, remove it and try again."
+msgstr ""
+"Неможливо конвертувати всі символи. Якщо у верхній частині файлу є рядок "
+"кодування, видаліть його та спробуйте ще раз."
 
-#: mu/logic.py:1228
+#: mu/logic.py:1162
+#, python-brace-format
 msgid "Saved file: {}"
 msgstr "Збережений файл: {}"
 
-#: mu/logic.py:1260 mu/logic.py:1675
+#: mu/logic.py:1194 mu/logic.py:1633
+#, python-brace-format
 msgid "You cannot use the filename \"{}\""
 msgstr "Ви не можете використовувати назву файла \"{}\""
 
-#: mu/logic.py:1263
+#: mu/logic.py:1198
 msgid ""
-"This name is already used by another part of Python. If you use this name, "
-"things are likely to break. Please try again with a different filename."
-msgstr "Цю назву вже використовує інша частина Python. Якщо ви будете використовувати це ім'я, код, ймовірно, зіпсується. Спробуйте ще раз з іншим іменем файлу."
+"This name is already used by another part of Python. If you use this "
+"name, things are likely to break. Please try again with a different "
+"filename."
+msgstr ""
+"Цю назву вже використовує інша частина Python. Якщо ви будете "
+"використовувати це ім'я, код, ймовірно, зіпсується. Спробуйте ще раз з "
+"іншим іменем файлу."
 
-#: mu/logic.py:1340
+#: mu/logic.py:1274
 msgid "Good job! No problems found."
 msgstr "Молодець! Проблем не знайдено."
 
-#: mu/logic.py:1341
+#: mu/logic.py:1275
 msgid "Hurrah! Checker turned up no problems."
 msgstr "Ура! Перевірка не виявила проблем."
 
-#: mu/logic.py:1342
+#: mu/logic.py:1276
 msgid "Nice one! Zero problems detected."
 msgstr "Чудово! Не виявлено жодної проблеми."
 
-#: mu/logic.py:1343
+#: mu/logic.py:1277
 msgid "Well done! No problems here."
 msgstr "Молодець! Тут проблем немає."
 
-#: mu/logic.py:1344
+#: mu/logic.py:1278
 msgid "Awesome! Zero problems found."
 msgstr "Дивовижно! Не знайдено жодної проблеми."
 
-#: mu/logic.py:1370
+#: mu/logic.py:1301
 msgid "There is un-saved work, exiting the application will cause you to lose it."
 msgstr "Роботу не збережено, вихід із програми призведе до  її втрати."
 
-#: mu/logic.py:1442
-msgid "Could not find MicroPython runtime."
-msgstr "Не вдалося знайти MicroPython."
+#: mu/logic.py:1420
+msgid "Plugin changes take effect when you restart Nu."
+msgstr ""
 
-#: mu/logic.py:1443
-msgid ""
-"The micro:bit runtime you specified ('{}') does not exist. Please try again."
-msgstr "Код micro:bit, який ви вказали ('{}'), не існує. Будь ласка спробуйте ще раз."
-
-#: mu/logic.py:1569
+#: mu/logic.py:1532
+#, python-brace-format
 msgid "Changed to {} mode."
 msgstr "Змінено на режим {}."
 
-#: mu/logic.py:1599
-msgid "Would you like to change Mu to the {} mode?"
+#: mu/logic.py:1560
+#, fuzzy, python-brace-format
+msgid "Would you like to change Nu to the {} mode?"
 msgstr "Бажаєте змінити режим М'ю на {}?"
 
-#: mu/logic.py:1618
+#: mu/logic.py:1579
+#, python-brace-format
 msgid "Device changed to {}."
 msgstr "Пристрій змінено на {}."
 
-#: mu/logic.py:1654
+#: mu/logic.py:1612
 msgid "Cannot Set Breakpoint."
 msgstr "Неможливо встановити точку зупинки."
 
+#: mu/logic.py:1614
+msgid ""
+"Lines that are comments or some multi-line statements cannot have "
+"breakpoints."
+msgstr ""
+"Рядки, які є коментарями або деякими багаторядковими операторами, не "
+"можуть мати точки зупинки."
+
+#: mu/logic.py:1637
+msgid ""
+"This name is already used by another part of Python. If you use that "
+"name, things are likely to break. Please try again with a different "
+"filename."
+msgstr ""
+"Цю назву вже використовує інша частина Python. Якщо ви будете "
+"використовувати це ім'я, код, ймовірно, зіпсується. Спробуйте ще раз з "
+"іншим іменем файлу."
+
 #: mu/logic.py:1655
-msgid ""
-"Lines that are comments or some multi-line statements cannot have breakpoints."
-msgstr "Рядки, які є коментарями або деякими багаторядковими операторами, не можуть мати точки зупинки."
-
-#: mu/logic.py:1678
-msgid ""
-"This name is already used by another part of Python. If you use that name, "
-"things are likely to break. Please try again with a different filename."
-msgstr "Цю назву вже використовує інша частина Python. Якщо ви будете використовувати це ім'я, код, ймовірно, зіпсується. Спробуйте ще раз з іншим іменем файлу."
-
-#: mu/logic.py:1700
 msgid "Could not rename file."
 msgstr "Не вдалося перейменувати файл."
 
-#: mu/logic.py:1701
-msgid "A file of that name is already open in Mu."
+#: mu/logic.py:1656
+#, fuzzy
+msgid "A file of that name is already open in Nu."
 msgstr "Файл з такою назвою вже відкрито в М'ю."
 
-#: mu/logic.py:1733
+#: mu/logic.py:1686
+#, python-brace-format
 msgid "Replaced \"{}\" with \"{}\"."
 msgstr "Замінено \"{}\" на \"{}\"."
 
-#: mu/logic.py:1738
+#: mu/logic.py:1689
+#, python-brace-format
 msgid "Replaced {} matches of \"{}\" with \"{}\"."
 msgstr "Замінено {} збігів \"{}\" на \"{}\"."
 
-#: mu/logic.py:1743 mu/logic.py:1750 mu/logic.py:1769
+#: mu/logic.py:1694 mu/logic.py:1701 mu/logic.py:1719
+#, python-brace-format
 msgid "Could not find \"{}\"."
 msgstr "Не вдалося знайти \"{}\"."
 
-#: mu/logic.py:1748 mu/logic.py:1767
+#: mu/logic.py:1699 mu/logic.py:1717
+#, python-brace-format
 msgid "Highlighting matches for \"{}\"."
 msgstr "Підсвічування збігів для \"{}\"."
 
-#: mu/logic.py:1753 mu/logic.py:1772
+#: mu/logic.py:1704 mu/logic.py:1722
 msgid "You must provide something to find."
 msgstr "Ви повинні вказати щось, щоб знайти."
 
-#: mu/logic.py:1754 mu/logic.py:1773
+#: mu/logic.py:1706 mu/logic.py:1724
 msgid "Please try again, this time with something in the find box."
 msgstr "Спробуйте ще раз, цього разу з чимось у вікні пошуку."
 
-#: mu/logic.py:1817
+#: mu/logic.py:1766
 msgid "Successfully cleaned the code. Use CTRL-Z to undo."
 msgstr "Код успішно очищено. Використовуйте Ctrl-Z для скасування."
 
-#: mu/logic.py:1823
+#: mu/logic.py:1772
 msgid "Your code contains problems."
 msgstr "Ваш код містить проблеми."
 
-#: mu/logic.py:1824
+#: mu/logic.py:1774
 msgid ""
-"These must be fixed before tidying will work. Please use the 'Check' button to "
-"highlight these problems."
-msgstr "Вони повинні бути виправлені, перш ніж форматування буде працювати. Використовуйте кнопку 'Перевірити', щоб виділити ці проблеми."
+"These must be fixed before tidying will work. Please use the 'Check' "
+"button to highlight these problems."
+msgstr ""
+"Вони повинні бути виправлені, перш ніж форматування буде працювати. "
+"Використовуйте кнопку 'Перевірити', щоб виділити ці проблеми."
 
-#: mu/modes/base.py:115
+#: mu/modes/base.py:85
+#, python-brace-format
 msgid "Cannot connect to device on port {}"
 msgstr "Неможливо підключитися до пристрою на порту {}"
 
-#: mu/modes/base.py:209
+#: mu/modes/base.py:179
 msgid "# Write your code here :-)"
 msgstr "# Напишіть свій код тут :-)"
 
-#: mu/modes/base.py:332
+#: mu/modes/base.py:337
 msgid "Data Flood Detected!"
 msgstr "Виявлено 'потоп' даних!"
 
-#: mu/modes/base.py:333
+#: mu/modes/base.py:339
+#, fuzzy
 msgid ""
-"The plotter is flooded with data which will make Mu unresponsive and freeze. As "
-"a safeguard, the plotter has been stopped.\n"
+"The plotter is flooded with data which will make Nu unresponsive and "
+"freeze. As a safeguard, the plotter has been stopped.\n"
 "\n"
-"Flooding is when chunks of data of more than 1024 bytes are repeatedly sent to "
-"the plotter.\n"
+"Flooding is when chunks of data of more than 1024 bytes are repeatedly "
+"sent to the plotter.\n"
 "\n"
-"To fix this, make sure your code prints small tuples of data between calls to "
-"'sleep' for a very short period of time."
-msgstr "Плотер 'затоплений' даними, які змусять М'ю не реагувати і 'замерзнути'. Як запобіжний засіб, плотер було зупинено.\n\n'Затоплення' - це випадки, коли шматки даних з більш ніж 1024 байтами неодноразово надсилаються на плотер.\n\nЩоб виправити це, переконайтеся, що ваш код друкує невеликі кортежі даних між дзвінками до 'сну' протягом дуже короткого періоду часу."
+"To fix this, make sure your code prints small tuples of data between "
+"calls to 'sleep' for a very short period of time."
+msgstr ""
+"Плотер 'затоплений' даними, які змусять М'ю не реагувати і 'замерзнути'. "
+"Як запобіжний засіб, плотер було зупинено.\n"
+"\n"
+"'Затоплення' - це випадки, коли шматки даних з більш ніж 1024 байтами "
+"неодноразово надсилаються на плотер.\n"
+"\n"
+"Щоб виправити це, переконайтеся, що ваш код друкує невеликі кортежі даних"
+" між дзвінками до 'сну' протягом дуже короткого періоду часу."
 
-#: mu/modes/base.py:508 mu/modes/base.py:558
+#: mu/modes/base.py:517 mu/modes/base.py:565
 msgid "Click on the device's reset button, wait a few seconds and then try again."
-msgstr "Натисніть кнопку скидання пристрою, зачекайте кілька секунд і повторіть спробу."
+msgstr ""
+"Натисніть кнопку скидання пристрою, зачекайте кілька секунд і повторіть "
+"спробу."
 
-#: mu/modes/base.py:516 mu/modes/base.py:566
+#: mu/modes/base.py:524 mu/modes/base.py:572
 msgid "Could not find an attached device."
 msgstr "Не вдалося знайти приєднаний пристрій."
 
-#: mu/modes/base.py:517
+#: mu/modes/base.py:526
 msgid ""
 "Please make sure the device is plugged into this computer.\n"
 "\n"
-"It must have a version of MicroPython (or CircuitPython) flashed onto it before "
-"the REPL will work.\n"
+"It must have a version of MicroPython (or CircuitPython) flashed onto it "
+"before the REPL will work.\n"
 "\n"
-"Finally, press the device's reset button and wait a few seconds before trying "
-"again."
-msgstr "Переконайтеся, що пристрій підключено до цього комп’ютера.\n\nНа ньому повинна бути прошита версія MicroPython (або CircuitPython), перш ніж REPL запрацює.\n\nНарешті, натисніть кнопку скидання пристрою та зачекайте кілька секунд, перш ніж повторити спробу."
+"Finally, press the device's reset button and wait a few seconds before "
+"trying again."
+msgstr ""
+"Переконайтеся, що пристрій підключено до цього комп’ютера.\n"
+"\n"
+"На ньому повинна бути прошита версія MicroPython (або CircuitPython), "
+"перш ніж REPL запрацює.\n"
+"\n"
+"Нарешті, натисніть кнопку скидання пристрою та зачекайте кілька секунд, "
+"перш ніж повторити спробу."
 
-#: mu/modes/base.py:567
+#: mu/modes/base.py:574
 msgid ""
 "Please make sure the device is plugged into this computer.\n"
 "\n"
-"It must have a version of MicroPython (or CircuitPython) flashed onto it before "
-"the Plotter will work.\n"
+"It must have a version of MicroPython (or CircuitPython) flashed onto it "
+"before the Plotter will work.\n"
 "\n"
-"Finally, press the device's reset button and wait a few seconds before trying "
-"again."
-msgstr "Переконайтеся, що пристрій підключено до цього комп’ютера.\n\nВін повинен мати версію MicroPython (або CircuitPython), що прошивається на ньому, перш ніж Plotter запрацює.\n\nНарешті, натисніть кнопку скидання пристрою та зачекайте кілька секунд, перш ніж повторити спробу."
-
-#: mu/modes/circuitpython.py:37
-msgid "CircuitPython"
-msgstr "CircuitPython"
-
-#: mu/modes/circuitpython.py:39
-msgid "Write code for boards running CircuitPython."
-msgstr "Напишіть код для плат, на яких працює CircuitPython."
-
-#: mu/modes/circuitpython.py:142 mu/modes/pyboard.py:86
-msgid "Serial"
-msgstr "Послідовний"
-
-#: mu/modes/circuitpython.py:143 mu/modes/pyboard.py:87
-msgid "Open a serial connection to your device."
-msgstr "Відкрийте послідовне з'єднання зі своїм пристроєм."
-
-#: mu/modes/circuitpython.py:152 mu/modes/esp.py:102 mu/modes/microbit.py:164
-#: mu/modes/pyboard.py:96 mu/modes/python3.py:174
-msgid "Plotter"
-msgstr "Плотер"
-
-#: mu/modes/circuitpython.py:153 mu/modes/esp.py:103 mu/modes/microbit.py:165
-#: mu/modes/pyboard.py:97
-msgid "Plot incoming REPL data."
-msgstr "Побудова вхідних даних REPL."
-
-#: mu/modes/circuitpython.py:189
-msgid "Permission error running mount command"
-msgstr "Помилка дозволу під час запуску команди mount"
-
-#: mu/modes/circuitpython.py:190
-msgid ""
-"The mount command (\"{}\") returned an error: {}. Mu will continue as if a "
-"device isn't plugged in."
-msgstr "Команда монтування (\"{}\") повернула помилку: {}. М'ю продовжуватиме працювати так, ніби пристрій не підключено до мережі."
-
-#: mu/modes/circuitpython.py:208
-msgid ""
-"If your Circuit Python device is plugged in, you need to \"Share with Linux\" "
-"on the CIRCUITPY drive in the \"Files\" app then restart Mu."
-msgstr "Якщо пристрій Circuit Python підключено, потрібно \"Поділитися з Linux\" на диску CIRCUITPY у додатку \"Файли\", а потім перезапустити М'ю."
-
-#: mu/modes/circuitpython.py:269
-msgid "Could not find an attached CircuitPython device."
-msgstr "Не вдалося знайти приєднаний пристрій CircuitPython."
-
-#: mu/modes/circuitpython.py:270
-msgid ""
-"Python files for CircuitPython devices are stored on the device. Therefore, to "
-"edit these files you need to have the device plugged in. Until you plug in a "
-"device, Mu will use the directory found here:\n"
+"Finally, press the device's reset button and wait a few seconds before "
+"trying again."
+msgstr ""
+"Переконайтеся, що пристрій підключено до цього комп’ютера.\n"
 "\n"
-" {}\n"
+"Він повинен мати версію MicroPython (або CircuitPython), що прошивається "
+"на ньому, перш ніж Plotter запрацює.\n"
 "\n"
-"...to store your code."
-msgstr "Файли Python для пристроїв CircuitPython зберігаються на пристрої. Тому для редагування цих файлів потрібно підключити пристрій. Доки ви не підключите пристрій, М'ю використовуватиме каталог, знайдений тут:\n\n {}\n\n...для зберігання вашого коду."
+"Нарешті, натисніть кнопку скидання пристрою та зачекайте кілька секунд, "
+"перш ніж повторити спробу."
 
-#: mu/modes/debugger.py:39
+#: mu/modes/debugger.py:40
 msgid "Graphical Debugger"
 msgstr "Графічний налагоджувач"
 
-#: mu/modes/debugger.py:41
+#: mu/modes/debugger.py:42
 msgid "Debug your Python 3 code."
 msgstr "Налагодити код Python 3."
 
-#: mu/modes/debugger.py:61 mu/modes/pygamezero.py:123 mu/modes/python3.py:207
-#: mu/modes/web.py:136
+#: mu/modes/debugger.py:62 mu/modes/python3.py:211
+#: plugins/pygamezero/nu_pygamezero/mode.py:150
 msgid "Stop"
 msgstr "Зупинити"
 
-#: mu/modes/debugger.py:62
+#: mu/modes/debugger.py:63
 msgid "Stop the running code."
 msgstr "Зупиніть працюючий код."
 
-#: mu/modes/debugger.py:68
+#: mu/modes/debugger.py:69
 msgid "Continue"
 msgstr "Продовжити"
 
-#: mu/modes/debugger.py:69
+#: mu/modes/debugger.py:70
 msgid "Continue to run your Python script."
 msgstr "Продовжити виконувати скрипт Python."
 
-#: mu/modes/debugger.py:75
+#: mu/modes/debugger.py:76
 msgid "Step Over"
 msgstr "Крок вперед"
 
-#: mu/modes/debugger.py:76
+#: mu/modes/debugger.py:77
 msgid "Step over a line of code."
 msgstr "Пропустити  рядок коду."
 
-#: mu/modes/debugger.py:82
+#: mu/modes/debugger.py:83
 msgid "Step In"
 msgstr "Крок із входом"
 
-#: mu/modes/debugger.py:83
+#: mu/modes/debugger.py:84
 msgid "Step into a function."
 msgstr "Крок у середину функції."
 
-#: mu/modes/debugger.py:89
+#: mu/modes/debugger.py:90
 msgid "Step Out"
 msgstr "Крок з виходом"
 
-#: mu/modes/debugger.py:90
+#: mu/modes/debugger.py:91
 msgid "Step out of a function."
 msgstr "Крок з виходом із функції."
 
-#: mu/modes/debugger.py:161
+#: mu/modes/debugger.py:162
 msgid "Your script has finished running."
 msgstr "Ваш скрипт закінчився."
 
-#: mu/modes/debugger.py:266
+#: mu/modes/debugger.py:267
 msgid ""
 "Unable to connect to the Python debugger.\n"
 "\n"
-msgstr "Не вдається підключитися до налагоджувача Python.\n\n"
+msgstr ""
+"Не вдається підключитися до налагоджувача Python.\n"
+"\n"
 
-#: mu/modes/debugger.py:355
+#: mu/modes/debugger.py:352
+#, python-brace-format
 msgid "Debugger info: {}"
 msgstr "Інформація налагоджувача: {}"
 
-#: mu/modes/debugger.py:362
+#: mu/modes/debugger.py:358
+#, python-brace-format
 msgid "Debugger warning: {}"
 msgstr "Попередження налагоджувача: {}"
 
-#: mu/modes/debugger.py:370
+#: mu/modes/debugger.py:364
+#, python-brace-format
 msgid "Debugger error: {}"
 msgstr "Помилка налагодження: {}"
 
-#: mu/modes/esp.py:35
-msgid "ESP MicroPython"
-msgstr "ESP MicroPython"
+#: mu/modes/python3.py:138
+msgid "Python 3"
+msgstr "Python 3"
 
-#: mu/modes/esp.py:38
-msgid "Write MicroPython on ESP8266/ESP32 boards."
-msgstr "Запускайте MicroPython на платах ESP8266/ESP32."
+#: mu/modes/python3.py:140
+msgid "Create code using standard Python 3."
+msgstr "Створити код за допомогою стандартного Python 3."
 
-#: mu/modes/esp.py:71 mu/modes/python3.py:150 mu/modes/python3.py:199
-#: mu/modes/web.py:75 mu/modes/web.py:128
+#: mu/modes/python3.py:156 mu/modes/python3.py:203
 msgid "Run"
 msgstr "Запуск"
 
-#: mu/modes/esp.py:72
-msgid "Run your code directly on the {board_name} via the REPL."
-msgstr "Запустіть свій код безпосередньо на {board_name} через REPL."
+#: mu/modes/python3.py:157 mu/modes/python3.py:204
+msgid "Run your Python script."
+msgstr "Запустити скрипт Python."
 
-#: mu/modes/esp.py:81 mu/modes/microbit.py:145
-msgid "Files"
-msgstr "Файли"
+#: mu/modes/python3.py:163
+msgid "Debug"
+msgstr "Відлагодити"
 
-#: mu/modes/esp.py:82
-msgid "Access the file system on {board_name}."
-msgstr "Доступ до файлової системи на {board_name}."
+#: mu/modes/python3.py:164
+msgid "Debug your Python script."
+msgstr "Налагодження скрипту Python."
 
-#: mu/modes/esp.py:90 mu/modes/microbit.py:152 mu/modes/python3.py:164
+#: mu/modes/python3.py:170
 msgid "REPL"
 msgstr "REPL"
 
-#: mu/modes/esp.py:91
-msgid "Use the REPL to live-code on the {board_name}."
-msgstr "Використовуйте REPL для 'живого' коду на {board_name}."
+#: mu/modes/python3.py:171
+msgid "Use the REPL for live coding."
+msgstr "Використати REPL для прямого кодування."
 
-#: mu/modes/esp.py:129 mu/modes/microbit.py:519
-msgid "REPL and file system cannot work at the same time."
-msgstr "REPL та файлова система не можуть працювати одночасно."
+#: mu/modes/python3.py:180 plugins/circuitpython/nu_circuitpython/mode.py:155
+msgid "Plotter"
+msgstr "Плотер"
 
-#: mu/modes/esp.py:130 mu/modes/microbit.py:520
+#: mu/modes/python3.py:181
+msgid "Plot data from your script or the REPL."
+msgstr "Побудова даних зі свого скрипту або REPL."
+
+#: mu/modes/python3.py:212
+msgid "Stop your Python script."
+msgstr "Зупинити свій скрипт Python."
+
+#: mu/modes/python3.py:281
+msgid "Nu can't find uv, so it can't run this program."
+msgstr ""
+
+#: mu/modes/python3.py:283
 msgid ""
-"The REPL and file system both use the same USB serial connection. Only one can "
-"be active at any time. Toggle the file system off and try again."
-msgstr "REPL і файлова система використовують однакове послідовне з'єднання USB. Тільки один може бути активним у будь-який час. Вимкніть файлову систему та повторіть спробу."
+"This program starts with a “# /// script” block listing the packages it "
+"needs, and Nu uses uv to fetch them. Reinstalling Nu should bring uv "
+"back. Or remove the block to run the program with your environment's "
+"packages."
+msgstr ""
 
-#: mu/modes/esp.py:149 mu/modes/microbit.py:539
-msgid "The plotter and file system cannot work at the same time."
-msgstr "Плотер і файлова система не можуть працювати одночасно."
+#: mu/modes/python3.py:364
+msgid "Starting iPython REPL."
+msgstr "Запуск iPython REPL."
 
-#: mu/modes/esp.py:152 mu/modes/microbit.py:542
+#: mu/modes/python3.py:369
+msgid "Stopping iPython REPL (this may take a short amount of time)."
+msgstr "Зупинка iPython REPL (це може зайняти деякий час)."
+
+#: mu/modes/python3.py:457
+msgid "REPL started."
+msgstr "REPL запущено."
+
+#: mu/modes/python3.py:466
+msgid "REPL stopped."
+msgstr "REPL зупинено."
+
+#: mu/plugin/errors.py:292
+#, python-brace-format
+msgid "The {} plugin had another problem (see the log)."
+msgstr ""
+
+#: mu/plugin/errors.py:306
+#, python-brace-format
+msgid "The {} plugin keeps having problems."
+msgstr ""
+
+#: mu/plugin/errors.py:308
 msgid ""
-"The plotter and file system both use the same USB serial connection. Only one "
-"can be active at any time. Toggle the file system off and try again."
-msgstr "Плотер і файлова система використовують однакове послідовне з'єднання USB. Тільки один може бути активним у будь-який час. Вимкніть файлову систему та повторіть спробу."
+"Nu is still running. Switch the plugin off? It won't be loaded the next "
+"time Nu starts. You can switch it back on in the Plugins tab of Nu's "
+"administration window (the cog in the status bar)."
+msgstr ""
 
-#: mu/modes/esp.py:180
-msgid "Cannot run anything without any active editor tabs."
-msgstr "Нічого не можна запустити без активних вкладок редактора."
+#: mu/plugin/errors.py:316
+#, python-brace-format
+msgid "The {} plugin is switched off from the next start."
+msgstr ""
 
-#: mu/modes/esp.py:181
+#: mu/plugin/errors.py:323
+#, python-brace-format
+msgid "The {} plugin had a problem and stopped what it was doing."
+msgstr ""
+
+#: mu/plugin/errors.py:326
+#, python-brace-format
 msgid ""
-"Running transfers the content of the current tab onto the device. It seems like "
-"you don't have  any tabs open."
-msgstr "Виконання передає вміст поточної вкладки на пристрій. Схоже, у вас немає відкритих вкладок."
-
-#: mu/modes/esp.py:200 mu/modes/microbit.py:556
-msgid "File system cannot work at the same time as the REPL or plotter."
-msgstr "Файлова система не може працювати одночасно з REPL або плотером."
-
-#: mu/modes/esp.py:204 mu/modes/microbit.py:560
-msgid ""
-"The file system and the REPL and plotter use the same USB serial connection. "
-"Toggle the REPL and plotter off and try again."
-msgstr "Файлова система та REPL та плотер використовують одне і те ж послідовне з'єднання USB. Вимкніть REPL та плотер та спробуйте ще раз."
-
-#: mu/modes/esp.py:231
-msgid "Could not find an attached {board_name}"
-msgstr "Не вдалося знайти приєднаний пристрій {board_name}."
-
-#: mu/modes/esp.py:234 mu/modes/microbit.py:585
-msgid ""
-"Please make sure the device is plugged into this computer.\n"
+"Nu is still running, so you can carry on. If it keeps happening, tell the"
+" plugin's author:\n"
 "\n"
-"The device must have MicroPython flashed onto it before the file system will "
-"work.\n"
+"{}: {}\n"
 "\n"
-"Finally, press the device's reset button and wait a few seconds before trying "
-"again."
-msgstr "Переконайтеся, що пристрій підключено до цього комп’ютера.\n\nПеред тим, як файлова система запрацює, на пристрої повинен бути прошитий MicroPython.\n\nНарешті, натисніть кнопку скидання пристрою та зачекайте кілька секунд, перш ніж повторити спробу."
+"The full details are in Nu's log."
+msgstr ""
 
-#: mu/modes/esp.py:259
-msgid "{board_name} board"
-msgstr "Плата {board_name}"
-
-#: mu/modes/lego.py:33
-msgid "Lego MicroPython"
-msgstr "Lego MicroPython"
-
-#: mu/modes/lego.py:36
-msgid "Write MicroPython directly on Lego Spike devices."
-msgstr "Напишіть MicroPython безпосередньо на пристроях Lego Spike."
-
-#: mu/modes/microbit.py:111
-msgid "BBC micro:bit"
-msgstr "BBC micro: bit"
-
-#: mu/modes/microbit.py:113
-msgid "Write MicroPython for the BBC micro:bit."
-msgstr "Запускайте MicroPython на BBC micro:bit."
-
-#: mu/modes/microbit.py:138
-msgid "Flash"
-msgstr "Прошити"
-
-#: mu/modes/microbit.py:139
-msgid "Flash your code onto the micro:bit."
-msgstr "Прошити код на micro:bit."
-
-#: mu/modes/microbit.py:146
-msgid "Access the file system on the micro:bit."
-msgstr "Доступ до файлової системи на micro:bit."
-
-#: mu/modes/microbit.py:153
-msgid "Use the REPL to live-code on the micro:bit."
-msgstr "Використовувати REPL для кодування на micro:bit."
-
-#: mu/modes/microbit.py:190
-msgid "Your script is too long and code minification is disabled"
-msgstr "Ваш скрипт задовгий, а мінімізацію коду вимкнено"
-
-#: mu/modes/microbit.py:194
-msgid "Your script is too long and the minifier isn't available"
-msgstr "Ваш скрипт занадто довгий, і мініфікатор недоступний"
-
-#: mu/modes/microbit.py:206
-msgid "Problem minifying script"
-msgstr "Проблема з мініфікацією скрипта"
-
-#: mu/modes/microbit.py:218
-msgid "Our minifier tried but your script is too long!"
-msgstr "Наш мініфікатор спробував, але ваш скрипт занадто довгий!"
-
-#: mu/modes/microbit.py:286
-msgid "Unable to flash \"{}\""
-msgstr "Не вдається прошити \"{}\""
-
-#: mu/modes/microbit.py:307 mu/modes/microbit.py:584
-msgid "Could not find an attached BBC micro:bit."
-msgstr "Не вдалося знайти приєднаний пристрій BBC micro:bit.."
-
-#: mu/modes/microbit.py:308
+#: mu/script_metadata.py:160
 msgid ""
-"Please ensure you leave enough time for the BBC micro:bit to be attached and "
-"configured correctly by your computer. This may take several seconds. "
-"Alternatively, try removing and re-attaching the device or saving your work and "
-"restarting Mu if the device remains unfound."
-msgstr "Будь ласка, переконайтеся, що у вас залишається достатньо часу, щоб його правильно приєднати BBC micro:bit та налаштувати комп'ютер. Це може зайняти кілька секунд. Крім того, спробуйте видалити та повторно підключити пристрій або зберегти свою роботу та перезапустити М'ю, якщо пристрій залишиться без підтвердження."
+"Hint: the “# /// script” block at the top of this program isn't written "
+"correctly. Check its brackets, quotes and commas."
+msgstr ""
 
-#: mu/modes/microbit.py:326
-msgid "Cannot save a custom hex file to a local directory."
-msgstr "Неможливо зберегти нетиповий шістнадцятковий файл до локального каталогу."
-
-#: mu/modes/microbit.py:327
+#: mu/script_metadata.py:167
 msgid ""
-"When a custom hex file is configured in the settings a local directory cannot "
-"be used to saved the final hex file."
-msgstr "Якщо у налаштуваннях налаштовано спеціальний шістнадцятковий файл, локальний каталог не може бути використаний для збереження остаточного шістнадцяткового файлу."
+"Hint: every line of the “# /// script” block must start with “#”, and the"
+" block must end with a “# ///” line."
+msgstr ""
 
-#: mu/modes/microbit.py:336
-msgid "Cannot use a custom hex file without micro:bit port."
-msgstr "Неможливо використовувати спеціальний шістнадцятковий файл без порту micro:bit."
-
-#: mu/modes/microbit.py:337
+#: mu/script_metadata.py:174
 msgid ""
-"Mu was unable to detect the micro:bit serial port. Normally this is okay, as Mu "
-"can inject the Python code into the hex to flash. However, this cannot be done "
-"with a custom hex file."
-msgstr "М'ю не вдалося виявити послідовний порт micro:bit. Зазвичай це нормально, оскільки М'ю може ввести код Python у HEX для прошивки. Однак, це неможливо зробити з користувацьким файлом HEX."
+"Hint: a package in this program's “dependencies” wasn't found on PyPI. "
+"Check its spelling."
+msgstr ""
 
-#: mu/modes/microbit.py:390
-msgid "Unsupported BBC micro:bit."
-msgstr "Непідтримуваний BBC micro:bit."
-
-#: mu/modes/microbit.py:391
+#: mu/script_metadata.py:188
 msgid ""
-"Your device is newer than this version of Mu. Please update Mu to the latest "
-"version to support this device.\n"
-"\n"
-"https://codewith.mu/"
-msgstr "Ваш пристрій новіший, ніж ця версія М'ю. Оновіть М'ю до останньої версії для підтримки цього пристрою.\n\nhttps://codewith.mu/"
+"Hint: uv couldn't download the packages this program needs. Are you "
+"connected to the internet? (It only needs to download them once.)"
+msgstr ""
 
-#: mu/modes/microbit.py:425 mu/modes/microbit.py:446
-msgid "Flashing the micro:bit"
-msgstr "Прошивання micro:bit."
-
-#: mu/modes/microbit.py:427
-msgid "Runtime"
-msgstr "Середовище виконання"
-
-#: mu/modes/microbit.py:458
-msgid "Finished flashing."
-msgstr "Прошивання закінчено."
-
-#: mu/modes/microbit.py:490
-msgid "Copied code onto micro:bit."
-msgstr "Код скопійовано на micro:bit."
-
-#: mu/modes/microbit.py:498
-msgid "There was a problem flashing the micro:bit."
-msgstr "Виникла проблема з прошиванням micro:bit."
-
-#: mu/modes/microbit.py:499
+#: mu/script_metadata.py:196
 msgid ""
-"Please do not disconnect the device until flashing has completed. Please check "
-"the logs for more information."
-msgstr "Будь ласка, не відключайте пристрій, поки прошивання не завершиться. Перевірте журнали для отримання додаткової інформації."
+"Hint: this program's “requires-python” asks for a different Python than "
+"your environment has, so it might not work."
+msgstr ""
 
-#: mu/modes/microbit.py:601
-msgid "micro:bit"
-msgstr "micro:bit"
-
-#: mu/modes/pico.py:33
-msgid "RP2040"
-msgstr "RP2040"
-
-#: mu/modes/pico.py:36
-msgid "Write MicroPython directly on a Raspberry Pi Pico."
-msgstr "Напишіть MicroPython безпосередньо на Raspberry Pi Pico."
-
-#: mu/modes/pyboard.py:32
-msgid "Pyboard MicroPython"
-msgstr "Pyboard MicroPython"
-
-#: mu/modes/pyboard.py:34
-msgid "Use MicroPython on the Pyboard line of boards"
-msgstr "Використовувати MicroPython на панелі Pyboard"
-
-#: mu/modes/pyboard.py:177
-msgid "Could not find an attached PyBoard device."
-msgstr "Не вдалося знайти приєднаний пристрій PyBoard."
-
-#: mu/modes/pyboard.py:178
+#: mu/script_metadata.py:203
 msgid ""
-"Python files for PyBoard MicroPython devices are stored on the device. "
-"Therefore, to edit these files you need to have the device plugged in. Until "
-"you plug in a device, Mu will use the directory found here:\n"
+"Hint: Nu couldn't find your environment's Python. Please restart Nu so it"
+" can repair your environment."
+msgstr ""
+
+#: mu/virtual_environment.py:593
+msgid "Its output is in the Run pane."
+msgstr ""
+
+#: mu/virtual_environment.py:655
+msgid "Nu reads this list to show your packages."
+msgstr ""
+
+#: plugins/circuitpython/nu_circuitpython/__init__.py:29
+#: plugins/circuitpython/nu_circuitpython/mode.py:39
+msgid "CircuitPython"
+msgstr "CircuitPython"
+
+#: plugins/circuitpython/nu_circuitpython/__init__.py:30
+#, fuzzy
+msgid "Adds CircuitPython mode, for boards that run CircuitPython."
+msgstr "Напишіть код для плат, на яких працює CircuitPython."
+
+#: plugins/circuitpython/nu_circuitpython/mode.py:41
+msgid "Write code for boards running CircuitPython."
+msgstr "Напишіть код для плат, на яких працює CircuitPython."
+
+#: plugins/circuitpython/nu_circuitpython/mode.py:145
+msgid "Serial"
+msgstr "Послідовний"
+
+#: plugins/circuitpython/nu_circuitpython/mode.py:146
+msgid "Open a serial connection to your device."
+msgstr "Відкрийте послідовне з'єднання зі своїм пристроєм."
+
+#: plugins/circuitpython/nu_circuitpython/mode.py:156
+msgid "Plot incoming REPL data."
+msgstr "Побудова вхідних даних REPL."
+
+#: plugins/circuitpython/nu_circuitpython/mode.py:192
+msgid "Permission error running mount command"
+msgstr "Помилка дозволу під час запуску команди mount"
+
+#: plugins/circuitpython/nu_circuitpython/mode.py:194
+#, fuzzy, python-brace-format
+msgid ""
+"The mount command (\"{}\") returned an error: {}. Nu will continue as if "
+"a device isn't plugged in."
+msgstr ""
+"Команда монтування (\"{}\") повернула помилку: {}. М'ю продовжуватиме "
+"працювати так, ніби пристрій не підключено до мережі."
+
+#: plugins/circuitpython/nu_circuitpython/mode.py:212
+#, fuzzy
+msgid ""
+"If your Circuit Python device is plugged in, you need to \"Share with "
+"Linux\" on the CIRCUITPY drive in the \"Files\" app then restart Nu."
+msgstr ""
+"Якщо пристрій Circuit Python підключено, потрібно \"Поділитися з Linux\" "
+"на диску CIRCUITPY у додатку \"Файли\", а потім перезапустити М'ю."
+
+#: plugins/circuitpython/nu_circuitpython/mode.py:269
+msgid "Could not find an attached CircuitPython device."
+msgstr "Не вдалося знайти приєднаний пристрій CircuitPython."
+
+#: plugins/circuitpython/nu_circuitpython/mode.py:271
+#, fuzzy, python-brace-format
+msgid ""
+"Python files for CircuitPython devices are stored on the device. "
+"Therefore, to edit these files you need to have the device plugged in. "
+"Until you plug in a device, Nu will use the directory found here:\n"
 "\n"
 " {}\n"
 "\n"
 "...to store your code."
-msgstr "Файли Python для пристроїв PyBoard MicroPython зберігаються на пристрої. Тому для редагування цих файлів потрібно підключити пристрій. Доки ви не підключите пристрій, М'ю використовуватиме каталог, знайдений тут:\n\n {}\n\n...для зберігання вашого коду."
+msgstr ""
+"Файли Python для пристроїв CircuitPython зберігаються на пристрої. Тому "
+"для редагування цих файлів потрібно підключити пристрій. Доки ви не "
+"підключите пристрій, М'ю використовуватиме каталог, знайдений тут:\n"
+"\n"
+" {}\n"
+"\n"
+"...для зберігання вашого коду."
 
-#: mu/modes/pygamezero.py:35
+#: plugins/pygamezero/nu_pygamezero/__init__.py:29
+#: plugins/pygamezero/nu_pygamezero/mode.py:39
 msgid "Pygame Zero"
 msgstr "Pygame Zero"
 
-#: mu/modes/pygamezero.py:37
+#: plugins/pygamezero/nu_pygamezero/__init__.py:30
+msgid "Adds Pygame Zero mode, for making games."
+msgstr ""
+
+#: plugins/pygamezero/nu_pygamezero/mode.py:41
 msgid "Make games with Pygame Zero."
 msgstr "Створити ігри з Pygame Zero."
 
-#: mu/modes/pygamezero.py:65 mu/modes/pygamezero.py:115
+#: plugins/pygamezero/nu_pygamezero/mode.py:73
+#: plugins/pygamezero/nu_pygamezero/mode.py:140
 msgid "Play"
 msgstr "Пограти"
 
-#: mu/modes/pygamezero.py:66 mu/modes/pygamezero.py:116
+#: plugins/pygamezero/nu_pygamezero/mode.py:74
+#: plugins/pygamezero/nu_pygamezero/mode.py:141
 msgid "Play your Pygame Zero game."
 msgstr "Пограти у свою гру  Pygame Zero."
 
-#: mu/modes/pygamezero.py:72 mu/modes/web.py:103
+#: plugins/pygamezero/nu_pygamezero/mode.py:80
 msgid "Images"
 msgstr "Зображення"
 
-#: mu/modes/pygamezero.py:73
+#: plugins/pygamezero/nu_pygamezero/mode.py:81
 msgid "Show the images used by Pygame Zero."
 msgstr "Показати зображення, використані Pygame Zero."
 
-#: mu/modes/pygamezero.py:79
+#: plugins/pygamezero/nu_pygamezero/mode.py:87
 msgid "Fonts"
 msgstr "Шрифти"
 
-#: mu/modes/pygamezero.py:80
+#: plugins/pygamezero/nu_pygamezero/mode.py:88
 msgid "Show the fonts used by Pygame Zero."
 msgstr "Показати шрифти, використані Pygame Zero."
 
-#: mu/modes/pygamezero.py:86
+#: plugins/pygamezero/nu_pygamezero/mode.py:94
 msgid "Sounds"
 msgstr "Звуки"
 
-#: mu/modes/pygamezero.py:87
+#: plugins/pygamezero/nu_pygamezero/mode.py:95
 msgid "Show the sounds used by Pygame Zero."
 msgstr "Показати звуки, які використовує Pygame Zero."
 
-#: mu/modes/pygamezero.py:93
+#: plugins/pygamezero/nu_pygamezero/mode.py:101
 msgid "Music"
 msgstr "Музика"
 
-#: mu/modes/pygamezero.py:94
+#: plugins/pygamezero/nu_pygamezero/mode.py:102
 msgid "Show the music used by Pygame Zero."
 msgstr "Показати музику, яку використовує Pygame Zero."
 
-#: mu/modes/pygamezero.py:124
+#: plugins/pygamezero/nu_pygamezero/mode.py:151
 msgid "Stop your Pygame Zero game."
 msgstr "Зупинити  гру Pygame Zero."
 
-#: mu/modes/python3.py:133
-msgid "Python 3"
-msgstr "Python 3"
+#~ msgid "Minify Python code before flashing?"
+#~ msgstr "Мінімізувати код Python перед записом у пам'ять?"
 
-#: mu/modes/python3.py:135
-msgid "Create code using standard Python 3."
-msgstr "Створити код за допомогою стандартного Python 3."
+#~ msgid ""
+#~ "Override the built-in MicroPython "
+#~ "runtime with the following hex file "
+#~ "(empty means use the default):"
+#~ msgstr ""
+#~ "Перевизначення вбудованого середовища виконання "
+#~ "MicroPython за допомогою наступного "
+#~ "шістнадцяткового файла (порожній означає "
+#~ "використання типового):"
 
-#: mu/modes/python3.py:151 mu/modes/python3.py:200
-msgid "Run your Python script."
-msgstr "Запустити скрипт Python."
+#~ msgid "How to flash MicroPython to your device"
+#~ msgstr "Як записати файл прошивки MicroPython на ваш пристрій"
 
-#: mu/modes/python3.py:157
-msgid "Debug"
-msgstr "Відлагодити"
+#~ msgid ""
+#~ "&nbsp;1. Determine the type of device"
+#~ " (ESP8266 or ESP32)<br />&nbsp;2. Download"
+#~ " firmware from the <a "
+#~ "href=\"https://micropython.org/download\" "
+#~ "style=\"color:#039be5;\">https://micropython.org/download</a><br/>&nbsp;3."
+#~ " Connect your device<br/>&nbsp;4. Load the"
+#~ " .bin file below using the 'Browse'"
+#~ " button<br/>&nbsp;5. Press 'Erase & write"
+#~ " firmware'"
+#~ msgstr ""
+#~ "1. Визначте тип пристрою (ESP8266 або"
+#~ " ESP32) 2<br />. Завантажте прошивку "
+#~ "з https://micropython.org/download <a "
+#~ "href=\"https://micropython.org/download\" "
+#~ "style=\"color:#039be5;\">3</a><br/>. Підключіть пристрій"
+#~ " 4.<br/>Завантажте файл .bin нижче за "
+#~ "допомогою кнопки \"Перегляд\" 5.<br/>Натисніть "
+#~ "\"Видалити та записати мікропрограмне "
+#~ "забезпечення\""
 
-#: mu/modes/python3.py:158
-msgid "Debug your Python script."
-msgstr "Налагодження скрипту Python."
+#~ msgid "Browse"
+#~ msgstr "Огляд"
 
-#: mu/modes/python3.py:165
-msgid "Use the REPL for live coding."
-msgstr "Використати REPL для прямого кодування."
+#~ msgid "Erase && write firmware"
+#~ msgstr "Стирання і запис мікропрограмного забезпечення"
 
-#: mu/modes/python3.py:175
-msgid "Plot data from your script or the REPL."
-msgstr "Побудова даних зі свого скрипту або REPL."
+#~ msgid "BBC micro:bit Settings"
+#~ msgstr "Налаштування BBC micro:bit"
 
-#: mu/modes/python3.py:208
-msgid "Stop your Python script."
-msgstr "Зупинити свій скрипт Python."
+#~ msgid "ESP Firmware flasher"
+#~ msgstr "Завантажувач прошивки ESP"
 
-#: mu/modes/python3.py:280
-msgid "Starting iPython REPL."
-msgstr "Запуск iPython REPL."
+#~ msgid "Filesystem on "
+#~ msgstr "Файлова система на "
 
-#: mu/modes/python3.py:285
-msgid "Stopping iPython REPL (this may take a short amount of time)."
-msgstr "Зупинка iPython REPL (це може зайняти деякий час)."
+#~ msgid "Mu"
+#~ msgstr "М'ю"
 
-#: mu/modes/python3.py:377
-msgid "REPL started."
-msgstr "REPL запущено."
+#~ msgid "File already exists; overwrite it?"
+#~ msgstr "Файл вже існує. Перезаписати його?"
 
-#: mu/modes/python3.py:386
-msgid "REPL stopped."
-msgstr "REPL зупинено."
+#~ msgid "File already exists"
+#~ msgstr "Файл вже існує"
 
-#: mu/modes/web.py:58
-msgid "Web"
-msgstr "Веб"
+#~ msgid "Copying '{}' to device."
+#~ msgstr "Копіювання '{}' на пристрій."
 
-#: mu/modes/web.py:60
-msgid "Build simple websites with the \"Flask\" web framework."
-msgstr "Створюйте прості вебсайти за допомогою вебфреймворку \"Flask\"."
+#~ msgid "'{}' successfully copied to device."
+#~ msgstr "'{}' успішно скопійовано на пристрій."
 
-#: mu/modes/web.py:76 mu/modes/web.py:129
-msgid "Run the web server."
-msgstr "Запустити вебсервер."
+#~ msgid "Delete (cannot be undone)"
+#~ msgstr "Видалити (неможливо скасувати)"
 
-#: mu/modes/web.py:83
-msgid "Open your website in a browser."
-msgstr "Відкрийте свій вебсайт у вебпереглядачі."
+#~ msgid "Deleting '{}' from device."
+#~ msgstr "Видалення '{}' з пристрою."
 
-#: mu/modes/web.py:89
-msgid "Templates"
-msgstr "Шаблони"
+#~ msgid "'{}' successfully deleted from device."
+#~ msgstr "'{}' успішно видалено з пристрою."
 
-#: mu/modes/web.py:90
-msgid "Load HTML templates used by your website."
-msgstr "Завантажте шаблони HTML, що використовуються вашим вебсайтом."
+#~ msgid "Getting '{}' from device. Copying to '{}'."
+#~ msgstr "Отримання '{}' з пристрою. Копіювання до '{}'."
 
-#: mu/modes/web.py:96
-msgid "CSS"
-msgstr "CSS"
+#~ msgid "Successfully copied '{}' from the device to your computer."
+#~ msgstr "Успішно скопійовано '{}' з пристрою на комп 'ютер."
 
-#: mu/modes/web.py:97
-msgid "Load CSS files used by your website."
-msgstr "Завантажте файли CSS, що використовуються вашим вебсайтом."
+#~ msgid "Open in Mu"
+#~ msgstr "Відкрити в М'ю"
 
-#: mu/modes/web.py:104
-msgid "Open the directory containing images used by your website."
-msgstr "Відкрийте каталог із зображеннями, які використовуються на вашому вебсайті."
+#~ msgid "Write to main.py on device"
+#~ msgstr "Запис до main.py на пристрої"
 
-#: mu/modes/web.py:137
-msgid "Stop the web server."
-msgstr "Зупинити сервер"
+#~ msgid "Opening '{}'"
+#~ msgstr "Відкривання '{}'"
 
-#: mu/modes/web.py:157
-msgid "This is not a Python file!"
-msgstr "Це не файл Python!"
+#~ msgid "Files on your device:"
+#~ msgstr "Файли на вашому пристрої:"
 
-#: mu/modes/web.py:158
-msgid ""
-"Mu is only able to serve a Python file. Please make sure the current tab in Mu "
-"is the one for your web application and then try again."
-msgstr "М'ю може обслуговувати лише файл Python. Переконайтеся, що поточна вкладка в М'ю відповідає вебзастосунку, а потім спробуйте ще раз."
+#~ msgid "Files on your computer:"
+#~ msgstr "Файли на вашому комп’ютері:"
 
-#: mu/modes/web.py:175
-msgid "Cannot find template directory!"
-msgstr "Не вдається знайти каталог шаблонів!"
+#~ msgid ""
+#~ "There was a problem getting the "
+#~ "list of files on the device. "
+#~ "Please check Mu's logs for technical "
+#~ "information. Alternatively, try unplugging"
+#~ "/plugging-in your device and/or restarting"
+#~ " Mu."
+#~ msgstr ""
+#~ "Виникла проблема з отриманням списку "
+#~ "файлів на пристрої. Будь ласка, "
+#~ "перевірте журнали М'ю для отримання "
+#~ "технічної інформації. Крім того, спробуйте "
+#~ "вимкнути/підключити пристрій та/або перезапустити"
+#~ " М'ю."
 
-#: mu/modes/web.py:176
-msgid ""
-"To serve your web application, there needs to be a 'templates' directory in the "
-"same place as your web application's Python code. Please fix this and try "
-"again. (Hint: Mu was expecting the `templates` directory to be here: )"
-msgstr "Щоб обслуговувати вашу вебзастосунок, потрібен каталог 'шаблонів' у тому ж місці, що й код Python вашого вебзастосунку. Виправте помилку та повторіть спробу. (Підказка: М'ю очікує, що каталог 'шаблонів' буде тут: )"
+#~ msgid ""
+#~ "There was a problem copying the "
+#~ "file '{}' onto the device. Please "
+#~ "check Mu's logs for more information."
+#~ msgstr ""
+#~ "Виникла проблема з копіюванням файлу "
+#~ "'{}' на пристрій. Будь ласка, перевірте"
+#~ " журнали М'ю для отримання додаткової "
+#~ "інформації."
 
-#: mu/modes/web.py:273
-msgid "Cannot Open Website - Server not Running."
-msgstr "Неможливо відкрити вебсайт - сервер не працює."
+#~ msgid ""
+#~ "There was a problem deleting '{}' "
+#~ "from the device. Please check Mu's "
+#~ "logs for more information."
+#~ msgstr ""
+#~ "Під час видалення \" '{}' з "
+#~ "пристрою сталася помилка. Будь ласка, "
+#~ "перевірте журнали М'ю для отримання "
+#~ "додаткової інформації."
 
-#: mu/modes/web.py:274
-msgid ""
-"You must have the local web server running in order to view your website in a "
-"browser. Click on the 'Run' button to start the server and then try again."
-msgstr "Щоб переглянути свій вебсайт у вебпереглядачі, необхідно запустити локальний вебсервер. Натисніть кнопку \"Запустити\", щоб запустити сервер, а потім спробуйте ще раз."
+#~ msgid ""
+#~ "There was a problem getting '{}' "
+#~ "from the device. Please check Mu's "
+#~ "logs for more information."
+#~ msgstr ""
+#~ "Виникла проблема з отриманням  '{}' з"
+#~ " пристрою. Будь ласка, перевірте журнали"
+#~ " М'ю для отримання додаткової інформації."
+
+#~ msgid "Could not find MicroPython runtime."
+#~ msgstr "Не вдалося знайти MicroPython."
+
+#~ msgid ""
+#~ "The micro:bit runtime you specified "
+#~ "('{}') does not exist. Please try "
+#~ "again."
+#~ msgstr ""
+#~ "Код micro:bit, який ви вказали ('{}'),"
+#~ " не існує. Будь ласка спробуйте ще"
+#~ " раз."
+
+#~ msgid "ESP MicroPython"
+#~ msgstr "ESP MicroPython"
+
+#~ msgid "Write MicroPython on ESP8266/ESP32 boards."
+#~ msgstr "Запускайте MicroPython на платах ESP8266/ESP32."
+
+#~ msgid "Run your code directly on the {board_name} via the REPL."
+#~ msgstr "Запустіть свій код безпосередньо на {board_name} через REPL."
+
+#~ msgid "Files"
+#~ msgstr "Файли"
+
+#~ msgid "Access the file system on {board_name}."
+#~ msgstr "Доступ до файлової системи на {board_name}."
+
+#~ msgid "Use the REPL to live-code on the {board_name}."
+#~ msgstr "Використовуйте REPL для 'живого' коду на {board_name}."
+
+#~ msgid "REPL and file system cannot work at the same time."
+#~ msgstr "REPL та файлова система не можуть працювати одночасно."
+
+#~ msgid ""
+#~ "The REPL and file system both use"
+#~ " the same USB serial connection. Only"
+#~ " one can be active at any time."
+#~ " Toggle the file system off and "
+#~ "try again."
+#~ msgstr ""
+#~ "REPL і файлова система використовують "
+#~ "однакове послідовне з'єднання USB. Тільки "
+#~ "один може бути активним у будь-який "
+#~ "час. Вимкніть файлову систему та "
+#~ "повторіть спробу."
+
+#~ msgid "The plotter and file system cannot work at the same time."
+#~ msgstr "Плотер і файлова система не можуть працювати одночасно."
+
+#~ msgid ""
+#~ "The plotter and file system both "
+#~ "use the same USB serial connection. "
+#~ "Only one can be active at any "
+#~ "time. Toggle the file system off "
+#~ "and try again."
+#~ msgstr ""
+#~ "Плотер і файлова система використовують "
+#~ "однакове послідовне з'єднання USB. Тільки "
+#~ "один може бути активним у будь-який "
+#~ "час. Вимкніть файлову систему та "
+#~ "повторіть спробу."
+
+#~ msgid "Cannot run anything without any active editor tabs."
+#~ msgstr "Нічого не можна запустити без активних вкладок редактора."
+
+#~ msgid ""
+#~ "Running transfers the content of the "
+#~ "current tab onto the device. It "
+#~ "seems like you don't have  any "
+#~ "tabs open."
+#~ msgstr ""
+#~ "Виконання передає вміст поточної вкладки "
+#~ "на пристрій. Схоже, у вас немає "
+#~ "відкритих вкладок."
+
+#~ msgid "File system cannot work at the same time as the REPL or plotter."
+#~ msgstr "Файлова система не може працювати одночасно з REPL або плотером."
+
+#~ msgid ""
+#~ "The file system and the REPL and"
+#~ " plotter use the same USB serial "
+#~ "connection. Toggle the REPL and plotter"
+#~ " off and try again."
+#~ msgstr ""
+#~ "Файлова система та REPL та плотер "
+#~ "використовують одне і те ж послідовне"
+#~ " з'єднання USB. Вимкніть REPL та "
+#~ "плотер та спробуйте ще раз."
+
+#~ msgid "Could not find an attached {board_name}"
+#~ msgstr "Не вдалося знайти приєднаний пристрій {board_name}."
+
+#~ msgid ""
+#~ "Please make sure the device is plugged into this computer.\n"
+#~ "\n"
+#~ "The device must have MicroPython flashed"
+#~ " onto it before the file system "
+#~ "will work.\n"
+#~ "\n"
+#~ "Finally, press the device's reset button"
+#~ " and wait a few seconds before "
+#~ "trying again."
+#~ msgstr ""
+#~ "Переконайтеся, що пристрій підключено до цього комп’ютера.\n"
+#~ "\n"
+#~ "Перед тим, як файлова система запрацює,"
+#~ " на пристрої повинен бути прошитий "
+#~ "MicroPython.\n"
+#~ "\n"
+#~ "Нарешті, натисніть кнопку скидання пристрою"
+#~ " та зачекайте кілька секунд, перш ніж"
+#~ " повторити спробу."
+
+#~ msgid "{board_name} board"
+#~ msgstr "Плата {board_name}"
+
+#~ msgid "Lego MicroPython"
+#~ msgstr "Lego MicroPython"
+
+#~ msgid "Write MicroPython directly on Lego Spike devices."
+#~ msgstr "Напишіть MicroPython безпосередньо на пристроях Lego Spike."
+
+#~ msgid "BBC micro:bit"
+#~ msgstr "BBC micro: bit"
+
+#~ msgid "Write MicroPython for the BBC micro:bit."
+#~ msgstr "Запускайте MicroPython на BBC micro:bit."
+
+#~ msgid "Flash"
+#~ msgstr "Прошити"
+
+#~ msgid "Flash your code onto the micro:bit."
+#~ msgstr "Прошити код на micro:bit."
+
+#~ msgid "Access the file system on the micro:bit."
+#~ msgstr "Доступ до файлової системи на micro:bit."
+
+#~ msgid "Use the REPL to live-code on the micro:bit."
+#~ msgstr "Використовувати REPL для кодування на micro:bit."
+
+#~ msgid "Your script is too long and code minification is disabled"
+#~ msgstr "Ваш скрипт задовгий, а мінімізацію коду вимкнено"
+
+#~ msgid "Your script is too long and the minifier isn't available"
+#~ msgstr "Ваш скрипт занадто довгий, і мініфікатор недоступний"
+
+#~ msgid "Problem minifying script"
+#~ msgstr "Проблема з мініфікацією скрипта"
+
+#~ msgid "Our minifier tried but your script is too long!"
+#~ msgstr "Наш мініфікатор спробував, але ваш скрипт занадто довгий!"
+
+#~ msgid "Unable to flash \"{}\""
+#~ msgstr "Не вдається прошити \"{}\""
+
+#~ msgid "Could not find an attached BBC micro:bit."
+#~ msgstr "Не вдалося знайти приєднаний пристрій BBC micro:bit.."
+
+#~ msgid ""
+#~ "Please ensure you leave enough time "
+#~ "for the BBC micro:bit to be "
+#~ "attached and configured correctly by "
+#~ "your computer. This may take several "
+#~ "seconds. Alternatively, try removing and "
+#~ "re-attaching the device or saving "
+#~ "your work and restarting Mu if the"
+#~ " device remains unfound."
+#~ msgstr ""
+#~ "Будь ласка, переконайтеся, що у вас "
+#~ "залишається достатньо часу, щоб його "
+#~ "правильно приєднати BBC micro:bit та "
+#~ "налаштувати комп'ютер. Це може зайняти "
+#~ "кілька секунд. Крім того, спробуйте "
+#~ "видалити та повторно підключити пристрій "
+#~ "або зберегти свою роботу та "
+#~ "перезапустити М'ю, якщо пристрій залишиться"
+#~ " без підтвердження."
+
+#~ msgid "Cannot save a custom hex file to a local directory."
+#~ msgstr ""
+#~ "Неможливо зберегти нетиповий шістнадцятковий "
+#~ "файл до локального каталогу."
+
+#~ msgid ""
+#~ "When a custom hex file is "
+#~ "configured in the settings a local "
+#~ "directory cannot be used to saved "
+#~ "the final hex file."
+#~ msgstr ""
+#~ "Якщо у налаштуваннях налаштовано спеціальний"
+#~ " шістнадцятковий файл, локальний каталог не"
+#~ " може бути використаний для збереження "
+#~ "остаточного шістнадцяткового файлу."
+
+#~ msgid "Cannot use a custom hex file without micro:bit port."
+#~ msgstr ""
+#~ "Неможливо використовувати спеціальний "
+#~ "шістнадцятковий файл без порту micro:bit."
+
+#~ msgid ""
+#~ "Mu was unable to detect the "
+#~ "micro:bit serial port. Normally this is"
+#~ " okay, as Mu can inject the "
+#~ "Python code into the hex to flash."
+#~ " However, this cannot be done with"
+#~ " a custom hex file."
+#~ msgstr ""
+#~ "М'ю не вдалося виявити послідовний порт"
+#~ " micro:bit. Зазвичай це нормально, оскільки"
+#~ " М'ю може ввести код Python у "
+#~ "HEX для прошивки. Однак, це неможливо"
+#~ " зробити з користувацьким файлом HEX."
+
+#~ msgid "Unsupported BBC micro:bit."
+#~ msgstr "Непідтримуваний BBC micro:bit."
+
+#~ msgid ""
+#~ "Your device is newer than this "
+#~ "version of Mu. Please update Mu to"
+#~ " the latest version to support this"
+#~ " device.\n"
+#~ "\n"
+#~ "https://codewith.mu/"
+#~ msgstr ""
+#~ "Ваш пристрій новіший, ніж ця версія "
+#~ "М'ю. Оновіть М'ю до останньої версії "
+#~ "для підтримки цього пристрою.\n"
+#~ "\n"
+#~ "https://codewith.mu/"
+
+#~ msgid "Flashing the micro:bit"
+#~ msgstr "Прошивання micro:bit."
+
+#~ msgid "Runtime"
+#~ msgstr "Середовище виконання"
+
+#~ msgid "Copied code onto micro:bit."
+#~ msgstr "Код скопійовано на micro:bit."
+
+#~ msgid "There was a problem flashing the micro:bit."
+#~ msgstr "Виникла проблема з прошиванням micro:bit."
+
+#~ msgid ""
+#~ "Please do not disconnect the device "
+#~ "until flashing has completed. Please "
+#~ "check the logs for more information."
+#~ msgstr ""
+#~ "Будь ласка, не відключайте пристрій, "
+#~ "поки прошивання не завершиться. Перевірте "
+#~ "журнали для отримання додаткової інформації."
+
+#~ msgid "micro:bit"
+#~ msgstr "micro:bit"
+
+#~ msgid "RP2040"
+#~ msgstr "RP2040"
+
+#~ msgid "Write MicroPython directly on a Raspberry Pi Pico."
+#~ msgstr "Напишіть MicroPython безпосередньо на Raspberry Pi Pico."
+
+#~ msgid "Pyboard MicroPython"
+#~ msgstr "Pyboard MicroPython"
+
+#~ msgid "Use MicroPython on the Pyboard line of boards"
+#~ msgstr "Використовувати MicroPython на панелі Pyboard"
+
+#~ msgid "Could not find an attached PyBoard device."
+#~ msgstr "Не вдалося знайти приєднаний пристрій PyBoard."
+
+#~ msgid ""
+#~ "Python files for PyBoard MicroPython "
+#~ "devices are stored on the device. "
+#~ "Therefore, to edit these files you "
+#~ "need to have the device plugged "
+#~ "in. Until you plug in a device,"
+#~ " Mu will use the directory found "
+#~ "here:\n"
+#~ "\n"
+#~ " {}\n"
+#~ "\n"
+#~ "...to store your code."
+#~ msgstr ""
+#~ "Файли Python для пристроїв PyBoard "
+#~ "MicroPython зберігаються на пристрої. Тому "
+#~ "для редагування цих файлів потрібно "
+#~ "підключити пристрій. Доки ви не "
+#~ "підключите пристрій, М'ю використовуватиме "
+#~ "каталог, знайдений тут:\n"
+#~ "\n"
+#~ " {}\n"
+#~ "\n"
+#~ "...для зберігання вашого коду."
+
+#~ msgid "Web"
+#~ msgstr "Веб"
+
+#~ msgid "Build simple websites with the \"Flask\" web framework."
+#~ msgstr "Створюйте прості вебсайти за допомогою вебфреймворку \"Flask\"."
+
+#~ msgid "Run the web server."
+#~ msgstr "Запустити вебсервер."
+
+#~ msgid "Open your website in a browser."
+#~ msgstr "Відкрийте свій вебсайт у вебпереглядачі."
+
+#~ msgid "Templates"
+#~ msgstr "Шаблони"
+
+#~ msgid "Load HTML templates used by your website."
+#~ msgstr "Завантажте шаблони HTML, що використовуються вашим вебсайтом."
+
+#~ msgid "CSS"
+#~ msgstr "CSS"
+
+#~ msgid "Load CSS files used by your website."
+#~ msgstr "Завантажте файли CSS, що використовуються вашим вебсайтом."
+
+#~ msgid "Open the directory containing images used by your website."
+#~ msgstr ""
+#~ "Відкрийте каталог із зображеннями, які "
+#~ "використовуються на вашому вебсайті."
+
+#~ msgid "Stop the web server."
+#~ msgstr "Зупинити сервер"
+
+#~ msgid "This is not a Python file!"
+#~ msgstr "Це не файл Python!"
+
+#~ msgid ""
+#~ "Mu is only able to serve a "
+#~ "Python file. Please make sure the "
+#~ "current tab in Mu is the one "
+#~ "for your web application and then "
+#~ "try again."
+#~ msgstr ""
+#~ "М'ю може обслуговувати лише файл Python."
+#~ " Переконайтеся, що поточна вкладка в "
+#~ "М'ю відповідає вебзастосунку, а потім "
+#~ "спробуйте ще раз."
+
+#~ msgid "Cannot find template directory!"
+#~ msgstr "Не вдається знайти каталог шаблонів!"
+
+#~ msgid ""
+#~ "To serve your web application, there "
+#~ "needs to be a 'templates' directory "
+#~ "in the same place as your web "
+#~ "application's Python code. Please fix "
+#~ "this and try again. (Hint: Mu was"
+#~ " expecting the `templates` directory to "
+#~ "be here: )"
+#~ msgstr ""
+#~ "Щоб обслуговувати вашу вебзастосунок, потрібен"
+#~ " каталог 'шаблонів' у тому ж місці,"
+#~ " що й код Python вашого "
+#~ "вебзастосунку. Виправте помилку та повторіть"
+#~ " спробу. (Підказка: М'ю очікує, що "
+#~ "каталог 'шаблонів' буде тут: )"
+
+#~ msgid "Cannot Open Website - Server not Running."
+#~ msgstr "Неможливо відкрити вебсайт - сервер не працює."
+
+#~ msgid ""
+#~ "You must have the local web server"
+#~ " running in order to view your "
+#~ "website in a browser. Click on the"
+#~ " 'Run' button to start the server "
+#~ "and then try again."
+#~ msgstr ""
+#~ "Щоб переглянути свій вебсайт у "
+#~ "вебпереглядачі, необхідно запустити локальний "
+#~ "вебсервер. Натисніть кнопку \"Запустити\", щоб"
+#~ " запустити сервер, а потім спробуйте "
+#~ "ще раз."
+

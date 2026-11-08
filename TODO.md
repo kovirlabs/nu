@@ -528,18 +528,20 @@ choice; recommended stack below.)
 - Orphaned resource icons / locale strings for removed modes are harmless; sweep later.
 - 100%-coverage mandate is great for the Qt6 port; can relax to "don't regress" afterward
   if it slows iteration.
-- **Translations re-extraction after the in-app "Mu" → "Nu" rename** (i18n follow-up). The
-  user-facing app-name strings were renamed from "Mu" to "Nu" (window title, dialogs,
-  tooltips, error/confirmation messages, the MOTD, and the Jupyter kernel label) across
-  `mu/interface/main.py`, `mu/interface/dialogs.py`, `mu/logic.py`,
-  `mu/modes/{base,circuitpython}.py`, and `mu/virtual_environment.py`. Because each is a
-  gettext `_()` string, renaming changes its `msgid`, so the existing
-  `mu/locale/*/LC_MESSAGES/mu.po` catalogues **no longer match** those strings — they fall
-  back to the (English) "Nu …" source until the catalogues are regenerated. **To do:**
-  re-extract the `.pot` and merge into the per-locale `.po` (the `make translate*` / babel
-  flow), then update the translations. NB heritage strings were intentionally left as "Mu"
-  (e.g. the MOTD credit "Mu was created by Nicholas H. Tollervey."), so they keep their
-  existing translations.
+- ~~**Translations re-extraction after the in-app "Mu" → "Nu" rename**~~ — done
+  (branch `i18n/re-extract-after-rename`). All 14 catalogues were re-extracted from
+  `mu/` + the bundled plugins and merged (`make translate_begin`); 213 entries whose
+  only change was the app name had their translation carried across mechanically by
+  `utils/recover_renamed_translations.py` (only where the translation writes the name
+  literally as "Mu"); every `.mo` was recompiled (the fr and ru_RU binaries had drifted
+  from their `.po` for years); Ukrainian was added to the language picker; and
+  `tests/test_i18n.py` now guards `.po`/`.mo` sync, `{}` placeholders and
+  picker ↔ `mu/locale` parity. Nothing was machine-translated. **Remaining, for
+  translators** (see `docs/translations.md`, `make translate_status`): ~85–105
+  untranslated messages per language (mostly the Environment/Plugins tabs, command log
+  and PEP 723 hints) and ~16–36 "needs review" (fuzzy) ones, notably all of uk_UA's
+  renamed strings (its translation writes "М'ю"), sv's genitive "Mus", and the nl
+  `"{} REPL"` entry, which was mistranslated and is now flagged fuzzy.
 - ~~**App-ID realignment**~~ — done in 4e: `setDesktopFileName("org.kovir.mu")` matches
   Briefcase's generated `.desktop`; `conf/` removed.
 - ~~**Stale `conf/mu.appdata.xml` description**~~ — moot: `conf/` removed in 4e (it

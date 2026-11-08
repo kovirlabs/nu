@@ -311,6 +311,38 @@ def translate_done(lang=""):
 
 
 @export
+def translate_status():
+    """Print a Markdown table of how complete each translation is."""
+    from babel import Locale
+    from babel.messages.pofile import read_po
+
+    print("| Language | In English | Code | Translated | Needs review | Untranslated |")
+    print("| --- | --- | --- | ---: | ---: | ---: |")
+    for lang in sorted(os.listdir(_MU_LOCALE_DIRNAME)):
+        mu_po_filename = os.path.join(_MU_LOCALE_DIRNAME, lang, "LC_MESSAGES", "mu.po")
+        if not os.path.isfile(mu_po_filename):
+            continue
+        with open(mu_po_filename, "rb") as po_file:
+            messages = [m for m in read_po(po_file) if m.id]
+        fuzzy = sum(1 for m in messages if m.fuzzy)
+        translated = sum(1 for m in messages if m.string and not m.fuzzy)
+        untranslated = len(messages) - fuzzy - translated
+        locale = Locale.parse(lang)
+        print(
+            "| {} | {} | `{}` | {} ({:.0%}) | {} | {} |".format(
+                locale.get_display_name(lang),
+                locale.get_display_name("en"),
+                lang,
+                translated,
+                translated / len(messages),
+                fuzzy,
+                untranslated,
+            )
+        )
+    return 0
+
+
+@export
 def translate_test(lang=""):
     """Run translate_done and launch Mu in the given LANG."""
     result = translate_done(lang)
