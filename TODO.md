@@ -494,24 +494,73 @@ choice; recommended stack below.)
 | Hex format | **Universal Hex** — one image covers micro:bit **V1 + V2** |
 | Board detect | serial VID:PID via the existing `adafruit-board-toolkit` + the mounted `MICROBIT` DAPLink volume |
 
-**6a. Connectivity + flashing foundation:**
-- [ ] REPL + file ops (`ls`/`cp`/`rm`/mount) over serial via **`mpremote`**.
-- [ ] Flash via **`pyOCD`**; fall back to copying a `.hex` onto the mounted `MICROBIT` drive
-  (no drivers needed). Handle **Universal Hex** for V1+V2.
-- [ ] Obtain the micro:bit MicroPython firmware by **pin + fetch / installer-bundle** — do
-  **not** re-vendor a frozen blob (the original mistake that got the mode dropped).
+As built (2026-11): **mpremote** + **DAPLink drag-and-drop**, per-version hex; board detection
+by VID:PID from Qt's port info (the device selector) and pyserial (the flash worker's thread),
+not `adafruit-board-toolkit`. pyOCD and Universal Hex are deferred (below).
+
+**6a. Connectivity + flashing foundation:** ✅ built, **needs hardware validation**
+(everything below is tested against fakes only; there was no micro:bit when it was built —
+the maintainer's checklist is in `plugins/microbit/README.md`)
+- [x] Flash via **DAPLink mass-storage drag-and-drop**: `nu_microbit.flash.copy_hex` writes the
+  firmware `.hex` onto the `MICROBIT` drive (found via `mount` output, `/media/*`,
+  `/run/media/*`, `/Volumes`, ChromeOS's `/mnt/chromeos/removable`, Windows volume labels),
+  then waits for DAPLink's remount (≤30 s gone, ≤60 s back) and checks `FAIL.TXT`.
+  `DETAILS.TXT` gives the board ID (9900/9901 → V1, 9903–9906 → V2; anything else is
+  refused politely) and the DAPLink version; a `MAINTENANCE` drive gets its own message.
+- [x] Copy the learner's code as `main.py` + reset via **`mpremote`** (`>=1.29`), in-process:
+  `SerialTransport.enter_raw_repl(soft_reset=True)` → `fs_writefile` → mpremote's own `reset`
+  code (`machine.reset()`), in a worker `QThread` — no `sys.executable -m mpremote` problem
+  in the packaged app. Echoed as `mpremote connect <port> fs cp <file> :main.py + reset`.
+  MicroPython present? → REPL probe (Ctrl-C, Ctrl-B, banner `MicroPython … micro:bit vX`,
+  3 s); absent (or **Shift+Flash**, confirmed) → firmware first, then a ≤20 s wait for the
+  REPL. `time`, `time.sleep_ms` and `machine.reset` were checked in the V1 1.1.1 and V2 2.1.2
+  firmware sources.
+- [x] Firmware **pinned + fetched**, never vendored (`nu_microbit/firmware.py`): V2 **2.1.2**
+  (`microbit-foundation/micropython-microbit-v2`; newest release, though GitHub's "latest"
+  badge is still on 2.1.1) and V1 **1.1.1** (`bbcmicrobit/micropython`), by URL + SHA-256
+  (verified by downloading both, 2026-11). Downloaded on first use to
+  `DATA_DIR/microbit/firmware/` with progress, checked, kept; a bad cached copy is deleted;
+  offline → a message naming the file, its URL and the folder. Also looked for in
+  `nu_microbit/firmware/` (the installer-bundling hook for 6c). To update a pin: change the
+  URL, version, size and SHA-256 together and re-run the tests.
+- [ ] REPL file ops (`ls`/`cp`/`rm`) via mpremote — with the Files pane (6b).
+- [ ] **Universal Hex** (one image for V1+V2): deferred. Per-version hex picked from
+  `DETAILS.TXT` is simpler and robust; revisit if we ever ship the firmware in installers
+  and want one file.
+- [ ] **pyOCD** as the richer flasher: deferred (heavy deps, untestable without hardware).
+  Hook: `BoardIO.copy_hex` is the one firmware-writing step; a pyOCD flasher would replace
+  it (and could work when the drive doesn't mount).
 
 **6b. The plugin (on the Phase 5 API):**
-- [ ] A `nu-microbit` plugin providing the micro:bit **mode**: flash button, REPL,
-  file-transfer pane, workspace dir.
+- [x] A `nu-microbit` plugin (`plugins/microbit`, import `nu_microbit`, entry point
+  `microbit`, mode key `microbit` as in Mu) providing the micro:bit **mode**: **Flash**
+  (F3; Shift+Flash re-flashes MicroPython), **REPL** and **Plotter** (MicroPythonMode's,
+  unchanged — the micro:bit REPL is a plain MicroPython REPL), board detection by DAPLink
+  VID:PID 0D28:0204 with V1/V2 named from the serial number, workspace
+  `<workspace>/microbit`. Flash closes an open REPL/plotter first (they hold the port),
+  greys the buttons while it runs and reopens them after. Needed plugin API **0.5**
+  (`Host.log_command`, `Host.current_device`, `Host.data_dir`); boards' modes now show
+  **What Nu ran** as a tab of its own in the admin dialog. Opt-in (root `microbit` extra)
+  until validated — see 6c.
 - [ ] Reintroduce the **file-transfer pane** (the old `FileSystemPane`, removed in Phase 1d)
-  as plugin-owned UI driven by `mpremote`.
-- [ ] Ship **modern `microbit` V2 API stubs** for autocomplete/calltips (audio, microphone,
-  speaker, `log`, radio, …).
+  as plugin-owned UI driven by `mpremote`. **Designed, not built**: `docs/plugins.md` →
+  "Roadmap: the micro:bit Files pane" (API 0.6 `Host.add_pane`/`remove_pane`; mpremote
+  `fs_listdir`/`fs_readfile`/`fs_writefile`/`fs_rmfile` on the same worker pattern, logged;
+  exclusive with the REPL).
+- [x] **Modern `microbit` V2 API stubs** for autocomplete/calltips
+  (`nu_microbit/api/microbit.py`, 349 entries): upstream's, corrected and brought up to
+  MicroPython 2.x (microphone, speaker, `Sound`, `audio.SoundEffect`, `log`, `power`,
+  `pin_logo`, `run_every`, radio, music, neopixel, speech…), checked against the v2-docs and
+  `micropython-microbit-stubs`; V2-only entries say "(micro:bit V2)".
 
 **6c. Packaging + distribution:**
-- [ ] Bundle as a default-enabled plugin; include `mpremote`/`pyOCD` wheels for offline
-  installers.
+- [ ] **After the maintainer's hardware pass**: promote to a default-enabled bundled plugin —
+  move `nu-microbit>=0.1` from the `microbit` extra to `nu-editor`'s dependencies, add
+  `./plugins/microbit` to Briefcase `requires`, `loader.BUNDLED_DISTRIBUTIONS` and
+  `build.yml`'s plugin installs (see `docs/packaging.md` → "Opt-in workspace plugins").
+  Include `mpremote` (+ pyOCD if adopted) wheels for offline installers; optionally fetch the
+  two pinned `.hex` files (SHA-256 checked) into `nu_microbit/firmware/` at build time so a
+  fresh install can flash offline.
 - [ ] Also publish to PyPI so it doubles as the **worked example** for community authors.
 
 **6d. Stretch / future:**

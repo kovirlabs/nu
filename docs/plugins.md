@@ -4,8 +4,9 @@
 
     Nu loads plugins at startup, both installed packages and files in the
     plugins folder (Phases 5a and 5b in `TODO.md`), CircuitPython and Pygame
-    Zero ship as plugins (5c), and the **Plugins** tab lists them and switches
-    them on and off (5e). The API is at version **0.5**, so it can still
+    Zero ship as plugins (5c), the **Plugins** tab lists them and switches
+    them on and off (5e), and micro:bit is back as an opt-in plugin (Phase 6,
+    see [The BBC micro:bit](microbit.md)). The API is at version **0.5**, so it can still
     change between releases. In the downloadable installers the plugins
     folder is the only way to add a plugin (see
     [Roadmap: installing plugins](#roadmap-installing-plugins)).
@@ -22,7 +23,7 @@ Click the **cog** in the bottom-right corner of Nu's window and choose the
 |---|---|
 | **On** | Tick to switch the plugin on, untick to switch it off. |
 | **Plugin** | Its name. Hover over it to see what it adds. |
-| **From** | *Bundled with Nu* (it comes with Nu: CircuitPython and Pygame Zero), *Installed package* (installed into the Python that Nu runs from), or *Plugins folder* (a file or folder put in Nu's plugins folder). Hover over it for the exact package or file. |
+| **From** | *Bundled with Nu* (it comes with Nu: CircuitPython and Pygame Zero), *Installed package* (installed into the Python that Nu runs from, e.g. micro:bit while it's opt-in), or *Plugins folder* (a file or folder put in Nu's plugins folder). Hover over it for the exact package or file. |
 | **Status** | *On*, *Off*, *Couldn't load*, or *Switched off after errors; see the log*. |
 | **Modes** | The modes it adds to the mode picker. |
 
@@ -293,7 +294,7 @@ class MicrobitMode(Mode):
         """Toolbar buttons."""
         return [
             {
-                "name": "flash",            # also its icon and button id
+                "name": "microbit-flash",   # also its icon and button id
                 "display_name": "Flash",
                 "description": "Flash your code to the micro:bit.",
                 "handler": self.flash,
@@ -411,7 +412,8 @@ have no package metadata) to declare any.
 These are planned, and are deliberately left out until a real plugin needs
 them:
 
-- **Panes and settings pages**, e.g. micro:bit's file-transfer pane (Phase 6).
+- **Panes and settings pages**, e.g. micro:bit's file-transfer pane (designed
+  below: [Roadmap: the micro:bit Files pane](#roadmap-the-microbit-files-pane)).
 - **Installing a plugin and its learner-env packages from Nu** (Phase 5d; see
   the [roadmap](#roadmap-installing-plugins)).
 - **Translations for plugins.** Bundled plugins use Nu's own message catalog
@@ -475,7 +477,10 @@ until it is).
   tab shows it as *Couldn't load*, saying it was written for a different
   version of Nu, with the exact versions in its details.
 - The API is bumped deliberately, with a short compatibility-shim window. It
-  stays at 0.x until the micro:bit plugin (Phase 6) has proven it.
+  stays at 0.x until the micro:bit plugin (Phase 6) has proven it: 0.5 is
+  what micro:bit needed to be built on the API alone, and it should reach 1.0
+  once the plugin has passed its hardware checks and the Files pane (below)
+  has settled the API for panes.
 
 ## Trust & safety
 
@@ -593,6 +598,36 @@ uv pip uninstall --python <DATA_DIR>/plugin-env/bin/python nu-microbit
   same id: the installed one wins today. Is that still right when the learner
   installed one themselves?
 
+## Roadmap: the micro:bit Files pane
+
+!!! note "Design only"
+
+    Phase 6b. Not built yet: micro:bit mode has Flash, REPL and Plotter.
+
+Upstream Mu's micro:bit mode had a **Files** pane: the files on the board on
+one side, the learner's `microbit` folder on the other, drag between them.
+Nu removed the old `FileSystemPane` (and the frozen `microfs` behind it) in
+Phase 1. It comes back as **plugin-owned UI** driven by mpremote:
+
+- **API (0.6):** a plugin needs to put a widget in the window.
+  `Host.add_pane(widget, title, area="bottom")` docks it (as the REPL and
+  plotter are docked) and returns a handle; `Host.remove_pane(handle)` takes
+  it away, and the core removes a plugin's panes when it unloads or its mode
+  is deactivated. The widget is the plugin's own Qt code (PyQt6 is Nu's
+  dependency, so a plugin may import it); the core owns where it goes and
+  its theme.
+- **Talking to the board:** the same worker pattern as Flash: one job at a
+  time on a `QThread`, through `mpremote.transport_serial.SerialTransport`:
+  `fs_listdir` to list, `fs_readfile` / `fs_writefile` to copy each way,
+  `fs_rmfile` to delete, each logged under **What Nu ran** as
+  `mpremote connect <port> fs ls` / `fs cp :a.py a.py` / `fs cp a.py :a.py` /
+  `fs rm :a.py`.
+- **One serial port:** the pane, the REPL and Flash all need it, so the pane
+  is closed while the REPL is open and vice versa (as in Mu), and Flash
+  refreshes it afterwards.
+- **Tests:** a fake transport with an in-memory file system, as the flash
+  tests fake the board.
+
 ## A minimal example
 
 ```text
@@ -615,6 +650,10 @@ tab and stores a setting. To start a plugin from it:
    `learner-env`.
 4. Install it into the environment Nu runs from (`uv pip install -e
    path/to/plugin` in a checkout) and restart Nu.
+
+`plugins/microbit/` is the one for a board that also flashes firmware: a
+GUI-free state machine run on a `QThread`, a pinned-and-fetched download,
+and commands echoed with `Host.log_command`.
 
 `plugins/pygamezero/` is the worked example of a full mode: buttons that
 toggle, running the learner's program, workspace assets, autocomplete stubs
@@ -648,6 +687,18 @@ to `pythonpath` in `[tool.pytest.ini_options]`, its package to
 `_TRANSLATE_PLUGIN_PACKAGES` in `make.py`, and its path to the pip installs in
 `.github/workflows/test.yml`, `docs.yml` and `build.yml`, and
 to mkdocstrings' `paths` in `mkdocs.yml`. Then `uv lock`.
+
+### In the repo but opt-in: micro:bit
+
+`plugins/microbit/` (`nu-microbit`) is a workspace member like the bundled
+plugins, with its tests run in CI, but it is **not** one of `nu-editor`'s
+dependencies or in Briefcase's `requires`, and not in
+`loader.BUNDLED_DISTRIBUTIONS`, so the Plugins tab shows it as an *Installed
+package*. It's installed by `nu-editor`'s `microbit` extra (`uv sync
+--all-extras` in a checkout). Until a plugin has been tried on real hardware,
+it stays opt-in like this; its README has the checklist. Promoting it (Phase
+6c) is the steps above: add it to the dependencies and `requires`, to
+`BUNDLED_DISTRIBUTIONS` and to `build.yml`'s installs, and drop the extra.
 
 If a bundled plugin's mode used to be built in, keep its `short_name`: saved
 sessions and the `mode` setting refer to it. (If the plugin is switched off or

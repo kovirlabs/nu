@@ -79,6 +79,11 @@ uv run --python /home/you/…/bin/python --script /home/you/mu_code/hello.py
 - `uv pip list` lists the packages; Nu runs it to show you yours.
 - `uv run` ran a program that lists the packages it needs (next section).
 
+Modes for boards don't use this environment, so they have no Environment tab;
+the admin dialog shows **What Nu ran** as a tab of its own there instead. In
+[micro:bit mode](microbit.md) that's where you'll see the `mpremote` command
+that copied your program onto the micro:bit.
+
 [uv](https://docs.astral.sh/uv/) is the tool Nu uses to manage Python
 environments. `--python` tells it which environment to use: the Python inside
 yours.
