@@ -781,6 +781,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Managing plugins">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-plugin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a plugin
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1034,34 +1051,6 @@
       
     </span>
   </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#roadmap-installing-plugins" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Roadmap: installing plugins
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Roadmap: installing plugins">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#open-questions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Open questions
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1830,6 +1819,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Managing plugins">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-plugin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a plugin
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2087,34 +2093,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#roadmap-installing-plugins" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Roadmap: installing plugins
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Roadmap: installing plugins">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#open-questions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Open questions
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#roadmap-the-microbit-files-pane" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2202,10 +2180,10 @@
 plugins folder (Phases 5a and 5b in <code>TODO.md</code>), CircuitPython and Pygame
 Zero ship as plugins (5c), the <strong>Plugins</strong> tab lists them and switches
 them on and off (5e), and micro:bit is back as an opt-in plugin (Phase 6,
-see <a href="../microbit/">The BBC micro:bit</a>). The API is at version <strong>0.5</strong>, so it can still
-change between releases. In the downloadable installers the plugins
-folder is the only way to add a plugin (see
-<a href="#roadmap-installing-plugins">Roadmap: installing plugins</a>).</p>
+see <a href="../microbit/">The BBC micro:bit</a>). Learners add plugins from PyPI or
+a wheel file on the Plugins tab, installers included (5d, see
+<a href="#adding-a-plugin">Adding a plugin</a>). The API is at version <strong>0.5</strong>, so
+it can still change between releases.</p>
 </div>
 <h2 id="managing-plugins">Managing plugins<a class="headerlink" href="#managing-plugins" title="Permanent link">&para;</a></h2>
 <p><em>This part is for learners and teachers; the rest of the page is for people
@@ -2230,11 +2208,11 @@ writing plugins.</em></p>
 </tr>
 <tr>
 <td><strong>From</strong></td>
-<td><em>Bundled with Nu</em> (it comes with Nu: CircuitPython and Pygame Zero), <em>Installed package</em> (installed into the Python that Nu runs from, e.g. micro:bit while it's opt-in), or <em>Plugins folder</em> (a file or folder put in Nu's plugins folder). Hover over it for the exact package or file.</td>
+<td><em>Bundled with Nu</em> (it comes with Nu: CircuitPython and Pygame Zero), <em>Installed package</em> (installed into the Python that Nu runs from, e.g. micro:bit while it's opt-in), <em>Added by you</em> (added with <strong>Add a plugin…</strong> or <strong>Add from a file…</strong>), or <em>Plugins folder</em> (a file or folder put in Nu's plugins folder). Hover over it for the exact package or file.</td>
 </tr>
 <tr>
 <td><strong>Status</strong></td>
-<td><em>On</em>, <em>Off</em>, <em>Couldn't load</em>, or <em>Switched off after errors; see the log</em>.</td>
+<td><em>On</em>, <em>Off</em>, <em>Couldn't load</em>, <em>Switched off after errors; see the log</em>, or <em>Removed; gone when you restart Nu</em>.</td>
 </tr>
 <tr>
 <td><strong>Modes</strong></td>
@@ -2251,9 +2229,10 @@ plugins can be switched off too: a class that only uses Python 3 can take
 CircuitPython and Pygame Zero out of the mode picker. Changes take effect the
 <strong>next time you start Nu</strong>; until then the plugin keeps working, and the tab
 says <em>On until you restart Nu</em>. A switched-off plugin isn't loaded at all.</p>
-<p><strong>Adding a plugin.</strong> Click <strong>Open plugins folder</strong>, put the plugin's <code>.py</code>
-file (or its folder) there, and restart Nu. Installing plugins from inside Nu
-is planned (see the <a href="#roadmap-installing-plugins">roadmap</a>).</p>
+<p><strong>Adding a plugin.</strong> Click <strong>Add a plugin…</strong> and type its package name, or
+<strong>Add from a file…</strong> for a <code>.whl</code> file; see <a href="#adding-a-plugin">Adding a plugin</a>
+below. A plugin that's a single <code>.py</code> file (or a folder) goes in the plugins
+folder instead: click <strong>Open plugins folder</strong>, put it there, and restart Nu.</p>
 <p><strong>When a plugin keeps failing</strong>, Nu tells you each time and carries on. After
 three errors it offers to switch the plugin off; if you agree, the Plugins tab
 shows it as <em>Switched off after errors; see the log</em> from the next start, and
@@ -2262,14 +2241,76 @@ the errors are on the <strong>Current Log</strong> tab. Tick it to give it anoth
 with the same access to your computer as Nu itself: it can read and change
 your files, like any program you install. Nu can't check what a plugin does.</p>
 <p><strong>How to write a plugin</strong> on the tab opens this page.</p>
+<h3 id="adding-a-plugin">Adding a plugin<a class="headerlink" href="#adding-a-plugin" title="Permanent link">&para;</a></h3>
+<p><strong>From PyPI.</strong> Click <strong>Add a plugin…</strong> and type the name of the plugin's
+package, for example <code>nu-microbit</code> (the plugin's web page says what it is).
+Nu asks PyPI about it and shows what the package says about itself: its
+summary, author, web page and latest version. Check it's the one you meant:
+anyone can put a package on PyPI, and names can look alike. Under that are
+the trust note and the exact commands Nu will run, such as</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>venv<span class="w"> </span>--python<span class="w"> </span>&lt;Nu<span class="s1">'s own Python&gt; &lt;Nu'</span>s<span class="w"> </span>data<span class="w"> </span>folder&gt;/plugin-env
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span>&lt;Nu<span class="s1">'s data folder&gt;/plugin-env/bin/python --excludes &lt;Nu'</span>s<span class="w"> </span>data<span class="w"> </span>folder&gt;/plugin-env/nu-provides.txt<span class="w"> </span>nu-microbit
+</code></pre></div>
+<p>Click <strong>Add it</strong>: the commands run in a progress window, their output
+streaming in, and they're listed under <strong>What Nu Ran</strong> afterwards. The plugin
+loads the <strong>next time you start Nu</strong>; until then the tab lists it under
+<em>When you restart Nu</em>.</p>
+<p>Only a package name is accepted (<code>nu-microbit</code>, or with a version such as
+<code>nu-microbit&gt;=0.2</code>): not a web address, a file path or an option for uv.</p>
+<p><strong>From a file (no internet).</strong> A teacher can download a plugin's wheel (a
+<code>.whl</code> file) once and share it. <strong>Add from a file…</strong> asks for the file, shows
+its name and version, and installs it the same way. A newer file of a plugin
+you added replaces it.</p>
+<p><strong>What Nu checks.</strong> After installing, Nu reads the new package's details
+(without running it) and removes it again, saying why, if</p>
+<ul>
+<li>it isn't a Nu plugin (it doesn't declare a <code>mu.plugins</code> entry point), or</li>
+<li>it needs a version of a package Nu already has (PyQt6, say) that isn't the
+  one Nu has.</li>
+</ul>
+<p>A package Nu already has (a bundled plugin, or PyQt6) can't be added, and one
+you've already added is updated with <strong>Update</strong> instead.</p>
+<p><strong>Packages for your programs.</strong> If the plugin lists packages your programs
+need (its <a href="#packages-for-the-learners-environment"><code>learner-env</code> extra</a>), Nu
+installs them into your Python environment straight away, with
+<code>uv pip install --python &lt;your environment's Python&gt; …</code>, also shown in the
+window and under <strong>What Nu Ran</strong>. If there's no environment yet, they're added
+when Nu makes it.</p>
+<p><strong>Updating and removing.</strong> Pick a plugin you added and click <strong>Update</strong> to get
+its latest version from PyPI (<code>uv pip install --upgrade …</code>; one added from a
+file is updated by adding a newer file), or <strong>Remove</strong> to uninstall it (<code>uv
+pip uninstall …</code>, after asking). Both take effect at the next start. Bundled
+plugins, installed packages and plugins-folder plugins have neither button:
+switch them off, or delete the file.</p>
+<p><strong>After a Nu upgrade.</strong> Plugins you added are built for the Python Nu runs
+on. If a new Nu moves to a new Python (3.11 to 3.12, say), they're not loaded
+(the log says why), and the Plugins tab says so, with a <strong>Reinstall my
+plugins</strong> button: it makes the plugin environment again with Nu's new Python
+and adds every plugin you'd added. One added from a file that's no longer
+there is reported, and you can add it again.</p>
+<p><strong>Limits, for now:</strong></p>
+<ul>
+<li>Removing a plugin leaves the packages it needed in the plugin environment.
+  They're harmless (only a package with a <code>mu.plugins</code> entry point is loaded)
+  and <strong>Reinstall my plugins</strong> starts the environment afresh. The packages it
+  added to your Python environment stay too, since your programs may use them.</li>
+<li>Installing by name needs the internet; the installers don't carry any
+  plugins besides the bundled ones. <strong>Add from a file…</strong> works offline.</li>
+<li>There's no list of recommended plugins to choose from, and no checking
+  beyond the above: you choose which plugins to trust.</li>
+<li>If a plugin you added and one in the plugins folder have the same id, the
+  one you added wins (as installed packages always do).</li>
+<li>A plugin in the plugins folder can't list packages for your programs (it
+  has no package details); package it to do that.</li>
+</ul>
 <div class="admonition note">
 <p class="admonition-title">For teachers: where the choice is kept</p>
 <p>Nu keeps the ids of switched-off plugins (the <strong>Id</strong> in a plugin's
 details) in its <code>settings.json</code>, in the same data folder as <code>plugins/</code>,
 and saves it as soon as you click <strong>OK</strong>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">"disabled_plugins"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"pygamezero"</span><span class="p">]</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">"disabled_plugins"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"pygamezero"</span><span class="p">]</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="p">}</span>
 </code></pre></div>
 <p>To prepare several computers, you can write that file yourself while Nu
 is closed. <code>plugins_switched_off_after_errors</code> lists the plugins Nu
@@ -2321,7 +2362,8 @@ roadmap, see Phase 5 (architecture) and Phase 6 (the micro:bit plugin) in
 next time Nu starts.</p>
 <ol>
 <li><strong>Installed packages.</strong> Any package installed in the environment Nu runs
-   from that declares a <code>mu.plugins</code> entry point (see
+   from, or added by the learner into the plugin environment (see below), that
+   declares a <code>mu.plugins</code> entry point (see
    <a href="#the-entry-point">The entry point</a>). Its id is the entry point's name.</li>
 <li>
 <p><strong>The plugins folder</strong>, for local plugins that aren't packaged:</p>
@@ -2361,10 +2403,24 @@ installed one, the folder plugin is skipped.</p>
 <div class="admonition note">
 <p class="admonition-title">Installers and installed packages</p>
 <p>In the Windows, macOS and Linux installers, Nu runs from its own bundled
-environment, which you can't install packages into. Until Phase 5d adds
-plugin installs, use the plugins folder there. Installed packages are
-picked up in a development checkout (<code>uv pip install -e path/to/plugin</code>)
-or a <code>pip install nu-editor</code>.</p>
+environment, which can't be installed into (it's read-only, and changing
+it would break the app's signature and its upgrades). So plugins the
+learner adds (see <a href="#adding-a-plugin">Adding a plugin</a>) go into a <strong>plugin
+environment</strong> of their own, <code>plugin-env</code> in Nu's data folder, made with
+Nu's own Python so their compiled code matches the process that imports
+them. At startup, before plugins are discovered, its <code>site-packages</code> goes
+on <code>sys.path</code> with <code>site.addsitedir</code> (so <code>.pth</code> files work), <em>after</em>
+Nu's own entries, so Nu's packages (PyQt6 above all) always win. It's
+left off, with the reason in the log, if it was made with another Python.</p>
+<p><code>plugin-env.json</code>, next to it, records that Python and what the learner
+added (the name as typed, or the wheel file), so <strong>Reinstall my plugins</strong>
+can make it again. Every install passes uv <code>--excludes</code> with a list of
+every package Nu's own process has (<code>plugin-env/nu-provides.txt</code>), so the
+plugin environment never gets a second PyQt6, QScintilla or <code>nu-editor</code>;
+afterwards Nu checks the plugin's own requirements on those packages
+against the versions Nu has.</p>
+<p>In a development checkout (<code>uv pip install -e path/to/plugin</code>) or a
+<code>pip install nu-editor</code>, installing into Nu's environment works too.</p>
 </div>
 <h3 id="when-a-plugin-is-skipped">When a plugin is skipped<a class="headerlink" href="#when-a-plugin-is-skipped" title="Permanent link">&para;</a></h3>
 <p>Nu logs the reason, shows it on the Plugins tab (<em>Couldn't load</em>, with the
@@ -2410,14 +2466,14 @@ go to Nu's log as well. As ever, never touch Qt widgets from your own
 threads: send a signal to the main thread instead.</p>
 <p>For a problem the learner can fix, raise <code>PluginError</code> instead. Nu shows your
 message as is, and doesn't count it against the plugin:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mu.plugin</span><span class="w"> </span><span class="kn">import</span> <span class="n">PluginError</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">flash</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_devices</span><span class="p">():</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        <span class="k">raise</span> <span class="n">PluginError</span><span class="p">(</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>            <span class="s2">"Plug in your micro:bit first."</span><span class="p">,</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>            <span class="s2">"Use a USB cable that carries data, not just power."</span><span class="p">,</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>        <span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mu.plugin</span><span class="w"> </span><span class="kn">import</span> <span class="n">PluginError</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">flash</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_devices</span><span class="p">():</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        <span class="k">raise</span> <span class="n">PluginError</span><span class="p">(</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>            <span class="s2">"Plug in your micro:bit first."</span><span class="p">,</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>            <span class="s2">"Use a USB cable that carries data, not just power."</span><span class="p">,</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        <span class="p">)</span>
 </code></pre></div>
 <h3 id="switching-a-plugin-off">Switching a plugin off<a class="headerlink" href="#switching-a-plugin-off" title="Permanent link">&para;</a></h3>
 <p>Learners do it on the Plugins tab (see <a href="#managing-plugins">Managing plugins</a>),
@@ -2479,8 +2535,8 @@ release.</p>
 </table>
 <h3 id="the-entry-point">The entry point<a class="headerlink" href="#the-entry-point" title="Permanent link">&para;</a></h3>
 <p>A packaged plugin advertises itself in its <code>pyproject.toml</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">[project.entry-points.</span><span class="s2">"mu.plugins"</span><span class="k">]</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">microbit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"nu_microbit:MicrobitPlugin"</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">[project.entry-points.</span><span class="s2">"mu.plugins"</span><span class="k">]</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">microbit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"nu_microbit:MicrobitPlugin"</span>
 </code></pre></div>
 <p>The value points at a <code>Plugin</code> subclass, a <code>Plugin</code> instance, or a function
 that returns one.</p>
@@ -2495,20 +2551,20 @@ literal string. When loading it, the host compares that with its own version:</p
   logged and skipped. Nu carries on without it.</li>
 </ul>
 <h3 id="plugin"><code>Plugin</code><a class="headerlink" href="#plugin" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mu.plugin</span><span class="w"> </span><span class="kn">import</span> <span class="n">Plugin</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyPlugin</span><span class="p">(</span><span class="n">Plugin</span><span class="p">):</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">"My Plugin"</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">description</span> <span class="o">=</span> <span class="s2">"Adds My mode, for doing my thing."</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">api_version</span> <span class="o">=</span> <span class="s2">"0.5"</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">):</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">        </span><span class="sd">"""Called once when the plugin loads. Do all wiring here, through</span>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="sd">        `host`."""</span>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">unregister</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">):</span>
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">        </span><span class="sd">"""Optional. Called when the plugin unloads. Modes it registered are</span>
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="sd">        removed for you; undo anything else here."""</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mu.plugin</span><span class="w"> </span><span class="kn">import</span> <span class="n">Plugin</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyPlugin</span><span class="p">(</span><span class="n">Plugin</span><span class="p">):</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">"My Plugin"</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">description</span> <span class="o">=</span> <span class="s2">"Adds My mode, for doing my thing."</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">api_version</span> <span class="o">=</span> <span class="s2">"0.5"</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">):</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">        </span><span class="sd">"""Called once when the plugin loads. Do all wiring here, through</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="sd">        `host`."""</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">unregister</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">):</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">        </span><span class="sd">"""Optional. Called when the plugin unloads. Modes it registered are</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="sd">        removed for you; undo anything else here."""</span>
 </code></pre></div>
 <p><code>name</code> and <code>description</code> <em>(0.4)</em> are what the Plugins tab shows: keep the
 description to one sentence saying what the plugin adds. Both are optional; a
@@ -2520,45 +2576,45 @@ sentence. A drop-in plugin has no package, so it's shown by its id.</p>
 <p>If <code>register</code> raises, the plugin is logged and skipped, and any modes it had
 already registered are removed. A broken plugin never stops Nu starting.</p>
 <p>For the common case of a plugin that only adds modes, use <code>ModePlugin</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mu.plugin</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModePlugin</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">MicrobitPlugin</span><span class="p">(</span><span class="n">ModePlugin</span><span class="p">):</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">"micro:bit"</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">description</span> <span class="o">=</span> <span class="s2">"Adds micro:bit mode, for the BBC micro:bit."</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">api_version</span> <span class="o">=</span> <span class="s2">"0.5"</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">mode</span> <span class="o">=</span> <span class="n">MicrobitMode</span>          <span class="c1"># or: modes = (ModeA, ModeB)</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="c1"># Optional: the folder of icons the modes use (see "Icons and images").</span>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="n">images</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">"images"</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mu.plugin</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModePlugin</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">MicrobitPlugin</span><span class="p">(</span><span class="n">ModePlugin</span><span class="p">):</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">"micro:bit"</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">description</span> <span class="o">=</span> <span class="s2">"Adds micro:bit mode, for the BBC micro:bit."</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">api_version</span> <span class="o">=</span> <span class="s2">"0.5"</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">mode</span> <span class="o">=</span> <span class="n">MicrobitMode</span>          <span class="c1"># or: modes = (ModeA, ModeB)</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="c1"># Optional: the folder of icons the modes use (see "Icons and images").</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="n">images</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">"images"</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="mode"><code>Mode</code><a class="headerlink" href="#mode" title="Permanent link">&para;</a></h3>
 <p><code>Mode</code> is the mode base class the built-in modes use (see <a href="../modes/">Modes</a>).
 Set the class attributes and override the methods you need:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mu.plugin</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mode</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">MicrobitMode</span><span class="p">(</span><span class="n">Mode</span><span class="p">):</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">"micro:bit"</span>             <span class="c1"># shown in the mode picker</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">short_name</span> <span class="o">=</span> <span class="s2">"microbit"</span>        <span class="c1"># stable, unique id (settings and session keys)</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">description</span> <span class="o">=</span> <span class="s2">"Write MicroPython for the BBC micro:bit."</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">icon</span> <span class="o">=</span> <span class="s2">"microbit"</span>              <span class="c1"># an image name: Nu's, or your plugin's</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">actions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">        </span><span class="sd">"""Toolbar buttons."""</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>        <span class="k">return</span> <span class="p">[</span>
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>            <span class="p">{</span>
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>                <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"microbit-flash"</span><span class="p">,</span>   <span class="c1"># also its icon and button id</span>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>                <span class="s2">"display_name"</span><span class="p">:</span> <span class="s2">"Flash"</span><span class="p">,</span>
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>                <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Flash your code to the micro:bit."</span><span class="p">,</span>
-<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>                <span class="s2">"handler"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">flash</span><span class="p">,</span>
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>                <span class="s2">"shortcut"</span><span class="p">:</span> <span class="s2">"F3"</span><span class="p">,</span>
-<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>            <span class="p">},</span>
-<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>        <span class="p">]</span>
-<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>
-<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">api</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="w">        </span><span class="sd">"""Autocomplete and call tip entries."""</span>
-<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>        <span class="k">return</span> <span class="n">MICROBIT_APIS</span>
-<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>
-<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>    <span class="c1"># Optional hooks: activate(), deactivate(), stop(), workspace_dir(),</span>
-<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>    <span class="c1"># ensure_workspace_assets(workspace_dir)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mu.plugin</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mode</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">MicrobitMode</span><span class="p">(</span><span class="n">Mode</span><span class="p">):</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">"micro:bit"</span>             <span class="c1"># shown in the mode picker</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">short_name</span> <span class="o">=</span> <span class="s2">"microbit"</span>        <span class="c1"># stable, unique id (settings and session keys)</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="n">description</span> <span class="o">=</span> <span class="s2">"Write MicroPython for the BBC micro:bit."</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="n">icon</span> <span class="o">=</span> <span class="s2">"microbit"</span>              <span class="c1"># an image name: Nu's, or your plugin's</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">actions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">        </span><span class="sd">"""Toolbar buttons."""</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>        <span class="k">return</span> <span class="p">[</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>            <span class="p">{</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>                <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"microbit-flash"</span><span class="p">,</span>   <span class="c1"># also its icon and button id</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>                <span class="s2">"display_name"</span><span class="p">:</span> <span class="s2">"Flash"</span><span class="p">,</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>                <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Flash your code to the micro:bit."</span><span class="p">,</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>                <span class="s2">"handler"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">flash</span><span class="p">,</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>                <span class="s2">"shortcut"</span><span class="p">:</span> <span class="s2">"F3"</span><span class="p">,</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>            <span class="p">},</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>        <span class="p">]</span>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">api</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="w">        </span><span class="sd">"""Autocomplete and call tip entries."""</span>
+<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>        <span class="k">return</span> <span class="n">MICROBIT_APIS</span>
+<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>
+<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a>    <span class="c1"># Optional hooks: activate(), deactivate(), stop(), workspace_dir(),</span>
+<a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a>    <span class="c1"># ensure_workspace_assets(workspace_dir)</span>
 </code></pre></div>
 <p>Two more things a mode can declare (new in 0.2):</p>
 <table>
@@ -2697,8 +2753,11 @@ tell the learner if there's none). Offer the Plotter only if
 </table>
 <p>The core uses <code>load_plugin</code>, <code>unload_plugin</code>, <code>modes</code>, <code>plugins</code>,
 <code>plugin_records</code>, <code>describe_plugins</code>, <code>set_plugin_enabled</code> and
-<code>plugins_folder</code> (the last four for the Plugins tab); plugins shouldn't need
-them.</p>
+<code>plugins_folder</code>, and for adding plugins <code>plugin_env_status</code>,
+<code>plugin_environment_state</code>, <code>check_plugin_name</code>, <code>check_plugin_file</code>,
+<code>look_up_plugin</code>, <code>add_plugin</code>, <code>update_plugin</code>, <code>remove_plugin</code> and
+<code>reinstall_plugins</code> (all but the first four for the Plugins tab); plugins
+shouldn't need them, and they're not part of the versioned API.</p>
 <h3 id="icons-and-images">Icons and images<a class="headerlink" href="#icons-and-images" title="Permanent link">&para;</a></h3>
 <p>A mode's <code>icon</code>, each action's <code>name</code> and <code>update_action(icon=...)</code> are image
 names: a file <code>name.svg</code> or <code>name.png</code>. Nu looks in its own images first, then
@@ -2719,24 +2778,23 @@ use Nu's own icons by name (Pygame Zero uses Nu's <code>stop</code>).</p>
 Nu runs from. If your mode needs packages there (Pygame Zero needs <code>pgzero</code> and
 <code>pygame</code>), list them as an extra called <code>learner-env</code> in your
 <code>pyproject.toml</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">[project.optional-dependencies]</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">learner-env</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"pgzero&gt;=1.2.1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"pygame&gt;=2.6"</span><span class="p">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">[project.optional-dependencies]</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">learner-env</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"pgzero&gt;=1.2.1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"pygame&gt;=2.6"</span><span class="p">]</span>
 </code></pre></div>
 <p>Nu reads it from your package's metadata, without importing your plugin, so it
 counts even while your plugin is switched off. These packages are installed
 with Nu's own when the learner's environment is built (on first run, and when
 Nu is upgraded), and bundled plugins' wheels ship in the installers so that
-works offline. Not yet (Phase 5d): installing them into an <em>existing</em>
-environment when you add a plugin later, and a way for drop-in plugins (which
-have no package metadata) to declare any.</p>
+works offline. When a learner adds your plugin from the Plugins tab, they're
+installed into their existing environment straight away (see
+<a href="#adding-a-plugin">Adding a plugin</a>). Drop-in plugins (which have no package
+metadata) can't declare any.</p>
 <h3 id="not-in-the-api-yet">Not in the API yet<a class="headerlink" href="#not-in-the-api-yet" title="Permanent link">&para;</a></h3>
 <p>These are planned, and are deliberately left out until a real plugin needs
 them:</p>
 <ul>
 <li><strong>Panes and settings pages</strong>, e.g. micro:bit's file-transfer pane (designed
   below: <a href="#roadmap-the-microbit-files-pane">Roadmap: the micro:bit Files pane</a>).</li>
-<li><strong>Installing a plugin and its learner-env packages from Nu</strong> (Phase 5d; see
-  the <a href="#roadmap-installing-plugins">roadmap</a>).</li>
 <li><strong>Translations for plugins.</strong> Bundled plugins use Nu's own message catalog
   (their strings are extracted with Nu's); a community plugin's strings aren't
   translated yet.</li>
@@ -2767,8 +2825,9 @@ until it is).</p>
 <ul>
 <li>A plugin is a normal Python distribution: its own <code>pyproject.toml</code> declaring
   dependencies, the <code>mu.plugins</code> entry point and (optionally) the
-  <code>learner-env</code> extra. Installing it into the learner's environment from Nu
-  comes in Phase 5d.</li>
+  <code>learner-env</code> extra. Learners add it from the Plugins tab (by name from
+  PyPI, or from its wheel file); it shouldn't list <code>nu-editor</code> as a
+  dependency (Nu leaves it out anyway).</li>
 <li><strong>Bundled</strong> plugins live in this repo under <code>plugins/&lt;name&gt;/</code> as members of a
   <strong>uv workspace</strong> (shared lockfile; independently buildable and publishable).
   They are also published to PyPI, so they travel the <em>exact same</em> path a
@@ -2800,97 +2859,10 @@ until it is).</p>
 model is the same as <code>pip</code>: <em>you chose to install it.</em> The Plugins tab says so
 in plain words: a plugin runs inside Nu with the same access to your computer
 as Nu itself, so only add plugins you trust, as you'd only install programs
-you trust. When Nu can install plugins (see below), it will show the real <code>uv</code>
-command before running it. (A curated/signed index is a possible future, not a
-v1 guarantee.) In-process plugins can't be meaningfully sandboxed without a
+you trust. Before adding a plugin, Nu shows what PyPI says about it (to help
+spot a look-alike name) and the real <code>uv</code> commands it will run. (A
+curated/signed index is a possible future, not a v1 guarantee.) In-process plugins can't be meaningfully sandboxed without a
 far larger redesign, which is out of scope.</p>
-<h2 id="roadmap-installing-plugins">Roadmap: installing plugins<a class="headerlink" href="#roadmap-installing-plugins" title="Permanent link">&para;</a></h2>
-<div class="admonition note">
-<p class="admonition-title">Design only</p>
-<p>This is the plan for Phase 5d. None of it is built yet: today a learner
-adds a plugin by putting it in the plugins folder.</p>
-</div>
-<p><strong>The constraint.</strong> In the installers, Nu runs from the environment Briefcase
-bundled into the app. It can't be installed into: it's read-only (<code>Program
-Files</code>, a signed <code>.app</code>, an AppImage's squashfs), and changing it would break
-Nu's signature and its next upgrade. So entry-point discovery only sees the
-bundled plugins there, and a plugin from PyPI needs somewhere else to live.</p>
-<p><strong>1. A plugin environment.</strong> A virtual environment of its own under Nu's data
-folder (<code>DATA_DIR/plugin-env</code>, next to the learner's <code>mu_venv-…</code>), made the
-first time a plugin is added with</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>uv<span class="w"> </span>venv<span class="w"> </span>--python<span class="w"> </span>&lt;Nu<span class="err">'</span>s<span class="w"> </span>own<span class="w"> </span>Python&gt;<span class="w"> </span>&lt;DATA_DIR&gt;/plugin-env
-</code></pre></div>
-<p>Using Nu's own interpreter (<code>sys.executable</code>; in the installers, the Python
-Briefcase bundled) gives it exactly Nu's Python version and ABI, so a plugin's
-compiled extensions match the process that imports them. It's separate from
-the learner's environment on purpose: plugin code runs <em>inside</em> Nu, the
-learner's programs run in their own process, and a learner removing a package
-must never break Nu. A small <code>plugin-env.json</code> records the Python version and
-the plugins the learner added, so the environment can be rebuilt (see the open
-questions).</p>
-<p><strong>2. On <code>sys.path</code> before discovery.</strong> At startup, before <code>discover()</code>, Nu
-adds the plugin environment's <code>site-packages</code> to <code>sys.path</code> with
-<code>site.addsitedir</code> (so <code>.pth</code> files work), <em>after</em> Nu's own entries, so Nu's
-own packages (PyQt6 above all) always win. <code>importlib.metadata</code> then finds the
-plugin's <code>mu.plugins</code> entry point like any installed package's; the Plugins
-tab shows it as <em>Installed package</em>. Nothing else about loading changes:
-disabling, error isolation and the tab work as they do now.</p>
-<p><strong>3. Installing.</strong> The Plugins tab grows an <strong>Add a plugin…</strong> button. It asks
-for a package name (for example <code>nu-microbit</code>), shows what PyPI says about it
-(summary, author, homepage) with the trust note, and the exact command it will
-run:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span>&lt;DATA_DIR&gt;/plugin-env/bin/python<span class="w"> </span>nu-microbit
-</code></pre></div>
-<p>The command goes through the same <code>Uv</code> wrapper as the learner's packages, so
-it's in <strong>What Nu Ran</strong> and the log, and its output streams into the same
-progress window. Like switching, an added plugin loads at the next start.
-<strong>Add from a file…</strong> takes a <code>.whl</code> the teacher downloaded, which works
-offline.</p>
-<p><strong>4. The plugin's packages for the learner.</strong> A plugin's <code>learner-env</code> extra
-(see <a href="#packages-for-the-learners-environment">Packages for the learner's environment</a>)
-is read from the newly installed package's metadata and installed into the
-learner's environment straight away, through the same command log:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span>&lt;the<span class="w"> </span>learner<span class="s1">'s environment'</span>s<span class="w"> </span>Python&gt;<span class="w"> </span>&lt;its<span class="w"> </span>learner-env<span class="w"> </span>requirements&gt;
-</code></pre></div>
-<p><code>wheels.baseline_packages()</code> already includes every installed plugin's extra,
-so a rebuilt learner environment gets them too, once the plugin environment is
-on <code>sys.path</code>.</p>
-<p><strong>5. Removing.</strong> A plugin in the plugin environment gets a <strong>Remove</strong> button
-(bundled and plugins-folder plugins don't: switch them off, or delete the
-file):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>uninstall<span class="w"> </span>--python<span class="w"> </span>&lt;DATA_DIR&gt;/plugin-env/bin/python<span class="w"> </span>nu-microbit
-</code></pre></div>
-<h3 id="open-questions">Open questions<a class="headerlink" href="#open-questions" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>PyQt6 and the other packages Nu already has.</strong> A plugin depends on Nu, and
-  so, through it, on PyQt6. Installing it must not put a second PyQt6 (or a
-  different QScintilla) into the plugin environment: Nu's copy is the one
-  imported, and a mismatched one could only cause confusion. Candidates, to
-  prototype: a <code>--constraint</code> file pinning every package Nu has to its exact
-  version (from <code>importlib.metadata</code>) together with a <code>--no-deps</code> install of
-  the packages Nu provides, or a <code>.pth</code> file in the plugin environment that
-  makes Nu's own packages visible so uv treats them as already installed.
-  Plugins should not list <code>nu-editor</code> itself as a dependency.</li>
-<li><strong>Upgrading Nu.</strong> A new Nu may bring a new Python (3.11 → 3.12): the plugin
-  environment then has to be rebuilt and its plugins reinstalled, as the
-  learner's environment already is. A new plugin API version skips plugins
-  that haven't caught up, with the reason on the tab; an <strong>Update</strong> button
-  (<code>uv pip install --upgrade</code>) would help.</li>
-<li><strong>Offline.</strong> Installing by name needs PyPI; a wheel file doesn't. Should
-  the installers carry a small set of vetted plugins' wheels, as they carry
-  the bundled ones?</li>
-<li><strong>Uninstalling leaves dependencies behind</strong> (<code>uv pip uninstall</code> removes only
-  what it's given). Rebuilding the plugin environment from the recorded list
-  is cheap with uv and may be simpler than tracking dependencies. The
-  learner-env packages a plugin brought stay too, since the learner's own
-  programs may use them.</li>
-<li><strong>Trust when installing by name:</strong> typosquatting on PyPI. Showing the
-  package's metadata before confirming helps; a curated list is a possible
-  future.</li>
-<li><strong>Same id twice.</strong> An installed plugin and a plugins-folder plugin with the
-  same id: the installed one wins today. Is that still right when the learner
-  installed one themselves?</li>
-</ul>
 <h2 id="roadmap-the-microbit-files-pane">Roadmap: the micro:bit Files pane<a class="headerlink" href="#roadmap-the-microbit-files-pane" title="Permanent link">&para;</a></h2>
 <div class="admonition note">
 <p class="admonition-title">Design only</p>
@@ -2921,11 +2893,11 @@ Phase 1. It comes back as <strong>plugin-owned UI</strong> driven by mpremote:</
   tests fake the board.</li>
 </ul>
 <h2 id="a-minimal-example">A minimal example<a class="headerlink" href="#a-minimal-example" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>my-nu-plugin/
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>├── pyproject.toml          # deps + [project.entry-points."mu.plugins"]
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>└── my_nu_plugin/
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    ├── __init__.py         # MyPlugin(ModePlugin) + MyMode(Mode)
-<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>    └── images/             # my-plugin-mode.svg, my-plugin-action.svg, ...
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>my-nu-plugin/
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>├── pyproject.toml          # deps + [project.entry-points."mu.plugins"]
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>└── my_nu_plugin/
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    ├── __init__.py         # MyPlugin(ModePlugin) + MyMode(Mode)
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    └── images/             # my-plugin-mode.svg, my-plugin-action.svg, ...
 </code></pre></div>
 <p>A runnable template lives in this repo at <code>plugins/example/</code>: an "Example"
 mode with its own icons and one button that counts the lines in the current

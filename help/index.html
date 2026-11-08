@@ -1873,8 +1873,14 @@ Nu's log, your plugins and the language setting.</p>
 them: where each comes from, whether it's on and, if it couldn't start, why.
 Untick one to switch it off, or tick it to switch it back on; changes take
 effect when you restart Nu.</p>
-<p>To try a new plugin, click <strong>Open plugins folder</strong> on that tab, put the
-plugin's <code>.py</code> file (or folder) there, and restart Nu. The folder is:</p>
+<p>To add a plugin, click <strong>Add a plugin…</strong> on that tab and type the name of
+its package (for example <code>nu-microbit</code>), or <strong>Add from a file…</strong> if you have
+its <code>.whl</code> file. Nu shows what the plugin says about itself and the commands
+it will run, and adds it when you click <strong>Add it</strong>; it's ready the next time
+you start Nu. A plugin you added can be <strong>Updated</strong> or <strong>Removed</strong> there too.
+See <a href="../plugins/#adding-a-plugin">Adding a plugin</a>.</p>
+<p>A plugin that's a single <code>.py</code> file (or a folder) goes in the plugins folder:
+click <strong>Open plugins folder</strong>, put it there, and restart Nu. The folder is:</p>
 <table>
 <thead>
 <tr>
