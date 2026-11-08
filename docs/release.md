@@ -20,10 +20,13 @@ version numbers and the order of publishing are up to whoever cuts it.
 
 ## Version numbers
 
-Nu's versions are plain [PEP 440](https://peps.python.org/pep-0440/) numbers:
-`2.0.0`, or `2.0.0b3`, `2.0.0rc1` for a pre-release. The tag is the version
-with a `v` in front (`v2.0.0`). A tag with a pre-release segment publishes a
-GitHub *pre-release*; a plain `vX.Y.Z` publishes a full release.
+Release versions are **plain numeric `X.Y.Z`**: no `rc`/`b`/`dev`
+suffixes. Windows MSI versions must be numeric, and Briefcase strips any
+suffix, so `2.0.0b3` and `2.0.0` would be the same version to Windows (the
+2.0.0 betas all were). To try out a release before publishing it, build the
+installers from a manual run (below); once a version is tagged, ship fixes as
+the next patch (`2.0.1`). The tag is the version with a `v` in front
+(`v2.0.0`).
 
 The version lives in **two** places, and both must change together:
 
@@ -112,14 +115,19 @@ release needs a new plugin version, that version must be on PyPI before
    see [packaging](packaging.md#opt-in-workspace-plugins-microbit).)
 2. Bump Nu's version in **both** places (above), finish `CHANGES.md`, and
    commit.
-3. Push an annotated tag: `git tag -a v2.0.0 -m "Nu 2.0.0"` then
-   `git push origin v2.0.0`. `build.yml` builds the three installers (from
-   the plugins in the repository, not PyPI) and publishes the GitHub Release
-   with them attached.
-4. Download each installer from the release and run the learner checks above
-   on real machines: at least current Windows 11, current macOS (Apple
-   Silicon) and a current Ubuntu LTS.
-5. Publish to PyPI with `make publish-live` (try `make publish-test` first to
+3. On that branch, run **Build installers** by hand (Actions tab → *Run
+   workflow* → pick the branch). It builds all three installers as
+   downloadable artifacts without publishing anything.
+4. Download each installer from that run and do the learner checks above on
+   real machines: at least current Windows 11 (installing **over the previous
+   release**, which it should replace: one "Nu Editor" in *Apps*), current
+   macOS (Apple Silicon) and a current Ubuntu LTS, with a first launch with
+   the network off.
+5. Merge, then push an annotated tag on that commit:
+   `git tag -a v2.0.0 -m "Nu 2.0.0"` then `git push origin v2.0.0`.
+   `build.yml` rebuilds the three installers (from the plugins in the
+   repository, not PyPI) and publishes the GitHub Release with them attached.
+6. Publish to PyPI with `make publish-live` (try `make publish-test` first to
    upload to test PyPI). It runs `make check`, builds the sdists and wheels of
    `nu-editor`, `nu-pygamezero` and `nu-circuitpython` into `dist/` (`make
    dist`), uploads the two plugins (a version PyPI already has, because the
