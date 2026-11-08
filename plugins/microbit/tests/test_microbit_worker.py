@@ -5,8 +5,9 @@ back to the GUI thread through signals.
 """
 
 import threading
+import time
 
-from PyQt6.QtCore import QEventLoop, QObject, QTimer
+from PyQt6.QtCore import QCoreApplication, QObject
 
 from nu_microbit import worker
 from nu_microbit.flash import FlashError
@@ -70,9 +71,8 @@ def test_run_finishes_even_if_the_job_raises():
 class Receiver(QObject):
     """Lives on the GUI thread, like the mode."""
 
-    def __init__(self, loop):
+    def __init__(self):
         super().__init__()
-        self.loop = loop
         self.seen = []
         self.threads = set()
 
@@ -91,12 +91,10 @@ class Receiver(QObject):
 
     def on_finished(self):
         self._note("finished")
-        self.loop.quit()
 
 
 def test_start_runs_the_job_on_another_thread_and_reports_on_this_one():
-    loop = QEventLoop()
-    receiver = Receiver(loop)
+    receiver = Receiver()
     job = FakeJob()
     thread, flash_worker = worker.start(
         job,
@@ -105,9 +103,13 @@ def test_start_runs_the_job_on_another_thread_and_reports_on_this_one():
         receiver.on_failed,
         receiver.on_finished,
     )
-    QTimer.singleShot(5000, loop.quit)  # never hang the suite
-    loop.exec()
-    thread.wait(2000)
+    # Pump events by hand: a QEventLoop can return at once if an earlier
+    # test asked the application to quit.
+    deadline = time.monotonic() + 5
+    while ("finished",) not in receiver.seen and time.monotonic() < deadline:
+        QCoreApplication.processEvents()
+        time.sleep(0.005)
+    assert thread.wait(2000)
     assert receiver.seen == [
         ("status", "one"),
         ("status", "two"),

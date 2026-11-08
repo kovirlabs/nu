@@ -34,6 +34,8 @@ logger = logging.getLogger(__name__)
 
 #: The toolbar's Flash button (and its icon, images/microbit-flash.svg).
 FLASH_BUTTON = "microbit-flash"
+#: How long Nu waits, when quitting, for a flash to stop.
+STOP_TIMEOUT_MS = 5000
 
 
 class MicrobitMode(MicroPythonMode):
@@ -260,6 +262,11 @@ class MicrobitMode(MicroPythonMode):
 
     def on_flash_finished(self):
         """The worker's thread has stopped: tidy up and give the buttons back."""
+        if self.flash_thread is not None:
+            # QThread.finished comes just before the thread really ends: let
+            # it end before dropping the last reference, or Qt aborts when
+            # the QThread is garbage-collected while still running.
+            self.flash_thread.wait()
         self.flash_thread = None
         self.flash_worker = None
         self.flash_job = None
@@ -276,6 +283,14 @@ class MicrobitMode(MicroPythonMode):
         """Nu is quitting: stop a flash in progress (as soon as it can)."""
         if self.flash_job is not None:
             self.flash_job.cancel()
-        if self.flash_thread is not None:
-            self.flash_thread.quit()
-            self.flash_thread.wait(2000)
+        thread = self.flash_thread
+        if thread is not None:
+            thread.quit()
+            # Steps notice the cancel within a second or so, but one may be
+            # blocked on the board or the network for longer. Qt aborts if a
+            # running QThread is destroyed, so as a last resort (Nu is
+            # quitting anyway) stop it outright.
+            if not thread.wait(STOP_TIMEOUT_MS):
+                logger.warning("The flash thread didn't stop; terminating it")
+                thread.terminate()
+                thread.wait()

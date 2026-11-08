@@ -9,7 +9,9 @@ from importlib.metadata import PackageNotFoundError, distribution, entry_points
 from unittest import mock
 
 import pytest
-from PyQt6.QtCore import QEventLoop, Qt, QTimer
+import time
+
+from PyQt6.QtCore import QCoreApplication, Qt
 
 import mu.wheels
 from mu import resources
@@ -28,6 +30,18 @@ try:
     INSTALLED = True
 except PackageNotFoundError:  # pragma: no cover (without the microbit extra)
     INSTALLED = False
+
+
+def wait_until(condition, timeout=5.0):
+    """Process Qt events until `condition()` is true; False on timeout."""
+    deadline = time.monotonic() + timeout
+    while not condition():
+        if time.monotonic() > deadline:
+            return False
+        QCoreApplication.processEvents()
+        time.sleep(0.005)
+    return True
+
 
 needs_install = pytest.mark.skipif(
     not INSTALLED, reason="nu-microbit isn't installed (uv sync --all-extras)"
@@ -423,7 +437,17 @@ def test_stop_cancels_a_flash(mm):
     mm.stop()
     job.cancel.assert_called_once_with()
     thread.quit.assert_called_once_with()
-    thread.wait.assert_called_once_with(2000)
+    thread.wait.assert_called_once_with(mode_module.STOP_TIMEOUT_MS)
+    thread.terminate.assert_not_called()
+
+
+def test_stop_terminates_a_stuck_flash(mm):
+    thread = mock.MagicMock()
+    thread.wait.side_effect = [False, True]
+    mm.flash_job, mm.flash_thread = mock.MagicMock(), thread
+    mm.stop()
+    thread.terminate.assert_called_once_with()
+    assert thread.wait.call_count == 2
 
 
 def test_stop_when_idle(mm):
@@ -460,14 +484,12 @@ def test_flash_with_no_microbit_end_to_end(mm, host):
     mm.shift_held = lambda: False
     mm.active = True
     mm.set_buttons = mock.MagicMock()
-    loop = QEventLoop()
-    poll = QTimer()
-    poll.timeout.connect(lambda: mm.flash_thread is None and loop.quit())
     mm.flash()
-    poll.start(10)
-    QTimer.singleShot(5000, loop.quit)  # never hang the suite
-    loop.exec()
-    poll.stop()
+    thread = mm.flash_thread
+    # Pump events by hand: a QEventLoop can return at once if an earlier
+    # test asked the application to quit.
+    assert wait_until(lambda: mm.flash_thread is None)
+    assert thread.isFinished()
     host.show_message.assert_called_once()
     assert host.show_message.call_args[0][0] == (
         "Could not find an attached BBC micro:bit."
