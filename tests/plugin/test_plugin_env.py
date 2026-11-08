@@ -19,7 +19,7 @@ from unittest import mock
 import pytest
 
 from mu import __version__ as nu_version
-from mu.command_log import CommandRecord
+from mu.command_log import CommandRecord, quote_command
 from mu.plugin import plugin_env
 from mu.plugin.plugin_env import (
     MISSING,
@@ -30,6 +30,11 @@ from mu.plugin.plugin_env import (
 )
 
 PY = plugin_env.python_version()
+
+
+def cmd(*args):
+    """A uv command as the learner sees it, quoted for this OS."""
+    return "$ " + quote_command(["uv", *args])
 
 
 # --- helpers ---
@@ -583,9 +588,15 @@ def test_add_by_name_makes_the_environment(env):
     job = plugin_env.add_job(env, requirement=requirement, **kwargs)
     excludes = env.excludes_path
     assert job.preview == [
-        "$ uv venv --python {} {}".format(plugin_env.nu_python(), env.path),
-        "$ uv pip install --python {} --excludes {} 'nu-cows>=1'".format(
-            env.interpreter, excludes
+        cmd("venv", "--python", plugin_env.nu_python(), env.path),
+        cmd(
+            "pip",
+            "install",
+            "--python",
+            env.interpreter,
+            "--excludes",
+            excludes,
+            "nu-cows>=1",
         ),
     ]
     lines = run(job)
@@ -598,7 +609,7 @@ def test_add_by_name_makes_the_environment(env):
             env.interpreter,
         ),
     ]
-    assert "$ uv venv --python {} {}".format(plugin_env.nu_python(), env.path) in lines
+    assert cmd("venv", "--python", plugin_env.nu_python(), env.path) in lines
     assert "uv says hello" in lines
     assert job.succeeded and job.changed
     assert job.messages == ["Added nu-cows 1.2."]
@@ -719,7 +730,9 @@ def test_add_with_learner_env_packages(env):
         )
     ]
     assert "Adding the packages nu-cows needs to your Python environment…" in lines
-    assert "$ uv pip install --python /learner/bin/python 'cowsay>=6'" in lines
+    assert (
+        cmd("pip", "install", "--python", "/learner/bin/python", "cowsay>=6") in lines
+    )
     assert job.succeeded and job.changed
 
 
@@ -776,8 +789,15 @@ def test_update(env):
     kwargs = job_kwargs(env, {"nu-cows>=1": ("nu-cows", "2.0", [], True)})
     job = plugin_env.update_job(env, "nu-cows", **kwargs)
     assert job.preview == [
-        "$ uv pip install --upgrade --python {} --excludes {} 'nu-cows>=1'".format(
-            env.interpreter, env.excludes_path
+        cmd(
+            "pip",
+            "install",
+            "--upgrade",
+            "--python",
+            env.interpreter,
+            "--excludes",
+            env.excludes_path,
+            "nu-cows>=1",
         )
     ]
     run(job)
@@ -803,7 +823,7 @@ def test_remove(env):
     kwargs = job_kwargs(env)
     job = plugin_env.remove_job(env, "nu-cows", **kwargs)
     assert job.preview == [
-        "$ uv pip uninstall --python {} nu-cows".format(env.interpreter)
+        cmd("pip", "uninstall", "--python", env.interpreter, "nu-cows")
     ]
     run(job)
     assert job.succeeded and job.changed
