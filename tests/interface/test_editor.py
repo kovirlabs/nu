@@ -474,7 +474,32 @@ def test_EditorPane_show_annotations():
     ep.annotate = mock.MagicMock()
     ep.show_annotations()
     ep.annotate.assert_called_once_with(
-        1, "\u2191 message 1\n\u2191 message 2", ep.annotationDisplay()
+        1, "\u2191 message 1\n\u2191 message 2", ep.annotationDisplay().value
+    )
+
+
+def test_EditorPane_show_annotations_real_scintilla():
+    """
+    Regression (Qt6 port): with the real QScintilla ``annotate`` (not a mock)
+    showing annotations must not raise. PyQt6 enums are no longer ints, so
+    passing ``annotationDisplay()`` straight through as the style number raised
+    a TypeError, which crashed Nu whenever the checker found a problem.
+    """
+    ep = mu.interface.editor.EditorPane(None, "foo\nbar\n")
+    ep.check_indicators = {
+        "error": {
+            "markers": {
+                1: [{"message": "message 1", "line_no": 1}],
+            }
+        }
+    }
+    ep.show_annotations()
+    # QsciScintilla.annotation() returns garbage under PyQt6, so read the
+    # annotation back through Scintilla itself: its length and its style.
+    text = "\u2191 message 1".encode("utf-8")
+    assert ep.SendScintilla(ep.SCI_ANNOTATIONGETTEXT, 1, 0) == len(text)
+    assert ep.SendScintilla(ep.SCI_ANNOTATIONGETSTYLE, 1) == (
+        ep.annotationDisplay().value
     )
 
 

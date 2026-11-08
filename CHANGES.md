@@ -37,6 +37,13 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   to clipboard** button. Mu used to open codewith.mu with the details in the
   address; Nu never sends anything by itself.
 
+### Fixed
+
+Regressions from the move to PyQt6, found by checking Nu against Mu 1.2.2:
+
+* **Check** no longer crashes Nu when it finds a problem in your code; the
+  problems are shown under the lines again.
+
 ### Security
 
 * All open Dependabot and CodeQL alerts are resolved, and the bundled Jupyter
