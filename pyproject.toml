@@ -134,6 +134,17 @@ all = [
     "nu-editor[lint]",
 ]
 
+# ---------------------------------------------------------------------------
+# uv workspace (Phase 5c, see TODO.md and docs/packaging.md).
+#
+# Bundled plugins live in-repo under plugins/<name>/, each its own
+# independently buildable and publishable package with a `mu.plugins` entry
+# point, sharing this repo's uv.lock. plugins/example is a member too (so it's
+# locked and buildable) but, being a template, nothing depends on it.
+# ---------------------------------------------------------------------------
+[tool.uv.workspace]
+members = ["plugins/*"]
+
 [tool.hatch.version]
 # mu/__init__.py stays the single version source (also parsed by the
 # platform installer tooling).
