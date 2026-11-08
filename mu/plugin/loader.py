@@ -28,6 +28,7 @@ import traceback
 from dataclasses import dataclass, field
 
 from .. import config, settings
+from . import plugin_env
 from .base import Plugin, check_compatible
 
 logger = logging.getLogger(__name__)
@@ -71,20 +72,23 @@ class PluginSource:
 
     `id` is the stable name used to enable/disable it: the entry point name,
     or the module name in the drop-in folder. `kind` is "bundled" (ships with
-    Nu), "package" (another installed package) or "folder" (the drop-in
-    folder); `origin` says where exactly, for logs and the Plugins tab.
-    `name` and `description` are what the package says about itself (its
-    distribution name, or a bundled plugin's own name, and its summary), if
-    anything: what the Plugins tab shows for a plugin that isn't imported.
+    Nu), "package" (another package installed where Nu runs from), "added"
+    (added by the learner, into the plugin environment: see plugin_env.py)
+    or "folder" (the drop-in folder); `origin` says where exactly, for logs
+    and the Plugins tab. `name` and `description` are what the package says
+    about itself (its distribution name, or a bundled plugin's own name, and
+    its summary), if anything: what the Plugins tab shows for a plugin that
+    isn't imported. `distribution` is its package's name, if it has one.
     Calling `load()` imports it and returns a Plugin instance, or raises.
     """
 
     id: str
-    kind: str  # "bundled", "package" or "folder"
+    kind: str  # "bundled", "package", "added" or "folder"
     origin: str
     load: object = field(repr=False)
     description: str = ""
     name: str = ""
+    distribution: str = ""
 
 
 @dataclass
@@ -109,6 +113,7 @@ class PluginRecord:
     detail: str = ""
     name: str = ""
     description: str = ""
+    distribution: str = ""
 
 
 def _instantiate(obj, what):
@@ -131,14 +136,15 @@ def _instantiate(obj, what):
 
 def entry_point_sources(group=ENTRY_POINT_GROUP):
     """
-    Plugins installed as packages in the environment Nu runs from, found
-    through their `mu.plugins` entry points.
+    Plugins installed as packages, found through their `mu.plugins` entry
+    points: in the environment Nu runs from, and in the plugin environment
+    once it's on `sys.path` (see plugin_env.py), whose are kind "added".
     """
     sources = []
     for entry_point in importlib.metadata.entry_points(group=group):
         dist = entry_point.dist
         kind = "package"
-        name = description = ""
+        name = description = dist_name = ""
         if dist:
             origin = "{} {}".format(dist.name, dist.version)
             dist_name = _normalise(dist.name)
@@ -146,6 +152,8 @@ def entry_point_sources(group=ENTRY_POINT_GROUP):
                 kind = "bundled"
                 name = _(BUNDLED_NAMES[dist_name])
             else:
+                if plugin_env.plugin_env.contains(dist):
+                    kind = "added"
                 name = _metadata(dist, "Name")
             description = _metadata(dist, "Summary")
         else:
@@ -155,7 +163,9 @@ def entry_point_sources(group=ENTRY_POINT_GROUP):
             return _instantiate(entry_point.load(), entry_point.value)
 
         sources.append(
-            PluginSource(entry_point.name, kind, origin, load, description, name)
+            PluginSource(
+                entry_point.name, kind, origin, load, description, name, dist_name
+            )
         )
     return sources
 
@@ -341,6 +351,7 @@ def load_plugins(host, sources=None, store=None):
             SKIPPED,
             name=source.name or source.id,
             description=source.description,
+            distribution=source.distribution,
         )
         records.append(record)
         if source.id in seen:
@@ -419,7 +430,8 @@ def describe(records, store=None, modes_of=None):
     the record's facts plus `enabled` (whether it will load at the next
     start, from the settings), `switched_off_after_errors`, `can_switch`
     (False for a duplicate id, which is switched with the first plugin of
-    that id) and `modes` (from `modes_of(plugin)`; [] if it isn't loaded).
+    that id), `distribution` (its package's name, or "") and `modes` (from
+    `modes_of(plugin)`; [] if it isn't loaded).
     """
     disabled = disabled_plugins(store)
     after_errors = switched_off_after_errors(store)
@@ -436,6 +448,7 @@ def describe(records, store=None, modes_of=None):
                 "description": record.description,
                 "kind": record.kind,
                 "origin": record.origin,
+                "distribution": record.distribution,
                 "status": record.status,
                 "problem": record.problem,
                 "reason": record.reason,

@@ -59,10 +59,9 @@ tooling have been removed.
 Nu **2.0.0** is in beta: native installers for Windows, macOS and Linux are
 published with each [GitHub release](https://github.com/kovirlabs/nu/releases).
 It runs on **PyQt6** and **Python 3.11+** (verified through 3.14). The plan and
-what's left (installer signing, installing plugins from the app, the micro:bit
-hardware pass) are tracked in [`TODO.md`](TODO.md); what changed since Mu is in
-[`CHANGES.md`](CHANGES.md). Guidance for working in this repository lives in
-[`CLAUDE.md`](CLAUDE.md).
+what's left (installer signing, the micro:bit hardware pass) are tracked in
+[`TODO.md`](TODO.md); what changed since Mu is in [`CHANGES.md`](CHANGES.md).
+Guidance for working in this repository lives in [`CLAUDE.md`](CLAUDE.md).
 
 ## Running from source
 

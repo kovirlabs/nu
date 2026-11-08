@@ -2328,13 +2328,20 @@ def show_admin(ed):
 
 
 def test_show_admin_passes_the_plugins():
-    """The Plugins tab gets every plugin, the plugins folder and the docs."""
+    """
+    The Plugins tab gets every plugin, the plugins folder, the docs, and the
+    Host to add and remove plugins through, with the plugin environment's
+    state.
+    """
     ed, view = admin_editor({})
+    ed.plugin_host.plugin_environment_state.return_value = {"status": "ready"}
     show_admin(ed)
     assert view.show_admin.call_args.kwargs["plugins"] == {
         "plugins": PLUGIN_ROWS,
         "folder": "/data/mu/plugins",
         "help_url": "https://kovirlabs.github.io/nu/plugins/",
+        "manager": ed.plugin_host,
+        "environment": {"status": "ready"},
     }
 
 

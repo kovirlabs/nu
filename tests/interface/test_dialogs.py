@@ -1451,3 +1451,536 @@ def test_EnvironmentsWidget_expanding_makes_room():
     section.toggle.click()
     assert ad.height() >= ad.minimumSizeHint().height()
     assert ad.height() > 300
+
+
+# --- adding, updating and removing plugins ---
+
+
+class FakeJob:
+    """Stands in for mu.plugin.plugin_env.PluginJob."""
+
+    def __init__(self, messages=("Added nu-cows 1.0.",), succeeded=True, changed=True):
+        self.preview = ["$ uv pip install --python /env/bin/python nu-cows"]
+        self.messages = list(messages)
+        self.succeeded = succeeded
+        self.changed = changed
+        self.done = False
+        self.started = False
+
+    def start(self, output, finished):
+        self.started = True
+        output("$ uv pip install nu-cows")
+        self.done = True
+        finished(self)
+
+
+ADDED_ROW = dict(
+    id="cows-added",
+    name="nu-cows",
+    description="Cows, added by you.",
+    kind="added",
+    origin="nu-cows 1.0",
+    distribution="nu-cows",
+    removable=True,
+    updatable=True,
+    modes=["Cow"],
+)
+
+
+def manager_widget(environment=None, rows=None):
+    """A Plugins tab that can add and remove plugins (through `manager`)."""
+    widget = mu.interface.dialogs.PluginsWidget()
+    manager = mock.MagicMock()
+    plugins = dict(
+        PLUGINS,
+        plugins=rows
+        if rows is not None
+        else PLUGINS["plugins"] + [plugin_row(**ADDED_ROW)],
+        manager=manager,
+        environment=environment or {"status": "ready", "added": ["nu-cows"]},
+    )
+    widget.setup(plugins, open_directory=mock.MagicMock())
+    return widget, manager
+
+
+def select(widget, plugin_id):
+    for item in widget.items:
+        if widget._row(item)["id"] == plugin_id:
+            widget.tree.setCurrentItem(item)
+            return item
+    raise AssertionError(plugin_id)
+
+
+def test_PluginsWidget_added_by_you():
+    """Plugins the learner added are listed after installed packages."""
+    widget, _manager = manager_widget()
+    assert cells(widget, widget.FROM) == [
+        "Bundled with Nu",
+        "Bundled with Nu",
+        "Installed package",
+        "Added by you",
+        "Plugins folder",
+        "Plugins folder",
+        "Plugins folder",
+    ]
+
+
+def test_PluginsWidget_no_adding_without_a_manager(plugins_widget):
+    widget = plugins_widget
+    for button in (
+        widget.add_button,
+        widget.add_file_button,
+        widget.update_button,
+        widget.remove_button,
+    ):
+        assert not button.isEnabled()
+    assert widget.reinstall_box.isHidden()
+    assert widget.changes_label.isHidden()
+
+
+def test_PluginsWidget_update_and_remove_only_for_added_plugins():
+    widget, _manager = manager_widget()
+    assert widget.add_button.isEnabled()
+    assert widget.add_file_button.isEnabled()
+    select(widget, "cows-added")
+    assert widget.update_button.isEnabled()
+    assert widget.remove_button.isEnabled()
+    select(widget, "pygamezero")
+    assert not widget.update_button.isEnabled()
+    assert not widget.remove_button.isEnabled()
+    # One added from a file can be removed but not updated from PyPI.
+    widget, _manager = manager_widget(
+        rows=[plugin_row(**dict(ADDED_ROW, updatable=False))]
+    )
+    assert not widget.update_button.isEnabled()
+    assert widget.remove_button.isEnabled()
+
+
+def run_jobs_at_once():
+    """Patch the progress window to run the job straight away."""
+
+    class Dialog:
+        def __init__(self, parent):
+            pass
+
+        def setup_job(self, job, title):
+            self.job = job
+            self.title = title
+
+        def exec(self):
+            self.job.start(lambda text: None, lambda job: None)
+
+    return mock.patch.object(mu.interface.dialogs, "PackageDialog", Dialog)
+
+
+def test_PluginsWidget_add_plugin():
+    """
+    The learner types a name; Nu checks it, shows what PyPI says and the
+    command, and installs it when they agree. The tab says it's for the
+    next start.
+    """
+    widget, manager = manager_widget()
+    job = FakeJob()
+    manager.add_plugin.return_value = job
+    confirm = mock.MagicMock()
+    confirm.return_value.exec.return_value = True
+    with (
+        mock.patch.object(
+            mu.interface.dialogs.QInputDialog, "getText", return_value=("nu-cows", True)
+        ),
+        mock.patch.object(mu.interface.dialogs, "AddPluginDialog", confirm),
+        run_jobs_at_once(),
+    ):
+        widget.add_button.click()
+    requirement = manager.check_plugin_name.return_value
+    manager.check_plugin_name.assert_called_once_with("nu-cows")
+    manager.add_plugin.assert_called_once_with(requirement=requirement)
+    confirm.return_value.setup.assert_called_once_with(
+        "Add a Plugin",
+        job.preview,
+        name=requirement.name,
+        look_up=manager.look_up_plugin,
+    )
+    assert job.started
+    assert not widget.changes_label.isHidden()
+    assert "When you restart Nu:" in widget.changes_label.text()
+    assert "Added nu-cows 1.0." in widget.changes_label.text()
+
+
+def test_PluginsWidget_add_plugin_cancelled():
+    widget, manager = manager_widget()
+    job = FakeJob()
+    manager.add_plugin.return_value = job
+    confirm = mock.MagicMock()
+    confirm.return_value.exec.return_value = False
+    with (
+        mock.patch.object(
+            mu.interface.dialogs.QInputDialog, "getText", return_value=("nu-cows", True)
+        ),
+        mock.patch.object(mu.interface.dialogs, "AddPluginDialog", confirm),
+    ):
+        widget.add_plugin()
+    assert not job.started
+    with mock.patch.object(
+        mu.interface.dialogs.QInputDialog, "getText", return_value=("", False)
+    ):
+        widget.add_plugin()
+    manager.check_plugin_name.assert_called_once()
+
+
+def test_PluginsWidget_add_plugin_bad_name():
+    widget, manager = manager_widget()
+    manager.check_plugin_name.side_effect = ValueError("“-r x” isn't a package name.")
+    with (
+        mock.patch.object(
+            mu.interface.dialogs.QInputDialog, "getText", return_value=("-r x", True)
+        ),
+        mock.patch.object(mu.interface.dialogs.QMessageBox, "warning") as warning,
+    ):
+        widget.add_plugin()
+    assert warning.call_args.args[1:] == (
+        "Add a Plugin",
+        "“-r x” isn't a package name.",
+    )
+    manager.add_plugin.assert_not_called()
+
+
+def test_PluginsWidget_add_plugin_file(tmp_path):
+    """From a file: no PyPI, its name and version come from the file."""
+    widget, manager = manager_widget()
+    path = str(tmp_path / "nu_cows-1.0-py3-none-any.whl")
+    manager.check_plugin_file.return_value = ("nu-cows", "1.0")
+    job = FakeJob()
+    manager.add_plugin.return_value = job
+    confirm = mock.MagicMock()
+    confirm.return_value.exec.return_value = True
+    with (
+        mock.patch.object(
+            mu.interface.dialogs.QFileDialog,
+            "getOpenFileName",
+            return_value=(path, "Plugin files (*.whl)"),
+        ) as pick,
+        mock.patch.object(mu.interface.dialogs, "AddPluginDialog", confirm),
+        run_jobs_at_once(),
+    ):
+        widget.add_file_button.click()
+    assert pick.call_args.args[3] == "Plugin files (*.whl)"
+    manager.add_plugin.assert_called_once_with(wheel=path)
+    title, preview = confirm.return_value.setup.call_args.args
+    assert title == "Add a Plugin from a File"
+    assert confirm.return_value.setup.call_args.kwargs["info"] == {
+        "name": "nu-cows",
+        "version": "1.0",
+        "summary": "",
+        "author": "",
+        "homepage": "",
+        "file": path,
+    }
+    assert job.started
+
+
+def test_PluginsWidget_add_plugin_file_cancelled_or_bad():
+    widget, manager = manager_widget()
+    with mock.patch.object(
+        mu.interface.dialogs.QFileDialog, "getOpenFileName", return_value=("", "")
+    ):
+        widget.add_plugin_file()
+    manager.check_plugin_file.assert_not_called()
+    manager.check_plugin_file.side_effect = ValueError("x.zip isn't a wheel file.")
+    with (
+        mock.patch.object(
+            mu.interface.dialogs.QFileDialog,
+            "getOpenFileName",
+            return_value=("/x.zip", ""),
+        ),
+        mock.patch.object(mu.interface.dialogs.QMessageBox, "warning") as warning,
+    ):
+        widget.add_plugin_file()
+    assert warning.call_args.args[2] == "x.zip isn't a wheel file."
+    manager.add_plugin.assert_not_called()
+
+
+def test_PluginsWidget_update_plugin():
+    widget, manager = manager_widget()
+    job = FakeJob(messages=["Updated nu-cows: it's now version 2.0."])
+    manager.update_plugin.return_value = job
+    select(widget, "cows-added")
+    with run_jobs_at_once():
+        widget.update_button.click()
+    manager.update_plugin.assert_called_once_with("nu-cows")
+    assert "Updated nu-cows" in widget.changes_label.text()
+    # Not for a plugin Nu can't update.
+    select(widget, "pygamezero")
+    widget.update_plugin()
+    widget.tree.setCurrentItem(None)
+    widget.update_plugin()
+    widget.remove_plugin()
+    manager.update_plugin.assert_called_once()
+    manager.remove_plugin.assert_not_called()
+
+
+@pytest.mark.parametrize("answer", ["Yes", "No"])
+def test_PluginsWidget_remove_plugin(answer):
+    """Remove asks first, showing the command; then it's marked removed."""
+    widget, manager = manager_widget()
+    job = FakeJob(messages=["Removed nu-cows. It's gone the next time you start Nu."])
+    manager.remove_plugin.return_value = job
+    item = select(widget, "cows-added")
+    QMessageBox = mu.interface.dialogs.QMessageBox
+    with (
+        mock.patch.object(
+            QMessageBox,
+            "question",
+            return_value=getattr(QMessageBox.StandardButton, answer),
+        ) as question,
+        run_jobs_at_once(),
+    ):
+        widget.remove_button.click()
+    assert question.call_args.args[1] == "Remove a Plugin"
+    assert job.preview[0] in question.call_args.args[2]
+    if answer == "Yes":
+        assert job.started
+        assert item.text(widget.STATUS) == "Removed; gone when you restart Nu"
+        assert not widget.remove_button.isEnabled()
+        assert not widget.update_button.isEnabled()
+        assert "Status: Removed; gone when you restart Nu" in widget.summary.text()
+    else:
+        assert not job.started
+        assert item.text(widget.STATUS) == "On"
+
+
+def test_PluginsWidget_remove_plugin_that_fails():
+    widget, manager = manager_widget()
+    job = FakeJob(
+        messages=["Nu couldn't remove nu-cows."], succeeded=False, changed=False
+    )
+    manager.remove_plugin.return_value = job
+    item = select(widget, "cows-added")
+    QMessageBox = mu.interface.dialogs.QMessageBox
+    with (
+        mock.patch.object(
+            QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes
+        ),
+        run_jobs_at_once(),
+    ):
+        widget.remove_plugin()
+    assert item.text(widget.STATUS) == "On"
+    assert widget.remove_button.isEnabled()
+    assert widget.changes_label.isHidden()
+
+
+PYTHON_CHANGED = {
+    "status": "python-changed",
+    "python": "3.11",
+    "nu_python": "3.12",
+    "added": ["nu-cows", "nu-sheep"],
+}
+
+
+def test_PluginsWidget_python_changed():
+    """
+    After Nu moved to a new Python, the tab says the learner's plugins are
+    off until they're installed again, and nothing else can be added.
+    """
+    widget, _manager = manager_widget(environment=PYTHON_CHANGED)
+    assert not widget.reinstall_box.isHidden()
+    assert widget.reinstall_note.text() == (
+        "Nu has moved to Python 3.12, so the plugins you added for Python 3.11 "
+        "(nu-cows, nu-sheep) are switched off until you install them again."
+    )
+    assert not widget.add_button.isEnabled()
+    assert not widget.add_file_button.isEnabled()
+    select(widget, "cows-added")
+    assert not widget.remove_button.isEnabled()
+
+
+@pytest.mark.parametrize("changed", [True, False])
+def test_PluginsWidget_reinstall(changed):
+    widget, manager = manager_widget(environment=dict(PYTHON_CHANGED, added=[]))
+    assert "(none)" in widget.reinstall_note.text()
+    job = FakeJob(messages=["Added nu-cows 1.0."], changed=changed)
+    manager.reinstall_plugins.return_value = job
+    with run_jobs_at_once():
+        widget.reinstall_button.click()
+    assert job.started
+    assert widget.reinstall_button.isEnabled() is not changed
+    if changed:
+        assert widget.reinstall_note.text() == (
+            "Your plugins are installed again. They load when you restart Nu."
+        )
+
+
+def test_PluginLookupWorker():
+    finished = []
+    worker = mu.interface.dialogs.PluginLookupWorker(
+        lambda name: {"name": name}, "nu-cows"
+    )
+    worker.finished.connect(lambda *args: finished.append(args))
+    worker.run()
+    worker.look_up = lambda name: None
+    worker.run()
+
+    def offline(name):
+        raise OSError("Network is unreachable")
+
+    worker.look_up = offline
+    worker.run()
+    worker.look_up = mock.MagicMock(side_effect=TimeoutError())
+    worker.run()
+    assert finished == [
+        ({"name": "nu-cows"}, ""),
+        ({}, ""),
+        ({}, "Network is unreachable"),
+        ({}, "TimeoutError"),
+    ]
+
+
+INFO = {
+    "name": "nu-cows",
+    "version": "1.0",
+    "summary": "Cows & calves for Nu.",
+    "author": "Daisy",
+    "homepage": "https://example.org/cows",
+}
+
+
+def test_AddPluginDialog_with_a_file():
+    dialog = mu.interface.dialogs.AddPluginDialog()
+    dialog.setup(
+        "Add a Plugin from a File",
+        ["$ uv pip install /w/nu_cows.whl"],
+        info=dict(INFO, summary="", author="", homepage="", file="/w/nu_cows.whl"),
+    )
+    assert dialog.windowTitle() == "Add a Plugin from a File"
+    assert dialog.ok_button.isEnabled()
+    assert dialog.ok_button.text() == "Add it"
+    assert "<b>nu-cows</b> 1.0" in dialog.about.text()
+    assert "From the file /w/nu_cows.whl" in dialog.about.text()
+    assert dialog.commands.toPlainText() == "$ uv pip install /w/nu_cows.whl"
+    assert "Only add plugins you trust" in dialog.trust_note.text()
+    dialog.done(0)
+
+
+def test_AddPluginDialog_asks_pypi():
+    """
+    PyPI is asked off the GUI thread; until it answers, OK is off. Then it
+    shows what the package says about itself.
+    """
+    QThread = mu.interface.dialogs.QThread
+    look_up = mock.MagicMock()
+    with mock.patch.object(QThread, "start") as start:
+        dialog = mu.interface.dialogs.AddPluginDialog()
+        dialog.setup("Add a Plugin", ["$ uv …"], name="nu-cows", look_up=look_up)
+    start.assert_called_once_with()
+    assert dialog.worker.look_up is look_up
+    assert not dialog.ok_button.isEnabled()
+    assert dialog.about.text() == "Asking PyPI about nu-cows…"
+    dialog.worker.finished.emit(INFO, "")
+    assert dialog.thread is None
+    assert dialog.ok_button.isEnabled()
+    text = dialog.about.text()
+    assert "<b>nu-cows</b> 1.0" in text
+    assert "Cows &amp; calves for Nu." in text
+    assert "By: Daisy" in text
+    assert '<a href="https://example.org/cows">' in text
+    assert "names can look alike" in text
+
+
+def test_AddPluginDialog_not_a_web_link():
+    dialog = mu.interface.dialogs.AddPluginDialog()
+    dialog.setup(
+        "Add a Plugin",
+        [],
+        info=dict(INFO, homepage="javascript:alert(1)"),
+    )
+    assert "javascript" not in dialog.about.text()
+
+
+@pytest.mark.parametrize(
+    "info, problem, expected",
+    [
+        ({}, "", "PyPI has no package called nu-cows."),
+        ({}, "timed out", "Nu couldn't ask PyPI about nu-cows"),
+    ],
+)
+def test_AddPluginDialog_cant_add(info, problem, expected):
+    QThread = mu.interface.dialogs.QThread
+    with mock.patch.object(QThread, "start"):
+        dialog = mu.interface.dialogs.AddPluginDialog()
+        dialog.setup("Add a Plugin", [], name="nu-cows", look_up=mock.MagicMock())
+    dialog.worker.finished.emit(info, problem)
+    assert expected in dialog.about.text()
+    assert not dialog.ok_button.isEnabled()
+
+
+def test_AddPluginDialog_closed_while_asking():
+    """Closing it before PyPI answers stops the thread; the answer is ignored."""
+    QThread = mu.interface.dialogs.QThread
+    with mock.patch.object(QThread, "start"):
+        dialog = mu.interface.dialogs.AddPluginDialog()
+        dialog.setup("Add a Plugin", [], name="nu-cows", look_up=mock.MagicMock())
+    with mock.patch.object(QThread, "quit") as quit:
+        dialog.reject()
+    quit.assert_called_once_with()
+    assert dialog.thread is None
+
+
+def test_AddPluginDialog_real_thread():
+    """The lookup really runs on a thread and comes back to the dialog."""
+    from PyQt6.QtCore import QEventLoop, QTimer
+
+    dialog = mu.interface.dialogs.AddPluginDialog()
+    loop = QEventLoop()
+    dialog.setup("Add a Plugin", [], name="nu-cows", look_up=lambda name: INFO)
+    dialog.worker.finished.connect(lambda *args: QTimer.singleShot(0, loop.quit))
+    QTimer.singleShot(5000, loop.quit)
+    loop.exec()
+    assert dialog.ok_button.isEnabled()
+    assert dialog.thread is None
+
+
+@pytest.mark.parametrize(
+    "succeeded, changed, last_lines",
+    [
+        (True, True, ["The changes take effect the next time you start Nu."]),
+        (False, False, ["Not everything worked: see above."]),
+        (
+            False,
+            True,
+            [
+                "Not everything worked: see above.",
+                "The changes take effect the next time you start Nu.",
+            ],
+        ),
+    ],
+)
+def test_PackageDialog_runs_a_plugin_job(succeeded, changed, last_lines):
+    """
+    A plugin change streams into the package progress window, which can't be
+    closed until it's done, then says how it went.
+    """
+    pd = mu.interface.dialogs.PackageDialog()
+    job = FakeJob(succeeded=succeeded, changed=changed)
+    with mock.patch.object(mu.interface.dialogs.QTimer, "singleShot") as later:
+        pd.setup_job(job, "Add a Plugin")
+    assert pd.windowTitle() == "Add a Plugin"
+    ok = pd.button_box.button(QDialogButtonBox.StandardButton.Ok)
+    assert not ok.isEnabled()
+    with mock.patch.object(QDialog, "reject") as reject:
+        pd.reject()
+        reject.assert_not_called()
+        later.call_args.args[1]()  # the job starts
+        pd.reject()
+        reject.assert_called_once_with()
+    lines = pd.text_area.toPlainText().splitlines()
+    assert lines[0] == "$ uv pip install nu-cows"
+    assert lines[-len(last_lines) - 2 : -2] == last_lines
+    assert lines[-1] == "FINISHED"
+    assert ok.isEnabled()
+
+
+def test_PackageDialog_reject_without_a_job():
+    pd = mu.interface.dialogs.PackageDialog()
+    with mock.patch.object(QDialog, "reject") as reject:
+        pd.reject()
+    reject.assert_called_once_with()
