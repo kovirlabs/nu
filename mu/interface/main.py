@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import sys
 import logging
 import os.path
-from PyQt6.QtCore import QSize, Qt, pyqtSignal, QTimer
+from PyQt6.QtCore import QPoint, QSize, Qt, pyqtSignal, QTimer
 from PyQt6.QtWidgets import (
     QToolBar,
     QWidget,
@@ -39,6 +39,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import (
     QAction,
+    QGuiApplication,
     QShortcut,
     QKeySequence,
     QStandardItemModel,
@@ -1039,26 +1040,25 @@ class Window(QMainWindow):
 
     def size_window(self, x=None, y=None, w=None, h=None):
         """
-        Makes the editor 80% of the width*height of the screen and centres it
-        when none of x, y, w and h is passed in; otherwise uses the passed in
-        values to position and size the editor window.
+        Makes the editor 80% of the width*height of the primary screen and
+        centres it there when none of x, y, w and h is passed in; otherwise
+        uses the passed in values to position and size the editor window.
 
-        If the X or Y value will be off the screen, these are reset to None
-        (thus stopping the window being drawn in a hard-to-reach place). See
-        issue #1613 for context.
+        A saved position is kept when the window's top-left corner is on any
+        connected screen, so a window left on a second monitor opens there
+        again. If it's on none of them (that monitor has been unplugged, or
+        the position is off every screen) the window is centred on the
+        primary screen instead, so it's never drawn in a hard-to-reach place.
+        See issue #1613 for context.
         """
-        screen_width, screen_height = self.screen_size()
-        w = int(screen_width * 0.8) if w is None else w
-        h = int(screen_height * 0.8) if h is None else h
+        screen = QApplication.primaryScreen().geometry()
+        w = int(screen.width() * 0.8) if w is None else w
+        h = int(screen.height() * 0.8) if h is None else h
         self.resize(w, h)
         size = self.geometry()
-        # Ensure the window isn't added off the screen.
-        if x and (x <= 0 or x > screen_width):
-            x = None
-        if y and (y <= 0 or y > screen_height):
-            y = None
-        x = (screen_width - size.width()) // 2 if x is None else x
-        y = (screen_height - size.height()) // 2 if y is None else y
+        if x is None or y is None or QGuiApplication.screenAt(QPoint(x, y)) is None:
+            x = screen.x() + (screen.width() - size.width()) // 2
+            y = screen.y() + (screen.height() - size.height()) // 2
         self.move(x, y)
 
     def reset_annotations(self):
