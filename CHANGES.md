@@ -33,7 +33,7 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   and say which packages their modes need in your programs' environment. Drop
   one into Nu's plugins folder, or install one as a package; a plugin that
   fails is skipped or reported, and Nu keeps running. The plugin API is at
-  version 0.2 and may change. See
+  version 0.3 and may change. See
   [Writing a Nu plugin](https://kovirlabs.github.io/nu/plugins/).
 * **Private crash reports.** If Nu crashes it shows the details with a **Copy
   to clipboard** button. Mu used to open codewith.mu with the details in the
@@ -45,6 +45,9 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   with Nu and switched on as before, and works the same way (saved sessions in
   Pygame Zero mode carry on), but it's built on the public plugin API, so it
   can be switched off like any other plugin.
+* **CircuitPython is now a bundled plugin** too (`nu-circuitpython`), installed
+  with Nu and switched on as before; saved sessions in CircuitPython mode carry
+  on. Nu's own modes are now just Python 3 and the Debugger.
 
 ### Fixed
 

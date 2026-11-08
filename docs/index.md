@@ -10,7 +10,9 @@ beginner programmers.
     the pre-fork toolchain (PyQt5, `setup.py`, Sphinx/ReadTheDocs, and the
     micro:bit/web modes). Nu has since moved to **PyQt6**, **Python 3.11+**,
     **uv** and **ruff**, and trimmed the mode set to Python 3, Pygame Zero,
-    CircuitPython and the debugger. For the current, authoritative state of the
+    CircuitPython and the debugger (the core keeps Python 3 and the debugger;
+    the other two are bundled [plugins](plugins.md)). For the current,
+    authoritative state of the
     project see
     [`README.md`](https://github.com/kovirlabs/nu/blob/master/README.md),
     `CLAUDE.md` and `TODO.md` in the repository root. These pages are being
