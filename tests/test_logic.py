@@ -2207,6 +2207,7 @@ def test_show_admin():
             venv, "installed_packages", return_value=([], ["Foo", "bar"])
         ),
         mock.patch.object(venv, "describe", return_value={"name": "env"}),
+        mock.patch.object(venv, "list_environments", return_value=[]),
     ):
         mock_open = mock.mock_open()
         with (
@@ -2239,6 +2240,7 @@ def test_show_admin_no_change():
             venv, "installed_packages", return_value=([], ["Foo", "bar"])
         ),
         mock.patch.object(venv, "describe", return_value={"name": "env"}),
+        mock.patch.object(venv, "list_environments", return_value=[]),
     ):
         with (
             mock.patch("builtins.open", mock_open),
@@ -3668,3 +3670,59 @@ def test_com1_hash_not_equal_on_different_ports(microbit_com1):
         "BBC micro:bit",
     )
     assert hash(microbit_com1) != hash(microbit_com2)
+
+
+ENVIRONMENTS = [
+    {"name": "mu_venv", "path": "/data/mu_venv-311-1-1", "next_start": True},
+    {"name": "project-a", "path": "/data/envs/project-a", "next_start": False},
+]
+
+
+def show_admin_with_environments(ed):
+    with (
+        mock.patch.object(venv, "installed_packages", return_value=([], [])),
+        mock.patch.object(venv, "describe", return_value={"name": "mu_venv"}),
+        mock.patch.object(venv, "list_environments", return_value=ENVIRONMENTS),
+        mock.patch("builtins.open", mock.mock_open(read_data="the log")),
+    ):
+        ed.show_admin()
+
+
+def test_show_admin_passes_the_environments():
+    """The Environment tab's Advanced section gets every environment."""
+    ed, view = admin_editor({})
+    show_admin_with_environments(ed)
+    environment = view.show_admin.call_args.kwargs["environment"]
+    assert environment["environments"] == ENVIRONMENTS
+
+
+def test_show_admin_switches_environment():
+    """Chosen on the tab: used from the next start, and the learner's told."""
+    ed, view = admin_editor({"locale": "", "environment": "/data/envs/project-a"})
+    with mock.patch.object(venv, "switch_environment", return_value=None) as switch:
+        show_admin_with_environments(ed)
+    switch.assert_called_once_with("/data/envs/project-a")
+    message, duration = ed.show_status_message.call_args.args
+    assert message == "Nu will use the environment “project-a” when you restart it."
+
+
+def test_show_admin_environment_unchanged():
+    """The one for the next start chosen again: nothing to do."""
+    ed, view = admin_editor({"locale": "", "environment": "/data/mu_venv-311-1-1"})
+    with mock.patch.object(venv, "switch_environment") as switch:
+        show_admin_with_environments(ed)
+    switch.assert_not_called()
+    ed.show_status_message.assert_not_called()
+
+
+def test_show_admin_environment_refused():
+    """Nu can't use it: the learner's told why, and nothing changes."""
+    ed, view = admin_editor({"locale": "", "environment": "/elsewhere/env"})
+    with mock.patch.object(
+        venv, "switch_environment", return_value="Nu can't use it: No pip."
+    ):
+        show_admin_with_environments(ed)
+    view.show_message.assert_called_once_with(
+        "Nu can't switch to the environment “env”.", "Nu can't use it: No pip."
+    )
+    ed.show_status_message.assert_not_called()
