@@ -235,6 +235,13 @@ def test_create_virtual_environment_on_disk(venv_dirpath, test_wheels):
     assert os.path.samefile(result, expected_result)
 
     #
+    # The real uv can list the packages (its status output mustn't break the
+    # parse) and everything installed at creation counts as baseline.
+    #
+    _, user_packages = venv.installed_packages()
+    assert user_packages == []
+
+    #
     # Issue #1372 -- venv creation fails for paths with a space
     #
     with mock.patch.object(VE, "ensure_key_modules"):
@@ -565,6 +572,39 @@ def test_install_user_packages(venv):
         assert kwargs.get("upgrade") is True
 
 
+@pytest.mark.parametrize("method", ["install_user_packages", "remove_user_packages"])
+def test_user_package_process_runs_to_completion(qtapp, venv, method):
+    """
+    Regression: the uv process behind the admin dialog's package install /
+    removal must be kept alive until it finishes. Nothing held a reference to
+    it, so Qt destroyed the QProcess while uv was still running ("QProcess:
+    Destroyed while process is still running"), the package was never
+    installed and the "finished" slot never fired, leaving the dialog stuck.
+
+    A real QProcess is run (Python standing in for uv: it exits straight away
+    with an error, which is fine -- we only need "finished" to arrive).
+    """
+    import gc
+    import time
+    from PyQt6.QtCore import QEventLoop
+
+    finished = []
+    fake_uv = mu.virtual_environment.Uv(
+        uv_executable=sys.executable, venv_path=venv.path
+    )
+    with mock.patch.object(VE, "_uv", return_value=fake_uv):
+        getattr(venv, method)(
+            ["arrr"], slots=VE.Slots(finished=lambda: finished.append(True))
+        )
+    del fake_uv
+    deadline = time.time() + 20
+    while not finished and time.time() < deadline:
+        gc.collect()
+        qtapp.processEvents(QEventLoop.ProcessEventsFlag.AllEvents, 50)
+        time.sleep(0.01)
+    assert finished
+
+
 def test_remove_user_packages(venv):
     """Ensure that, given a list of packages, we uv-uninstall them
 
@@ -600,6 +640,27 @@ def test_installed_packages(venv):
                 ["mu-editor"] + [name for name, _ in baseline_packages]
             )
             assert set(user_result) == set(name for name, _ in user_packages)
+
+
+def test_installed_packages_matches_normalised_names(venv):
+    """
+    The baseline list is recorded from ``pip list`` (e.g. ``jupyter_client``,
+    ``Pygments``) but uv reports normalised names (``jupyter-client``,
+    ``pygments``). Those are the same packages, so they mustn't be shown as
+    the user's own packages (where deleting them would uninstall them).
+    """
+    baseline_packages = [("jupyter_client", "8"), ("Pygments", "2"), ("pip", "26")]
+    uv_packages = [
+        ("jupyter-client", "8"),
+        ("pygments", "2"),
+        ("pip", "26"),
+        ("requests", "2"),
+    ]
+    with mock.patch.object(VE, "baseline_packages", return_value=baseline_packages):
+        with mock.patch.object(mu.virtual_environment, "Uv") as MockUv:
+            MockUv.return_value.list_packages.return_value = uv_packages
+            _, user_result = venv.installed_packages()
+    assert user_result == ["requests"]
 
 
 def test_activation_vars(venv):
@@ -764,7 +825,7 @@ def test_uv_list_packages(uv_process):
     uv = UV(uv_executable="/x/uv", venv_path="/venv")
     assert uv.list_packages() == [("a", "1"), ("b", "2")]
     (_, args), _ = uv_process.run_blocking.call_args
-    assert args == ["pip", "list", "--format=json", "--python", "/venv"]
+    assert args == ["pip", "list", "--format=json", "--quiet", "--python", "/venv"]
 
 
 def test_uv_run_connects_supplied_slots(uv_process):

@@ -5,6 +5,7 @@ import functools
 import glob
 import json
 import logging
+import re
 import shutil
 import subprocess
 import tarfile
@@ -451,6 +452,11 @@ def _uv_from_package():
     return candidate if candidate and os.path.exists(candidate) else None
 
 
+def canonical_package_name(name):
+    """Normalise a package name as PEP 503 does (``Foo_Bar`` -> ``foo-bar``)."""
+    return re.sub(r"[-_.]+", "-", name).lower()
+
+
 def find_uv():
     """Locate the `uv` executable.
 
@@ -563,8 +569,14 @@ class Uv(object):
 
     def list_packages(self):
         """Return ``(name, version)`` tuples for packages in the target env."""
-        output = self.run_blocking("pip", "list", "--format=json", *self._python_args())
-        return [(p["name"], p["version"]) for p in json.loads(output)]
+        output = self.run_blocking(
+            "pip", "list", "--format=json", "--quiet", *self._python_args()
+        )
+        # Process merges stderr into the output, where uv reports e.g. the
+        # environment it selected, so parse only the JSON line.
+        json_lines = [line for line in output.splitlines() if line.startswith("[")]
+        packages = json.loads(json_lines[0] if json_lines else output)
+        return [(p["name"], p["version"]) for p in packages]
 
 
 class SplashLogHandler(logging.NullHandler):
@@ -607,6 +619,9 @@ class VirtualEnvironment(object):
 
     def __init__(self, dirpath=None):
         self.process = Process()
+        # The uv process installing/removing user packages (see
+        # install_user_packages), referenced so it isn't destroyed mid-run.
+        self.user_package_process = None
         self._is_windows = sys.platform == "win32"
         self._bin_extension = ".exe" if self._is_windows else ""
         self.settings = settings.VirtualEnvironmentSettings()
@@ -1241,14 +1256,18 @@ class VirtualEnvironment(object):
         Install user defined packages.
         """
         logger.info("Installing user packages: %s", ", ".join(packages))
-        self._uv().install(packages, slots=slots, upgrade=True)
+        # Keep the process alive: Qt destroys (and kills) a QProcess as soon
+        # as nothing references it.
+        self.user_package_process = self._uv().install(
+            packages, slots=slots, upgrade=True
+        )
 
     def remove_user_packages(self, packages, slots=Process.Slots()):
         """
         Remove user defined packages.
         """
         logger.info("Removing user packages: %s", ", ".join(packages))
-        self._uv().uninstall(packages, slots=slots)
+        self.user_package_process = self._uv().uninstall(packages, slots=slots)
 
     def installed_packages(self):
         """
@@ -1257,9 +1276,12 @@ class VirtualEnvironment(object):
         """
         logger.info("Discovering installed third party modules in venv.")
         baseline_packages = [name for name, version in self.baseline_packages()]
+        # The baseline names come from `pip list` (e.g. "jupyter_client") but
+        # uv reports normalised ones ("jupyter-client"), so compare those.
+        baseline_names = {canonical_package_name(n) for n in baseline_packages}
         user_packages = []
         for package, version in self._uv().list_packages():
-            if package not in baseline_packages:
+            if canonical_package_name(package) not in baseline_names:
                 user_packages.append(package)
         logger.info(user_packages)
 

@@ -34,27 +34,24 @@ logger = logging.getLogger(__name__)
 
 
 class MuKernelManager(QtKernelManager):
-    def start_kernel(self, **kw):
-        """Starts a kernel on this host in a separate process.
+    async def _async_pre_start_kernel(self, **kw):
+        """Prepare the kernel command, making it use the venv's Python.
 
         Subclassed to allow checking that the kernel uses the same Python as
-        Mu itself.
+        Mu itself. Only this preparation step is overridden: jupyter_client
+        (7+) launches the kernel through a provisioner, so the rest of the
+        start-up must stay jupyter_client's own.
         """
-        kernel_cmd, kw = self.pre_start_kernel(**kw)
+        kernel_cmd, kw = await super()._async_pre_start_kernel(**kw)
         cmd_interpreter = kernel_cmd[0]
         if cmd_interpreter != venv.interpreter:
             self.log.debug("Wrong interpreter selected to run REPL: %s", kernel_cmd)
             self.log.debug(
                 "Using default interpreter to run REPL instead: %s",
-                cmd_interpreter,
+                venv.interpreter,
             )
-            cmd_interpreter = venv.interpreter
-            kernel_cmd[0] = cmd_interpreter
-
-        # launch the kernel subprocess
-        self.log.debug("Starting kernel: %s", kernel_cmd)
-        self.kernel = self._launch_kernel(kernel_cmd, **kw)
-        self.post_start_kernel(**kw)
+            kernel_cmd[0] = venv.interpreter
+        return kernel_cmd, kw
 
 
 class KernelRunner(QObject):

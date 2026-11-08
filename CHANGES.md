@@ -37,6 +37,29 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   to clipboard** button. Mu used to open codewith.mu with the details in the
   address; Nu never sends anything by itself.
 
+### Fixed
+
+Things that worked in Mu 1.2.2 but broke in the 2.0.0 betas with the move to
+PyQt6 and uv, found by checking Nu against Mu:
+
+* **Check** no longer crashes Nu when it finds a problem in your code; the
+  problems are shown under the lines again.
+* **Tidy** works on code that uses newer Python syntax, such as `match`
+  statements, instead of saying the code contains problems.
+* The **admin dialog** (Ctrl+Shift+D, or the icon at the right of the status
+  bar) opens again in Python 3 and Pygame Zero modes; it crashed Nu while
+  listing your installed packages.
+* The admin dialog's **Third Party Packages** list shows only packages you
+  added again, not ones Nu installed for itself (such as `jupyter-client`),
+  so removing lines there can't uninstall the REPL's own packages.
+* Adding or removing packages in the admin dialog works again: the install
+  was stopped as soon as it started and the progress window never finished.
+* The Python 3 **REPL** button starts the Jupyter REPL again instead of
+  crashing Nu.
+* Opening a file Nu can't handle no longer suggests micro:bit `.hex` files.
+* When a program finishes, the footer shows `status: 0` again rather than
+  `status: ExitStatus.NormalExit`.
+
 ### Security
 
 * All open Dependabot and CodeQL alerts are resolved, and the bundled Jupyter

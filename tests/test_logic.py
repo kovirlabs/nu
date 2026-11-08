@@ -1350,6 +1350,11 @@ def test_load_not_python_or_hex():
     with mock.patch("os.path.isfile", return_value=True):
         ed._load("unknown_filetype.foo")
     assert view.show_message.call_count == 1
+    # Nu no longer has a mode that opens .hex files (micro:bit was removed),
+    # so the message mustn't offer them.
+    message, info = view.show_message.call_args[0]
+    assert "hex" not in info
+    assert "Python" in info
 
 
 def test_load_recovers_from_oserror():
@@ -3283,6 +3288,35 @@ def test_tidy_code_valid_python():
     tab = mock_view.current_tab
     tab.SendScintilla.assert_called_once_with(tab.SCI_SETTEXT, b'print("hello")\n')
     assert ed.show_status_message.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "source, expected",
+    [
+        # Structural pattern matching (Python 3.10+).
+        (
+            "match x:\n    case 1:\n        y=2\n",
+            "match x:\n    case 1:\n        y = 2\n",
+        ),
+        # Type alias statement (Python 3.12+ syntax; black parses it on any
+        # interpreter).
+        ("type  X = int\n", "type X = int\n"),
+    ],
+)
+def test_tidy_code_modern_python_syntax(source, expected):
+    """
+    Nu runs on Python 3.11+, so Tidy must accept the syntax that Python
+    accepts. It used to pin black's target to Python 3.6, so valid code using
+    newer syntax was rejected as "Your code contains problems".
+    """
+    mock_view = mock.MagicMock()
+    mock_view.current_tab.text.return_value = source
+    ed = mu.logic.Editor(mock_view)
+    ed.show_status_message = mock.MagicMock()
+    ed.tidy_code()
+    assert mock_view.show_message.call_count == 0
+    tab = mock_view.current_tab
+    tab.SendScintilla.assert_called_once_with(tab.SCI_SETTEXT, expected.encode("utf-8"))
 
 
 @pytest.mark.skipif(sys.version_info < (3, 6), reason="Requires Python3.6")

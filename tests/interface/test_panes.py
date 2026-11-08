@@ -1361,6 +1361,42 @@ def test_PythonProcessPane_finished():
     ppp.setTextCursor.assert_called_once_with(ppp.textCursor())
 
 
+def test_PythonProcessPane_finished_without_qtpy_enum_promotion():
+    """
+    finished() must use PyQt6's scoped enum (QTextCursor.MoveOperation.End).
+    The Qt5-style ``cursor.End`` only worked because qtconsole's qtpy
+    "promotes" PyQt6 enum members onto their classes as a side effect of
+    being imported; without that it raises AttributeError.
+    """
+    from PyQt6.QtGui import QTextCursor
+
+    ppp = mu.interface.panes.PythonProcessPane()
+    ppp.setPlainText("output")
+    promoted = QTextCursor.__dict__.get("End")
+    if promoted is not None:
+        delattr(QTextCursor, "End")
+    try:
+        ppp.finished(0, 0)
+    finally:
+        if promoted is not None:
+            QTextCursor.End = promoted
+    assert ppp.toPlainText().endswith(
+        "---------- FINISHED ----------\nexit code: 0 status: 0"
+    )
+
+
+def test_PythonProcessPane_finished_shows_numeric_status():
+    """
+    The FINISHED footer shows the exit status as a number, as Mu did
+    ("status: 0"), not PyQt6's enum repr ("status: ExitStatus.NormalExit").
+    """
+    from PyQt6.QtCore import QProcess
+
+    ppp = mu.interface.panes.PythonProcessPane()
+    ppp.finished(1, QProcess.ExitStatus.CrashExit)
+    assert ppp.toPlainText().endswith("exit code: 1 status: 1")
+
+
 def test_PythonProcessPane_context_menu():
     """
     Ensure the context menu for the REPL is configured correctly for non-OSX

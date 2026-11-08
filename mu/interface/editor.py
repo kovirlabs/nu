@@ -430,7 +430,10 @@ class EditorPane(QsciScintilla):
         for line, messages in lines.items():
             text = "\n".join(messages).strip()
             if text:
-                self.annotate(line, text, self.annotationDisplay())
+                # annotate() takes a style *number*. Upstream passed the
+                # AnnotationDisplay value (an int under PyQt5); PyQt6 enums
+                # aren't ints, so pass its value to keep the same style.
+                self.annotate(line, text, self.annotationDisplay().value)
 
     def find_next_match(
         self,
