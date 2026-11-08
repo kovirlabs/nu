@@ -73,13 +73,12 @@ msgstr ""
 "cliquer sur \"Annuler\"."
 
 #: mu/interface/dialogs.py:104
-#, fuzzy
 msgid ""
 "Change mode at any time by clicking the \"Mode\" button containing Nu's "
 "logo."
 msgstr ""
 "Change le mode à n'importe quel moment en cliquant sur le bouton \"Mode\""
-" qui contient le logo de Mu."
+" qui contient le logo de Nu."
 
 #: mu/interface/dialogs.py:143
 msgid ""
@@ -364,9 +363,8 @@ msgid ""
 msgstr ""
 
 #: mu/interface/dialogs.py:727 mu/interface/main.py:1344
-#, fuzzy
 msgid "Nu Administration"
-msgstr "Administration de Mu"
+msgstr "Administration de Nu"
 
 #: mu/interface/dialogs.py:741
 msgid "Current Log"
@@ -430,9 +428,8 @@ msgid "Mode"
 msgstr "Mode"
 
 #: mu/interface/main.py:105
-#, fuzzy
 msgid "Change Nu's mode of behaviour."
-msgstr "Change le mode de Mu."
+msgstr "Change le mode de Nu."
 
 #: mu/interface/main.py:110
 msgid "New"
@@ -504,27 +501,25 @@ msgid "Help"
 msgstr "Aide"
 
 #: mu/interface/main.py:163
-#, fuzzy
 msgid "Show help about Nu in a browser."
-msgstr "Montre l'aide à propos de Mu dans un navigateur."
+msgstr "Montre l'aide à propos de Nu dans un navigateur."
 
 #: mu/interface/main.py:166
 msgid "Quit"
 msgstr "Quitter"
 
 #: mu/interface/main.py:166
-#, fuzzy
 msgid "Quit Nu."
-msgstr "Quitte Mu."
+msgstr "Quitte Nu."
 
 #: mu/interface/main.py:264
 msgid "Close file"
 msgstr ""
 
 #: mu/interface/main.py:305
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu {}"
-msgstr "Mu {}"
+msgstr "Nu {}"
 
 #: mu/interface/main.py:524
 msgid "Copy selected text to REPL"
@@ -573,12 +568,11 @@ msgstr "(Un dictionnaire de {} éléments.)"
 
 #: mu/interface/main.py:1007
 msgid "Nu"
-msgstr ""
+msgstr "Nu"
 
 #: mu/interface/main.py:1331
-#, fuzzy
 msgid "Nu's current mode of behaviour."
-msgstr "Mode courant de Mu."
+msgstr "Mode courant de Nu."
 
 #: mu/interface/main.py:1378
 #, python-brace-format
@@ -965,14 +959,13 @@ msgid "The file \"{}\" is already open."
 msgstr "Le fichier \"{}\" est déjà ouvert."
 
 #: mu/logic.py:976
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu cannot read the characters in {}"
-msgstr "Mu ne peut pas lire les caractères dans {}"
+msgstr "Nu ne peut pas lire les caractères dans {}"
 
 #: mu/logic.py:1003
-#, fuzzy
 msgid "Nu was not able to open this file"
-msgstr "Mu ne peut pas ouvrir ce fichier"
+msgstr "Nu ne peut pas ouvrir ce fichier"
 
 #: mu/logic.py:1004
 #, fuzzy
@@ -1004,7 +997,7 @@ msgid "Is this a {} file?"
 msgstr "{} est un fichier?"
 
 #: mu/logic.py:1020
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "It looks like this could be a {} file.\n"
 "\n"
@@ -1012,7 +1005,7 @@ msgid ""
 msgstr ""
 "Ca ressemble a un fichier {}.\n"
 "\n"
-"Veux-tu changer le mode de Mu en {}?"
+"Veux-tu changer le mode de Nu en {}?"
 
 #: mu/logic.py:1142
 msgid "Could not save file (disk problem)"
@@ -1094,9 +1087,9 @@ msgid "Changed to {} mode."
 msgstr "Basculé vers le mode {}"
 
 #: mu/logic.py:1560
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Would you like to change Nu to the {} mode?"
-msgstr "Veux-tu changer le mode de Mu en {}?"
+msgstr "Veux-tu changer le mode de Nu en {}?"
 
 #: mu/logic.py:1579
 #, fuzzy, python-brace-format
@@ -1129,9 +1122,8 @@ msgid "Could not rename file."
 msgstr "Impossible de renommer le fichier."
 
 #: mu/logic.py:1656
-#, fuzzy
 msgid "A file of that name is already open in Nu."
-msgstr "A fichier avec ce nom est déjà ouvert dans Mu."
+msgstr "A fichier avec ce nom est déjà ouvert dans Nu."
 
 #: mu/logic.py:1686
 #, python-brace-format
@@ -1191,7 +1183,6 @@ msgid "Data Flood Detected!"
 msgstr "Inondation des données détectée!"
 
 #: mu/modes/base.py:339
-#, fuzzy
 msgid ""
 "The plotter is flooded with data which will make Nu unresponsive and "
 "freeze. As a safeguard, the plotter has been stopped.\n"
@@ -1202,7 +1193,7 @@ msgid ""
 "To fix this, make sure your code prints small tuples of data between "
 "calls to 'sleep' for a very short period of time."
 msgstr ""
-"Le grapheur est inondé par les données ce qui rend Mu peu réactif voire "
+"Le grapheur est inondé par les données ce qui rend Nu peu réactif voire "
 "bloqué. Par sécurité, le grapheur a été interrompu.\n"
 "\n"
 "L'inondation se produit lorsque de bloc de données de plus de 1024 octets"

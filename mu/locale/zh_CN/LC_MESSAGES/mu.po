@@ -69,11 +69,10 @@ msgid ""
 msgstr "请选择所需模式，然后单击“确定”。否则，请单击“取消”。"
 
 #: mu/interface/dialogs.py:104
-#, fuzzy
 msgid ""
 "Change mode at any time by clicking the \"Mode\" button containing Nu's "
 "logo."
-msgstr "通过点击有Mu图标的“模式”按钮来随时更改模式。"
+msgstr "通过点击有Nu图标的“模式”按钮来随时更改模式。"
 
 #: mu/interface/dialogs.py:143
 msgid ""
@@ -358,9 +357,8 @@ msgid ""
 msgstr ""
 
 #: mu/interface/dialogs.py:727 mu/interface/main.py:1344
-#, fuzzy
 msgid "Nu Administration"
-msgstr "Mu 管理"
+msgstr "Nu 管理"
 
 #: mu/interface/dialogs.py:741
 msgid "Current Log"
@@ -424,9 +422,8 @@ msgid "Mode"
 msgstr "模式"
 
 #: mu/interface/main.py:105
-#, fuzzy
 msgid "Change Nu's mode of behaviour."
-msgstr "改变Mu的运行模式。"
+msgstr "改变Nu的运行模式。"
 
 #: mu/interface/main.py:110
 msgid "New"
@@ -497,27 +494,25 @@ msgid "Help"
 msgstr "帮助"
 
 #: mu/interface/main.py:163
-#, fuzzy
 msgid "Show help about Nu in a browser."
-msgstr "在浏览器中显示关于Mu的帮助内容。"
+msgstr "在浏览器中显示关于Nu的帮助内容。"
 
 #: mu/interface/main.py:166
 msgid "Quit"
 msgstr "退出"
 
 #: mu/interface/main.py:166
-#, fuzzy
 msgid "Quit Nu."
-msgstr "退出 Mu 。"
+msgstr "退出 Nu 。"
 
 #: mu/interface/main.py:264
 msgid "Close file"
 msgstr "关闭文件"
 
 #: mu/interface/main.py:305
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu {}"
-msgstr "Mu {}"
+msgstr "Nu {}"
 
 #: mu/interface/main.py:524
 msgid "Copy selected text to REPL"
@@ -566,12 +561,11 @@ msgstr "（ {} 项的字典(dict)。）"
 
 #: mu/interface/main.py:1007
 msgid "Nu"
-msgstr ""
+msgstr "Nu"
 
 #: mu/interface/main.py:1331
-#, fuzzy
 msgid "Nu's current mode of behaviour."
-msgstr "Mu 当前的运行模式。"
+msgstr "Nu 当前的运行模式。"
 
 #: mu/interface/main.py:1378
 #, python-brace-format
@@ -906,7 +900,7 @@ msgid "{} compatible"
 msgstr "兼容"
 
 #: mu/logic.py:939
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "The file contains characters Nu expects to be encoded as {0} or as the "
 "computer's default encoding {1}, but which are encoded in some other way."
@@ -915,7 +909,7 @@ msgid ""
 "If this file was saved in another application, re-save the file via the "
 "'Save as' option and set the encoding to {0}"
 msgstr ""
-"文件的编码有问题，该文件所包含字符应为 Mu 的默认编码{0}或计算机的默认编码{1}。\n"
+"文件的编码有问题，该文件所包含字符应为 Nu 的默认编码{0}或计算机的默认编码{1}。\n"
 "\n"
 "如果此文件是通过另外一个应用程序保存，请通过“另存为”选项重新保存文件，并将编码设置为{0}"
 
@@ -925,14 +919,13 @@ msgid "The file \"{}\" is already open."
 msgstr "文件“{}”已经打开。"
 
 #: mu/logic.py:976
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu cannot read the characters in {}"
-msgstr "Mu 无法读取 {} 中的字符"
+msgstr "Nu 无法读取 {} 中的字符"
 
 #: mu/logic.py:1003
-#, fuzzy
 msgid "Nu was not able to open this file"
-msgstr "Mu 无法打开此文件"
+msgstr "Nu 无法打开此文件"
 
 #: mu/logic.py:1004
 #, fuzzy
@@ -962,7 +955,7 @@ msgid "Is this a {} file?"
 msgstr "这是一个 {} 文件吗？"
 
 #: mu/logic.py:1020
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "It looks like this could be a {} file.\n"
 "\n"
@@ -970,7 +963,7 @@ msgid ""
 msgstr ""
 "看起来这可能是一个 {} 文件。\n"
 "\n"
-"你想将 Mu 改为 {}模式吗？"
+"你想将 Nu 改为 {}模式吗？"
 
 #: mu/logic.py:1142
 msgid "Could not save file (disk problem)"
@@ -1043,9 +1036,9 @@ msgid "Changed to {} mode."
 msgstr "已更改为 {} 模式。"
 
 #: mu/logic.py:1560
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Would you like to change Nu to the {} mode?"
-msgstr "你想将 Mu 改为 {} 模式吗？"
+msgstr "你想将 Nu 改为 {} 模式吗？"
 
 #: mu/logic.py:1579
 #, python-brace-format
@@ -1074,9 +1067,8 @@ msgid "Could not rename file."
 msgstr "无法重命名文件。"
 
 #: mu/logic.py:1656
-#, fuzzy
 msgid "A file of that name is already open in Nu."
-msgstr "该名称的文件已在 Mu 中打开。"
+msgstr "该名称的文件已在 Nu 中打开。"
 
 #: mu/logic.py:1686
 #, python-brace-format
@@ -1134,7 +1126,6 @@ msgid "Data Flood Detected!"
 msgstr "检测到数据泛滥！"
 
 #: mu/modes/base.py:339
-#, fuzzy
 msgid ""
 "The plotter is flooded with data which will make Nu unresponsive and "
 "freeze. As a safeguard, the plotter has been stopped.\n"
@@ -1145,7 +1136,7 @@ msgid ""
 "To fix this, make sure your code prints small tuples of data between "
 "calls to 'sleep' for a very short period of time."
 msgstr ""
-"绘图器已经数据泛滥，这将使 Mu 无响应并卡死。作为一种保护措施，绘图器已经停止。\n"
+"绘图器已经数据泛滥，这将使 Nu 无响应并卡死。作为一种保护措施，绘图器已经停止。\n"
 "\n"
 "泛滥是指不停的发送超过 1024 字节的大量数据到绘图器。\n"
 "\n"
@@ -1452,20 +1443,19 @@ msgid "Permission error running mount command"
 msgstr "运行装载命令时遇到权限错误。"
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:194
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "The mount command (\"{}\") returned an error: {}. Nu will continue as if "
 "a device isn't plugged in."
-msgstr "装载命令（“{}”）返回了一个错误：{}。Mu 将假设设备未连接。"
+msgstr "装载命令（“{}”）返回了一个错误：{}。Nu 将假设设备未连接。"
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:212
-#, fuzzy
 msgid ""
 "If your Circuit Python device is plugged in, you need to \"Share with "
 "Linux\" on the CIRCUITPY drive in the \"Files\" app then restart Nu."
 msgstr ""
 "如果你的 CircuitPython 设备已插入，你需要在“文件（Files）”应用中把 CIRCUITPY 驱动器“与 Linux "
-"共享（Share with Linux）”，然后重启 Mu 。"
+"共享（Share with Linux）”，然后重启 Nu 。"
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:269
 msgid "Could not find an attached CircuitPython device."

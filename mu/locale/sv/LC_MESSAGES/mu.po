@@ -359,9 +359,8 @@ msgid ""
 msgstr ""
 
 #: mu/interface/dialogs.py:727 mu/interface/main.py:1344
-#, fuzzy
 msgid "Nu Administration"
-msgstr "Mu-inställningar"
+msgstr "Nu-inställningar"
 
 #: mu/interface/dialogs.py:741
 msgid "Current Log"
@@ -498,27 +497,25 @@ msgid "Help"
 msgstr "Hjälp"
 
 #: mu/interface/main.py:163
-#, fuzzy
 msgid "Show help about Nu in a browser."
-msgstr "Visa hjälp om Mu in en webbläsare."
+msgstr "Visa hjälp om Nu in en webbläsare."
 
 #: mu/interface/main.py:166
 msgid "Quit"
 msgstr "Avsluta"
 
 #: mu/interface/main.py:166
-#, fuzzy
 msgid "Quit Nu."
-msgstr "Avsluta Mu."
+msgstr "Avsluta Nu."
 
 #: mu/interface/main.py:264
 msgid "Close file"
 msgstr ""
 
 #: mu/interface/main.py:305
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu {}"
-msgstr "Mu {}"
+msgstr "Nu {}"
 
 #: mu/interface/main.py:524
 msgid "Copy selected text to REPL"
@@ -567,12 +564,11 @@ msgstr "(En dict av {} saker.)"
 
 #: mu/interface/main.py:1007
 msgid "Nu"
-msgstr ""
+msgstr "Nu"
 
 #: mu/interface/main.py:1331
-#, fuzzy
 msgid "Nu's current mode of behaviour."
-msgstr "Mu nuvarande utvecklingsläge."
+msgstr "Nu nuvarande utvecklingsläge."
 
 #: mu/interface/main.py:1378
 #, python-brace-format
@@ -923,7 +919,7 @@ msgid "{} compatible"
 msgstr ""
 
 #: mu/logic.py:939
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "The file contains characters Nu expects to be encoded as {0} or as the "
 "computer's default encoding {1}, but which are encoded in some other way."
@@ -932,7 +928,7 @@ msgid ""
 "If this file was saved in another application, re-save the file via the "
 "'Save as' option and set the encoding to {0}"
 msgstr ""
-"Filen innehåller tecken Mu förväntar sig teckenkodas som {0} eller med "
+"Filen innehåller tecken Nu förväntar sig teckenkodas som {0} eller med "
 "datorns standardkodning {1}, men är teckenkodad på något annat sätt.\n"
 "\n"
 "Om filen sparades i en annan applikation, spara om den via ‘Spara som’ "
@@ -944,14 +940,13 @@ msgid "The file \"{}\" is already open."
 msgstr "Filen “{}” är redan öppen."
 
 #: mu/logic.py:976
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu cannot read the characters in {}"
-msgstr "Mu kan inte läsa tecknen i {}"
+msgstr "Nu kan inte läsa tecknen i {}"
 
 #: mu/logic.py:1003
-#, fuzzy
 msgid "Nu was not able to open this file"
-msgstr "Mu kunde inte öppna filen"
+msgstr "Nu kunde inte öppna filen"
 
 #: mu/logic.py:1004
 #, fuzzy
@@ -983,7 +978,7 @@ msgid "Is this a {} file?"
 msgstr "Är det här en {} fil?"
 
 #: mu/logic.py:1020
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "It looks like this could be a {} file.\n"
 "\n"
@@ -991,7 +986,7 @@ msgid ""
 msgstr ""
 "Det verkar som det här är en {}-fil.\n"
 "\n"
-"Vill du ändra Mu till {}-läget?"
+"Vill du ändra Nu till {}-läget?"
 
 #: mu/logic.py:1142
 msgid "Could not save file (disk problem)"
@@ -1073,9 +1068,9 @@ msgid "Changed to {} mode."
 msgstr "Ändrat till {}-läget."
 
 #: mu/logic.py:1560
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Would you like to change Nu to the {} mode?"
-msgstr "Vill du ändra Mu till {}-läget?"
+msgstr "Vill du ändra Nu till {}-läget?"
 
 #: mu/logic.py:1579
 #, fuzzy, python-brace-format
@@ -1107,9 +1102,8 @@ msgid "Could not rename file."
 msgstr "Kunde inte byta namn på filen."
 
 #: mu/logic.py:1656
-#, fuzzy
 msgid "A file of that name is already open in Nu."
-msgstr "En fil med det namnet har redan öppnats i Mu."
+msgstr "En fil med det namnet har redan öppnats i Nu."
 
 #: mu/logic.py:1686
 #, python-brace-format
@@ -1167,7 +1161,6 @@ msgid "Data Flood Detected!"
 msgstr "Dataöverflöde upptäckt!"
 
 #: mu/modes/base.py:339
-#, fuzzy
 msgid ""
 "The plotter is flooded with data which will make Nu unresponsive and "
 "freeze. As a safeguard, the plotter has been stopped.\n"
@@ -1178,7 +1171,7 @@ msgid ""
 "To fix this, make sure your code prints small tuples of data between "
 "calls to 'sleep' for a very short period of time."
 msgstr ""
-"Plottern är överflödad med data, vilket kommer göra frysa Mu och göra den"
+"Plottern är överflödad med data, vilket kommer göra frysa Nu och göra den"
 " icke-responsiv. Som en säkerhetsåtgärd har plotter stoppats.\n"
 "\n"
 "Överflödning är när datamängder på mer än 1024 bytes kontinuerligt "

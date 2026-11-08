@@ -73,13 +73,12 @@ msgstr ""
 "\"Cancel\"."
 
 #: mu/interface/dialogs.py:104
-#, fuzzy
 msgid ""
 "Change mode at any time by clicking the \"Mode\" button containing Nu's "
 "logo."
 msgstr ""
 "Thay đổi chế độ bất cứ lúc nào bằng cách nhấp vào nút \"Mode\" có chứa "
-"biểu tượng của Mu."
+"biểu tượng của Nu."
 
 #: mu/interface/dialogs.py:143
 msgid ""
@@ -361,9 +360,8 @@ msgid ""
 msgstr ""
 
 #: mu/interface/dialogs.py:727 mu/interface/main.py:1344
-#, fuzzy
 msgid "Nu Administration"
-msgstr "Quản trị Mu"
+msgstr "Quản trị Nu"
 
 #: mu/interface/dialogs.py:741
 msgid "Current Log"
@@ -427,9 +425,8 @@ msgid "Mode"
 msgstr "Chế độ"
 
 #: mu/interface/main.py:105
-#, fuzzy
 msgid "Change Nu's mode of behaviour."
-msgstr "Thay đổi chế độ hành vi của Mu."
+msgstr "Thay đổi chế độ hành vi của Nu."
 
 #: mu/interface/main.py:110
 msgid "New"
@@ -500,27 +497,25 @@ msgid "Help"
 msgstr "Trợ giúp"
 
 #: mu/interface/main.py:163
-#, fuzzy
 msgid "Show help about Nu in a browser."
-msgstr "Hiển thị trợ giúp về Mu trong trình duyệt."
+msgstr "Hiển thị trợ giúp về Nu trong trình duyệt."
 
 #: mu/interface/main.py:166
 msgid "Quit"
 msgstr "Thoát"
 
 #: mu/interface/main.py:166
-#, fuzzy
 msgid "Quit Nu."
-msgstr "Đóng Mu."
+msgstr "Đóng Nu."
 
 #: mu/interface/main.py:264
 msgid "Close file"
 msgstr ""
 
 #: mu/interface/main.py:305
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu {}"
-msgstr "Mu {}"
+msgstr "Nu {}"
 
 #: mu/interface/main.py:524
 msgid "Copy selected text to REPL"
@@ -569,12 +564,11 @@ msgstr "(Một từ điển có {} mục.)"
 
 #: mu/interface/main.py:1007
 msgid "Nu"
-msgstr ""
+msgstr "Nu"
 
 #: mu/interface/main.py:1331
-#, fuzzy
 msgid "Nu's current mode of behaviour."
-msgstr "Chế độ hành vi hiện tại của Mu."
+msgstr "Chế độ hành vi hiện tại của Nu."
 
 #: mu/interface/main.py:1378
 #, python-brace-format
@@ -939,7 +933,7 @@ msgid "{} compatible"
 msgstr ""
 
 #: mu/logic.py:939
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "The file contains characters Nu expects to be encoded as {0} or as the "
 "computer's default encoding {1}, but which are encoded in some other way."
@@ -948,7 +942,7 @@ msgid ""
 "If this file was saved in another application, re-save the file via the "
 "'Save as' option and set the encoding to {0}"
 msgstr ""
-"Tệp chứa các ký tự Mu mong muốn được mã hóa là {0} hoặc dưới dạng mã hóa "
+"Tệp chứa các ký tự Nu mong muốn được mã hóa là {0} hoặc dưới dạng mã hóa "
 "mặc định của máy tính {1}, nhưng được mã hóa theo một cách khác.\n"
 "\n"
 "Nếu tệp này được lưu trong ứng dụng khác, hãy lưu lại tệp qua tùy chọn "
@@ -960,14 +954,13 @@ msgid "The file \"{}\" is already open."
 msgstr "Tệp \"{}\" đã được mở sẵn."
 
 #: mu/logic.py:976
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu cannot read the characters in {}"
-msgstr "Mu không thể đọc các ký tự trong {}"
+msgstr "Nu không thể đọc các ký tự trong {}"
 
 #: mu/logic.py:1003
-#, fuzzy
 msgid "Nu was not able to open this file"
-msgstr "Mu không thể mở tập tin này"
+msgstr "Nu không thể mở tập tin này"
 
 #: mu/logic.py:1004
 #, fuzzy
@@ -999,7 +992,7 @@ msgid "Is this a {} file?"
 msgstr "Đây có phải là tệp {} không?"
 
 #: mu/logic.py:1020
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "It looks like this could be a {} file.\n"
 "\n"
@@ -1007,7 +1000,7 @@ msgid ""
 msgstr ""
 "Có vẻ như đây có thể là tệp {}.\n"
 "\n"
-"Bạn có muốn đổi Mu thành chế độ {} không?"
+"Bạn có muốn đổi Nu thành chế độ {} không?"
 
 #: mu/logic.py:1142
 msgid "Could not save file (disk problem)"
@@ -1086,9 +1079,9 @@ msgid "Changed to {} mode."
 msgstr "Đã thay đổi thành chế độ {}."
 
 #: mu/logic.py:1560
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Would you like to change Nu to the {} mode?"
-msgstr "Bạn có muốn đổi Mu thành chế độ {} không?"
+msgstr "Bạn có muốn đổi Nu thành chế độ {} không?"
 
 #: mu/logic.py:1579
 #, fuzzy, python-brace-format
@@ -1121,9 +1114,8 @@ msgid "Could not rename file."
 msgstr "Không thể đổi tên tệp."
 
 #: mu/logic.py:1656
-#, fuzzy
 msgid "A file of that name is already open in Nu."
-msgstr "Một tệp có tên đó đã được mở sẵn trong Mu."
+msgstr "Một tệp có tên đó đã được mở sẵn trong Nu."
 
 #: mu/logic.py:1686
 #, python-brace-format
@@ -1181,7 +1173,6 @@ msgid "Data Flood Detected!"
 msgstr "Phát hiện tràn dữ liệu!"
 
 #: mu/modes/base.py:339
-#, fuzzy
 msgid ""
 "The plotter is flooded with data which will make Nu unresponsive and "
 "freeze. As a safeguard, the plotter has been stopped.\n"
@@ -1192,7 +1183,7 @@ msgid ""
 "To fix this, make sure your code prints small tuples of data between "
 "calls to 'sleep' for a very short period of time."
 msgstr ""
-"Máy vẽ bị tràn ngập với dữ liệu mà sẽ làm cho Mu không phản hồi và đóng "
+"Máy vẽ bị tràn ngập với dữ liệu mà sẽ làm cho Nu không phản hồi và đóng "
 "băng. Như một biện pháp bảo vệ, máy vẽ đã được dừng lại.\n"
 "\n"
 "Việc tràn xảy ra khi các khối dữ liệu có dung lượng lớn hơn 1024 byte "

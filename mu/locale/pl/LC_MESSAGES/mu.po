@@ -74,13 +74,12 @@ msgstr ""
 "razie kliknij \"Anuluj\"."
 
 #: mu/interface/dialogs.py:104
-#, fuzzy
 msgid ""
 "Change mode at any time by clicking the \"Mode\" button containing Nu's "
 "logo."
 msgstr ""
 "Zmień tryb w dowolnym momencie kilkając na przycisk \"Tryb\" zawierający "
-"logo Mu."
+"logo Nu."
 
 #: mu/interface/dialogs.py:143
 msgid ""
@@ -363,9 +362,8 @@ msgid ""
 msgstr ""
 
 #: mu/interface/dialogs.py:727 mu/interface/main.py:1344
-#, fuzzy
 msgid "Nu Administration"
-msgstr "Administracja Mu"
+msgstr "Administracja Nu"
 
 #: mu/interface/dialogs.py:741
 msgid "Current Log"
@@ -429,9 +427,8 @@ msgid "Mode"
 msgstr "Tryb"
 
 #: mu/interface/main.py:105
-#, fuzzy
 msgid "Change Nu's mode of behaviour."
-msgstr "Zmień tryb działania Mu"
+msgstr "Zmień tryb działania Nu"
 
 #: mu/interface/main.py:110
 msgid "New"
@@ -502,27 +499,25 @@ msgid "Help"
 msgstr "Pomoc"
 
 #: mu/interface/main.py:163
-#, fuzzy
 msgid "Show help about Nu in a browser."
-msgstr "Pokaż pomoc na temat Mu w przeglądarce."
+msgstr "Pokaż pomoc na temat Nu w przeglądarce."
 
 #: mu/interface/main.py:166
 msgid "Quit"
 msgstr "Zakończ"
 
 #: mu/interface/main.py:166
-#, fuzzy
 msgid "Quit Nu."
-msgstr "Wyjdź z Mu"
+msgstr "Wyjdź z Nu"
 
 #: mu/interface/main.py:264
 msgid "Close file"
 msgstr ""
 
 #: mu/interface/main.py:305
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu {}"
-msgstr "Mu {}"
+msgstr "Nu {}"
 
 #: mu/interface/main.py:524
 msgid "Copy selected text to REPL"
@@ -571,12 +566,11 @@ msgstr "(Słownik {} elementów.)"
 
 #: mu/interface/main.py:1007
 msgid "Nu"
-msgstr ""
+msgstr "Nu"
 
 #: mu/interface/main.py:1331
-#, fuzzy
 msgid "Nu's current mode of behaviour."
-msgstr "Aktualny tryb działania Mu."
+msgstr "Aktualny tryb działania Nu."
 
 #: mu/interface/main.py:1378
 #, python-brace-format
@@ -938,7 +932,7 @@ msgid "{} compatible"
 msgstr ""
 
 #: mu/logic.py:939
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "The file contains characters Nu expects to be encoded as {0} or as the "
 "computer's default encoding {1}, but which are encoded in some other way."
@@ -947,7 +941,7 @@ msgid ""
 "If this file was saved in another application, re-save the file via the "
 "'Save as' option and set the encoding to {0}"
 msgstr ""
-"Plik zawiera znaki Mu oczekuje, że będzie zakodowany jako {0} lub jako "
+"Plik zawiera znaki Nu oczekuje, że będzie zakodowany jako {0} lub jako "
 "domyślne kodowanie komputera {1}, ale które są zakodowane w inny sposób."
 "\n"
 "\n"
@@ -960,14 +954,13 @@ msgid "The file \"{}\" is already open."
 msgstr "Plik \"{}\" jest już otwarty."
 
 #: mu/logic.py:976
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu cannot read the characters in {}"
-msgstr "Mu nie może odczytać znaków w {}"
+msgstr "Nu nie może odczytać znaków w {}"
 
 #: mu/logic.py:1003
-#, fuzzy
 msgid "Nu was not able to open this file"
-msgstr "Mu nie było w stanie otworzyć tego pliku"
+msgstr "Nu nie było w stanie otworzyć tego pliku"
 
 #: mu/logic.py:1004
 #, fuzzy
@@ -999,7 +992,7 @@ msgid "Is this a {} file?"
 msgstr "Czy {} jest plikiem?"
 
 #: mu/logic.py:1020
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "It looks like this could be a {} file.\n"
 "\n"
@@ -1007,7 +1000,7 @@ msgid ""
 msgstr ""
 "To wygląda, że może być plikiem {}.\n"
 "\n"
-"Czy chciałbyś, żeby Mu zmieniło na tryb {}?"
+"Czy chciałbyś, żeby Nu zmieniło na tryb {}?"
 
 #: mu/logic.py:1142
 msgid "Could not save file (disk problem)"
@@ -1087,9 +1080,9 @@ msgid "Changed to {} mode."
 msgstr "Zmieniłem na tryb {}"
 
 #: mu/logic.py:1560
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Would you like to change Nu to the {} mode?"
-msgstr "Czy chciałbyś przełączyć Mu w tryb {}?"
+msgstr "Czy chciałbyś przełączyć Nu w tryb {}?"
 
 #: mu/logic.py:1579
 #, fuzzy, python-brace-format
@@ -1123,9 +1116,8 @@ msgid "Could not rename file."
 msgstr "Nie mogę zmienić nazwy pliku."
 
 #: mu/logic.py:1656
-#, fuzzy
 msgid "A file of that name is already open in Nu."
-msgstr "Plik o tej nazwie jest już otwarty w Mu."
+msgstr "Plik o tej nazwie jest już otwarty w Nu."
 
 #: mu/logic.py:1686
 #, python-brace-format
@@ -1183,7 +1175,6 @@ msgid "Data Flood Detected!"
 msgstr "Przepełnienie danymi wykryte!"
 
 #: mu/modes/base.py:339
-#, fuzzy
 msgid ""
 "The plotter is flooded with data which will make Nu unresponsive and "
 "freeze. As a safeguard, the plotter has been stopped.\n"
@@ -1194,7 +1185,7 @@ msgid ""
 "To fix this, make sure your code prints small tuples of data between "
 "calls to 'sleep' for a very short period of time."
 msgstr ""
-"Plotter jest przepełniony danymi, które sprawią, że Mu będzie "
+"Plotter jest przepełniony danymi, które sprawią, że Nu będzie "
 "nieresponsywny i się zawiesi. Dla bezpieczeństwa, plotter został "
 "zatrzymany\n"
 "\n"

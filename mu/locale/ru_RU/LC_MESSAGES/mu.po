@@ -77,13 +77,12 @@ msgstr ""
 "нажмите «Отмена»."
 
 #: mu/interface/dialogs.py:104
-#, fuzzy
 msgid ""
 "Change mode at any time by clicking the \"Mode\" button containing Nu's "
 "logo."
 msgstr ""
 "Вы можете изменить режим работы редактора в любое время, нажав кнопку "
-"\"Режим\" с логотипом Mu."
+"\"Режим\" с логотипом Nu."
 
 #: mu/interface/dialogs.py:143
 msgid ""
@@ -367,20 +366,18 @@ msgid "Automatically detect"
 msgstr "Определить автоматически"
 
 #: mu/interface/dialogs.py:677
-#, fuzzy
 msgid ""
 "Please select the language for Nu's user interface from the choices "
 "listed below. <strong>Restart Nu for these changes to take "
 "effect.</strong>"
 msgstr ""
-"Пожалуйста, выберите язык для пользовательского интерфейса Mu из "
-"вариантов, перечисленных ниже. <strong> Перезапустите Mu, чтобы изменения"
+"Пожалуйста, выберите язык для пользовательского интерфейса Nu из "
+"вариантов, перечисленных ниже. <strong> Перезапустите Nu, чтобы изменения"
 " вступили в силу. </strong>"
 
 #: mu/interface/dialogs.py:727 mu/interface/main.py:1344
-#, fuzzy
 msgid "Nu Administration"
-msgstr "Администрирование Mu"
+msgstr "Администрирование Nu"
 
 #: mu/interface/dialogs.py:741
 msgid "Current Log"
@@ -444,9 +441,8 @@ msgid "Mode"
 msgstr "Режим"
 
 #: mu/interface/main.py:105
-#, fuzzy
 msgid "Change Nu's mode of behaviour."
-msgstr "Выбор режима работы редактора Mu."
+msgstr "Выбор режима работы редактора Nu."
 
 #: mu/interface/main.py:110
 msgid "New"
@@ -517,27 +513,25 @@ msgid "Help"
 msgstr "Помощь"
 
 #: mu/interface/main.py:163
-#, fuzzy
 msgid "Show help about Nu in a browser."
-msgstr "Открыть страницу помощи Mu в браузере."
+msgstr "Открыть страницу помощи Nu в браузере."
 
 #: mu/interface/main.py:166
 msgid "Quit"
 msgstr "Выход"
 
 #: mu/interface/main.py:166
-#, fuzzy
 msgid "Quit Nu."
-msgstr "Закрыть редактор Mu."
+msgstr "Закрыть редактор Nu."
 
 #: mu/interface/main.py:264
 msgid "Close file"
 msgstr "Закрыть файл"
 
 #: mu/interface/main.py:305
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu {}"
-msgstr "Mu {}"
+msgstr "Nu {}"
 
 #: mu/interface/main.py:524
 msgid "Copy selected text to REPL"
@@ -586,12 +580,11 @@ msgstr "(Словарь, содержащий {} ключей.)"
 
 #: mu/interface/main.py:1007
 msgid "Nu"
-msgstr ""
+msgstr "Nu"
 
 #: mu/interface/main.py:1331
-#, fuzzy
 msgid "Nu's current mode of behaviour."
-msgstr "Текущий режим работы редактора Mu."
+msgstr "Текущий режим работы редактора Nu."
 
 #: mu/interface/main.py:1378
 #, python-brace-format
@@ -974,14 +967,13 @@ msgid "The file \"{}\" is already open."
 msgstr "Файл \"{}\" уже открыт."
 
 #: mu/logic.py:976
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu cannot read the characters in {}"
-msgstr "Mu не может прочитать символы в {}"
+msgstr "Nu не может прочитать символы в {}"
 
 #: mu/logic.py:1003
-#, fuzzy
 msgid "Nu was not able to open this file"
-msgstr "Mu не смог открыть этот файл"
+msgstr "Nu не смог открыть этот файл"
 
 #: mu/logic.py:1004
 #, fuzzy
@@ -1014,7 +1006,7 @@ msgid "Is this a {} file?"
 msgstr "Это файл формата {}?"
 
 #: mu/logic.py:1020
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "It looks like this could be a {} file.\n"
 "\n"
@@ -1022,7 +1014,7 @@ msgid ""
 msgstr ""
 "Похоже, это может быть файл {}.\n"
 "\n"
-"Хотите переключить Mu в режим {}?"
+"Хотите переключить Nu в режим {}?"
 
 #: mu/logic.py:1142
 msgid "Could not save file (disk problem)"
@@ -1102,9 +1094,9 @@ msgid "Changed to {} mode."
 msgstr "Режим работы изменён на {}."
 
 #: mu/logic.py:1560
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Would you like to change Nu to the {} mode?"
-msgstr "Вы хотите переключить Mu в режим {}?"
+msgstr "Вы хотите переключить Nu в режим {}?"
 
 #: mu/logic.py:1579
 #, python-brace-format
@@ -1138,9 +1130,8 @@ msgid "Could not rename file."
 msgstr "Невозможно переименовать файл."
 
 #: mu/logic.py:1656
-#, fuzzy
 msgid "A file of that name is already open in Nu."
-msgstr "Файл с таким именем уже открыт в Mu."
+msgstr "Файл с таким именем уже открыт в Nu."
 
 #: mu/logic.py:1686
 #, python-brace-format
@@ -1203,7 +1194,6 @@ msgid "Data Flood Detected!"
 msgstr "Обнаружен спам данными!"
 
 #: mu/modes/base.py:339
-#, fuzzy
 msgid ""
 "The plotter is flooded with data which will make Nu unresponsive and "
 "freeze. As a safeguard, the plotter has been stopped.\n"
@@ -1214,7 +1204,7 @@ msgid ""
 "To fix this, make sure your code prints small tuples of data between "
 "calls to 'sleep' for a very short period of time."
 msgstr ""
-"Плоттер переполнен данными, из-за которых Mu перестает отвечать на "
+"Плоттер переполнен данными, из-за которых Nu перестает отвечать на "
 "запросы и зависает. В качестве меры предосторожности плоттер был "
 "остановлен.\n"
 "\n"
@@ -1530,29 +1520,28 @@ msgid "Permission error running mount command"
 msgstr "Ошибка разрешения при выполнении команды монтирования"
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:194
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "The mount command (\"{}\") returned an error: {}. Nu will continue as if "
 "a device isn't plugged in."
 msgstr ""
-"Команда монтирования (\"{}\") вернула ошибку: {}. Mu продолжит работу, "
+"Команда монтирования (\"{}\") вернула ошибку: {}. Nu продолжит работу, "
 "как если бы устройство не было подключено."
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:212
-#, fuzzy
 msgid ""
 "If your Circuit Python device is plugged in, you need to \"Share with "
 "Linux\" on the CIRCUITPY drive in the \"Files\" app then restart Nu."
 msgstr ""
 "Если ваше устройство Circuit Python подключено, вам нужно «Поделиться с "
-"Linux» на диске CIRCUITPY в приложении «Файлы», а затем перезапустить Mu."
+"Linux» на диске CIRCUITPY в приложении «Файлы», а затем перезапустить Nu."
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:269
 msgid "Could not find an attached CircuitPython device."
 msgstr "Не удалось найти подключенное устройство с CircuitPython."
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:271
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "Python files for CircuitPython devices are stored on the device. "
 "Therefore, to edit these files you need to have the device plugged in. "
@@ -1564,7 +1553,7 @@ msgid ""
 msgstr ""
 "Файлы Python для устройств CircuitPython хранятся на устройстве. "
 "Следовательно, для редактирования этих файлов вам необходимо подключить "
-"устройство. Пока вы не подключите устройство, Mu будет использовать "
+"устройство. Пока вы не подключите устройство, Nu будет использовать "
 "каталог, найденный здесь:\n"
 "\n"
 "  {}\n"

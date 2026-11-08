@@ -70,11 +70,10 @@ msgid ""
 msgstr "使うモードを選択して \"OK\" をクリックしてください。モードを変更しない場合は \"CANCEL\" をクリックしてください。"
 
 #: mu/interface/dialogs.py:104
-#, fuzzy
 msgid ""
 "Change mode at any time by clicking the \"Mode\" button containing Nu's "
 "logo."
-msgstr "Mu のロゴのついた \"モード\" ボタンをクリックすることにより、いつでもモードを変更できます。"
+msgstr "Nu のロゴのついた \"モード\" ボタンをクリックすることにより、いつでもモードを変更できます。"
 
 #: mu/interface/dialogs.py:143
 msgid ""
@@ -352,19 +351,17 @@ msgid "Automatically detect"
 msgstr "自動検出"
 
 #: mu/interface/dialogs.py:677
-#, fuzzy
 msgid ""
 "Please select the language for Nu's user interface from the choices "
 "listed below. <strong>Restart Nu for these changes to take "
 "effect.</strong>"
 msgstr ""
-"Mu "
-"のユーザーインターフェイスの言語を以下の選択肢から選択してください。<strong>これらの変更を有効にするには、Muを再起動してください。</strong>"
+"Nu "
+"のユーザーインターフェイスの言語を以下の選択肢から選択してください。<strong>これらの変更を有効にするには、Nuを再起動してください。</strong>"
 
 #: mu/interface/dialogs.py:727 mu/interface/main.py:1344
-#, fuzzy
 msgid "Nu Administration"
-msgstr "Mu の管理"
+msgstr "Nu の管理"
 
 #: mu/interface/dialogs.py:741
 msgid "Current Log"
@@ -428,9 +425,8 @@ msgid "Mode"
 msgstr "モード"
 
 #: mu/interface/main.py:105
-#, fuzzy
 msgid "Change Nu's mode of behaviour."
-msgstr "Mu の動作モードを変更します。"
+msgstr "Nu の動作モードを変更します。"
 
 #: mu/interface/main.py:110
 msgid "New"
@@ -501,18 +497,16 @@ msgid "Help"
 msgstr "ヘルプ"
 
 #: mu/interface/main.py:163
-#, fuzzy
 msgid "Show help about Nu in a browser."
-msgstr "Mu のヘルプをWebブラウザで表示します。"
+msgstr "Nu のヘルプをWebブラウザで表示します。"
 
 #: mu/interface/main.py:166
 msgid "Quit"
 msgstr "終了"
 
 #: mu/interface/main.py:166
-#, fuzzy
 msgid "Quit Nu."
-msgstr "Mu を終了します。"
+msgstr "Nu を終了します。"
 
 #: mu/interface/main.py:264
 msgid "Close file"
@@ -573,9 +567,8 @@ msgid "Nu"
 msgstr ""
 
 #: mu/interface/main.py:1331
-#, fuzzy
 msgid "Nu's current mode of behaviour."
-msgstr "現在の Mu 動作モード。"
+msgstr "現在の Nu 動作モード。"
 
 #: mu/interface/main.py:1378
 #, python-brace-format
@@ -912,7 +905,7 @@ msgid "{} compatible"
 msgstr "{} 互換"
 
 #: mu/logic.py:939
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "The file contains characters Nu expects to be encoded as {0} or as the "
 "computer's default encoding {1}, but which are encoded in some other way."
@@ -921,7 +914,7 @@ msgid ""
 "If this file was saved in another application, re-save the file via the "
 "'Save as' option and set the encoding to {0}"
 msgstr ""
-"Mu が前提としているファイルエンコーディングは {0} かコンピュータのデフォルトの {1} ですが、他の方法でエンコードされています。\n"
+"Nu が前提としているファイルエンコーディングは {0} かコンピュータのデフォルトの {1} ですが、他の方法でエンコードされています。\n"
 "このファイルが別のアプリケーションで保存されたのであれば、「別名で保存」オプションでエンコーディングを {0} を設定して再保存してください。"
 
 #: mu/logic.py:964
@@ -930,14 +923,13 @@ msgid "The file \"{}\" is already open."
 msgstr "ファイル \"{}\" は既に開いています。"
 
 #: mu/logic.py:976
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu cannot read the characters in {}"
-msgstr "Mu は {} の文字を読み込めませんでした。"
+msgstr "Nu は {} の文字を読み込めませんでした。"
 
 #: mu/logic.py:1003
-#, fuzzy
 msgid "Nu was not able to open this file"
-msgstr "Mu はこのファイルを開けませんでした"
+msgstr "Nu はこのファイルを開けませんでした"
 
 #: mu/logic.py:1004
 #, fuzzy
@@ -967,7 +959,7 @@ msgid "Is this a {} file?"
 msgstr "これは {} ファイルですか？"
 
 #: mu/logic.py:1020
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "It looks like this could be a {} file.\n"
 "\n"
@@ -975,7 +967,7 @@ msgid ""
 msgstr ""
 "これは {} ファイルのようです。\n"
 "\n"
-"Mu を {} モードに変更しますか？"
+"Nu を {} モードに変更しますか？"
 
 #: mu/logic.py:1142
 msgid "Could not save file (disk problem)"
@@ -1050,9 +1042,9 @@ msgid "Changed to {} mode."
 msgstr "モードを {} に変更します。"
 
 #: mu/logic.py:1560
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Would you like to change Nu to the {} mode?"
-msgstr "Mu を {} モードに変更しますか？"
+msgstr "Nu を {} モードに変更しますか？"
 
 #: mu/logic.py:1579
 #, python-brace-format
@@ -1083,9 +1075,8 @@ msgid "Could not rename file."
 msgstr "ファイル名を変更できませんでした。"
 
 #: mu/logic.py:1656
-#, fuzzy
 msgid "A file of that name is already open in Nu."
-msgstr "この名前のファイルは Mu で既に開いています。"
+msgstr "この名前のファイルは Nu で既に開いています。"
 
 #: mu/logic.py:1686
 #, python-brace-format
@@ -1143,7 +1134,6 @@ msgid "Data Flood Detected!"
 msgstr "データの氾濫を検出しました！"
 
 #: mu/modes/base.py:339
-#, fuzzy
 msgid ""
 "The plotter is flooded with data which will make Nu unresponsive and "
 "freeze. As a safeguard, the plotter has been stopped.\n"
@@ -1154,7 +1144,7 @@ msgid ""
 "To fix this, make sure your code prints small tuples of data between "
 "calls to 'sleep' for a very short period of time."
 msgstr ""
-"Mu が無反応でフリーズしてしまうぐらいのデータが溢れています。セーフガードとしてプロッタを停止させました。\n"
+"Nu が無反応でフリーズしてしまうぐらいのデータが溢れています。セーフガードとしてプロッタを停止させました。\n"
 "\n"
 "溢れているとは、1024バイトを超えるデータセットがプロッターに繰り返し送信されている状態です。\n"
 "\n"
@@ -1461,27 +1451,26 @@ msgid "Permission error running mount command"
 msgstr "mount コマンド実行中の権限エラー"
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:194
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "The mount command (\"{}\") returned an error: {}. Nu will continue as if "
 "a device isn't plugged in."
-msgstr "mount コマンド(\"{}\")がエラーを返しました: {}。Mu はデバイスが接続されていないかのように動作を継続します。"
+msgstr "mount コマンド(\"{}\")がエラーを返しました: {}。Nu はデバイスが接続されていないかのように動作を継続します。"
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:212
-#, fuzzy
 msgid ""
 "If your Circuit Python device is plugged in, you need to \"Share with "
 "Linux\" on the CIRCUITPY drive in the \"Files\" app then restart Nu."
 msgstr ""
 "CircuitPython デバイスが接続されている場合、\"ファイル\" アプリで CIRCUITPY ドライブを \"Linuxで共有\" "
-"してから Mu を再起動する必要があります。"
+"してから Nu を再起動する必要があります。"
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:269
 msgid "Could not find an attached CircuitPython device."
 msgstr "CircuitPython デバイスが繋げられていないようです。"
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:271
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "Python files for CircuitPython devices are stored on the device. "
 "Therefore, to edit these files you need to have the device plugged in. "
@@ -1492,7 +1481,7 @@ msgid ""
 "...to store your code."
 msgstr ""
 "CircuitPython デバイスの Python "
-"ファイルはデバイス内に保存するので、デバイスが接続されている必要があります。デバイスを接続するまで、Mu "
+"ファイルはデバイス内に保存するので、デバイスが接続されている必要があります。デバイスを接続するまで、Nu "
 "はコードを保存するために次のディレクトリを使います:\n"
 "\n"
 " {}"

@@ -74,13 +74,12 @@ msgstr ""
 "opačnom prípade kliknite na tlačidlo \"Zrušiť\"."
 
 #: mu/interface/dialogs.py:104
-#, fuzzy
 msgid ""
 "Change mode at any time by clicking the \"Mode\" button containing Nu's "
 "logo."
 msgstr ""
 "Režim môžete zmeniť kedykoľvek kliknutím na tlačidlo \"Režim\" s logom "
-"editora Mu."
+"editora Nu."
 
 #: mu/interface/dialogs.py:143
 msgid ""
@@ -362,19 +361,17 @@ msgid "Automatically detect"
 msgstr "Rozpoznať automaticky"
 
 #: mu/interface/dialogs.py:677
-#, fuzzy
 msgid ""
 "Please select the language for Nu's user interface from the choices "
 "listed below. <strong>Restart Nu for these changes to take "
 "effect.</strong>"
 msgstr ""
-"Vyberte si prosím jazyk používateľského rozhrania Mu z možností uvedených"
-" nižšie. <strong>Aby sa tieto zmeny prejavili, reštartujte Mu.</strong>"
+"Vyberte si prosím jazyk používateľského rozhrania Nu z možností uvedených"
+" nižšie. <strong>Aby sa tieto zmeny prejavili, reštartujte Nu.</strong>"
 
 #: mu/interface/dialogs.py:727 mu/interface/main.py:1344
-#, fuzzy
 msgid "Nu Administration"
-msgstr "Správa Mu"
+msgstr "Správa Nu"
 
 #: mu/interface/dialogs.py:741
 msgid "Current Log"
@@ -438,9 +435,8 @@ msgid "Mode"
 msgstr "Režim"
 
 #: mu/interface/main.py:105
-#, fuzzy
 msgid "Change Nu's mode of behaviour."
-msgstr "Zmení režim správania Mu."
+msgstr "Zmení režim správania Nu."
 
 #: mu/interface/main.py:110
 msgid "New"
@@ -512,27 +508,25 @@ msgid "Help"
 msgstr "Pomocník"
 
 #: mu/interface/main.py:163
-#, fuzzy
 msgid "Show help about Nu in a browser."
-msgstr "Zobrazí pomocníka o Mu v prehliadači."
+msgstr "Zobrazí pomocníka o Nu v prehliadači."
 
 #: mu/interface/main.py:166
 msgid "Quit"
 msgstr "Ukončiť"
 
 #: mu/interface/main.py:166
-#, fuzzy
 msgid "Quit Nu."
-msgstr "Ukončí Mu."
+msgstr "Ukončí Nu."
 
 #: mu/interface/main.py:264
 msgid "Close file"
 msgstr "Zatvoriť súbor"
 
 #: mu/interface/main.py:305
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu {}"
-msgstr "Mu {}"
+msgstr "Nu {}"
 
 #: mu/interface/main.py:524
 msgid "Copy selected text to REPL"
@@ -581,12 +575,11 @@ msgstr "(Slovník s počtom položiek {}.)"
 
 #: mu/interface/main.py:1007
 msgid "Nu"
-msgstr ""
+msgstr "Nu"
 
 #: mu/interface/main.py:1331
-#, fuzzy
 msgid "Nu's current mode of behaviour."
-msgstr "Aktuálny režim správania sa editora Mu."
+msgstr "Aktuálny režim správania sa editora Nu."
 
 #: mu/interface/main.py:1378
 #, python-brace-format
@@ -943,7 +936,7 @@ msgid "{} compatible"
 msgstr "{} kompatibilné"
 
 #: mu/logic.py:939
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "The file contains characters Nu expects to be encoded as {0} or as the "
 "computer's default encoding {1}, but which are encoded in some other way."
@@ -952,7 +945,7 @@ msgid ""
 "If this file was saved in another application, re-save the file via the "
 "'Save as' option and set the encoding to {0}"
 msgstr ""
-"Súbor obsahuje znaky, o ktorých Mu očakáva, že budú zakódované ako {0} "
+"Súbor obsahuje znaky, o ktorých Nu očakáva, že budú zakódované ako {0} "
 "alebo ako predvolené kódovanie počítača {1}. Sú však zakódované iným "
 "spôsobom.\n"
 "\n"
@@ -965,14 +958,13 @@ msgid "The file \"{}\" is already open."
 msgstr "Súbor \"{}\" je už otvorený."
 
 #: mu/logic.py:976
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu cannot read the characters in {}"
-msgstr "Mu nemôže čítať znaky v {}"
+msgstr "Nu nemôže čítať znaky v {}"
 
 #: mu/logic.py:1003
-#, fuzzy
 msgid "Nu was not able to open this file"
-msgstr "Mu sa nepodarilo otvoriť tento súbor"
+msgstr "Nu sa nepodarilo otvoriť tento súbor"
 
 #: mu/logic.py:1004
 #, fuzzy
@@ -1004,14 +996,14 @@ msgid "Is this a {} file?"
 msgstr "Je {} súbor?"
 
 #: mu/logic.py:1020
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "It looks like this could be a {} file.\n"
 "\n"
 "Would you like to change Nu to the {}mode?"
 msgstr ""
 "Zdá sa, že sa jedná o súbor typu {}.\n"
-"Chcete prepnúť Mu do režimu {}?"
+"Chcete prepnúť Nu do režimu {}?"
 
 #: mu/logic.py:1142
 msgid "Could not save file (disk problem)"
@@ -1091,9 +1083,9 @@ msgid "Changed to {} mode."
 msgstr "Režim bol zmenený na {}."
 
 #: mu/logic.py:1560
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Would you like to change Nu to the {} mode?"
-msgstr "Chcete zmeniť režim Mu na {}?"
+msgstr "Chcete zmeniť režim Nu na {}?"
 
 #: mu/logic.py:1579
 #, python-brace-format
@@ -1127,9 +1119,8 @@ msgid "Could not rename file."
 msgstr "Súbor sa nepodarilo premenovať."
 
 #: mu/logic.py:1656
-#, fuzzy
 msgid "A file of that name is already open in Nu."
-msgstr "Súbor s týmto názvom je už v Mu otvorený."
+msgstr "Súbor s týmto názvom je už v Nu otvorený."
 
 #: mu/logic.py:1686
 #, python-brace-format
@@ -1189,7 +1180,6 @@ msgid "Data Flood Detected!"
 msgstr "Bola zistená záplava údajmi!"
 
 #: mu/modes/base.py:339
-#, fuzzy
 msgid ""
 "The plotter is flooded with data which will make Nu unresponsive and "
 "freeze. As a safeguard, the plotter has been stopped.\n"
@@ -1200,7 +1190,7 @@ msgid ""
 "To fix this, make sure your code prints small tuples of data between "
 "calls to 'sleep' for a very short period of time."
 msgstr ""
-"Ploter je zaplavený údajmi, ktoré spôsobia, že Mu prestane reagovať a "
+"Ploter je zaplavený údajmi, ktoré spôsobia, že Nu prestane reagovať a "
 "zamrzne. Z bezpečnostných dôvodov bol preto zapisovač zastavený.\n"
 "\n"
 "K záplave dochádza vtedy, keď sa do zapisovača opakovane odosielajú časti"
@@ -1516,12 +1506,12 @@ msgid "Permission error running mount command"
 msgstr "Chyba povolenia pri spustení príkazu mount"
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:194
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "The mount command (\"{}\") returned an error: {}. Nu will continue as if "
 "a device isn't plugged in."
 msgstr ""
-"Príkaz pre pripojenie (\"{}\") vrátil chybu: {}. Mu bude pokračovať, ako "
+"Príkaz pre pripojenie (\"{}\") vrátil chybu: {}. Nu bude pokračovať, ako "
 "keby zariadenie nebolo pripojené."
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:212
@@ -1535,7 +1525,7 @@ msgid "Could not find an attached CircuitPython device."
 msgstr "Nepodarilo sa nájsť pripojené CircuitPython zariadenie."
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:271
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "Python files for CircuitPython devices are stored on the device. "
 "Therefore, to edit these files you need to have the device plugged in. "
@@ -1547,7 +1537,7 @@ msgid ""
 msgstr ""
 "Python súbory pre CircuitPython zariadenia sú uložené priamo na "
 "zariadení. Ak ich chcete upravovať, musíte mať toto zariadenie pripojené."
-" Pokiaľ zariadenie nepripojíte, Mu bude na ukladanie vášho kódu používať "
+" Pokiaľ zariadenie nepripojíte, Nu bude na ukladanie vášho kódu používať "
 "priečinok, ktorý nájdete tu:\n"
 "\n"
 "{}"

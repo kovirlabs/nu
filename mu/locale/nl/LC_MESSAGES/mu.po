@@ -74,12 +74,11 @@ msgstr ""
 "\"Annuleren\"."
 
 #: mu/interface/dialogs.py:104
-#, fuzzy
 msgid ""
 "Change mode at any time by clicking the \"Mode\" button containing Nu's "
 "logo."
 msgstr ""
-"Verander de modus op ieder moment door op de \"Modus\" knop met het Mu "
+"Verander de modus op ieder moment door op de \"Modus\" knop met het Nu "
 "logo te klikken."
 
 #: mu/interface/dialogs.py:143
@@ -365,20 +364,18 @@ msgid "Automatically detect"
 msgstr "Automatisch detecteren"
 
 #: mu/interface/dialogs.py:677
-#, fuzzy
 msgid ""
 "Please select the language for Nu's user interface from the choices "
 "listed below. <strong>Restart Nu for these changes to take "
 "effect.</strong>"
 msgstr ""
-"Selecteer de taal voor de gebruikersinterface van Mu uit de onderstaande "
-"keuzes. <strong>Start Mu opnieuw om deze wijzigingen door te "
+"Selecteer de taal voor de gebruikersinterface van Nu uit de onderstaande "
+"keuzes. <strong>Start Nu opnieuw om deze wijzigingen door te "
 "voeren.</strong>"
 
 #: mu/interface/dialogs.py:727 mu/interface/main.py:1344
-#, fuzzy
 msgid "Nu Administration"
-msgstr "Mu Administratie"
+msgstr "Nu Administratie"
 
 #: mu/interface/dialogs.py:741
 msgid "Current Log"
@@ -442,9 +439,8 @@ msgid "Mode"
 msgstr "Modus"
 
 #: mu/interface/main.py:105
-#, fuzzy
 msgid "Change Nu's mode of behaviour."
-msgstr "Verander de manier van gedrag van Mu."
+msgstr "Verander de manier van gedrag van Nu."
 
 #: mu/interface/main.py:110
 msgid "New"
@@ -515,27 +511,25 @@ msgid "Help"
 msgstr "Help"
 
 #: mu/interface/main.py:163
-#, fuzzy
 msgid "Show help about Nu in a browser."
-msgstr "Help over Mu weergeven in een browser."
+msgstr "Help over Nu weergeven in een browser."
 
 #: mu/interface/main.py:166
 msgid "Quit"
 msgstr "Afsluiten"
 
 #: mu/interface/main.py:166
-#, fuzzy
 msgid "Quit Nu."
-msgstr "Mu Afsluiten."
+msgstr "Nu Afsluiten."
 
 #: mu/interface/main.py:264
 msgid "Close file"
 msgstr "Sluit bestand"
 
 #: mu/interface/main.py:305
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu {}"
-msgstr "Mu {}"
+msgstr "Nu {}"
 
 #: mu/interface/main.py:524
 msgid "Copy selected text to REPL"
@@ -584,12 +578,11 @@ msgstr "(Een woordenboek van {} items.)"
 
 #: mu/interface/main.py:1007
 msgid "Nu"
-msgstr ""
+msgstr "Nu"
 
 #: mu/interface/main.py:1331
-#, fuzzy
 msgid "Nu's current mode of behaviour."
-msgstr "Mu's huidige gedrag."
+msgstr "Nu's huidige gedrag."
 
 #: mu/interface/main.py:1378
 #, python-brace-format
@@ -954,7 +947,7 @@ msgid "{} compatible"
 msgstr "{} compatibel"
 
 #: mu/logic.py:939
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "The file contains characters Nu expects to be encoded as {0} or as the "
 "computer's default encoding {1}, but which are encoded in some other way."
@@ -963,7 +956,7 @@ msgid ""
 "If this file was saved in another application, re-save the file via the "
 "'Save as' option and set the encoding to {0}"
 msgstr ""
-"Het bestand bevat tekens die Mu verwacht te worden gecodeerd als {0} of "
+"Het bestand bevat tekens die Nu verwacht te worden gecodeerd als {0} of "
 "als de standaardcodering van de computer {1}, maar die op een andere "
 "manier zijn gecodeerd.\n"
 "\n"
@@ -977,14 +970,13 @@ msgid "The file \"{}\" is already open."
 msgstr "Het bestand \"{}\" is al geopend."
 
 #: mu/logic.py:976
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu cannot read the characters in {}"
-msgstr "Mu kan de tekens in {} niet lezen"
+msgstr "Nu kan de tekens in {} niet lezen"
 
 #: mu/logic.py:1003
-#, fuzzy
 msgid "Nu was not able to open this file"
-msgstr "Mu kon dit bestand niet openen"
+msgstr "Nu kon dit bestand niet openen"
 
 #: mu/logic.py:1004
 #, fuzzy
@@ -1016,7 +1008,7 @@ msgid "Is this a {} file?"
 msgstr "Is dit een {} bestand?"
 
 #: mu/logic.py:1020
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "It looks like this could be a {} file.\n"
 "\n"
@@ -1024,7 +1016,7 @@ msgid ""
 msgstr ""
 "Het lijkt erop dat dit een {} bestand kan zijn.\n"
 "\n"
-"Wilt u Mu wijzigen naar de {}modus?"
+"Wilt u Nu wijzigen naar de {}modus?"
 
 #: mu/logic.py:1142
 msgid "Could not save file (disk problem)"
@@ -1104,9 +1096,9 @@ msgid "Changed to {} mode."
 msgstr "Gewijzigd in {} modus."
 
 #: mu/logic.py:1560
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Would you like to change Nu to the {} mode?"
-msgstr "Wil je Mu veranderen in de {} modus?"
+msgstr "Wil je Nu veranderen in de {} modus?"
 
 #: mu/logic.py:1579
 #, python-brace-format
@@ -1140,9 +1132,8 @@ msgid "Could not rename file."
 msgstr "Kan de naam van het bestand niet wijzigen."
 
 #: mu/logic.py:1656
-#, fuzzy
 msgid "A file of that name is already open in Nu."
-msgstr "Een bestand met die naam is al geopend in Mu."
+msgstr "Een bestand met die naam is al geopend in Nu."
 
 #: mu/logic.py:1686
 #, python-brace-format
@@ -1202,7 +1193,6 @@ msgid "Data Flood Detected!"
 msgstr "Gegevensoverstroming gedetecteerd!"
 
 #: mu/modes/base.py:339
-#, fuzzy
 msgid ""
 "The plotter is flooded with data which will make Nu unresponsive and "
 "freeze. As a safeguard, the plotter has been stopped.\n"
@@ -1213,7 +1203,7 @@ msgid ""
 "To fix this, make sure your code prints small tuples of data between "
 "calls to 'sleep' for a very short period of time."
 msgstr ""
-"De plotter wordt overspoeld met gegevens waardoor Mu niet meer reageert "
+"De plotter wordt overspoeld met gegevens waardoor Nu niet meer reageert "
 "en vastloopt. Als beveiliging is de plotter gestopt.\n"
 "\n"
 "Overstromingen zijn wanneer stukjes data van meer dan 1024 bytes "
@@ -1530,22 +1520,21 @@ msgid "Permission error running mount command"
 msgstr "Toestemmingsfout bij het plaatsen van de opdracht"
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:194
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "The mount command (\"{}\") returned an error: {}. Nu will continue as if "
 "a device isn't plugged in."
 msgstr ""
-"Het plaatsings-commando (\"{}\") heeft een fout geretourneerd: {}. Mu "
+"Het plaatsings-commando (\"{}\") heeft een fout geretourneerd: {}. Nu "
 "gaat verder alsof een apparaat niet is aangesloten."
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:212
-#, fuzzy
 msgid ""
 "If your Circuit Python device is plugged in, you need to \"Share with "
 "Linux\" on the CIRCUITPY drive in the \"Files\" app then restart Nu."
 msgstr ""
 "Als uw Circuit Python-apparaat is aangesloten, moet u \"Delen met Linux\""
-" op de CIRCUITPY-schijf in de app \"Bestanden\" en vervolgens Mu opnieuw "
+" op de CIRCUITPY-schijf in de app \"Bestanden\" en vervolgens Nu opnieuw "
 "opstarten."
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:269
@@ -1553,7 +1542,7 @@ msgid "Could not find an attached CircuitPython device."
 msgstr "Kan een aangesloten CircuitPython-apparaat niet vinden."
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:271
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "Python files for CircuitPython devices are stored on the device. "
 "Therefore, to edit these files you need to have the device plugged in. "
@@ -1565,7 +1554,7 @@ msgid ""
 msgstr ""
 "Python-bestanden voor CircuitPython-apparaten worden op het apparaat "
 "opgeslagen. Om deze bestanden te kunnen bewerken, moet het apparaat "
-"daarom zijn aangesloten. Totdat u een apparaat aansluit, gebruikt Mu de "
+"daarom zijn aangesloten. Totdat u een apparaat aansluit, gebruikt Nu de "
 "map die u hier vindt:\n"
 "\n"
 " {}\n"

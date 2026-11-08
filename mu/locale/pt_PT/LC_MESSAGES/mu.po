@@ -71,13 +71,12 @@ msgstr ""
 "\"Cancelar\"."
 
 #: mu/interface/dialogs.py:104
-#, fuzzy
 msgid ""
 "Change mode at any time by clicking the \"Mode\" button containing Nu's "
 "logo."
 msgstr ""
 "Altera o modo a qualquer momento através do botão \"Modo\", com o logo do"
-" Mu."
+" Nu."
 
 #: mu/interface/dialogs.py:143
 msgid ""
@@ -361,19 +360,17 @@ msgid "Automatically detect"
 msgstr "Detetar automaticamente"
 
 #: mu/interface/dialogs.py:677
-#, fuzzy
 msgid ""
 "Please select the language for Nu's user interface from the choices "
 "listed below. <strong>Restart Nu for these changes to take "
 "effect.</strong>"
 msgstr ""
-"Escolhe uma língua para o interface do Mu na lista de opções. "
-"<strong>Reinicia o Mu para as alterações tomarem efeito.</strong>"
+"Escolhe uma língua para o interface do Nu na lista de opções. "
+"<strong>Reinicia o Nu para as alterações tomarem efeito.</strong>"
 
 #: mu/interface/dialogs.py:727 mu/interface/main.py:1344
-#, fuzzy
 msgid "Nu Administration"
-msgstr "Configuração do Mu"
+msgstr "Configuração do Nu"
 
 #: mu/interface/dialogs.py:741
 msgid "Current Log"
@@ -437,9 +434,8 @@ msgid "Mode"
 msgstr "Modo"
 
 #: mu/interface/main.py:105
-#, fuzzy
 msgid "Change Nu's mode of behaviour."
-msgstr "Altera o Modo de operação do Mu."
+msgstr "Altera o Modo de operação do Nu."
 
 #: mu/interface/main.py:110
 msgid "New"
@@ -510,27 +506,25 @@ msgid "Help"
 msgstr "Ajuda"
 
 #: mu/interface/main.py:163
-#, fuzzy
 msgid "Show help about Nu in a browser."
-msgstr "Mostra ajuda acerca do Mu no teu navegador ('browser')."
+msgstr "Mostra ajuda acerca do Nu no teu navegador ('browser')."
 
 #: mu/interface/main.py:166
 msgid "Quit"
 msgstr "Sair"
 
 #: mu/interface/main.py:166
-#, fuzzy
 msgid "Quit Nu."
-msgstr "Fecha o Mu"
+msgstr "Fecha o Nu"
 
 #: mu/interface/main.py:264
 msgid "Close file"
 msgstr "Fecha o ficheiro"
 
 #: mu/interface/main.py:305
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu {}"
-msgstr "Mu {}"
+msgstr "Nu {}"
 
 #: mu/interface/main.py:524
 msgid "Copy selected text to REPL"
@@ -579,12 +573,11 @@ msgstr "(dicionário de {} elementos)"
 
 #: mu/interface/main.py:1007
 msgid "Nu"
-msgstr ""
+msgstr "Nu"
 
 #: mu/interface/main.py:1331
-#, fuzzy
 msgid "Nu's current mode of behaviour."
-msgstr "Modo de operação ativo do Mu."
+msgstr "Modo de operação ativo do Nu."
 
 #: mu/interface/main.py:1378
 #, python-brace-format
@@ -955,7 +948,7 @@ msgid "{} compatible"
 msgstr "Compatível com {}"
 
 #: mu/logic.py:939
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "The file contains characters Nu expects to be encoded as {0} or as the "
 "computer's default encoding {1}, but which are encoded in some other way."
@@ -964,7 +957,7 @@ msgid ""
 "If this file was saved in another application, re-save the file via the "
 "'Save as' option and set the encoding to {0}"
 msgstr ""
-"O ficheiro contém caracteres que o Mu espera estarem codificados como {0}"
+"O ficheiro contém caracteres que o Nu espera estarem codificados como {0}"
 " ou {1} (a preferência do computador), mas que parecem estar codificados "
 "de outra forma.\n"
 "\n"
@@ -977,14 +970,13 @@ msgid "The file \"{}\" is already open."
 msgstr "O ficheiro \"{}\" já está aberto."
 
 #: mu/logic.py:976
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu cannot read the characters in {}"
-msgstr "O Mu não consegue ler os caracteres em {}"
+msgstr "O Nu não consegue ler os caracteres em {}"
 
 #: mu/logic.py:1003
-#, fuzzy
 msgid "Nu was not able to open this file"
-msgstr "O Mu não conseguiu abrir este ficheiro"
+msgstr "O Nu não conseguiu abrir este ficheiro"
 
 #: mu/logic.py:1004
 #, fuzzy
@@ -1016,7 +1008,7 @@ msgid "Is this a {} file?"
 msgstr "Será este um ficheiro {}?"
 
 #: mu/logic.py:1020
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "It looks like this could be a {} file.\n"
 "\n"
@@ -1024,7 +1016,7 @@ msgid ""
 msgstr ""
 "Parece que este é um ficheiro {}\n"
 "\n"
-"Queres mudar o Mu para o modo {}?"
+"Queres mudar o Nu para o modo {}?"
 
 #: mu/logic.py:1142
 msgid "Could not save file (disk problem)"
@@ -1103,9 +1095,9 @@ msgid "Changed to {} mode."
 msgstr "Ativado o modo {}."
 
 #: mu/logic.py:1560
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Would you like to change Nu to the {} mode?"
-msgstr "Queres mudar o Mu para o modo {}?"
+msgstr "Queres mudar o Nu para o modo {}?"
 
 #: mu/logic.py:1579
 #, python-brace-format
@@ -1138,9 +1130,8 @@ msgid "Could not rename file."
 msgstr "Não é possível alterar o nome do ficheiro."
 
 #: mu/logic.py:1656
-#, fuzzy
 msgid "A file of that name is already open in Nu."
-msgstr "Já existe um ficheiro aberto pelo Mu com esse nome."
+msgstr "Já existe um ficheiro aberto pelo Nu com esse nome."
 
 #: mu/logic.py:1686
 #, python-brace-format
@@ -1200,7 +1191,6 @@ msgid "Data Flood Detected!"
 msgstr "Detectada informação excessiva!"
 
 #: mu/modes/base.py:339
-#, fuzzy
 msgid ""
 "The plotter is flooded with data which will make Nu unresponsive and "
 "freeze. As a safeguard, the plotter has been stopped.\n"
@@ -1211,7 +1201,7 @@ msgid ""
 "To fix this, make sure your code prints small tuples of data between "
 "calls to 'sleep' for a very short period of time."
 msgstr ""
-"O gráfico recebeu informação excessiva, o que pode bloquear o Mu ou "
+"O gráfico recebeu informação excessiva, o que pode bloquear o Nu ou "
 "torná-lo muito lento. Como salvaguarda, o gráfico foi interrompido.\n"
 "\n"
 "A informação é considerada excessiva quando blocos de informação "
@@ -1534,12 +1524,12 @@ msgid "Permission error running mount command"
 msgstr "Erro de permissões ao correr o comando 'montar'"
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:194
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "The mount command (\"{}\") returned an error: {}. Nu will continue as if "
 "a device isn't plugged in."
 msgstr ""
-"O comando 'montar' (\"{}\") devolveu um erro: {}. O Mu vai continuar como"
+"O comando 'montar' (\"{}\") devolveu um erro: {}. O Nu vai continuar como"
 " se não tivesse nenhum dispositivo ligado."
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:212
@@ -1555,7 +1545,7 @@ msgid "Could not find an attached CircuitPython device."
 msgstr "Não foi encontrado um dispositivo CircuitPython ligado."
 
 #: plugins/circuitpython/nu_circuitpython/mode.py:271
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "Python files for CircuitPython devices are stored on the device. "
 "Therefore, to edit these files you need to have the device plugged in. "
@@ -1567,7 +1557,7 @@ msgid ""
 msgstr ""
 "Os ficheiros Python para dispositivos CircuitPython são armazenados no "
 "próprio dispositivo. Assim sendo, para os alterar terás que o ligar. "
-"Entretanto, o Mu utiliza esta pasta para guardar os teus programas:\n"
+"Entretanto, o Nu utiliza esta pasta para guardar os teus programas:\n"
 "\n"
 "{}"
 

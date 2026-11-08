@@ -74,13 +74,12 @@ msgstr ""
 " \"Cancelar\"."
 
 #: mu/interface/dialogs.py:104
-#, fuzzy
 msgid ""
 "Change mode at any time by clicking the \"Mode\" button containing Nu's "
 "logo."
 msgstr ""
 "Cambia el modo en cualquier momento haciendo clic en el botón \"Modo\" "
-"con el logo de Mu."
+"con el logo de Nu."
 
 #: mu/interface/dialogs.py:143
 msgid ""
@@ -365,9 +364,8 @@ msgid ""
 msgstr ""
 
 #: mu/interface/dialogs.py:727 mu/interface/main.py:1344
-#, fuzzy
 msgid "Nu Administration"
-msgstr "Administración de Mu"
+msgstr "Administración de Nu"
 
 #: mu/interface/dialogs.py:741
 msgid "Current Log"
@@ -431,9 +429,8 @@ msgid "Mode"
 msgstr "Modo"
 
 #: mu/interface/main.py:105
-#, fuzzy
 msgid "Change Nu's mode of behaviour."
-msgstr "Cambia el modo de comportamiento de Mu."
+msgstr "Cambia el modo de comportamiento de Nu."
 
 #: mu/interface/main.py:110
 msgid "New"
@@ -504,27 +501,25 @@ msgid "Help"
 msgstr "Ayuda"
 
 #: mu/interface/main.py:163
-#, fuzzy
 msgid "Show help about Nu in a browser."
-msgstr "Mostrar ayuda de Mu en un navegador."
+msgstr "Mostrar ayuda de Nu en un navegador."
 
 #: mu/interface/main.py:166
 msgid "Quit"
 msgstr "Salir"
 
 #: mu/interface/main.py:166
-#, fuzzy
 msgid "Quit Nu."
-msgstr "Salir de Mu."
+msgstr "Salir de Nu."
 
 #: mu/interface/main.py:264
 msgid "Close file"
 msgstr ""
 
 #: mu/interface/main.py:305
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu {}"
-msgstr "Mu {}"
+msgstr "Nu {}"
 
 #: mu/interface/main.py:524
 msgid "Copy selected text to REPL"
@@ -573,12 +568,11 @@ msgstr "(Un diccionario de {} elementos.)"
 
 #: mu/interface/main.py:1007
 msgid "Nu"
-msgstr ""
+msgstr "Nu"
 
 #: mu/interface/main.py:1331
-#, fuzzy
 msgid "Nu's current mode of behaviour."
-msgstr "Actual modo de comportamiento de Mu."
+msgstr "Actual modo de comportamiento de Nu."
 
 #: mu/interface/main.py:1378
 #, python-brace-format
@@ -941,7 +935,7 @@ msgid "{} compatible"
 msgstr ""
 
 #: mu/logic.py:939
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "The file contains characters Nu expects to be encoded as {0} or as the "
 "computer's default encoding {1}, but which are encoded in some other way."
@@ -950,7 +944,7 @@ msgid ""
 "If this file was saved in another application, re-save the file via the "
 "'Save as' option and set the encoding to {0}"
 msgstr ""
-"El archivo contiene caracteres que Mu espera codificar como {0} o como la"
+"El archivo contiene caracteres que Nu espera codificar como {0} o como la"
 " codificación predeterminada del ordenador {1}, pero están codificados de"
 " otra manera.\n"
 "\n"
@@ -963,14 +957,13 @@ msgid "The file \"{}\" is already open."
 msgstr "El archivo \"{}\" ya está abierto."
 
 #: mu/logic.py:976
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Nu cannot read the characters in {}"
-msgstr "Mu no puede leer los caracteres en {}"
+msgstr "Nu no puede leer los caracteres en {}"
 
 #: mu/logic.py:1003
-#, fuzzy
 msgid "Nu was not able to open this file"
-msgstr "Mu no pudo abrir este archivo"
+msgstr "Nu no pudo abrir este archivo"
 
 #: mu/logic.py:1004
 #, fuzzy
@@ -1002,7 +995,7 @@ msgid "Is this a {} file?"
 msgstr "¿Es este un archivo {}?"
 
 #: mu/logic.py:1020
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "It looks like this could be a {} file.\n"
 "\n"
@@ -1010,7 +1003,7 @@ msgid ""
 msgstr ""
 "Parece que este podría ser un archivo de {}.\n"
 "\n"
-"¿Desea cambiar Mu al modo {}?"
+"¿Desea cambiar Nu al modo {}?"
 
 #: mu/logic.py:1142
 msgid "Could not save file (disk problem)"
@@ -1090,9 +1083,9 @@ msgid "Changed to {} mode."
 msgstr "Cambiado al modo {}."
 
 #: mu/logic.py:1560
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Would you like to change Nu to the {} mode?"
-msgstr "¿Quieres cambiar Mu al modo {}?"
+msgstr "¿Quieres cambiar Nu al modo {}?"
 
 #: mu/logic.py:1579
 #, fuzzy, python-brace-format
@@ -1126,9 +1119,8 @@ msgid "Could not rename file."
 msgstr "No se pudo cambiar el nombre del archivo."
 
 #: mu/logic.py:1656
-#, fuzzy
 msgid "A file of that name is already open in Nu."
-msgstr "Un archivo con ese nombre ya está abierto en Mu."
+msgstr "Un archivo con ese nombre ya está abierto en Nu."
 
 #: mu/logic.py:1686
 #, python-brace-format
@@ -1186,7 +1178,6 @@ msgid "Data Flood Detected!"
 msgstr "¡Inundación de datos detectada!"
 
 #: mu/modes/base.py:339
-#, fuzzy
 msgid ""
 "The plotter is flooded with data which will make Nu unresponsive and "
 "freeze. As a safeguard, the plotter has been stopped.\n"
@@ -1197,7 +1188,7 @@ msgid ""
 "To fix this, make sure your code prints small tuples of data between "
 "calls to 'sleep' for a very short period of time."
 msgstr ""
-"El trazador está inundado de datos y que harán que Mu no responda y se "
+"El trazador está inundado de datos y que harán que Nu no responda y se "
 "congele. Como salvaguarda, el trazador se ha detenido.\n"
 "\n"
 "La inundación pasa cuando se envían repetidamente bloques de datos de más"
