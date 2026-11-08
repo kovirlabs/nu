@@ -411,7 +411,7 @@ class EnvironmentsWidget(QWidget):
         self.tree.setRootIsDecorated(False)
         self.tree.setUniformRowHeights(True)
         self.tree.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self.tree.setMinimumHeight(90)
+        self.tree.setMinimumHeight(110)
         self.tree.currentItemChanged.connect(self._update_buttons)
         body_layout.addWidget(self.tree)
         # What to type to do the same in a terminal.
@@ -440,6 +440,14 @@ class EnvironmentsWidget(QWidget):
             Qt.ArrowType.DownArrow if expanded else Qt.ArrowType.RightArrow
         )
         self.body.setVisible(expanded)
+        if expanded:
+            # Make room for it rather than squeezing the facts above.
+            window = self.window()
+            if window is not self and window.layout() is not None:
+                window.layout().activate()
+                needed = window.minimumSizeHint().height()
+                if window.height() < needed:
+                    window.resize(window.width(), needed)
 
     def _is_next(self, environment):
         """Whether Nu will use `environment` from the next start."""

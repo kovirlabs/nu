@@ -1430,3 +1430,24 @@ def test_AdminDialog_reports_the_chosen_environment():
     section.tree.setCurrentItem(section.tree.topLevelItem(1))
     section.use_selected()
     assert ad.settings()["environment"] == PROJECT_ENV["path"]
+
+
+def test_EnvironmentsWidget_expanding_makes_room():
+    """Opened inside the admin dialog, the dialog grows to fit it rather
+    than squeezing the environment's facts."""
+    parent = QWidget()
+    ad = mu.interface.dialogs.AdminDialog(parent)
+    environment = dict(ENVIRONMENT, environments=[DEFAULT_ENV, PROJECT_ENV])
+    ad.setup(
+        "log",
+        {"envars": "", "locale": ""},
+        "",
+        _python_mode(),
+        None,
+        environment=environment,
+    )
+    ad.resize(760, 300)
+    section = ad.environment_tab.environments_section
+    section.toggle.click()
+    assert ad.height() >= ad.minimumSizeHint().height()
+    assert ad.height() > 300
