@@ -77,6 +77,15 @@ class VirtualEnvironmentCreateError(VirtualEnvironmentError):
     pass
 
 
+def is_within(path, folder):
+    """Whether `path` is `folder` or inside it (comparing real paths)."""
+    path, folder = os.path.realpath(path), os.path.realpath(folder)
+    try:
+        return os.path.commonpath([path, folder]) == folder
+    except ValueError:  # e.g. on different Windows drives
+        return False
+
+
 def compact(text):
     """Remove double line spaces and anything else which might help"""
     compacted = "\n".join(line for line in text.splitlines() if line.strip())
@@ -1017,6 +1026,7 @@ class VirtualEnvironment(object):
                 # we're good to save settings and move on
                 #
                 self.settings.save()
+                self.remove_old_bundled_pythons()
                 break
 
             except VirtualEnvironmentError as exc:
@@ -1227,6 +1237,53 @@ class VirtualEnvironment(object):
             logger.warning("No interpreter at %s after extraction", interpreter)
             return None
         return interpreter
+
+    def remove_old_bundled_pythons(self):
+        """
+        Delete the CPython builds an earlier Nu extracted (see
+        :meth:`ensure_bundled_python`) and nothing uses any more: about 70 MB
+        each, left in ``DATA_DIR/python/`` by every upgrade that bundles a
+        newer build. Only in an installer build (one with a bundled archive);
+        the current build is kept, and so is any build the current
+        environment's ``pyvenv.cfg`` points into (it's based on that Python,
+        e.g. if recreating it after the upgrade failed). Returns the folders
+        removed.
+        """
+        archive = wheels.bundled_python_archive()
+        root = os.path.join(config.DATA_DIR, "python")
+        if not archive or not os.path.isdir(root):
+            return []
+        current = os.path.basename(archive)[: -len(".tar.gz")]
+        in_use = self._pyvenv_paths()
+        removed = []
+        for name in sorted(os.listdir(root)):
+            path = os.path.join(root, name)
+            if name in (current, current + ".partial") or not os.path.isdir(path):
+                continue
+            if any(is_within(used, path) for used in in_use):
+                logger.info("Keeping %s: the environment %s uses it", path, self.path)
+                continue
+            logger.info("Removing a bundled Python no longer used: %s", path)
+            try:
+                shutil.rmtree(path)
+            except OSError as exc:
+                logger.warning("Unable to remove %s: %s", path, exc)
+                continue
+            removed.append(path)
+        return removed
+
+    def _pyvenv_paths(self):
+        """
+        The values in the environment's ``pyvenv.cfg`` (``home``, and any
+        other paths a tool wrote there), or an empty list if it can't be read.
+        """
+        try:
+            with open(os.path.join(self.path, "pyvenv.cfg"), encoding="utf-8") as cfg:
+                lines = cfg.read().splitlines()
+        except OSError:
+            return []
+        values = (line.partition("=")[2].strip() for line in lines)
+        return [value for value in values if value]
 
     def create_venv(self):
         """
