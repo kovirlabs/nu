@@ -974,6 +974,16 @@ class Window(QMainWindow):
         package_box.setup(to_remove, to_add)
         package_box.exec()
 
+    def bring_to_front(self):
+        """
+        Show the window in front of the others (e.g. when Nu is started
+        again while it's already running).
+        """
+        if self.isMinimized():
+            self.showNormal()
+        self.raise_()
+        self.activateWindow()
+
     def show_message(self, message, information=None, icon=None):
         """
         Displays a modal message to the user.

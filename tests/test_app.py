@@ -9,6 +9,7 @@ import os.path
 import pytest
 import subprocess
 import threading
+import time
 
 from unittest import mock
 import mu.app
@@ -623,7 +624,10 @@ def test_running_twice():
         )
     )
 
-    child1 = subprocess.run([sys.executable, cmd1])
+    # Nobody answers the second launch (the first never listens), so it
+    # would say so in a message box: suppressed, as nobody's there to close it.
+    env = dict(os.environ, MU_SUPPRESS_CRASH_REPORT_FORM="1")
+    child1 = subprocess.run([sys.executable, cmd1], env=env)
     print("child 1 return code: {}".format(child1.returncode))
     assert child1.returncode == 2
 
@@ -672,3 +676,132 @@ def test_running_twice_after_generic_exception():
     test_only_running_once()
     # clear browser launch suppression env flag
     os.environ.pop("MU_SUPPRESS_CRASH_REPORT_FORM", "")
+
+
+def test_running_again_hands_over():
+    """
+    When Nu is already running, a second launch hands its files to it and
+    exits quietly.
+    """
+    error = mu.app.MutexError("MUTEX: Nu is already running with pid 5", 5)
+    with (
+        mock.patch.object(mu.app._shared_memory, "acquire", side_effect=error),
+        mock.patch("mu.app.tell_running_instance", return_value=True) as tell,
+        mock.patch("mu.app.QMessageBox") as box,
+        pytest.raises(SystemExit) as exit_info,
+    ):
+        check_only_running_once(["a.py"])
+    assert exit_info.value.code == 2
+    tell.assert_called_once_with(["a.py"], 5)
+    box.information.assert_not_called()
+
+
+def test_running_again_no_answer(monkeypatch):
+    """
+    If the running Nu doesn't answer, the second launch says so (rather than
+    silently doing nothing) before it exits.
+    """
+    monkeypatch.delenv("MU_SUPPRESS_CRASH_REPORT_FORM", raising=False)
+    error = mu.app.MutexError("MUTEX: Nu is already running with pid 5", 5)
+    with (
+        mock.patch.object(mu.app._shared_memory, "acquire", side_effect=error),
+        mock.patch("mu.app.tell_running_instance", return_value=False),
+        mock.patch("mu.app.QMessageBox") as box,
+        pytest.raises(SystemExit),
+    ):
+        check_only_running_once()
+    box.information.assert_called_once()
+    assert "already running" in box.information.call_args[0][2]
+
+
+def test_running_again_no_answer_suppressed(monkeypatch):
+    monkeypatch.setenv("MU_SUPPRESS_CRASH_REPORT_FORM", "1")
+    error = mu.app.MutexError("MUTEX: Nu is already running with pid 5", 5)
+    with (
+        mock.patch.object(mu.app._shared_memory, "acquire", side_effect=error),
+        mock.patch("mu.app.tell_running_instance", return_value=False),
+        mock.patch("mu.app.QMessageBox") as box,
+        pytest.raises(SystemExit),
+    ):
+        check_only_running_once()
+    box.information.assert_not_called()
+
+
+def test_instance_server_name_without_user():
+    with mock.patch("mu.app.getpass.getuser", side_effect=KeyError("USER")):
+        name = mu.app.instance_server_name()
+    assert name == mu.app._shared_memory.name + "-user-open"
+
+
+def test_tell_running_instance_nobody_listening():
+    """With no Nu listening, the hand-over fails (so the caller says so)."""
+    assert mu.app.tell_running_instance(["a.py"]) is False
+
+
+def _talk_to_server(server, script):
+    """
+    Run `script` in another process (as a second launch would) while this
+    one handles the server's events, until it finishes.
+    """
+    from PyQt6.QtCore import QCoreApplication
+
+    # Each test gets a fresh lock name in the environment, but this process
+    # took its own at import: give the other process this one's.
+    suffix = mu.app._shared_memory.name[len(mu.app.SharedMemoryMutex.NAME) :]
+    env = dict(os.environ, MU_TEST_SUPPORT_RANDOM_APP_NAME_EXT=suffix)
+    child = subprocess.Popen([sys.executable, "-c", script], env=env)
+    deadline = time.monotonic() + 30
+    while child.poll() is None and time.monotonic() < deadline:
+        QCoreApplication.processEvents()
+        time.sleep(0.01)
+    for _ in range(50):
+        QCoreApplication.processEvents()
+        time.sleep(0.01)
+    return child.wait(timeout=5)
+
+
+def test_listen_for_other_instances(tmp_path):
+    """
+    A second launch brings the running Nu's window to the front and opens
+    the files it was given.
+    """
+    window = mock.MagicMock()
+    editor = mock.MagicMock()
+    server = mu.app.listen_for_other_instances(window, editor)
+    try:
+        assert server.isListening()
+        target = str(tmp_path / "game.py")
+        script = (
+            "import sys; from mu import app; "
+            "sys.exit(0 if app.tell_running_instance([{!r}]) else 1)"
+        ).format(target)
+        assert _talk_to_server(server, script) == 0
+    finally:
+        server.close()
+    window.bring_to_front.assert_called_once_with()
+    editor.direct_load.assert_called_once_with(target)
+
+
+def test_listen_for_other_instances_garbled():
+    """A message that isn't a list of paths is ignored."""
+    window = mock.MagicMock()
+    editor = mock.MagicMock()
+    server = mu.app.listen_for_other_instances(window, editor)
+    try:
+        script = (
+            "from PyQt6.QtNetwork import QLocalSocket; from mu import app; "
+            "s = QLocalSocket(); s.connectToServer(app.instance_server_name()); "
+            "s.waitForConnected(2000); s.write(b'{nope'); "
+            "s.waitForBytesWritten(2000); s.disconnectFromServer()"
+        )
+        assert _talk_to_server(server, script) == 0
+    finally:
+        server.close()
+    window.bring_to_front.assert_not_called()
+    editor.direct_load.assert_not_called()
+
+
+def test_listen_for_other_instances_cannot_listen():
+    with mock.patch("mu.app.QLocalServer.listen", return_value=False):
+        server = mu.app.listen_for_other_instances(mock.MagicMock(), mock.MagicMock())
+    assert not server.isListening()
