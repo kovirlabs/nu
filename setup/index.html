@@ -1513,7 +1513,8 @@ and <strong>Python 3.11+</strong> (verified through 3.14).</p>
 <h2 id="setting-up-with-uv-recommended">Setting up with uv (recommended)<a class="headerlink" href="#setting-up-with-uv-recommended" title="Permanent link">&para;</a></h2>
 <p>Nu uses <a href="https://docs.astral.sh/uv/">uv</a> to manage its development environment.
 <code>uv sync</code> downloads a managed CPython, creates a <code>.venv</code>, and installs the
-project (editable) with its runtime dependencies:</p>
+project (editable) with its runtime dependencies, including the bundled
+plugins in <code>plugins/</code> (the repo is a uv workspace; see <a href="../packaging/">packaging</a>):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv sync                 # runtime deps only
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>uv sync --extra dev     # + tests, docs, packaging, i18n and lint tooling
 </code></pre></div>
@@ -1533,8 +1534,10 @@ the <code>[tests]</code>, <code>[docs]</code>, <code>[package]</code>, <code>[i1
 <p>If you prefer not to use uv, any Python 3.11+ virtual environment works:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python3 -m venv .venv
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>source .venv/bin/activate          # Windows: .\.venv\Scripts\activate
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>pip install -e ".[dev]"
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>pip install -e ./plugins/pygamezero -e ".[dev]"
 </code></pre></div>
+<p>pip doesn't know about the uv workspace, so the bundled plugins (which
+<code>nu-editor</code> depends on) are given as paths.</p>
 <h2 id="running-the-tests">Running the tests<a class="headerlink" href="#running-the-tests" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>uv run pytest
 </code></pre></div>

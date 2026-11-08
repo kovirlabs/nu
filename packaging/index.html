@@ -1055,6 +1055,34 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#bundled-plugins-the-uv-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bundled plugins: the uv workspace
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bundled plugins: the uv workspace">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-the-learners-environment-gets-from-plugins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the learner's environment gets from plugins
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#building-installers-briefcase" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1402,6 +1430,34 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#bundled-plugins-the-uv-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bundled plugins: the uv workspace
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bundled plugins: the uv workspace">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-the-learners-environment-gets-from-plugins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the learner's environment gets from plugins
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#building-installers-briefcase" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1507,6 +1563,46 @@ single definition in
 </tr>
 </tbody>
 </table>
+<h2 id="bundled-plugins-the-uv-workspace">Bundled plugins: the uv workspace<a class="headerlink" href="#bundled-plugins-the-uv-workspace" title="Permanent link">&para;</a></h2>
+<p>The repo is a <strong>uv workspace</strong> (<code>[tool.uv.workspace] members = ["plugins/*"]</code>
+in <code>pyproject.toml</code>). Each bundled plugin is its own package under
+<code>plugins/&lt;name&gt;/</code>, with its own <code>pyproject.toml</code>, version and <code>mu.plugins</code>
+entry point, sharing the repo's <code>uv.lock</code>. Today that's <strong><code>nu-pygamezero</code></strong>
+(<code>plugins/pygamezero</code>); <code>plugins/example</code> is a member too, so it's locked and
+buildable, but it's a template and nothing depends on it.</p>
+<p><code>nu-editor</code> depends on each bundled plugin by name (<code>nu-pygamezero&gt;=0.1</code>), and
+<code>[tool.uv.sources]</code> resolves that name from the workspace, so:</p>
+<ul>
+<li><strong>Development:</strong> <code>uv sync</code> installs the bundled plugins editable into <code>.venv</code>,
+  and Nu finds them through their entry points, the same way it finds a
+  community plugin. The tests for each live in <code>plugins/&lt;name&gt;/tests</code> and run
+  with Nu's.</li>
+<li><strong>pip from a checkout</strong> (as CI's test job does): pip doesn't read
+  <code>[tool.uv.sources]</code>, so give it the paths too:
+  <code>pip install ./plugins/pygamezero ".[dev]"</code>.</li>
+<li><strong>Installers:</strong> <code>[tool.briefcase.app.mu].requires</code> lists each bundled plugin
+  as a local path, relative to the project root (<code>"./plugins/pygamezero"</code>).
+  Briefcase turns a requirement containing a path separator into an absolute
+  path from the project root and pip-installs it into the app, entry points and
+  package data (icons, demo assets) included. (Checked against Briefcase
+  0.4.2's <code>briefcase/commands/create.py</code>: <code>_is_local_path</code> and
+  <code>_write_requirements_file</code>.)</li>
+<li><strong>Publishing to PyPI:</strong> <code>[tool.uv.sources]</code> is uv-only; the built <code>nu-editor</code>
+  sdist/wheel just says <code>Requires-Dist: nu-pygamezero&gt;=0.1</code>. So <strong>each bundled
+  plugin must be published to PyPI before the <code>nu-editor</code> release that needs
+  it</strong> (or <code>pip install nu-editor</code> can't resolve). Build and upload a plugin
+  from its folder (<code>uv build plugins/pygamezero</code>, then upload as usual); bump
+  its own version when it changes, independently of Nu's.</li>
+</ul>
+<h3 id="what-the-learners-environment-gets-from-plugins">What the learner's environment gets from plugins<a class="headerlink" href="#what-the-learners-environment-gets-from-plugins" title="Permanent link">&para;</a></h3>
+<p>A plugin lists the packages its modes need <em>in the learner's environment</em>
+(where their programs run, not where Nu runs) as an extra called
+<code>learner-env</code>, e.g. Pygame Zero's <code>learner-env = ["pgzero&gt;=1.2.1",
+"pygame&gt;=2.6"]</code>. <code>mu.wheels.baseline_packages()</code> is the core's own list
+(<code>ipykernel</code>) plus the <code>learner-env</code> requirements of every installed
+distribution with a <code>mu.plugins</code> entry point, read from package metadata
+without importing the plugin. That's what goes into the offline wheelhouse and
+what a new learner environment is built with.</p>
 <h2 id="building-installers-briefcase">Building installers (Briefcase)<a class="headerlink" href="#building-installers-briefcase" title="Permanent link">&para;</a></h2>
 <p>CI is the release path: <code>.github/workflows/build.yml</code> builds one OS per job and
 uploads the installer as a downloadable artifact. <strong>Trigger it from the GitHub
@@ -1516,7 +1612,7 @@ publishes a GitHub Release with the installers attached (a tag with a
 pre-release segment such as <code>v2.0.0rc1</code> publishes as a pre-release). See
 <a href="../release/">Release process</a>.</p>
 <p>Locally (inside a pip-enabled virtualenv with the <code>package</code> extra,
-<code>pip install -e ".[package]"</code>):</p>
+<code>uv sync --extra package</code>, or with pip <code>pip install -e ./plugins/pygamezero -e ".[package]"</code>):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$ make win64     # 64-bit Windows MSI
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>$ make macos     # macOS .app/.dmg (ad-hoc signed)
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>$ make linux     # Linux AppImage
@@ -1532,14 +1628,19 @@ demand).</p>
 <li>A pinned <strong><code>uv</code></strong> binary — it rides in via the PyPI <code>uv</code> wheel, and
   <code>find_uv()</code> locates it at runtime through <code>uv.find_uv_bin()</code> (no <code>PATH</code> or
   <code>MU_UV</code> needed in the packaged app).</li>
+<li>The bundled plugins (<code>plugins/*</code>), installed by Briefcase from the local
+  paths in <code>requires</code>.</li>
 <li>The <strong>baseline wheels zip</strong> (<code>mu/wheels/&lt;version&gt;.zip</code>), so the learner's
-  baseline packages install without the network.</li>
+  baseline packages install without the network: the core's (<code>ipykernel</code>)
+  plus the bundled plugins' <code>learner-env</code> packages (<code>pgzero</code>, <code>pygame</code>).</li>
 <li>A relocatable <strong>CPython</strong> (the python-build-standalone build uv itself would
   install, matching the app's Python X.Y and the runner's platform) plus a
   <strong>pip wheel</strong>, in <code>mu/wheels/python/</code>.</li>
 </ul>
 <p><code>python -m mu.wheels --package</code> fetches all three before packaging (it needs
-<code>uv</code> installed, to look up the CPython download).</p>
+<code>uv</code> installed, to look up the CPython download, and the bundled plugins
+installed, to read their <code>learner-env</code> needs; CI's build job installs them
+with <code>pip install --no-deps ./plugins/pygamezero</code>, which needs no PyQt6).</p>
 <p>At first launch Nu extracts the bundled CPython into its data directory (a
 stable, writable path: the app bundle may be read-only, and an AppImage is
 mounted somewhere new on every launch) and creates the learner's environment

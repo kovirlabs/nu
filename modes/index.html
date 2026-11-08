@@ -1654,8 +1654,12 @@ is available). It's also possible for one mode to transition to another and
 some modes are only available as transitional modes (i.e. they may not be
 selected by the user). A good example of such a "transitional" mode is the
 Python 3 debugger, which can only be accessed from the standard Python 3 mode.</p>
-<p>Mu contains the following modes, although it is very easy to add more (the
-images below are used with permission, see <a href="../copyright/">copyright</a>).</p>
+<p>Nu's <strong>core</strong> modes are <strong>Python 3</strong>, the <strong>Debugger</strong> and (until it moves to a
+plugin too, Phase 5c part 2) <strong>CircuitPython</strong>. Everything else is a
+<a href="../plugins/">plugin</a>: <strong>Pygame Zero</strong> is a <em>bundled</em> plugin, shipped and switched
+on by default, that lives in this repo under <code>plugins/pygamezero/</code>. The
+descriptions below are inherited from Mu and include modes this fork has dropped
+(the images below are used with permission, see <a href="../copyright/">copyright</a>).</p>
 <h3 id="adafruit-mode">Adafruit Mode<a class="headerlink" href="#adafruit-mode" title="Permanent link">&para;</a></h3>
 <p><img alt="" src="../circuit_playground.jpg" /></p>
 <p><a href="http://adafruit.com/">Adafruit</a> make extraordinarily awesome boards for
@@ -1679,6 +1683,12 @@ functionality to "flash" (i.e. copy) your code onto the device and a simple
 user interface to the simple file system on the device.</p>
 <h3 id="pygame-zero-pygame-mode">Pygame Zero / PyGame Mode<a class="headerlink" href="#pygame-zero-pygame-mode" title="Permanent link">&para;</a></h3>
 <p><img alt="" src="../pygame.png" /></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Pygame Zero is a bundled plugin: the <code>nu-pygamezero</code> package in
+<code>plugins/pygamezero/</code>, built on the public <a href="../plugins/">plugin API</a> only.
+It's the best worked example of a full mode as a plugin.</p>
+</div>
 <p><a href="http://pygame.org/">PyGame</a> (or, more correctly: "pygame") is a cross
 platform set of Python libraries for writing games.
 <a href="https://pygame-zero.readthedocs.io/en/stable/">Pygame Zero</a> is a wrapper for
@@ -1724,8 +1734,22 @@ discover where there may be bugs.</p>
 <p>Once the code has finished the debug mode transitions back to standard
 Python mode.</p>
 <h2 id="create-a-new-mode">Create a New Mode<a class="headerlink" href="#create-a-new-mode" title="Permanent link">&para;</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Write new modes as plugins</p>
+<p>A new mode should be a <a href="../plugins/">plugin</a>: a package with a <code>mu.plugins</code>
+entry point that imports only <code>mu.plugin</code>, starting from the template in
+<code>plugins/example/</code>. The class, attributes, actions and <code>api</code> described
+below are the same for a plugin mode (<code>mu.plugin.Mode</code> <em>is</em> <code>BaseMode</code>),
+but instead of registering it in <code>mu/app.py</code> you register it from your
+plugin, its icons live in your plugin's own <code>images</code> folder, and you reach
+the editor through <code>self.host</code> rather than <code>self.editor</code> and <code>self.view</code>.
+The Pygame Zero mode (<code>plugins/pygamezero/nu_pygamezero/mode.py</code>) shows all
+of this. The steps below describe the built-in, in-core route used by the
+core's own modes.</p>
+</div>
 <p>It's very easy to create new mode for Mu. The following tutorial explains how
-we created the Pygame Zero mode.</p>
+we created the Pygame Zero mode (it has since become a bundled plugin, so its
+code now lives in <code>plugins/pygamezero/</code>).</p>
 <h3 id="create-a-class">Create a Class<a class="headerlink" href="#create-a-class" title="Permanent link">&para;</a></h3>
 <p>The most important aspects of a mode are encapsulated in a class that
 represents the mode. These classes live in the <code>mu.modes</code> namespace and
@@ -1758,7 +1782,8 @@ attributes and three methods.</p>
 <li><code>description</code> -- a short description of the mode to be displayed in the
   mode picker. For example, "Make games with Pygame Zero".</li>
 <li><code>icon</code> -- an icon used to represent the mode in the mode picker. This must
-  be a <code>.png</code> image file found in the <code>mu/resources/images</code> directory.</li>
+  be a <code>.png</code> (or <code>.svg</code>) image file found in the <code>mu/resources/images</code>
+  directory, or in a plugin's registered images folder.</li>
 </ul>
 <p>Additional attritbutes with safe default values set in the <code>BaseMode</code> class
 which may be of value for you to change are:</p>
@@ -1767,7 +1792,14 @@ which may be of value for you to change are:</p>
   this value is 0 (zero) Mu will not auto-save changed files when in this mode.</li>
 <li><code>builtins</code> -- a list of strings defining symbols that Mu's code checker
   must assume are builtins (above and beyond Python's standard builtins).</li>
+<li><code>uses_user_environment</code> -- set it to <code>True</code> if the mode runs the learner's
+  programs in Nu's Python environment, so the admin dialog shows that
+  environment's variables and third-party packages.</li>
 </ul>
+<p>A mode may also override <code>ensure_workspace_assets(workspace_dir)</code>, which Nu
+calls for every mode at startup to put what it needs into the workspace (Pygame
+Zero creates its <code>images</code>, <code>fonts</code>, <code>sounds</code> and <code>music</code> folders with the
+tutorials' demo files). It must leave anything already there alone.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>When creating strings that will be seen by users please remember to use
@@ -1887,18 +1919,19 @@ file:</p>
 as input and emit to stdout a list of strings for the API that conform to
 Scintilla's protocol to be used by autocomplete and call-tips.</p>
 <p>In the case of the Pygame Zero mode, the output from the <code>mkapi.py</code> command
-ended up in <code>mu.modes.api.PYGAMEZERO_APIS</code>. The list itself is in the
-<code>pygamezero.py</code> file in the <code>mu/modes/api</code> directory, and the
-<code>__init__.py</code> found therein exposes it via the <code>__all__</code> list.</p>
+ended up in <code>PYGAMEZERO_APIS</code>. The list itself is in the plugin's
+<code>nu_pygamezero/api/pygamezero.py</code> file, and the <code>__init__.py</code> found therein
+exposes it via the <code>__all__</code> list. (The core's own modes keep theirs in
+<code>mu/modes/api</code>.)</p>
 <p>Back in the <code>PyGameZeroMode</code> class the <code>api</code> method simply returns a
-concatenated list of the APIs that a user of the mode may use:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>from mu.modes.api import (PYTHON3_APIS, SHARED_APIS, PI_APIS,
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>                          PYGAMEZERO_APIS)
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>... later in the PyGameZeroMode class ...
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>def api(self):
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    return SHARED_APIS + PYTHON3_APIS + PI_APIS + PYGAMEZERO_APIS
+concatenated list of the APIs that a user of the mode may use: the Python 3
+mode's entries, which the plugin gets from its host, plus its own:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>from .api import PYGAMEZERO_APIS
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>... later in the PyGameZeroMode class ...
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>def api(self):
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    return self.host.python_apis() + PYGAMEZERO_APIS
 </code></pre></div>
 <p>With these relatively simple steps, it's possible to create quite powerful
 modes. Most importantly, taking a look at the existing modes in the

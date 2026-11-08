@@ -1436,12 +1436,20 @@ fit together.</p>
 <li>The Python3 debugger consists of a debug client and debug runner found in the <code>debugger</code> namespace. A description of how the debugger works can be found in <a href="../debugger/">debugger</a>.</li>
 <li>Interacting with the UI layer is done via the <code>Window</code> class in the <code>interface.main</code> module. Mu specific UI code used by the <code>Window</code> class found in the other modules in the namespace.</li>
 <li>Internationalization (I18n) related assets are found under <code>locale</code>. Learn how this works via <a href="../translations/">translations</a>.</li>
-<li>Modes are found under the <code>modes</code> namespace. They all inherit from a <code>BaseMode</code> class and there's a tutorial for <a href="../modes/">modes</a>. </li>
+<li>Modes are found under the <code>modes</code> namespace. They all inherit from a <code>BaseMode</code> class and there's a tutorial for <a href="../modes/">modes</a>. The core's modes are Python 3, the Debugger and (for now) CircuitPython; the rest come from plugins.</li>
+<li>The plugin host is the <code>plugin</code> namespace: the public, versioned <code>mu.plugin</code> API, plugin discovery (<code>plugin.loader</code>) and error isolation (<code>plugin.errors</code>). See <a href="../plugins/">plugins</a>.</li>
 <li>Graphical assets, fonts and CSS descriptions for the themes are all found under <code>resources</code>.</li>
 </ul>
+<p>Bundled plugins live outside <code>mu</code>, under <code>plugins/&lt;name&gt;/</code> (e.g.
+<code>plugins/pygamezero</code>, the Pygame Zero mode): each is its own package, a member
+of the repo's uv workspace, installed with Nu and found through its
+<code>mu.plugins</code> entry point exactly like a community plugin. <code>plugins/example</code> is
+the template for writing one. See <a href="../plugins/">plugins</a> and
+<a href="../packaging/">packaging</a>.</p>
 <p>All classes, methods and functions have documentation <em>written for humans</em>.
 These are extracted into the <a href="../api/">api</a>.</p>
-<p><a href="../tests/">tests</a> is in the <code>test</code> directory and filenames for tests relate
+<p><a href="../tests/">tests</a> is in the <code>tests</code> directory (and each bundled plugin's in
+<code>plugins/&lt;name&gt;/tests</code>) and filenames for tests relate
 directly to the file they test in the Mu code base. The module / directory
 structure mirrors the organisation of the Mu code base. We use PyTest's assert
 based unit testing. All tests have a comment describing their intent.</p>
