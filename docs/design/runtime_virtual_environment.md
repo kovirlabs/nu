@@ -68,3 +68,43 @@ As far as possible this should remove the need to hack up special `PYTHONPATH`,
 
 * https://github.com/mu-editor/mu/issues/1061
 * https://github.com/mu-editor/mu/issues/1070
+
+## Nu today
+
+The decision stands: learners' programs run in an environment of their own,
+never in Nu's. What changed is how it's made, and that the learner can see it.
+The learner-facing description is [Your Python environment](../environment.md);
+this is the developer's summary.
+
+* **Made and managed with [uv](https://docs.astral.sh/uv/)**, not `venv` and
+  `pip`. `mu/virtual_environment.py` has the `VirtualEnvironment` class (the
+  module-level `venv` singleton) and `Uv`, the one place uv is run. The
+  environment is made with `uv venv --python <Python> --seed <folder>`, and
+  packages are added and removed with `uv pip install` / `uv pip uninstall
+  --python <the environment's Python>`.
+* **Where:** in Nu's data folder (`mu.config.DATA_DIR`), as
+  `mu_venv-<Python version>-<date and time>` (e.g.
+  `mu_venv-311-20261108-030353`). Extra, named environments the learner makes
+  are in `DATA_DIR/envs/<name>`. `venv.json` records which one is in use (see
+  [settings and sessions](settings-and-sessions.md#nu-today)).
+* **What goes in it:** the *baseline packages* from
+  `mu.wheels.baseline_packages()`: the core's own (`ipykernel`, for the
+  REPL) plus each installed plugin's `learner-env` extra (Pygame Zero's
+  `pgzero` and `pygame`). The modes are now [plugins](../plugins.md), so a
+  plugin declares what it needs, as this page's last paragraph foresaw.
+* **Offline:** the installers carry a Python (unpacked on first start by
+  `ensure_bundled_python`) and a wheelhouse of the baseline packages, so the
+  environment can be made with no internet; see
+  [packaging](../packaging.md#what-ships-inside-the-app).
+* **Visible:** every uv command goes through `Uv`, which records it in
+  `mu.command_log` (shown as **What Nu Ran**). The status bar shows the
+  environment, and the Environment tab shows where it is and the commands to
+  use it from a terminal.
+* **Programs that list their packages:** a script with a
+  [PEP 723](https://peps.python.org/pep-0723/) `# /// script` block is run
+  with `uv run --python <the environment's Python> --script`, which adds what
+  the block lists (`mu.script_metadata` finds the block).
+* Running a program still activates the environment for the child process
+  (`VirtualEnvironment.activation_vars`), and the debugger is the one place
+  that still sets `PYTHONPATH`, so its runner can import Nu (see
+  [debugger](../debugger.md#how-a-debug-session-starts)).

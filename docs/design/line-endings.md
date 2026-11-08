@@ -58,3 +58,31 @@ file could presumably be stored on the tab object.
 * (original change) https://github.com/mu-editor/mu/pull/133
 * https://github.com/mu-editor/mu/pull/371
 * https://github.com/mu-editor/mu/issues/380
+
+## Nu today
+
+### Learners' files: unchanged
+
+The editor still does what this decision says. `read_and_decode` in
+`mu/logic.py` calls `sniff_newline_convention`, which picks the most common
+line ending in the file (a tie goes to the platform's), converts the text to
+`\n` for the editor, and stores the convention on the tab; `save_and_encode`
+writes it back out with that convention. A new tab uses `\n`, so a new file
+is saved with LF endings on every platform (not with the platform's ending,
+as the decision above has it). Saving also strips trailing
+spaces from each line.
+
+### Nu's own repository: LF everywhere
+
+A separate decision, about the source code rather than learners' files: every
+text file in the repository is stored and checked out with LF line endings,
+on every platform. `.gitattributes` says so (`* text=auto eol=lf`) and marks
+the binary types (images, fonts, `.mo` catalogues, wheels...) as `binary`,
+so git never touches their bytes. Python, Qt and git all cope with LF on
+Windows, and one convention means no whole-file diffs when a file is edited
+on another system. The files that had CRLF endings were normalised to LF when
+the rule was added (Nu commits 42c4bcf and 72d97d3).
+
+If your editor shows a file as modified straight after checkout on Windows,
+check that it isn't converting line endings itself; `git add --renormalize .`
+puts things right.
