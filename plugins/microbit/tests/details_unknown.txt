@@ -1,0 +1,5 @@
+# DAPLink Firmware - see https://daplink.io
+Unique ID: 0240000032044e4500257009997b00386781000097969900
+HIC ID: 97969900
+Daplink Mode: Interface
+Interface Version: 0254

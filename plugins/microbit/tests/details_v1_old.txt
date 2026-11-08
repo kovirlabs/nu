@@ -1,0 +1,8 @@
+# DAPLink Firmware - see https://mbed.com/daplink
+Unique ID: 9900000037024e450073201100000021000000009796990b
+HIC ID: 9796990b
+Auto Reset: 0
+Daplink Mode: Interface
+Interface Version: 0234
+Local Mods: 1
+USB Interfaces: MSD, CDC, HID

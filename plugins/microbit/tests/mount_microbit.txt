@@ -1,0 +1,4 @@
+sysfs on /sys type sysfs (rw,nosuid,nodev,noexec,relatime)
+proc on /proc type proc (rw,nosuid,nodev,noexec,relatime)
+/dev/mapper/vg-root on / type ext4 (rw,relatime,errors=remount-ro,data=ordered)
+/dev/sdc on /media/learner/MICROBIT type vfat (rw,nosuid,nodev,relatime,uid=1000,gid=1000,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,showexec,utf8,flush,errors=remount-ro,uhelper=udisks2)

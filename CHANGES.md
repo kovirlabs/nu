@@ -16,8 +16,8 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   stack is gone.
 * **Modes:** Python 3, the Graphical Debugger, Pygame Zero and CircuitPython.
   The micro:bit, ESP MicroPython, Raspberry Pi Pico, Pyboard, Lego, Snek and
-  Web modes were removed (their tooling was unmaintained). micro:bit is planned
-  to return as a plugin.
+  Web modes were removed (their tooling was unmaintained). micro:bit is coming
+  back as a plugin on maintained tooling (opt-in for now, see below).
 * Your programs' Python environment is now created and managed with
   [uv](https://docs.astral.sh/uv/).
 * **Help** opens Nu's own [Using Nu](https://kovirlabs.github.io/nu/help/)
@@ -33,7 +33,7 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   and say which packages their modes need in your programs' environment. Drop
   one into Nu's plugins folder, or install one as a package; a plugin that
   fails is skipped or reported (errors in its background threads too), and Nu
-  keeps running. The plugin API is at version 0.4 and may change. See
+  keeps running. The plugin API is at version 0.5 and may change. See
   [Writing a Nu plugin](https://kovirlabs.github.io/nu/plugins/).
 * **A Plugins tab.** Click the cog and choose **Plugins** to see every plugin
   Nu found: where it comes from, whether it's on, and the modes it adds. If
@@ -52,6 +52,8 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   environment, adding, removing and listing packages, running a program) is
   listed on the Environment tab as you'd type it, with whether it worked. When
   you add or remove packages, the progress window shows the real command too.
+  Modes without that environment (boards) show the list as a **What Nu ran**
+  tab of its own, with the commands a plugin ran (micro:bit's `mpremote`).
 * **Programs can list the packages they need.** If a program starts with a
   `# /// script` block ([PEP 723](https://peps.python.org/pep-0723/)) such as
   `# dependencies = ["cowsay"]`, **Run** runs it with `uv run`, which fetches
@@ -62,6 +64,24 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
 * **Private crash reports.** If Nu crashes it shows the details with a **Copy
   to clipboard** button. Mu used to open codewith.mu with the details in the
   address; Nu never sends anything by itself.
+
+### Added (opt-in, needs hardware validation)
+
+* **BBC micro:bit mode is back**, as a plugin (`nu-microbit`) built on
+  maintained tools only. **Flash** puts the current tab on the micro:bit as
+  `main.py` with [mpremote](https://docs.micropython.org/en/latest/reference/mpremote.html),
+  first putting MicroPython on (copied to the MICROBIT drive) if it isn't
+  there; **Shift+Flash** puts it back on anyway. MicroPython (V1 1.1.1, V2
+  2.1.2) is downloaded from its official releases on first use and checked,
+  never shipped inside Nu; offline, Nu says which file to put where. Each step
+  shows in the status bar, and the commands are listed under **What Nu ran**.
+  **REPL** and **Plotter** work as in CircuitPython mode, and autocomplete
+  knows micro:bit MicroPython 2.x (sound, microphone, logo, `log`, `power`,
+  radio, music…). It hasn't been tried on real micro:bits yet, so it isn't in
+  the installers: run Nu from source with `uv sync --extra microbit`. See
+  [The BBC micro:bit](https://kovirlabs.github.io/nu/microbit/).
+* Plugin API **0.5**: `Host.log_command`, `Host.current_device` and
+  `Host.data_dir` (plugins written for 0.4 need `api_version = "0.5"`).
 
 ### Changed
 

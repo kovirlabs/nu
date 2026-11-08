@@ -210,6 +210,40 @@ def test_AdminDialog_focus_environment_in_other_modes():
     assert ad.tabs.currentWidget() is ad.log_widget
 
 
+def test_AdminDialog_commands_tab_in_other_modes():
+    """
+    A mode without the learner's environment still shows "What Nu ran" (the
+    micro:bit plugin logs its mpremote and copy commands there), as a tab of
+    its own.
+    """
+    mode = mock.MagicMock()
+    mode.uses_user_environment = False
+    parent = QWidget()
+    ad = mu.interface.dialogs.AdminDialog(parent)
+    ad.setup(
+        "log",
+        {"locale": ""},
+        "",
+        mode,
+        None,
+        environment={"commands": "$ mpremote connect COM3 fs cp a.py :main.py"},
+    )
+    assert ad.environment_tab is None
+    assert ad.commands_tab.text_area.toPlainText().startswith("$ mpremote")
+    titles = [ad.tabs.tabText(i) for i in range(ad.tabs.count())]
+    assert "What Nu ran" in titles
+    assert ad.tabs.currentWidget() is ad.log_widget
+
+
+def test_AdminDialog_no_commands_tab_without_the_log():
+    mode = mock.MagicMock()
+    mode.uses_user_environment = False
+    parent = QWidget()
+    ad = mu.interface.dialogs.AdminDialog(parent)
+    ad.setup("log", {"locale": ""}, "", mode, None)
+    assert ad.commands_tab is None
+
+
 def test_AdminDialog_setup():
     """
     Ensure the admin dialog is setup properly given the content of a log

@@ -38,7 +38,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: [".", "plugins/circuitpython", "plugins/pygamezero"]
+          paths: [".", "plugins/circuitpython", "plugins/pygamezero", "plugins/microbit"]
           options:
             show_root_heading: true
             show_source: true
@@ -61,6 +61,7 @@ nav:
   - Using Nu:
       - Using Nu: help.md
       - Your Python environment: environment.md
+      - The BBC micro:bit: microbit.md
   - Getting started:
       - Developer setup: setup.md
       - First steps: first-steps.md

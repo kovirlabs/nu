@@ -1,0 +1,42 @@
+# BBC micro:bit for Nu: an opt-in plugin (Phase 6, see TODO.md).
+#
+# It lives in Nu's repo as a uv workspace member, but unlike the bundled
+# plugins nu-editor does NOT depend on it yet: it's installed with Nu's
+# `microbit` extra (`uv sync --all-extras` in a checkout) until the maintainer
+# has validated it on real V1 and V2 boards (see README.md). Nu finds it
+# through the "mu.plugins" entry point below, exactly as it finds a community
+# plugin.
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nu-microbit"
+version = "0.1.0"
+description = "The BBC micro:bit mode for the Nu editor: write MicroPython for the micro:bit and flash it."
+readme = "README.md"
+license = "GPL-3.0-or-later"
+requires-python = ">=3.11"
+authors = [
+    { name = "Evan Gress", email = "kovirlabs@kovir.org" },
+    { name = "Kovir Labs", email = "kovirlabs@kovir.org" },
+]
+# No dependency on nu-editor: a plugin is installed into the environment Nu
+# runs from, which provides mu.plugin.
+# mpremote (MicroPython's own, maintained tool) copies the learner's code onto
+# the board over the serial REPL. pyserial, which it uses, is one of Nu's own
+# dependencies too. MicroPython itself is downloaded (pinned + checked), never
+# vendored: see nu_microbit/firmware.py.
+dependencies = ["mpremote>=1.29"]
+
+[project.urls]
+Homepage = "https://github.com/kovirlabs/nu"
+
+# No learner-env extra: the learner's micro:bit code runs on the board, not in
+# the learner's Python environment.
+
+[project.entry-points."mu.plugins"]
+microbit = "nu_microbit:MicrobitPlugin"
+
+[tool.hatch.build.targets.wheel]
+packages = ["nu_microbit"]

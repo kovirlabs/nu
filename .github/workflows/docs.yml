@@ -28,6 +28,6 @@ jobs:
       # Bundled plugins (plugins/*) are nu-editor dependencies uv resolves from
       # the workspace; pip needs their paths.
       - name: Install docs dependencies
-        run: pip install -e ./plugins/circuitpython -e ./plugins/pygamezero -e ".[docs]"
+        run: pip install -e ./plugins/circuitpython -e ./plugins/pygamezero -e ./plugins/microbit -e ".[docs]"
       - name: Build and deploy
         run: mkdocs gh-deploy --force

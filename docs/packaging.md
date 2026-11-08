@@ -57,6 +57,36 @@ template and nothing depends on it.
   (`uv build plugins/circuitpython`, then upload as usual); bump its own
   version when it changes, independently of Nu's.
 
+### Opt-in workspace plugins: micro:bit
+
+**`nu-microbit`** (`plugins/microbit`, Phase 6) is a workspace member too, but
+**not** a dependency of `nu-editor` yet: it hasn't been validated on real
+micro:bits. Instead:
+
+- `nu-editor` has an optional extra, `microbit = ["nu-microbit>=0.1"]`, and
+  `[tool.uv.sources]` resolves `nu-microbit` from the workspace, so
+  `uv sync --all-extras` (or `--extra microbit`) installs it editable in a
+  checkout. A plain `uv sync` doesn't, and its tests that need the installed
+  entry point skip.
+- CI installs it anyway (`./plugins/microbit` in `test.yml`'s and `docs.yml`'s
+  pip lines), so its tests and API docs run on every push.
+- It is **not** in Briefcase's `requires` or `build.yml`'s installs, so the
+  installers don't ship it, and the built `nu-editor` wheel lists it only as
+  `Requires-Dist: nu-microbit>=0.1; extra == "microbit"`.
+- Its own dependency is `mpremote`. The MicroPython firmware is **not** in the
+  package: it's pinned (URL + SHA-256) and downloaded on first use into
+  `DATA_DIR/microbit/firmware/`.
+
+**Promotion (Phase 6c), after the maintainer's hardware pass** (the checklist
+in `plugins/microbit/README.md`): move `nu-microbit>=0.1` from the extra to the
+dependencies, add `"./plugins/microbit"` to Briefcase's `requires`, add it to
+`loader.BUNDLED_DISTRIBUTIONS` and to `build.yml`'s plugin installs, and
+publish it to PyPI before that Nu release. To make Flash work offline from a
+fresh install, the installer build can also put the two pinned `.hex` files in
+`nu_microbit/firmware/` (the plugin checks there, after the data folder, and
+verifies them like a download); fetch them in `build.yml` with their SHA-256s
+from `nu_microbit/firmware.py`, never commit them.
+
 ### What the learner's environment gets from plugins
 
 A plugin lists the packages its modes need *in the learner's environment*

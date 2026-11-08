@@ -251,6 +251,7 @@ _TRANSLATE_IGNORE_DIRNAMES = {
 _TRANSLATE_PLUGIN_PACKAGES = [
     os.path.join("plugins", "circuitpython", "nu_circuitpython"),
     os.path.join("plugins", "pygamezero", "nu_pygamezero"),
+    os.path.join("plugins", "microbit", "nu_microbit"),
 ]
 
 

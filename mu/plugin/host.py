@@ -22,7 +22,8 @@ import os
 
 from PyQt6.QtWidgets import QMessageBox
 
-from .. import resources, settings
+from .. import config, resources, settings
+from ..command_log import command_log
 from ..modes.api import PI_APIS, PYTHON3_APIS, SHARED_APIS
 from ..modes.base import BaseMode
 from ..virtual_environment import venv
@@ -274,6 +275,14 @@ class Host:
         """The learner's workspace directory (where files are saved)."""
         return BaseMode.workspace_dir()
 
+    @property
+    def current_device(self):
+        """
+        The board picked in the device selector (a `mu.plugin.Device`), or
+        None if there's none. A property.
+        """
+        return self._editor.current_device
+
     def open_directory(self, path):
         """Open `path` in the operating system's file manager."""
         self._view.open_directory_from_os(path)
@@ -376,6 +385,39 @@ class Host:
     def settings(self, namespace):
         """Settings that persist between sessions, private to `namespace`."""
         return PluginSettings(namespace)
+
+    def data_dir(self, name):
+        """
+        A folder of the plugin's own in Nu's data folder, for files it
+        downloads or caches (not the learner's work, which belongs in the
+        workspace). `name` is a plain folder name, normally the plugin's id:
+        `data_dir("microbit")` is `<Nu's data folder>/microbit`. It's made if
+        missing; returns its path.
+        """
+        if (
+            not isinstance(name, str)
+            or name in ("", ".", "..")
+            or "/" in name
+            or "\\" in name
+        ):
+            raise ValueError("{!r} isn't a plain folder name".format(name))
+        path = os.path.join(config.DATA_DIR, name)
+        os.makedirs(path, exist_ok=True)
+        return path
+
+    def log_command(self, argv, cwd=None, note=None):
+        """
+        Record a command in the log the learner sees under "What Nu ran"
+        (and in Nu's log file), as uv's commands are: `argv` is the command
+        as the learner could type it (`["mpremote", "connect", port, ...]`),
+        `cwd` the folder it runs in, `note` a sentence for anything they
+        should know (e.g. that Nu did the same thing through the program's
+        Python API rather than running it). Returns the
+        `mu.command_log.CommandRecord`: call its `add_output(text)` as
+        output arrives and `finish(exit_code, output=None)` when it's done
+        (0 for success). Safe to call from any thread.
+        """
+        return command_log.start(argv, cwd=cwd, note=note)
 
     def logger(self, name):
         """A logger whose output goes to Nu's log file, as "mu.plugins.<name>"."""

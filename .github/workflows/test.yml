@@ -50,10 +50,11 @@ jobs:
           sudo apt-get install -y libegl1 libgl1
       # The bundled plugins (plugins/*) are nu-editor dependencies that uv
       # resolves from the workspace; pip needs their paths given explicitly.
+      # micro:bit is opt-in (nu-editor's `microbit` extra) but tested here too.
       - name: Install Mu dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install ./plugins/circuitpython ./plugins/pygamezero ".[dev]"
+          pip install ./plugins/circuitpython ./plugins/pygamezero ./plugins/microbit ".[dev]"
           pip list
         timeout-minutes: 10
       - name: Run checks
