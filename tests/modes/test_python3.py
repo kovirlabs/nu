@@ -5,11 +5,59 @@ Tests for the Python3 mode.
 
 import sys
 import os
-from mu.modes.python3 import PythonMode, KernelRunner
+import asyncio
+from jupyter_client.manager import KernelManager
+from mu.modes.python3 import PythonMode, KernelRunner, MuKernelManager
 from mu.modes.api import PYTHON3_APIS, SHARED_APIS, PI_APIS
 from mu.virtual_environment import venv
 
 from unittest import mock
+
+
+def test_mu_kernel_manager_uses_venv_interpreter():
+    """
+    The kernel command's interpreter is swapped for the user's venv
+    interpreter when the kernel spec names a different one.
+    """
+    km = MuKernelManager()
+
+    async def fake_pre_start(self, **kw):
+        return ["/some/other/python", "-m", "ipykernel_launcher"], {"env": {}}
+
+    with (
+        mock.patch.object(KernelManager, "_async_pre_start_kernel", fake_pre_start),
+        mock.patch("mu.modes.python3.venv") as mock_venv,
+    ):
+        mock_venv.interpreter = "/the/venv/bin/python"
+        cmd, kw = asyncio.run(km._async_pre_start_kernel())
+    assert cmd == ["/the/venv/bin/python", "-m", "ipykernel_launcher"]
+    assert kw == {"env": {}}
+
+
+def test_mu_kernel_manager_starts_real_kernel():
+    """
+    Regression (jupyter_client 8): actually start and stop a kernel through
+    MuKernelManager. The old start_kernel override bypassed jupyter_client's
+    provisioner-based start-up, leaving KernelManager.kernel as None, which
+    crashed Nu as soon as the REPL button was pressed.
+    """
+    km = MuKernelManager()
+    km.kernel_name = "python3"
+    with mock.patch("mu.modes.python3.venv") as mock_venv:
+        mock_venv.interpreter = sys.executable
+        km.start_kernel()
+    try:
+        assert km.has_kernel
+        assert km.is_alive()
+        client = km.blocking_client()
+        client.start_channels()
+        try:
+            client.wait_for_ready(timeout=60)
+        finally:
+            client.stop_channels()
+    finally:
+        km.shutdown_kernel(now=True)
+    assert not km.has_kernel
 
 
 def test_kernel_runner_start_kernel():

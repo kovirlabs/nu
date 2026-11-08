@@ -1028,6 +1028,9 @@ def test_Window_add_jupyter_repl():
     w.connect_zoom = mock.MagicMock(return_value=None)
     w.add_repl = mock.MagicMock()
     mock_kernel_manager = mock.MagicMock()
+    # jupyter_client 7+ keeps the kernel process in a provisioner, so
+    # KernelManager.kernel is None: add_jupyter_repl mustn't rely on it.
+    mock_kernel_manager.kernel = None
     mock_kernel_client = mock.MagicMock()
     mock_pane = mock.MagicMock()
     mock_pane_class = mock.MagicMock(return_value=mock_pane)
@@ -1036,7 +1039,7 @@ def test_Window_add_jupyter_repl():
     mock_pane_class.assert_called_once_with()
     assert mock_pane.kernel_manager == mock_kernel_manager
     assert mock_pane.kernel_client == mock_kernel_client
-    assert mock_kernel_manager.kernel.gui == "qt4"
+    mock_kernel_client.start_channels.assert_called_once_with()
     w.add_repl.assert_called_once_with(mock_pane, "Python3 (Jupyter)")
 
 
