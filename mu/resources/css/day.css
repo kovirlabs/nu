@@ -127,6 +127,18 @@ QStatusBar QLabel {
     margin: 2px;
 }
 
+/* The learner's Python environment, clickable (see StatusBar). */
+#EnvironmentLabel {
+    padding: 2px 8px;
+    margin: 2px 4px;
+    border: 1px solid #b4b4b4;
+    border-radius: 3px;
+}
+
+#EnvironmentLabel:hover {
+    background: #cccccc;
+}
+
 #AdministrationLabel:hover, #AdministrationLabel:focus {
     background: #cccccc;
 }

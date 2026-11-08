@@ -772,6 +772,34 @@ class VirtualEnvironment(object):
         logger.debug("Virtual environment set up %s at %s", self.name, self.path)
         self.settings["dirpath"] = self.path
 
+    @property
+    def display_name(self):
+        """
+        A short, stable name for the environment, for the learner: its
+        folder name without the Python version and creation timestamp that
+        `_generate_dirpath` adds (``mu_venv-311-20261108-030353`` →
+        ``mu_venv``), so it doesn't change when Nu re-creates the env.
+        """
+        return re.sub(r"-\d+-\d{8}-\d{6}$", "", self.name)
+
+    def python_version(self):
+        """
+        The environment's Python version (e.g. ``"3.11.15"``) as recorded in
+        its ``pyvenv.cfg`` (``version_info`` from uv, ``version`` from the
+        standard library's venv), or None if unknown. Reads a file rather
+        than running the interpreter, so it's cheap enough for the UI.
+        """
+        try:
+            with open(os.path.join(self.path, "pyvenv.cfg"), encoding="utf-8") as cfg:
+                lines = cfg.read().splitlines()
+        except OSError:
+            return None
+        for line in lines:
+            key, _sep, value = line.partition("=")
+            if key.strip() in ("version_info", "version") and value.strip():
+                return value.strip()
+        return None
+
     def activation_vars(self, base_path=None):
         """Environment-variable overrides that "activate" this venv for a
         spawned child process.

@@ -858,6 +858,8 @@ def test_editor_connect_to_status_bar():
         e.connect_to_status_bar(sb)
         # Check device_changed signal is connected to both editor and modes
         assert sb.device_selector.device_changed.connect.call_count == 3
+        # Clicking the environment indicator shows the environment.
+        sb.connect_environment.assert_called_once_with(e.show_environment)
 
 
 def test_editor_restore_session_missing_files():
@@ -2351,6 +2353,50 @@ def test_change_mode_no_timer():
         assert mock_button_bar.connect.call_count == 12
     view.status_bar.set_mode.assert_called_once_with("Python")
     view.stop_timer.assert_called_once_with()
+
+
+def _change_to_mode(uses_user_environment):
+    view = mock.MagicMock()
+    ed = mu.logic.Editor(view)
+    mode = mock.MagicMock()
+    mode.save_timeout = 0
+    mode.name = "Mode"
+    mode.actions.return_value = []
+    mode.uses_user_environment = uses_user_environment
+    ed.modes = {"python": mode}
+    ed.change_mode("python")
+    return view
+
+
+def test_change_mode_shows_the_environment():
+    """In a mode that runs code in the learner's environment, the status bar
+    shows which environment that is."""
+    with (
+        mock.patch.object(venv, "path", "/data/mu_venv-311-20261108-030353"),
+        mock.patch.object(venv, "name", "mu_venv-311-20261108-030353"),
+        mock.patch.object(venv, "python_version", return_value="3.11.15"),
+    ):
+        view = _change_to_mode(uses_user_environment=True)
+    view.status_bar.set_environment.assert_called_once_with(
+        "mu_venv", "3.11.15", "/data/mu_venv-311-20261108-030353"
+    )
+    view.status_bar.hide_environment.assert_not_called()
+
+
+def test_change_mode_hides_the_environment():
+    """Modes that don't use the learner's environment (CircuitPython, the
+    debugger) don't show it."""
+    view = _change_to_mode(uses_user_environment=False)
+    view.status_bar.hide_environment.assert_called_once_with()
+    view.status_bar.set_environment.assert_not_called()
+
+
+def test_show_environment_opens_admin_on_environment_tab():
+    view = mock.MagicMock()
+    ed = mu.logic.Editor(view)
+    ed.show_admin = mock.MagicMock()
+    ed.show_environment(mock.MagicMock())  # A mouse event.
+    ed.show_admin.assert_called_once_with(focus="environment")
 
 
 def test_change_mode_reset_breakpoints():

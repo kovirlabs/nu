@@ -813,6 +813,8 @@ class Editor(QObject):
         """
         # Connect to logs
         status_bar.connect_logs(self.show_admin, "Ctrl+Shift+D")
+        # Clicking the environment indicator shows the environment.
+        status_bar.connect_environment(self.show_environment)
         # Show connection messages in status_bar
         self.connected_devices.device_connected.connect(status_bar.device_connected)
         # Connect to device list
@@ -1325,9 +1327,17 @@ class Editor(QObject):
         logger.info("Quitting.\n\n")
         QtCore.QCoreApplication.exit(0)
 
-    def show_admin(self, event=None):
+    def show_environment(self, event=None):
         """
-        Cause the editor's admin dialog to be displayed to the user.
+        Show the learner's Python environment: the admin dialog, open on its
+        Environment tab (the status bar's environment indicator calls this).
+        """
+        self.show_admin(focus="environment")
+
+    def show_admin(self, event=None, focus=None):
+        """
+        Cause the editor's admin dialog to be displayed to the user, open on
+        the tab named by `focus` (e.g. "environment"), if given.
 
         Ensure any changes to the envars is updated.
         """
@@ -1348,6 +1358,7 @@ class Editor(QObject):
                 "\n".join(packages),
                 self.modes[self.mode],
                 self.connected_devices,
+                focus=focus,
             )
         if new_settings:
             if "envars" in new_settings:
@@ -1437,6 +1448,14 @@ class Editor(QObject):
         button_bar.connect("help", self.show_help, "Ctrl+H")
         button_bar.connect("quit", self.quit, "Ctrl+Q")
         self._view.status_bar.set_mode(self.modes[mode].name)
+        # Show which Python environment the learner's code runs in, in the
+        # modes that use it.
+        if self.modes[mode].uses_user_environment:
+            self._view.status_bar.set_environment(
+                venv.display_name, venv.python_version(), venv.path
+            )
+        else:
+            self._view.status_bar.hide_environment()
         # Update references to default file locations.
         try:
             workspace_dir = self.modes[mode].workspace_dir()

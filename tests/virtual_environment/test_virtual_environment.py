@@ -1215,3 +1215,45 @@ def test_subprocess_run_invalid_utf8(venv):
         _, output = venv.run_subprocess("")
 
     assert output == expected_output
+
+
+#
+# What the learner sees about their environment (Phase 4b)
+#
+@pytest.mark.parametrize(
+    "folder, name",
+    [
+        ("mu_venv-311-20261108-030353", "mu_venv"),
+        ("mu_venv-314-20260101-000000", "mu_venv"),
+        ("my-env", "my-env"),
+        ("mu_venv-311", "mu_venv-311"),
+    ],
+)
+def test_display_name_drops_version_and_timestamp(venv, tmp_path, folder, name):
+    """The status bar shows a short, stable name: re-creating the env (a new
+    timestamped folder) doesn't change it."""
+    venv.relocate(str(tmp_path / folder))
+    assert venv.display_name == name
+
+
+@pytest.mark.parametrize(
+    "cfg, version",
+    [
+        # Written by `uv venv`.
+        ("home = /x\nimplementation = CPython\nversion_info = 3.11.15\n", "3.11.15"),
+        # Written by the standard library's venv.
+        ("home = /x\nversion = 3.12.1\n", "3.12.1"),
+        ("home = /x\n", None),
+    ],
+)
+def test_python_version_from_pyvenv_cfg(venv, tmp_path, cfg, version):
+    venv.relocate(str(tmp_path / "env"))
+    os.makedirs(venv.path)
+    with open(os.path.join(venv.path, "pyvenv.cfg"), "w") as f:
+        f.write(cfg)
+    assert venv.python_version() == version
+
+
+def test_python_version_without_pyvenv_cfg(venv, tmp_path):
+    venv.relocate(str(tmp_path / "missing"))
+    assert venv.python_version() is None

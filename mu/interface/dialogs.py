@@ -255,8 +255,13 @@ class AdminDialog(QDialog):
         super().__init__(parent)
         self.package_widget = None
         self.envar_widget = None
+        self.environment_tab = None
 
-    def setup(self, log, settings, packages, mode, device_list):
+    def setup(self, log, settings, packages, mode, device_list, focus=None):
+        """
+        Build the tabs. `focus` names the tab to open on ("environment" for
+        the learner's Python environment); the log is shown otherwise.
+        """
         self.setMinimumSize(600, 400)
         self.setWindowTitle(_("Nu Administration"))
         widget_layout = QVBoxLayout()
@@ -277,6 +282,7 @@ class AdminDialog(QDialog):
             self.envar_widget = EnvironmentVariablesWidget(self)
             self.envar_widget.setup(settings.get("envars", ""))
             self.tabs.addTab(self.envar_widget, _("Python3 Environment"))
+            self.environment_tab = self.envar_widget
             self.package_widget = PackagesWidget(self)
             self.package_widget.setup(packages)
             self.tabs.addTab(self.package_widget, _("Third Party Packages"))
@@ -287,6 +293,8 @@ class AdminDialog(QDialog):
             self.locale_widget, load_icon("language.svg"), _("Select Language")
         )
         self.log_widget.log_text_area.setFocus()
+        if focus == "environment" and self.environment_tab:
+            self.tabs.setCurrentWidget(self.environment_tab)
 
     def settings(self):
         """

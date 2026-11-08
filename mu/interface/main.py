@@ -911,14 +911,15 @@ class Window(QMainWindow):
 
         timer.start(500)
 
-    def show_admin(self, log, settings, packages, mode, device_list):
+    def show_admin(self, log, settings, packages, mode, device_list, focus=None):
         """
         Display the administrative dialog with referenced content of the log
-        and settings. Return a dictionary of the settings that may have been
+        and settings, open on the tab named by `focus` (e.g. "environment")
+        if given. Return a dictionary of the settings that may have been
         changed by the admin dialog.
         """
         admin_box = AdminDialog(self)
-        admin_box.setup(log, settings, packages, mode, device_list)
+        admin_box.setup(log, settings, packages, mode, device_list, focus=focus)
         result = admin_box.exec()
         if result:
             return admin_box.settings()
@@ -1288,6 +1289,14 @@ class StatusBar(QStatusBar):
         self.mode = mode
         self.msg_duration = 5
 
+        # The learner's Python environment (shown only in modes that use it,
+        # see set_environment); click it to see and manage the environment.
+        self.env_label = QLabel()
+        self.env_label.setObjectName("EnvironmentLabel")
+        self.env_label.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.env_label.setHidden(True)
+        self.addPermanentWidget(self.env_label)
+
         # Mode selector.
         self.mode_label = QLabel()
         self.mode_label.setToolTip(_("Nu's current mode of behaviour."))
@@ -1323,6 +1332,39 @@ class StatusBar(QStatusBar):
         self.mode_label.shortcut = QShortcut(QKeySequence(shortcut), self.parent())
         self.mode_label.shortcut.activated.connect(handler)
         self.mode_label.mousePressEvent = handler
+
+    def connect_environment(self, handler):
+        """
+        Connect a click on the environment indicator to the referenced
+        handler function.
+        """
+        self.env_label.mousePressEvent = handler
+
+    def set_environment(self, name, version, path):
+        """
+        Show the environment indicator: "Environment: <name> · Python X.Y".
+        `version` is the full Python version (or None if unknown) and `path`
+        the environment's folder, shown in the tooltip.
+        """
+        text = _("Environment: {name}").format(name=name)
+        if version:
+            short_version = ".".join(version.split(".")[:2])
+            text += " · " + _("Python {version}").format(version=short_version)
+        self.env_label.setText(text)
+        self.env_label.setToolTip(
+            _(
+                "Your programs run with this Python environment:\n{path}\n\n"
+                "Click to see it, and to add or remove packages."
+            ).format(path=path)
+        )
+        self.env_label.setHidden(False)
+
+    def hide_environment(self):
+        """
+        Hide the environment indicator (for modes that don't use the
+        learner's Python environment, e.g. CircuitPython).
+        """
+        self.env_label.setHidden(True)
 
     def set_message(self, message, pause=5000):
         """

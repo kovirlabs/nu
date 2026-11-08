@@ -167,6 +167,47 @@ def test_AdminDialog_setup_python_mode():
     assert s == settings
 
 
+def _python_mode():
+    mode = mock.MagicMock()
+    mode.name = "Python 3"
+    mode.uses_user_environment = True
+    return mode
+
+
+def test_AdminDialog_focus_environment():
+    """Opened from the environment indicator, the dialog shows the
+    environment first."""
+    parent = QWidget()
+    ad = mu.interface.dialogs.AdminDialog(parent)
+    ad.setup(
+        "log",
+        {"envars": "", "locale": ""},
+        "",
+        _python_mode(),
+        None,
+        focus="environment",
+    )
+    assert ad.tabs.currentWidget() is ad.environment_tab
+
+
+def test_AdminDialog_focus_defaults_to_log():
+    parent = QWidget()
+    ad = mu.interface.dialogs.AdminDialog(parent)
+    ad.setup("log", {"envars": "", "locale": ""}, "", _python_mode(), None)
+    assert ad.tabs.currentWidget() is ad.log_widget
+
+
+def test_AdminDialog_focus_environment_in_other_modes():
+    """In a mode without the learner's environment there's no such tab; the
+    log is shown."""
+    mode = mock.MagicMock()
+    mode.uses_user_environment = False
+    parent = QWidget()
+    ad = mu.interface.dialogs.AdminDialog(parent)
+    ad.setup("log", {"locale": ""}, "", mode, None, focus="environment")
+    assert ad.tabs.currentWidget() is ad.log_widget
+
+
 def test_AdminDialog_setup():
     """
     Ensure the admin dialog is setup properly given the content of a log

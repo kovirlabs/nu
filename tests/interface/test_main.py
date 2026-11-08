@@ -1394,10 +1394,22 @@ def test_Window_show_admin():
         result = w.show_admin("log", "envars", "packages", "mode", "devices")
         mock_admin_display.assert_called_once_with(w)
         mock_admin_box.setup.assert_called_once_with(
-            "log", "envars", "packages", "mode", "devices"
+            "log", "envars", "packages", "mode", "devices", focus=None
         )
         mock_admin_box.exec.assert_called_once_with()
         assert result == "this is the expected result"
+
+
+def test_Window_show_admin_focus():
+    """The dialog can open on a given tab (e.g. from the environment
+    indicator)."""
+    mock_admin_display = mock.MagicMock()
+    with mock.patch("mu.interface.main.AdminDialog", mock_admin_display):
+        w = mu.interface.main.Window()
+        w.show_admin("log", "s", "p", "mode", "devices", focus="environment")
+    mock_admin_display().setup.assert_called_once_with(
+        "log", "s", "p", "mode", "devices", focus="environment"
+    )
 
 
 def test_Window_show_admin_cancelled():
@@ -1414,7 +1426,7 @@ def test_Window_show_admin_cancelled():
         result = w.show_admin("log", "envars", "packages", "mode", "devices")
         mock_admin_display.assert_called_once_with(w)
         mock_admin_box.setup.assert_called_once_with(
-            "log", "envars", "packages", "mode", "devices"
+            "log", "envars", "packages", "mode", "devices", focus=None
         )
         mock_admin_box.exec.assert_called_once_with()
         assert result == {}
@@ -2130,6 +2142,50 @@ def test_StatusBar_connect_logs():
     assert sb.logs_label.mousePressEvent == handler
     mock_shortcut.assert_called_once_with(mock_sequence("Ctrl-X"), sb.parent())
     mock_shortcut().activated.connect.assert_called_once_with(handler)
+
+
+def test_StatusBar_environment_label_hidden_by_default():
+    """The environment indicator only appears in modes that use the learner's
+    environment (the editor shows it on mode change)."""
+    sb = mu.interface.main.StatusBar()
+    assert sb.env_label.objectName() == "EnvironmentLabel"
+    assert sb.env_label.isHidden()
+    assert sb.env_label.cursor().shape() == Qt.CursorShape.PointingHandCursor
+
+
+def test_StatusBar_set_environment():
+    sb = mu.interface.main.StatusBar()
+    sb.set_environment("mu_venv", "3.11.15", "/data/mu_venv-311-x")
+    assert not sb.env_label.isHidden()
+    assert sb.env_label.text() == "Environment: mu_venv · Python 3.11"
+    tooltip = sb.env_label.toolTip()
+    assert "/data/mu_venv-311-x" in tooltip
+    assert "Click" in tooltip
+
+
+def test_StatusBar_set_environment_unknown_version():
+    sb = mu.interface.main.StatusBar()
+    sb.set_environment("mu_venv", None, "/data/env")
+    assert sb.env_label.text() == "Environment: mu_venv"
+
+
+def test_StatusBar_hide_environment():
+    sb = mu.interface.main.StatusBar()
+    sb.set_environment("mu_venv", "3.12.1", "/data/env")
+    sb.hide_environment()
+    assert sb.env_label.isHidden()
+
+
+def test_StatusBar_connect_environment():
+    """Clicking the indicator calls the handler (opens the admin dialog on
+    the Environment tab)."""
+    sb = mu.interface.main.StatusBar()
+
+    def handler(event=None):
+        pass
+
+    sb.connect_environment(handler)
+    assert sb.env_label.mousePressEvent == handler
 
 
 def test_StatusBar_connect_mode():
