@@ -480,3 +480,26 @@ def test_python_apis(host):
     assert apis == SHARED_APIS + PYTHON3_APIS + PI_APIS
     apis.append("mine")
     assert "mine" not in host.python_apis()
+
+
+def test_shared_apis(host):
+    """
+    A MicroPython-family mode builds on the entries every Python shares (not
+    the Python 3 standard library's), as a new list each time.
+    """
+    from mu.modes.api import SHARED_APIS
+
+    apis = host.shared_apis()
+    assert apis == SHARED_APIS
+    apis.append("mine")
+    assert "mine" not in host.shared_apis()
+
+
+@pytest.mark.parametrize("charts", [True, False])
+def test_plotter_available(host, charts):
+    """
+    Whether the plotter can be shown (PyQt6-Charts imported), so a mode only
+    offers a Plotter button that works.
+    """
+    with mock.patch("mu.interface.panes.CHARTS", charts):
+        assert host.plotter_available is charts

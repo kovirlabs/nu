@@ -27,7 +27,7 @@ from .mode import PyGameZeroMode
 
 class PygameZeroPlugin(ModePlugin):
     name = "Pygame Zero"
-    api_version = "0.2"
+    api_version = "0.3"
     mode = PyGameZeroMode
     # The mode and toolbar icons (play, images, fonts, sounds, music,
     # pygamezero). "stop" is Nu's own.
