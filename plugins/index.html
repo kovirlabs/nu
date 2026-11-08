@@ -2626,6 +2626,10 @@ Set the class attributes and override the methods you need:</p>
 </thead>
 <tbody>
 <tr>
+<td><code>star_imports = {}</code></td>
+<td>A dict mapping a module to the names its <code>import *</code> brings in (the micro:bit lists <code>from microbit import *</code>'s). <strong>Check</strong> reads such an import as naming them, so it can still spot undefined names.</td>
+</tr>
+<tr>
 <td><code>uses_user_environment = False</code></td>
 <td>Set it to <code>True</code> if the mode runs the learner's programs in Nu's Python environment (as Python 3 and Pygame Zero do). The admin dialog then shows that environment's variables and third-party packages.</td>
 </tr>
