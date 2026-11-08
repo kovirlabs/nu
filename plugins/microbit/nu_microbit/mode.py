@@ -52,6 +52,45 @@ class MicrobitMode(MicroPythonMode):
     # Every micro:bit's USB interface (DAPLink) has these ids.
     #               VID,                 PID,                manufacturer, name
     valid_boards = [(board.MICROBIT_VID, board.MICROBIT_PID, None, "BBC micro:bit")]
+    #: What "from microbit import *" brings in, so Check can still spot
+    #: undefined names in code that uses it.
+    star_imports = {
+        "microbit": [
+            "accelerometer",
+            "button_a",
+            "button_b",
+            "compass",
+            "display",
+            "i2c",
+            "Image",
+            "panic",
+            "pin0",
+            "pin1",
+            "pin2",
+            "pin3",
+            "pin4",
+            "pin5",
+            "pin6",
+            "pin7",
+            "pin8",
+            "pin9",
+            "pin10",
+            "pin11",
+            "pin12",
+            "pin13",
+            "pin14",
+            "pin15",
+            "pin16",
+            "pin19",
+            "pin20",
+            "reset",
+            "running_time",
+            "sleep",
+            "spi",
+            "temperature",
+            "uart",
+        ]
+    }
 
     # Modules built into micro:bit MicroPython, which the learner's files
     # mustn't shadow.

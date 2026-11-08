@@ -63,17 +63,6 @@ STYLE_REGEX = re.compile(r".*:(\d+):(\d+):\s+(.*)")
 FLAKE_REGEX = re.compile(r".*:(\d+):(\d+):?\s+(.*)")
 # Regex to match undefined name errors for given builtins
 BUILTINS_REGEX = r"^undefined name '({})'"
-# Regex to match false positive flake errors if microbit.* is expanded.
-EXPAND_FALSE_POSITIVE = re.compile(r"^.*'microbit\.(\w+)' imported but unused$")
-# The text to which "from microbit import \*" should be expanded.
-EXPANDED_IMPORT = (
-    "from microbit import pin15, pin2, pin0, pin1, "
-    " pin3, pin6, pin4, i2c, pin5, pin7, pin8, Image, "
-    "pin9, pin14, pin16, reset, pin19, temperature, "
-    "sleep, pin20, button_a, button_b, running_time, "
-    "accelerometer, display, uart, spi, panic, pin13, "
-    "pin12, pin11, pin10, compass"
-)
 MOTD = [  # Candidate phrases for the message of the day (MOTD).
     _("Hello, World!"),
     _(
@@ -348,7 +337,7 @@ def save_session(session):
     settings.session.save()
 
 
-def check_flake(filename, code, builtins=None):
+def check_flake(filename, code, builtins=None, star_imports=None):
     """
     Given a filename and some code to be checked, uses the PyFlakesmodule to
     return a dictionary describing issues of code quality per line. See:
@@ -356,24 +345,38 @@ def check_flake(filename, code, builtins=None):
     https://github.com/PyCQA/pyflakes
 
     If a list symbols is passed in as "builtins" these are assumed to be
-    additional builtins available when run by Mu.
+    additional builtins available when run by Nu.
+
+    `star_imports` maps a module to the names its ``import *`` brings in
+    (a mode's `star_imports`, e.g. the micro:bit's ``from microbit import
+    *``): the import is checked as if it named them, so pyflakes can still
+    spot undefined names, and the names left unused aren't reported.
     """
-    import_all = "from microbit import *" in code
-    if import_all:
-        # Massage code so "from microbit import *" is expanded so the symbols
-        # are known to flake.
-        code = code.replace("from microbit import *", EXPANDED_IMPORT)
+    expanded = []
+    for module, names in (star_imports or {}).items():
+        star = "from {} import *".format(module)
+        if star in code and names:
+            # On one line, so the line numbers stay the same.
+            code = code.replace(
+                star, "from {} import {}".format(module, ", ".join(names))
+            )
+            expanded.append(module)
+    unused_expanded = None
+    if expanded:
+        unused_expanded = re.compile(
+            r"^'({})\.\w+' imported but unused$".format(
+                "|".join(re.escape(module) for module in expanded)
+            )
+        )
     reporter = MuFlakeCodeReporter()
     check(code, filename, reporter)
     if builtins:
         builtins_regex = re.compile(BUILTINS_REGEX.format("|".join(builtins)))
     feedback = {}
     for log in reporter.log:
-        if import_all:
-            # Guard to stop unwanted "microbit.* imported but unused" messages.
-            message = log["message"]
-            if EXPAND_FALSE_POSITIVE.match(message):
-                continue
+        if unused_expanded and unused_expanded.match(log["message"]):
+            # Names an expanded "import *" brought in but the code didn't use.
+            continue
         if builtins:
             if builtins_regex.match(log["message"]):
                 continue
@@ -884,12 +887,6 @@ class Editor(QObject):
         old_window = old_session.get("window", {})
         self._view.size_window(**old_window)
 
-        #
-        # Doesn't seem to do anything useful
-        #
-        # ~ if old_session is None:
-        # ~ self._view.set_theme(self.theme)
-
         # handle os passed file last,
         # so it will not be focused over by another tab
         if paths and len(paths) > 0:
@@ -1255,8 +1252,13 @@ class Editor(QObject):
             logger.info("Checking code.")
             self._view.reset_annotations()
             filename = tab.path if tab.path else _("untitled")
-            builtins = self.modes[self.mode].builtins
-            flake = check_flake(filename, tab.text(), builtins)
+            mode = self.modes[self.mode]
+            flake = check_flake(
+                filename,
+                tab.text(),
+                mode.builtins,
+                getattr(mode, "star_imports", None),
+            )
             if flake:
                 logger.info(flake)
                 self._view.annotate_code(flake, "error")
@@ -1404,7 +1406,6 @@ class Editor(QObject):
                 settings,
                 "\n".join(packages),
                 mode,
-                self.connected_devices,
                 environment=environment,
                 focus=focus,
                 plugins=plugins,
@@ -1516,12 +1517,10 @@ class Editor(QObject):
         Given the name of a mode, will make the necessary changes to put the
         editor into the new mode.
         """
-        # Remove the old mode's REPL / filesystem / plotter if required.
+        # Remove the old mode's REPL / plotter if required.
         old_mode = self.modes[self.mode]
         if hasattr(old_mode, "remove_repl"):
             old_mode.remove_repl()
-        if hasattr(old_mode, "remove_fs"):
-            old_mode.remove_fs()
         if hasattr(old_mode, "remove_plotter"):
             if old_mode.plotter:
                 old_mode.remove_plotter()

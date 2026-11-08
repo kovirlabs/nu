@@ -218,6 +218,9 @@ which may be of value for you to change are:
   (CircuitPython sets it: a board restarts whenever a file on it is saved).
 * `builtins` -- a list of strings defining symbols that Nu's code checker
   must assume are builtins (above and beyond Python's standard builtins).
+* `star_imports` -- a dict mapping a module to the names its `import *` brings
+  in (the micro:bit lists `from microbit import *`'s). The code checker reads
+  such an import as naming them, so it can still spot undefined names.
 * `module_names` -- the module names the learner mustn't use for their own
   files, because they'd hide a real module (CircuitPython lists the modules
   built into CircuitPython).

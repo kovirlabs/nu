@@ -8,7 +8,7 @@ import subprocess
 
 PYTEST = "pytest"
 RUFF = "ruff"
-# Paths ruff lints and formats. Excludes (mu/contrib, the API stubs, docs) are
+# Paths ruff lints and formats. Excludes (the API stubs, docs) are
 # configured in pyproject.toml's [tool.ruff].
 RUFF_TARGETS = [
     "make.py",
@@ -26,7 +26,6 @@ INCLUDE_PATTERNS = {"*.py"}
 EXCLUDE_PATTERNS = {
     "build/*",
     "docs/*",
-    "mu/contrib/*",
     "mu/modes/api/*",
     "utils/*",
 }
@@ -179,11 +178,9 @@ def clean():
     _rmtree("site")  # MkDocs build output
     _rmtree(".pytest_cache")
     _rmtree("lib")
-    _rmtree(".git/avatar/")  # Created with `make video`
     # TODO: recursive __pycache__ directories
     _rmfiles(".", ".coverage")
     _rmfiles(".", "*.egg-info")
-    _rmfiles(".", "*.mp4")  # Created with `make video`
     _rmfiles(".", "*.pyc")
     _rmfiles("mu/locale", "*.pot")
     _rmfiles("mu/wheels", "*.zip")
@@ -229,6 +226,10 @@ def translate_begin(lang=""):
         mu_po_filename,
         "--locale={locale}".format(locale=lang),
     ]
+    if update:
+        # Don't keep translations of strings Nu no longer has (#~ entries):
+        # git keeps the history, see utils/recover_renamed_translations.py.
+        cmd.append("--ignore-obsolete")
     result = subprocess.run(cmd).returncode
 
     print(
@@ -244,7 +245,6 @@ def translate_begin(lang=""):
 
 _TRANSLATE_IGNORE_DIRNAMES = {
     os.path.join("mu", "modes", "api"),
-    os.path.join("mu", "contrib"),
 }
 # Bundled plugins use Nu's own message catalog, so their packages are
 # extracted too (but not their API stubs or tests).
@@ -345,7 +345,7 @@ def translate_status():
 
 @export
 def translate_test(lang=""):
-    """Run translate_done and launch Mu in the given LANG."""
+    """Run translate_done and launch Nu in the given LANG."""
     result = translate_done(lang)
     if result != 0:
         raise RuntimeError("Failed compiling the mu.po file.")
@@ -357,10 +357,10 @@ def translate_test(lang=""):
 
 @export
 def run():
-    """Run Mu from within a virtual environment"""
+    """Run Nu from within a virtual environment"""
     clean()
     if not os.environ.get("VIRTUAL_ENV"):
-        raise RuntimeError("Cannot run Mu;your Python virtualenv is not activated")
+        raise RuntimeError("Cannot run Nu; your Python virtualenv is not activated")
     return subprocess.run([sys.executable, "-m", "mu"]).returncode
 
 

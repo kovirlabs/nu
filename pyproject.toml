@@ -72,7 +72,6 @@ dependencies = [
     "pyzmq",
     # Serial connections to MicroPython-family boards (MicroPythonMode).
     "pyserial~=3.5",
-    "nudatus>=0.0.3",
     # flake8 brings pycodestyle + pyflakes, which are runtime dependencies
     # (the in-editor code checker in mu/logic.py uses their APIs directly).
     "flake8>=3.8.3",
@@ -83,7 +82,6 @@ dependencies = [
     # is gone; click now comes in transitively via black.
     "black>=24",
     "platformdirs>=2.6",
-    "semver>=2.8.0",
     # Reads the learner-env requirements plugins declare (mu/wheels).
     "packaging>=22",
     # `uv` creates and manages the user's virtual environment (Phase 4a, see
@@ -249,11 +247,9 @@ requires = [
     "tornado>=6.5.9",
     "pyzmq",
     "pyserial~=3.5",
-    "nudatus>=0.0.3",
     "flake8>=3.8.3",
     "black>=24",
     "platformdirs>=2.6",
-    "semver>=2.8.0",
     "uv>=0.5",
     "wheel",
 ]
@@ -295,7 +291,6 @@ target-version = "py311"
 # `_` is gettext's translation function, injected as a builtin at runtime.
 builtins = ["_"]
 extend-exclude = [
-    "mu/contrib",     # vendored third-party code (now empty)
     "mu/modes/api",   # generated API stubs
     "plugins/*/nu_*/api",  # plugins' generated API stubs
     "docs",
@@ -326,7 +321,6 @@ pythonpath = [
 
 [tool.coverage.run]
 omit = [
-    "mu/contrib/*",
     "mu/mu_debug.py",
     "mu/__main__.py",
     "mu/wheels/*",

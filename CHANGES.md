@@ -34,6 +34,14 @@
 * The Plugins tab drew a stray empty box on the selected row (Windows 11).
 * The log tab opens at the newest entries.
 
+### Removed
+
+* Code and files left over from Mu's removed modes: the micro:bit special case
+  in **Check** (modes can now declare `star_imports`, and the micro:bit plugin
+  does), unused REPL and file-system hooks, about 35 icon files that were never
+  loaded, the unused `nudatus` and `semver` dependencies, and obsolete
+  translations of strings Nu no longer has.
+
 ## 2.0.0
 
 The first stable release of **Nu**, a maintained continuation of the

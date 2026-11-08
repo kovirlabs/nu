@@ -503,30 +503,6 @@ def test_EditorPane_show_annotations_real_scintilla():
     )
 
 
-def test_EditorPane_find_next_match():
-    """
-    Ensures that the expected arg values are passed through to QsciScintilla
-    for highlighting matched text.
-    """
-    ep = mu.interface.editor.EditorPane(None, "baz")
-    ep.findFirst = mock.MagicMock(return_value=True)
-    assert ep.find_next_match(
-        "foo", from_line=10, from_col=5, case_sensitive=True, wrap_around=False
-    )
-    ep.findFirst.assert_called_once_with(
-        "foo",
-        False,
-        True,
-        True,
-        False,
-        forward=True,
-        line=10,
-        index=5,
-        show=False,
-        posix=False,
-    )
-
-
 def _ranges_in_text(text, search_for):
     """Find any instances of `search_for` inside text and return the equivalent
     Scintilla Ranges of (line_start, column_start, line_end, column_end).

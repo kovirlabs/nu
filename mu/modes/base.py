@@ -26,14 +26,12 @@ import logging
 import pkgutil
 from serial import Serial
 from PyQt6.QtSerialPort import QSerialPort, QSerialPortInfo
-from PyQt6.QtCore import QObject, pyqtSignal, QIODevice, QTimer
+from PyQt6.QtCore import QObject, pyqtSignal, QIODevice
 from mu.logic import Device
 from .. import config, settings
 
-ENTER_RAW_MODE = b"\x01"  # CTRL-A
 EXIT_RAW_MODE = b"\x02"  # CTRL-B
 KEYBOARD_INTERRUPT = b"\x03"  # CTRL-C
-SOFT_REBOOT = b"\x04"  # CTRL-C
 
 
 logger = logging.getLogger(__name__)
@@ -122,42 +120,6 @@ class REPLConnection(QObject):
         self.write(EXIT_RAW_MODE)  # CTRL-B
         self.write(KEYBOARD_INTERRUPT)  # CTRL-C
 
-    def execute(self, commands):
-        """
-        Execute a series of commands over a period of time (scheduling
-        remaining commands to be run in the next iteration of the event loop).
-        """
-        if commands:
-            command = commands[0]
-            logger.info("Sending command {}".format(command))
-            self.write(command)
-            remainder = commands[1:]
-            remaining_task = lambda commands=remainder: self.execute(commands)
-            QTimer.singleShot(2, remaining_task)
-
-    def send_commands(self, commands):
-        """
-        Send commands to the REPL via raw mode.
-        """
-        # Sequence of commands to get into raw mode (From pyboard.py).
-        raw_on = [
-            KEYBOARD_INTERRUPT,
-            KEYBOARD_INTERRUPT,
-            ENTER_RAW_MODE,
-            SOFT_REBOOT,
-            KEYBOARD_INTERRUPT,
-            KEYBOARD_INTERRUPT,
-        ]
-
-        newline = [b'print("\\n");']
-        commands = [c.encode("utf-8") + b"\r" for c in commands]
-        commands.append(b"\r")
-        commands.append(SOFT_REBOOT)
-        raw_off = [EXIT_RAW_MODE]
-        command_sequence = raw_on + newline + commands + raw_off
-        logger.info(command_sequence)
-        self.execute(command_sequence)
-
 
 class BaseMode(QObject):
     """
@@ -174,6 +136,9 @@ class BaseMode(QObject):
     has_debugger = False
     save_timeout = 5  #: Number of seconds to wait before saving work.
     builtins = None  #: Symbols to assume as builtins when checking code style.
+    #: Modules whose ``import *`` Check should expand, each mapped to the
+    #: names it brings in, so it can still spot undefined names.
+    star_imports = {}
     file_extensions = []
     module_names = MODULE_NAMES
     code_template = _("# Write your code here :-)")

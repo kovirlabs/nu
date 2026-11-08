@@ -435,33 +435,6 @@ class EditorPane(QsciScintilla):
                 # aren't ints, so pass its value to keep the same style.
                 self.annotate(line, text, self.annotationDisplay().value)
 
-    def find_next_match(
-        self,
-        text,
-        from_line=-1,
-        from_col=-1,
-        case_sensitive=True,
-        wrap_around=True,
-    ):
-        """
-        Finds the next text match from the current cursor, or the given
-        position, and selects it (the automatic selection is the only available
-        QsciScintilla behaviour).
-        Returns True if match found, False otherwise.
-        """
-        return self.findFirst(
-            text,  # Text to find,
-            False,  # Treat as regular expression
-            case_sensitive,  # Case sensitive search
-            True,  # Whole word matches only
-            wrap_around,  # Wrap search
-            forward=True,  # Forward search
-            line=from_line,  # -1 starts at current position
-            index=from_col,  # -1 starts at current position
-            show=False,  # Unfolds found text
-            posix=False,
-        )  # More POSIX compatible RegEx
-
     def range_from_positions(self, start_position, end_position):
         """Given a start-end pair, such as are provided by a regex match,
         return the corresponding Scintilla line-offset pairs which are
