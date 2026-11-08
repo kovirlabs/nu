@@ -1,20 +1,20 @@
-# Modes in Mu
+# Modes in Nu
 
-Mu is a modal editor: it behaves differently depending on the currently
-selected mode. The name of the current mode is always displayed in the bottom
-right hand corner of Mu's window. Clicking on the mode button opens up a dialog
-box to allow users to select a new mode.
+Nu, like Mu before it, is a modal editor: it behaves differently depending on
+the currently selected mode. The name of the current mode is always displayed
+in the bottom right hand corner of Nu's window. Clicking the **Mode** button
+opens a dialog box to allow users to select a new mode.
 
 ## What Are Modes?
 
-Modes are a way to customise how Mu should behave. This simplifies Mu: rather
+Modes are a way to customise how Nu should behave. This simplifies Nu: rather
 than trying to provide every possible feature at once (and thus become a
 nightmare of complexity for the user), modes bring related features together in
 a simple and easy to use manner.
 
 Modes are able to add buttons to the user interface, handle certain events
 (such as when one of the mode's buttons is clicked) and provide contextual
-information for Mu (such as where files should be saved or what API metadata
+information for Nu (such as where files should be saved or what API metadata
 is available). It's also possible for one mode to transition to another and
 some modes are only available as transitional modes (i.e. they may not be
 selected by the user). A good example of such a "transitional" mode is the
@@ -23,10 +23,11 @@ Python 3 debugger, which can only be accessed from the standard Python 3 mode.
 Nu's **core** has just two modes: **Python 3** and the **Debugger**. Every
 other mode is a [plugin](plugins.md). **CircuitPython** and **Pygame Zero** are
 *bundled* plugins, shipped and switched on by default, that live in this repo
-under `plugins/circuitpython/` and `plugins/pygamezero/`. The descriptions
-below are inherited from Mu and include micro:bit, which this fork dropped and
-plans to bring back as a plugin (Phase 6 in `TODO.md`). The images are used with
-permission, see [copyright](copyright.md).
+under `plugins/circuitpython/` and `plugins/pygamezero/`. **BBC micro:bit** is
+a plugin in this repo too (`plugins/microbit/`), but opt-in until it has been
+tried on real micro:bits. Learners switch plugins on and off on the
+**Plugins** tab. The images are used with permission, see
+[copyright](copyright.md).
 
 ### CircuitPython Mode
 
@@ -57,10 +58,19 @@ young coders that is capable of running MicroPython. Mu was originally created
 as volunteer led effort as part of the Python Software Foundation's
 contribution to the project.
 
-Just like the CircuitPython mode, micro:bit mode inherits from a base MicroPython
-mode so there's a REPL based interface to the device. It also provides
-functionality to "flash" (i.e. copy) your code onto the device and a simple
-user interface to the simple file system on the device.
+!!! note
+    micro:bit is an opt-in plugin: the `nu-microbit` package in
+    `plugins/microbit/`, installed with `uv sync --extra microbit` and not yet
+    in the installers. Mu's micro:bit mode and its unmaintained tools (uFlash,
+    microfs) were removed; this one is new, built on
+    [mpremote](https://docs.micropython.org/en/latest/reference/mpremote.html).
+    See [The BBC micro:bit](microbit.md).
+
+Just like the CircuitPython mode, micro:bit mode inherits from the base
+MicroPython mode, so there's a REPL based interface to the device. **Flash**
+puts the current file on the micro:bit as `main.py` (putting MicroPython on
+first, if it isn't there). Mu's Files pane, for the micro:bit's file system,
+isn't back yet (see [plugins](plugins.md#roadmap-the-microbit-files-pane)).
 
 ### Pygame Zero / PyGame Mode
 
@@ -75,18 +85,18 @@ user interface to the simple file system on the device.
 platform set of Python libraries for writing games.
 [Pygame Zero](https://pygame-zero.readthedocs.io/en/stable/) is a wrapper for
 pygame that makes it easy for beginners to make games. If both pygame and
-Pygame Zero are installed (as they are if you used the official Windows
-installer), Mu's Pygame Zero mode makes it easy for beginner programmers to
-create games.
+Pygame Zero are installed in the learner's environment (Nu does this itself:
+the plugin lists them as its `learner-env` packages), Nu's Pygame Zero mode
+makes it easy for beginner programmers to create games.
 
-This mode provides a "Play" button that uses Pygame Zero's game-runner to
-launch the user's games. Two further buttons open the operating system's file
-system explorer for the directories containing images and sounds used in the
-user's games. This makes it easy for the user to copy and paste new game assets
-into the right place.
+This mode provides a **Play** button that uses Pygame Zero's game-runner to
+launch the user's games. Four further buttons, **Images**, **Fonts**,
+**Sounds** and **Music**, open the operating system's file manager on the
+folders for those game assets. This makes it easy for the user to copy and
+paste new game assets into the right place.
 
 The standard Python3 mode (see below) is probably a better environment for more
-advanced pygame-only development. Mu ensures that all the game assets required
+advanced pygame-only development. Nu ensures that all the game assets required
 by the [Pygame Zero introductory tutorial](https://pygame-zero.readthedocs.io/en/stable/introduction.html)
 are available by default.
 
@@ -104,14 +114,17 @@ There are two ways to run your script in this mode:
 
 1. Click the "Run" button: will launch the script using Python's interactive
    mode (so you'll be dropped into a basic interactive Python shell upon the
-   script's completion).
+   script's completion). A script that lists the packages it needs in a
+   [PEP 723](environment.md#programs-that-list-the-packages-they-need)
+   `# /// script` block is run with `uv run` instead, which fetches them
+   first (and can't drop into the shell).
 2. Click the "Debug" button: Python mode transitions to the debug mode - a
    graphical way to inspect and watch your code execute.
    
 Because of the overhead needed to start the graphical debugger it takes longer
 to start running your script. This is especially noticeable on the Raspberry Pi.
 
-Python 2 isn't supported by Mu and never will be.
+Python 2 isn't supported by Nu and never will be.
 
 ### Debug Mode
 
@@ -392,7 +405,7 @@ A bundled plugin keeps its tests in `plugins/<name>/tests`, where they run
 with Nu's own (each bundled plugin's tests show how to test a mode through a
 mock `Host`).
 
-Please read the guide about [tests](tests.md) for how Mu is tested and the various
+Please read the guide about [tests](tests.md) for how Nu is tested and the various
 expectations we have when it comes to writing tests.
 
 If you are unsure about the best way to go about testing your mode please feel
