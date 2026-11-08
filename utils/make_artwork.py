@@ -113,7 +113,8 @@ def mode_button(icon):
 
 
 def main():
-    app = QGuiApplication(sys.argv)  # noqa: F841 (fonts need an application)
+    app = QGuiApplication(sys.argv)  # Fonts and drawing need an application.
+    print("Drawing with Qt's {} platform.".format(app.platformName()))
     family = "Source Code Pro"
     font_id = QFontDatabase.addApplicationFont(
         os.path.join(FONTS, "SourceCodePro-Regular.otf")
