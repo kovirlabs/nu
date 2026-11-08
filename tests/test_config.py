@@ -80,3 +80,14 @@ def test_the_test_session_never_uses_the_real_folders():
         assert not inside(path, real_workspace), path
     # Each test gets its own plugins folder (the temp_plugins_dir fixture).
     assert not inside(loader.DROPIN_DIR, real_data)
+
+
+def test_log_dir_follows_data_dir():
+    """
+    With MU_DATA_DIR set (as it is for the test session) the log goes there
+    too, never to the real log folder.
+    """
+    import mu.logic
+
+    assert mu.logic.LOG_DIR == os.path.join(os.environ["MU_DATA_DIR"], "logs")
+    assert mu.logic.LOG_FILE.startswith(mu.logic.LOG_DIR)

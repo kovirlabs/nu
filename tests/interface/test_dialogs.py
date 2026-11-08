@@ -117,6 +117,8 @@ def test_LogWidget_setup():
     lw.setup(log)
     assert lw.log_text_area.toPlainText() == log
     assert lw.log_text_area.isReadOnly()
+    # It opens at the newest entries (the end).
+    assert lw.log_text_area.textCursor().position() == len(log)
 
 
 def test_EnvironmentVariablesWidget_setup():

@@ -739,10 +739,11 @@ def test_tell_running_instance_nobody_listening():
     assert mu.app.tell_running_instance(["a.py"]) is False
 
 
-def _talk_to_server(server, script):
+def _talk_to_server(server, script, until=lambda: False):
     """
     Run `script` in another process (as a second launch would) while this
-    one handles the server's events, until it finishes.
+    one handles the server's events, until it finishes and (if given)
+    `until()` is true, or 10 seconds after it finishes.
     """
     from PyQt6.QtCore import QCoreApplication
 
@@ -755,8 +756,11 @@ def _talk_to_server(server, script):
     while child.poll() is None and time.monotonic() < deadline:
         QCoreApplication.processEvents()
         time.sleep(0.01)
-    for _ in range(50):
+    deadline = time.monotonic() + 10
+    while True:
         QCoreApplication.processEvents()
+        if until() or time.monotonic() > deadline:
+            break
         time.sleep(0.01)
     return child.wait(timeout=5)
 
@@ -776,7 +780,8 @@ def test_listen_for_other_instances(tmp_path):
             "import sys; from mu import app; "
             "sys.exit(0 if app.tell_running_instance([{!r}]) else 1)"
         ).format(target)
-        assert _talk_to_server(server, script) == 0
+        opened = lambda: editor.direct_load.called  # noqa: E731
+        assert _talk_to_server(server, script, until=opened) == 0
     finally:
         server.close()
     window.bring_to_front.assert_called_once_with()
@@ -795,7 +800,10 @@ def test_listen_for_other_instances_garbled():
             "s.waitForConnected(2000); s.write(b'{nope'); "
             "s.waitForBytesWritten(2000); s.disconnectFromServer()"
         )
-        assert _talk_to_server(server, script) == 0
+        # Nothing to wait for (it's ignored), so give it a moment.
+        start = time.monotonic()
+        waited = lambda: time.monotonic() - start > 1  # noqa: E731
+        assert _talk_to_server(server, script, until=waited) == 0
     finally:
         server.close()
     window.bring_to_front.assert_not_called()

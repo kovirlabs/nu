@@ -43,8 +43,14 @@ from . import settings
 from .virtual_environment import venv
 from .command_log import command_log
 
-# The default directory for application logs.
-LOG_DIR = platformdirs.user_log_dir(appname="mu", appauthor="python")
+# The default directory for application logs: with the rest of Nu's data
+# when MU_DATA_DIR moves it (tests, a throwaway profile), so those never
+# write to the real log.
+LOG_DIR = (
+    os.path.join(os.environ["MU_DATA_DIR"], "logs")
+    if os.environ.get("MU_DATA_DIR")
+    else platformdirs.user_log_dir(appname="mu", appauthor="python")
+)
 # The path to the log file for the application.
 LOG_FILE = os.path.join(LOG_DIR, "mu.log")
 #: What the Help button opens: the "Using Nu" page (docs/help.md).

@@ -135,7 +135,7 @@ class ModeSelector(QDialog):
 
 class LogWidget(QWidget):
     """
-    Used to display Mu's logs.
+    Used to display Nu's logs.
     """
 
     def setup(self, log):
@@ -153,6 +153,8 @@ class LogWidget(QWidget):
         self.log_text_area.setReadOnly(True)
         self.log_text_area.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.log_text_area.setPlainText(log)
+        # Open at the end: the newest entries, about what just happened.
+        self.log_text_area.moveCursor(QTextCursor.MoveOperation.End)
         widget_layout.addWidget(self.log_text_area)
 
 
