@@ -653,7 +653,7 @@ def test_jupyter_kernel_installed(patched, venv):
             # packaged (Briefcase) build.
             #
             expected_jupyter_args = (
-                mu.virtual_environment.safe_short_path(venv.interpreter),
+                venv.interpreter,
                 "-I",
                 "-m",
                 "ipykernel",

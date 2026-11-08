@@ -94,7 +94,6 @@ dependencies = [
     # everything else Nu has) out of the plugin environment (mu/plugin/plugin_env.py).
     "uv>=0.9.8",
     "wheel",
-    "pywin32; sys_platform == 'win32'",
     # Bundled plugins (Phase 5c): separate packages under plugins/, installed
     # with Nu and found through their `mu.plugins` entry points like any other
     # plugin. In this repo uv resolves them from the workspace (see
@@ -263,8 +262,6 @@ requires = [
 universal_build = false
 
 [tool.briefcase.app.mu.windows]
-# pywin32 is Windows-only; kept out of the cross-platform `requires` above.
-requires = ["pywin32; sys_platform == 'win32'"]
 # The MSI UpgradeCode: how Windows recognises a new Nu installer as an upgrade
 # of the installed one (replacing it rather than installing alongside). It's
 # what Briefcase derived from the bundle id (uuid5 of "mu.kovir.org") for every

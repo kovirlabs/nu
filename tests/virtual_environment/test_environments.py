@@ -338,17 +338,64 @@ def test_create_venv_reports_the_command(venv):
     assert lines[1] == "Using CPython 3.11"
 
 
-def test_install_from_zipped_wheels_reports_each(venv, tmp_path):
+def _wheels_archive(tmp_path, names):
     import zipfile
 
     archive = str(tmp_path / "wheels.zip")
     with zipfile.ZipFile(archive, "w") as zip:
-        zip.writestr("arrr-1.0-py3-none-any.whl", b"")
+        for name in names:
+            zip.writestr(name, b"")
+    return archive
+
+
+def test_install_from_zipped_wheels_in_one_go(venv, tmp_path):
+    """
+    The bundled wheels are installed with one offline `uv pip install` (not
+    one slow pip run per wheel).
+    """
+    archive = _wheels_archive(
+        tmp_path, ["arrr-1.0-py3-none-any.whl", "boo-2.0-py3-none-any.whl"]
+    )
     lines = []
     venv.progress = lines.append
-    with mock.patch.object(mu.virtual_environment, "Pip"):
+    with (
+        mock.patch.object(mu.virtual_environment, "find_uv", return_value="uv"),
+        mock.patch.object(UV, "run_subprocess", return_value=(True, "")) as run,
+    ):
         venv.install_from_zipped_wheels(archive)
-    assert lines == ["Installing arrr-1.0-py3-none-any.whl"]
+    assert lines == ["Installing 2 packages Nu needs (no internet needed)"]
+    run.assert_called_once()
+    args = run.call_args[0]
+    assert args[:6] == (
+        "pip",
+        "install",
+        "--python",
+        venv.interpreter,
+        "--no-index",
+        "--no-deps",
+    )
+    assert [os.path.basename(arg) for arg in args[6:]] == [
+        "arrr-1.0-py3-none-any.whl",
+        "boo-2.0-py3-none-any.whl",
+    ]
+
+
+def test_install_from_zipped_wheels_fails(venv, tmp_path):
+    archive = _wheels_archive(tmp_path, ["arrr-1.0-py3-none-any.whl"])
+    with (
+        mock.patch.object(mu.virtual_environment, "find_uv", return_value="uv"),
+        mock.patch.object(UV, "run_subprocess", return_value=(False, "nope")),
+        pytest.raises(mu.virtual_environment.VirtualEnvironmentCreateError) as exc,
+    ):
+        venv.install_from_zipped_wheels(archive)
+    assert "nope" in exc.value.message
+
+
+def test_install_from_zipped_wheels_empty(venv, tmp_path):
+    archive = _wheels_archive(tmp_path, [])
+    with mock.patch.object(UV, "run_subprocess") as run:
+        venv.install_from_zipped_wheels(archive)
+    run.assert_not_called()
 
 
 #

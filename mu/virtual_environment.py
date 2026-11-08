@@ -13,11 +13,6 @@ import tempfile
 import time
 import zipfile
 
-try:
-    import win32api
-except ImportError:
-    pass
-
 from PyQt6.QtCore import (
     QObject,
     QProcess,
@@ -37,25 +32,6 @@ wheels_dirpath = os.path.dirname(wheels.__file__)
 logger = logging.getLogger(__name__)
 
 ENCODING = sys.stdout.encoding if hasattr(sys.stdout, "encoding") else "utf-8"
-
-
-def safe_short_path(path):
-    """On Windows it converts a path to a short path with 8.3 representation.
-
-    This is to avoid an issue encountered on Windows were launching a virtual
-    environment python/pip process results in a 101 error exit code.
-
-    More info:
-    - https://github.com/mu-editor/mu/issues/1926
-    - https://bugs.python.org/issue46686
-    - https://github.com/python/cpython/issues/90844
-    """
-    if sys.platform != "win32":
-        return path
-    try:
-        return win32api.GetShortPathName(path)
-    except Exception:
-        return path
 
 
 class VirtualEnvironmentError(Exception):
@@ -888,11 +864,11 @@ class VirtualEnvironment(object):
         #
         # Pip and the interpreter will be set up when the virtualenv is created
         #
-        self.interpreter = safe_short_path(
-            os.path.join(self._bin_directory, "python" + self._bin_extension)
+        self.interpreter = os.path.join(
+            self._bin_directory, "python" + self._bin_extension
         )
-        self.pip_executable = safe_short_path(
-            os.path.join(self._bin_directory, "pip" + self._bin_extension)
+        self.pip_executable = os.path.join(
+            self._bin_directory, "pip" + self._bin_extension
         )
         self.reset_pip()
         logger.debug("Virtual environment set up %s at %s", self.name, self.path)
@@ -935,12 +911,16 @@ class VirtualEnvironment(object):
             uv_path = find_uv()
         except UvNotFound:
             uv_path = None
-        activate = activate_command(self.path, self._is_windows)
-        python = ["--python", self.interpreter]
+        # normpath: one kind of slash (a folder from settings or MU_DATA_DIR
+        # may use / on Windows), as the learner would type it.
+        path = os.path.normpath(self.path)
+        interpreter = os.path.normpath(self.interpreter)
+        activate = activate_command(path, self._is_windows)
+        python = ["--python", interpreter]
         return {
             "name": self.display_name,
-            "path": self.path,
-            "interpreter": self.interpreter,
+            "path": path,
+            "interpreter": interpreter,
             "python_version": self.python_version(),
             "activate": activate,
             "install": quote_command(["uv", "pip", "install", *python, "cowsay"]),
@@ -1584,7 +1564,7 @@ class VirtualEnvironment(object):
         logger.info("Creating virtualenv: {}".format(self.path))
         logger.info("Virtualenv name: {}".format(self.name))
 
-        uv_executable = safe_short_path(find_uv())
+        uv_executable = find_uv()
         python = self.ensure_bundled_python()
         seed_args = ["--seed"]
         if python:
@@ -1637,7 +1617,7 @@ class VirtualEnvironment(object):
         display_name = '"Python/Nu ({})"'.format(kernel_name)
         logger.info("Installing Jupyter Kernel: %s", kernel_name)
         ok, output = self.run_subprocess(
-            safe_short_path(self.interpreter),
+            self.interpreter,
             "-I",
             "-m",
             "ipykernel",
@@ -1668,17 +1648,35 @@ class VirtualEnvironment(object):
             with zipfile.ZipFile(zipped_wheels_filepath) as zip:
                 zip.extractall(unpacked_wheels_dirpath)
 
-            self.reset_pip()
-            #
-            # The wheels are installed one at a time as they reduces the possibility
-            # of the process installing them breaching its timeout
-            #
-            for wheel in glob.glob(os.path.join(unpacked_wheels_dirpath, "*.whl")):
-                logger.info(
-                    "About to install from wheel: {}".format(os.path.basename(wheel))
+            wheel_paths = sorted(
+                glob.glob(os.path.join(unpacked_wheels_dirpath, "*.whl"))
+            )
+            if not wheel_paths:
+                return
+            # All in one go: uv resolves and installs them in a few seconds,
+            # where installing them one by one with pip took minutes on the
+            # learner's first start. Offline (--no-index): the installer
+            # ships every wheel needed.
+            names = [os.path.basename(wheel) for wheel in wheel_paths]
+            logger.info("About to install from wheels: {}".format(", ".join(names)))
+            self._report(
+                _("Installing {} packages Nu needs (no internet needed)").format(
+                    len(names)
                 )
-                self._report(_("Installing {}").format(os.path.basename(wheel)))
-                self.pip.install(wheel, deps=False, index=False)
+            )
+            ok, output = Uv(find_uv()).run_subprocess(
+                "pip",
+                "install",
+                "--python",
+                self.interpreter,
+                "--no-index",
+                "--no-deps",
+                *wheel_paths,
+            )
+            if not ok:
+                raise VirtualEnvironmentCreateError(
+                    "Unable to install the bundled packages:\n%s" % compact(output)
+                )
 
     def install_baseline_packages(self):
         """
