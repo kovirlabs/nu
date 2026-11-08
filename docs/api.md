@@ -140,7 +140,7 @@ The Pygame Zero / pygame mode, as a bundled plugin (`plugins/pygamezero`).
 ## `mu.command_log`
 
 The log of the uv commands Nu runs in the learner's Python environment, shown
-as "What Nu ran" (see [Your Python environment](environment.md)).
+as "What Nu Ran" (see [Your Python environment](environment.md)).
 
 ::: mu.command_log
 

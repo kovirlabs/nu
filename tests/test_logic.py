@@ -1936,7 +1936,7 @@ def test_quit_modified_cancelled_from_event():
     mock_event = mock.MagicMock()
     mock_event.ignore = mock.MagicMock(return_value=None)
     with (
-        mock.patch("sys.exit", return_value=None),
+        mock.patch("PyQt6.QtCore.QCoreApplication.exit"),
         mock.patch("builtins.open", mock_open),
     ):
         ed.quit(mock_event)
@@ -1975,7 +1975,7 @@ def test_quit_modified_ok():
     #
     mock_event.ignore = mock.MagicMock(return_value=None)
     with (
-        mock.patch("sys.exit", return_value=None),
+        mock.patch("PyQt6.QtCore.QCoreApplication.exit"),
         mock.patch("mu.settings.SessionSettings.save") as mocked_save,
     ):
         ed.quit(mock_event)
@@ -2017,7 +2017,7 @@ def test_quit_save_tabs_with_paths():
     mock_mode.get_hex_path.return_value = "foo/bar"
     ed.modes = {"python": mock_mode, "microbit": mock_mode}
 
-    with mock.patch.object(sys, "exit"):
+    with mock.patch("PyQt6.QtCore.QCoreApplication.exit"):
         with mock.patch.object(mu.logic, "save_session") as mock_save_session:
             ed.quit()
 
@@ -2040,7 +2040,7 @@ def test_quit_save_theme():
     mock_mode.get_hex_path.return_value = "foo/bar"
     ed.modes = {"python": mock_mode, "microbit": mock_mode}
 
-    with mock.patch.object(sys, "exit"):
+    with mock.patch("PyQt6.QtCore.QCoreApplication.exit"):
         with mock.patch.object(mu.logic, "save_session") as mock_save_session:
             ed.quit()
 
@@ -2065,7 +2065,7 @@ def test_quit_save_envars():
     ed.modes = {"python": mock_mode, "microbit": mock_mode}
     ed.envars = [["name1", "value1"], ["name2", "value2"]]
 
-    with mock.patch.object(sys, "exit"):
+    with mock.patch("PyQt6.QtCore.QCoreApplication.exit"):
         with mock.patch.object(mu.logic, "save_session") as mock_save_session:
             ed.quit()
 
@@ -2089,7 +2089,7 @@ def test_quit_save_zoom_level():
     mock_mode.get_hex_path.return_value = "foo/bar"
     ed.modes = {"python": mock_mode, "microbit": mock_mode}
 
-    with mock.patch.object(sys, "exit"):
+    with mock.patch("PyQt6.QtCore.QCoreApplication.exit"):
         with mock.patch.object(mu.logic, "save_session") as mock_save_session:
             ed.quit()
 
@@ -2116,7 +2116,7 @@ def test_quit_save_window_geometry():
     mock_mode.get_hex_path.return_value = "foo/bar"
     ed.modes = {"python": mock_mode, "microbit": mock_mode}
 
-    with mock.patch.object(sys, "exit"):
+    with mock.patch("PyQt6.QtCore.QCoreApplication.exit"):
         with mock.patch.object(mu.logic, "save_session") as mock_save_session:
             ed.quit()
 
@@ -2148,7 +2148,7 @@ def test_quit_calls_mode_stop():
     mock_event = mock.MagicMock()
     mock_event.ignore = mock.MagicMock(return_value=None)
     with (
-        mock.patch("sys.exit", return_value=None),
+        mock.patch("PyQt6.QtCore.QCoreApplication.exit"),
         mock.patch("builtins.open", mock_open),
         mock.patch("mu.settings.session.save"),
     ):
@@ -2158,7 +2158,7 @@ def test_quit_calls_mode_stop():
 
 def test_quit_calls_sys_exit(mocked_session):
     """
-    Ensure that sys.exit(0) is called.
+    Ensure that the application is asked to exit with 0.
     """
     view = mock.MagicMock()
     view.modified = True
@@ -2268,6 +2268,32 @@ def test_show_admin_passes_the_environment_and_what_nu_ran():
     assert kwargs["focus"] == "environment"
     assert kwargs["environment"]["name"] == "mu_venv"
     assert "$ uv pip install cowsay" in kwargs["environment"]["commands"]
+
+
+def test_show_admin_in_a_board_mode_does_not_list_packages():
+    """
+    A mode without the learner's environment (a board's) has no Environment
+    tab, so Nu doesn't run `uv pip list` (nor describe the environment) for
+    it; the dialog still gets what Nu ran.
+    """
+    view = mock.MagicMock()
+    ed = mu.logic.Editor(view)
+    ed.modes = {"python": mock.MagicMock(uses_user_environment=False)}
+    view.show_admin.return_value = {"locale": ""}
+    log = mu.command_log.CommandLog()
+    log.start(["mpremote", "connect", "COM3"]).finish(0)
+    with (
+        mock.patch.object(venv, "installed_packages") as installed_packages,
+        mock.patch.object(venv, "describe") as describe,
+        mock.patch.object(mu.logic, "command_log", log),
+        mock.patch("builtins.open", mock.mock_open(read_data="the log")),
+    ):
+        ed.show_admin()
+    installed_packages.assert_not_called()
+    describe.assert_not_called()
+    args, kwargs = view.show_admin.call_args
+    assert args[2] == ""
+    assert kwargs["environment"] == {"commands": log.render()}
 
 
 PLUGIN_ROWS = [

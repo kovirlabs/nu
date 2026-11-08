@@ -176,7 +176,7 @@ def test_log_start_and_finish_go_to_the_log_file(log, caplog):
 
 
 def test_log_render_empty(log):
-    assert log.render() == "Nu hasn't run any uv commands yet."
+    assert log.render() == "Nu hasn't run any commands yet."
 
 
 def test_log_render(log):

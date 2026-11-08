@@ -65,6 +65,18 @@ save.
   to it. Press Ctrl+C there to get a REPL on the board.
 - **Plotter** (Ctrl+Shift+P) graphs tuples your board prints.
 
+### BBC micro:bit (coming soon)
+
+Write MicroPython for the [BBC micro:bit](https://microbit.org/). **Flash**
+(F3) puts your program on the micro:bit, and **REPL** and **Plotter** work as
+in CircuitPython mode. This mode is new and hasn't been tried on real
+micro:bits yet, so it isn't part of the installers; see
+[The BBC micro:bit](microbit.md).
+
+Pygame Zero and CircuitPython are [plugins](#plugins) that come with Nu,
+switched on; you can switch them off if you don't need them. micro:bit will
+join them once it has been tested.
+
 ## Where your files go
 
 Nu saves your work in a folder called `mu_code` in your home folder (the name
@@ -74,9 +86,10 @@ first.
 ## Adding Python packages
 
 Your programs run in their own Python environment, separate from Nu; the
-status bar shows which (`Environment: mu_venv · Python 3.11`). To use a
-package such as `requests`, click that, open **Packages** on the
-**Environment** tab, put the package's name on its own line, and click
+status bar shows which (`Environment: mu_venv · Python 3.11`). Click it to
+open the **Environment** tab, which shows where the environment is and the
+commands to use it from a terminal. To use a package such as `requests`, open
+**Packages** there, put the package's name on its own line, and click
 **OK**. Nu shows you the real `uv` command it runs. A program can also list
 the packages it needs in a `# /// script` block, and **Run** fetches them. See
 [Your Python environment](environment.md).
@@ -114,4 +127,5 @@ plugin has a problem, Nu tells you and keeps running. See
   [github.com/kovirlabs/nu/issues](https://github.com/kovirlabs/nu/issues).
 - **Learn more:** the original Mu's
   [tutorials](https://codewith.mu/en/tutorials/1.2/) still apply to most of
-  Nu, though Nu no longer has the micro:bit, ESP, Pico or web modes.
+  Nu, though Nu no longer has the ESP, Pico or web modes, and its micro:bit
+  mode is new.

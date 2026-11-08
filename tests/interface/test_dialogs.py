@@ -212,7 +212,7 @@ def test_AdminDialog_focus_environment_in_other_modes():
 
 def test_AdminDialog_commands_tab_in_other_modes():
     """
-    A mode without the learner's environment still shows "What Nu ran" (the
+    A mode without the learner's environment still shows "What Nu Ran" (the
     micro:bit plugin logs its mpremote and copy commands there), as a tab of
     its own.
     """
@@ -231,7 +231,7 @@ def test_AdminDialog_commands_tab_in_other_modes():
     assert ad.environment_tab is None
     assert ad.commands_tab.text_area.toPlainText().startswith("$ mpremote")
     titles = [ad.tabs.tabText(i) for i in range(ad.tabs.count())]
-    assert "What Nu ran" in titles
+    assert "What Nu Ran" in titles
     assert ad.tabs.currentWidget() is ad.log_widget
 
 
@@ -709,10 +709,10 @@ def test_EnvironmentWidget_copy_button(environment_widget, qtapp):
 
 def test_EnvironmentWidget_sections(environment_widget):
     """The packages and environment-variable editors keep their behaviour, as
-    sections of the Environment tab, beside "What Nu ran"."""
+    sections of the Environment tab, beside "What Nu Ran"."""
     sections = environment_widget.sections
     titles = [sections.tabText(i) for i in range(sections.count())]
-    assert titles == ["Packages", "Environment variables", "What Nu ran"]
+    assert titles == ["Packages", "Environment Variables", "What Nu Ran"]
     assert environment_widget.package_widget.text_area.toPlainText() == ("cowsay\nrich")
     assert environment_widget.envar_widget.text_area.toPlainText() == "NAME=value"
 
@@ -728,7 +728,7 @@ def test_EnvironmentWidget_without_facts():
 
 
 def test_CommandLogWidget(qtapp):
-    """What Nu ran: read-only, monospace, newest last, copyable."""
+    """What Nu Ran: read-only, monospace, newest last, copyable."""
     parent = QWidget()
     widget = mu.interface.dialogs.CommandLogWidget(parent)
     widget.setup(ENVIRONMENT["commands"], uv_path="/opt/nu/bin/uv")

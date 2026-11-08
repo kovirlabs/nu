@@ -51,7 +51,7 @@ FIND_DRIVE → READ_DETAILS → FIND_PORT → PROBE ─(MicroPython running)─�
 
 Each step shows a status line; downloading the firmware, copying it to the
 drive and the mpremote copy are logged as the commands a learner could type
-(see **What Nu ran** in the admin dialog).
+(see **What Nu Ran** in the admin dialog).
 
 ## Hardware validation checklist (≈15 minutes)
 
@@ -79,7 +79,7 @@ out-of-box demo) onto the V2 first, so it has no MicroPython.
    time only) → Copying MicroPython onto the micro:bit… N% → Waiting for the
    micro:bit to restart… → Waiting for MicroPython to start… → Copying your
    code… → **Done! Your code is on the micro:bit.** The board scrolls "hi".
-5. The admin dialog's **What Nu ran** tab shows a `curl …` download, a
+5. The admin dialog's **What Nu Ran** tab shows a `curl …` download, a
    `cp …hex …/MICROBIT/`, and `mpremote connect <port> fs cp …/hello.py
    :main.py + reset`.
 6. The firmware is in Nu's data folder under `microbit/firmware/`.

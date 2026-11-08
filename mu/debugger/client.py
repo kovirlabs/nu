@@ -95,6 +95,21 @@ class CommandBufferHandler(QObject):
     def worker(self):
         """
         Buffer input from a socket, emit complete debugger commands as signals.
+
+        Once the session is over (the connection closed or failed), end the
+        listener thread too. Otherwise it would sit in its event loop until
+        Qt destroyed it with the window at exit, which aborts Nu ("QThread:
+        Destroyed while thread is still running").
+        """
+        try:
+            self._listen()
+        finally:
+            self.debugger.listener_thread.quit()
+
+    def _listen(self):
+        """
+        Connect to the debug runner, then emit the commands it sends until the
+        connection closes or the session is stopped.
         """
         connected = False
         tries = 0

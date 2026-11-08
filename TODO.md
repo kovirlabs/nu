@@ -12,14 +12,18 @@ smaller codebase (less to port, lower risk). Keep the test suite green at every
 step — it's what makes the bigger changes safe.
 
 Baseline test suite (Python 3.8 + PyQt5, pre-changes): **1120 passed, 20 skipped**.
-Current baseline (Python 3.11–3.14 + PyQt6): **1267 passed, 20 skipped** (after Phase
-4b part 1; 1148 before it, 929 after Phase 4a's packaging work).
-Run headless with:
+Current baseline (Python 3.11–3.14 + PyQt6): **1572 passed, 20 skipped** (after the
+post-Phase 5/6 hardening; 1545 after Phase 6a/6b, 1267 after Phase 4b part 1, 929 after
+Phase 4a's packaging work). Run headless with:
 ```
 QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly -q
 ```
 (On a headless box without Mesa, Qt6 needs `libEGL.so.1` on `LD_LIBRARY_PATH`
-even for the `offscreen` platform plugin.)
+even for the `offscreen` platform plugin. Where `/tmp` is mounted `noexec`, add
+`--basetemp=<a folder programs can run from>`: one test builds and runs a real venv in
+its `tmp_path`.) The suite never reads or writes your real Nu data, workspace or IPython
+profile (the root `conftest.py` points them at a throwaway folder before `mu` is
+imported), and every test file also passes on its own and in `--random-order`.
 
 ## Decisions locked in
 
@@ -28,16 +32,17 @@ even for the `offscreen` platform plugin.)
 | License | **Stay GPLv3** → keep PyQt5/QScintilla; modernize *within* Qt |
 | GUI framework | **Keep Qt** (kivy/tkinter rejected: would lose QScintilla + qtconsole REPL; full rewrite) |
 | Qt/Python baseline | **Modernize**: PyQt5 → **PyQt6**, require **Python 3.11+** (verified through 3.14), drop stale pins |
-| Modes to keep | **Python3, Debugger, Pygame Zero, CircuitPython** |
+| Modes to keep | **Python3, Debugger** (core), **Pygame Zero, CircuitPython** (bundled plugins since Phase 5c); **micro:bit** back as an opt-in plugin (Phase 6) |
 | Modes to drop | ESP, Pico, Pyboard, Lego, Snek, **Web** |
 | OS targets | **Linux, Windows, macOS** (all three) |
 
 ### Resolved decision
 
 - [x] **micro:bit mode — DROPPED** (for now). Its tooling (`uflash` 2.0.0, `microfs` 1.4.5)
-  is frozen since 2021 / unmaintained. See 1e below. **Reintroduced** the right way — as a
-  modern **plugin** on maintained tooling (`mpremote`/`pyOCD`) — in **Phase 6**, atop the
-  **Phase 5** plugin architecture.
+  is frozen since 2021 / unmaintained. See 1d-micro below. **Reintroduced** the right way —
+  as a modern **plugin** on maintained tooling (`mpremote` + DAPLink drag-and-drop; pyOCD
+  deferred) — in **Phase 6**, atop the **Phase 5** plugin architecture: built, opt-in until
+  the maintainer's hardware pass.
 
 ---
 
@@ -150,6 +155,9 @@ even for the `offscreen` platform plugin.)
 
 ## Phase 4 — uv-driven environments + Briefcase installers
 
+Status: 4a, 4c, 4d (pending the maintainer's Windows/macOS install check) and 4e done; 4b
+part 1 done, part 2 (multi-env) not started; signing deferred.
+
 A deliberate departure from Mu's "hide everything" ethos: make the Python environment a
 **real, visible, scriptable** thing (good pedagogy), which also dissolves the packaging
 constraint — the app's own interpreter no longer needs to be venv-capable because **uv**
@@ -180,11 +188,10 @@ feel; offline-first via bundled assets; **Briefcase** for native installers.
 - [x] Suite green: **924 passed, 20 skipped**; ruff check + format clean. Added direct
   tests for the uv wrapper (`find_uv`/`UvNotFound`/`Uv`, previously entirely uncovered),
   for `activation_vars`, and for the activation wiring at both spawn paths.
-- [ ] **Still to do in 4a — GUI validation** (can't be done headlessly): spot-check the
-  activation across modes on a real display — especially Pygame Zero, whose interaction
-  with `VIRTUAL_ENV` was the original reason for the startup strip — and the REPL. Wiring
-  `uv run` to the "Run" action for PEP 723 inline deps, and scoping the UI to the env
-  (indicator + package list), land with 4b.
+- [x] **GUI validation** of the activation, on Linux under Xvfb (2026-11, the parity audit
+  and the post-Phase 5/6 sweep): Python 3 Run (environment variables reach the program),
+  Pygame Zero Play with the venv activated, the REPL, packages added and removed. A real
+  display on Windows/macOS is part of the maintainer's installer check (4d).
 
 **4b. Env UX (progressive disclosure):** part 1 ✅ (2026-11, `feature/env-ux-transparency`)
 - [x] "Environment: <name>" indicator + package list scoped to the active env. The status
@@ -193,10 +200,10 @@ feel; offline-first via bundled assets; **Briefcase** for native installers.
   version/timestamp suffix, the version comes from `pyvenv.cfg`. Clicking it opens the
   admin dialog's new **Environment** tab: the facts (folder, interpreter, the exact
   activate / `uv pip --python` / `uv run --python` commands, Nu's uv, each copyable), then
-  Packages / Environment variables (unchanged editors and settings keys) / What Nu ran.
+  Packages / Environment variables (unchanged editors and settings keys) / What Nu Ran.
 - [x] **Echo the real command**: every uv command goes through `Uv`, which records it in
   the GUI-free `mu/command_log.py` (argv, cwd, start, exit code, output tail; also logged
-  at INFO); "What Nu ran" renders it (`uv …` as typed, uv's full path in the tooltip and
+  at INFO); "What Nu Ran" renders it (`uv …` as typed, uv's full path in the tooltip and
   the log file), and the package dialog prints `$ uv pip install …` before the output.
   (No separate "new env" button yet: that's multi-env, below.)
 - [x] PEP 723: Run uses `uv run --python <env python> --script <file>` when the file has a
@@ -224,9 +231,10 @@ feel; offline-first via bundled assets; **Briefcase** for native installers.
   (`mu/wheels/python/`); first launch extracts it to `DATA_DIR/python/<build>/` and runs
   `uv venv --python <it> --seed --no-index --find-links …`. Verified offline end to end
   on macOS arm64 (network blocked, empty uv cache, no managed/system Python).
-  Follow-ups: verify on Windows + Linux installers; old extracted builds under
-  `DATA_DIR/python/` aren't cleaned up after upgrades (~70 MB each); check the archive
-  survives Apple notarization once signing lands.
+  Follow-ups: verify on Windows + Linux installers; check the archive survives Apple
+  notarization once signing lands. (Old extracted builds under `DATA_DIR/python/` are now
+  removed at startup once the environment no longer uses them:
+  `VirtualEnvironment.remove_old_bundled_pythons`.)
 - [x] Build a wheelhouse — `python -m mu.wheels --package` builds `mu/wheels/<version>.zip`
   (pgzero/pygame/ipykernel + deps), bundled via `sources`; the first-run baseline install
   is offline (pip from the zip, see `install_from_zipped_wheels`). Bumped the stale
@@ -274,6 +282,9 @@ feel; offline-first via bundled assets; **Briefcase** for native installers.
 - [x] App-ID realigned: `setDesktopFileName("org.kovir.mu")` to match Briefcase.
 
 ## Phase 5 — Plugin architecture (shell the core; modes become plugins)
+
+Status: 5a, 5b and 5c done (API 0.5); 5e's Plugins tab done; installing and removing
+plugins from it (5d + 5e) designed in `docs/plugins.md`, not built.
 
 **Long-term direction.** Shrink Nu to a lean **core** — editor, REPL, plotter, the
 uv-managed environment, and a **plugin host** — and push capability out into **plugins**.
@@ -421,7 +432,7 @@ drop-in dir covers them.
     then find its plugins as ordinary installed packages (kind "package").
   - **Add a plugin…** on the Plugins tab: package name → PyPI summary/author + trust note
     + the exact command → `uv pip install --python <plugin env> <pkg>` through `Uv`, so it
-    is in "What Nu ran" and streams into the package progress window. **Add from a file…**
+    is in "What Nu Ran" and streams into the package progress window. **Add from a file…**
     (`.whl`) for offline. Takes effect at the next start, like switching.
   - The new package's `learner-env` extra is read from its metadata and installed into
     the learner env right away (same command log); `wheels.baseline_packages()` already
@@ -479,6 +490,10 @@ plugin**: if it can be a clean plugin, the API is good.
 ---
 
 ## Phase 6 — micro:bit, reintroduced as a modern plugin
+
+Status: 6a and 6b built and tested against fakes, opt-in (`uv sync --extra microbit`) until
+the maintainer's hardware pass; the Files pane is designed, not built; 6c (default-on,
+installers, PyPI) and 6d open.
 
 micro:bit was **dropped in Phase 1** because its desktop tooling (`uflash`, `microfs`) was
 frozen/unmaintained. Reintroduce it the right way: as the **flagship plugin** on the Phase 5
@@ -540,7 +555,7 @@ the maintainer's checklist is in `plugins/microbit/README.md`)
   `<workspace>/microbit`. Flash closes an open REPL/plotter first (they hold the port),
   greys the buttons while it runs and reopens them after. Needed plugin API **0.5**
   (`Host.log_command`, `Host.current_device`, `Host.data_dir`); boards' modes now show
-  **What Nu ran** as a tab of its own in the admin dialog. Opt-in (root `microbit` extra)
+  **What Nu Ran** as a tab of its own in the admin dialog. Opt-in (root `microbit` extra)
   until validated — see 6c.
 - [ ] Reintroduce the **file-transfer pane** (the old `FileSystemPane`, removed in Phase 1d)
   as plugin-owned UI driven by `mpremote`. **Designed, not built**: `docs/plugins.md` →
@@ -570,10 +585,34 @@ the maintainer's checklist is in `plugins/microbit/README.md`)
 
 ---
 
+## Hardening after Phases 5–6 ✅ (2026-11, `polish/post-phase-5-6-hardening`)
+
+A regression sweep of the whole app under Xvfb (first run → saved session → German →
+English; every mode, toolbar button, pane and admin tab), then the deferred fixes.
+- [x] Fixed from the sweep: quitting after any debug session aborted Nu (the debugger's
+  listener `QThread` was left running; upstream bug); opening a folder (Pygame Zero's
+  asset buttons, **Open plugins folder**) could freeze Nu (`os.system("xdg-open …")` →
+  `QDesktopServices.openUrl`); a board mode's admin dialog ran `uv pip list` for nothing.
+- [x] Test isolation: `MU_DATA_DIR`/`MU_HOME_DIR` (+ `IPYTHONDIR`, the single-instance lock
+  name) set by the root `conftest.py` before `mu` is imported; tests can't quit the
+  `QApplication` or leave exception hooks patched; `mu.interface` installs `_` itself.
+- [x] LF line endings everywhere (`.gitattributes`).
+- [x] Window position honoured on any connected screen (`QGuiApplication.screenAt`).
+- [x] REPL kernel connection encrypted (CurveZMQ via jupyter_client's
+  `transport_encryption = "auto"`), which also silences ipykernel 7.4's warning.
+- [x] Old bundled CPython builds removed (4c follow-up).
+- [x] Toolbar shows icons only when its labels don't fit (long translations).
+- [x] Admin tab titles consistent; What Nu Ran's text covers plugins' commands.
+- Judgment calls left as they are (see the PR): a switched-off plugin shows its id
+  (`pygamezero`), not its name, since it isn't imported; the Packages and Environment
+  Variables texts still say "Python 3 mode" (translated upstream strings) though Pygame
+  Zero uses the environment too; the overflow button stays a thin strip.
+
 ## Notes / deferred
 
-- `virtual_environment.py` (~1k lines) powers "install packages from the UI" — being
-  **replaced by the uv-driven model in Phase 4** (not dropped; reshaped).
+- `virtual_environment.py` (~1.5k lines) powers "install packages from the UI" — reshaped
+  around uv in Phase 4 (venv creation, `uv pip`, `uv run`); the baseline install at first
+  run still goes through the venv's pip from the bundled wheelhouse.
 - Orphaned resource icons / locale strings for removed modes are harmless; sweep later.
 - 100%-coverage mandate is great for the Qt6 port; can relax to "don't regress" afterward
   if it slows iteration.

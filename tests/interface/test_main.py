@@ -3,7 +3,7 @@
 Tests for the user interface elements of Mu.
 """
 
-from PyQt6.QtWidgets import QWidget, QMessageBox, QMenu
+from PyQt6.QtWidgets import QApplication, QWidget, QMessageBox, QMenu
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QAction, QIcon, QKeySequence
 from unittest import mock
@@ -117,6 +117,24 @@ def test_ButtonBar_set_responsive_mode():
         mock_icon_size.assert_called_with(QSize(39, 39))
         style = "QWidget{font-size: " + str(11) + "px;}"
         bb.setStyleSheet.assert_called_with(style)
+
+
+def test_ButtonBar_set_responsive_mode_icons_only_when_labels_do_not_fit():
+    """
+    When the labels don't fit even at the smaller size (long translations),
+    the buttons show icons only, so none is hidden in the overflow menu; with
+    room again the labels come back.
+    """
+    bb = mu.interface.main.ButtonBar(None)
+    for name in ("new", "load", "save", "run", "debug", "help", "quit"):
+        bb.addAction(name, "A rather long translated label", "tooltip")
+    style = bb.toolButtonStyle
+    bb.set_responsive_mode(2000, 800)
+    assert style() == Qt.ToolButtonStyle.ToolButtonTextUnderIcon
+    bb.set_responsive_mode(600, 800)
+    assert style() == Qt.ToolButtonStyle.ToolButtonIconOnly
+    bb.set_responsive_mode(2000, 800)
+    assert style() == Qt.ToolButtonStyle.ToolButtonTextUnderIcon
 
 
 def test_ButtonBar_add_action():
@@ -1626,18 +1644,48 @@ def test_Window_update_title():
     w.setWindowTitle.assert_called_once_with("Nu - foo.py")
 
 
-def _primary_screen_mock(width, height):
+def _primary_screen_mock(width, height, x=0, y=0):
     """
     Create and return a usable mock for QApplication.primaryScreen that
     supports the QApplication.primaryScreen().geometry() use case: it returns a
-    mocked QRect responding to .width() and .height() per the passed in args.
+    mocked QRect responding to .x(), .y(), .width() and .height() per the
+    passed in args.
     """
     mock_rect = mock.MagicMock()
+    mock_rect.x = mock.MagicMock(return_value=x)
+    mock_rect.y = mock.MagicMock(return_value=y)
     mock_rect.width = mock.MagicMock(return_value=width)
     mock_rect.height = mock.MagicMock(return_value=height)
     mock_screen = mock.MagicMock()
     mock_screen.geometry = mock.MagicMock(return_value=mock_rect)
     return mock.MagicMock(return_value=mock_screen)
+
+
+def _screens_at(*rects):
+    """
+    A stand-in for QGuiApplication.screenAt with screens covering `rects`
+    ((x, y, width, height) each): a screen for a point on one, else None.
+    """
+
+    def screen_at(point):
+        for x, y, width, height in rects:
+            if x <= point.x() < x + width and y <= point.y() < y + height:
+                return mock.MagicMock()
+        return None
+
+    return screen_at
+
+
+def _sizable_window():
+    """A Window whose resize/move are mocks and whose size is 819x614."""
+    w = mu.interface.main.Window()
+    w.resize = mock.MagicMock(return_value=None)
+    mock_size = mock.MagicMock()
+    mock_size.width = mock.MagicMock(return_value=819)
+    mock_size.height = mock.MagicMock(return_value=614)
+    w.geometry = mock.MagicMock(return_value=mock_size)
+    w.move = mock.MagicMock(return_value=None)
+    return w
 
 
 def test_Window_autosize_window():
@@ -1646,13 +1694,7 @@ def test_Window_autosize_window():
     window is resized and positioned correctly.
     """
     mock_ps = _primary_screen_mock(1024, 768)
-    w = mu.interface.main.Window()
-    w.resize = mock.MagicMock(return_value=None)
-    mock_size = mock.MagicMock()
-    mock_size.width = mock.MagicMock(return_value=819)
-    mock_size.height = mock.MagicMock(return_value=614)
-    w.geometry = mock.MagicMock(return_value=mock_size)
-    w.move = mock.MagicMock(return_value=None)
+    w = _sizable_window()
     with mock.patch("mu.interface.main.QApplication.primaryScreen", mock_ps):
         w.size_window()
     mock_ps.assert_called_once_with()
@@ -1663,6 +1705,18 @@ def test_Window_autosize_window():
     w.move.assert_called_once_with(x, y)
 
 
+def test_Window_autosize_window_primary_screen_not_at_origin():
+    """
+    With no saved position the window is centred on the primary screen, even
+    when that isn't the screen at the virtual desktop's origin.
+    """
+    mock_ps = _primary_screen_mock(1024, 768, x=1920, y=100)
+    w = _sizable_window()
+    with mock.patch("mu.interface.main.QApplication.primaryScreen", mock_ps):
+        w.size_window()
+    w.move.assert_called_once_with(1920 + (1024 - 819) // 2, 100 + (768 - 614) // 2)
+
+
 def test_Window_autosize_window_off_screen():
     """
     Check the correct calculations take place and methods are called so the
@@ -1671,14 +1725,14 @@ def test_Window_autosize_window_off_screen():
     context.
     """
     mock_ps = _primary_screen_mock(1024, 768)
-    w = mu.interface.main.Window()
-    w.resize = mock.MagicMock(return_value=None)
-    mock_size = mock.MagicMock()
-    mock_size.width = mock.MagicMock(return_value=819)
-    mock_size.height = mock.MagicMock(return_value=614)
-    w.geometry = mock.MagicMock(return_value=mock_size)
-    w.move = mock.MagicMock(return_value=None)
-    with mock.patch("mu.interface.main.QApplication.primaryScreen", mock_ps):
+    w = _sizable_window()
+    with (
+        mock.patch("mu.interface.main.QApplication.primaryScreen", mock_ps),
+        mock.patch(
+            "mu.interface.main.QGuiApplication.screenAt",
+            _screens_at((0, 0, 1024, 768)),
+        ),
+    ):
         w.size_window(x=-20, y=9999)
     mock_ps.assert_called_once_with()
     w.resize.assert_called_once_with(int(1024 * 0.8), int(768 * 0.8))
@@ -1686,6 +1740,77 @@ def test_Window_autosize_window_off_screen():
     x = (1024 - 819) // 2
     y = (768 - 614) // 2
     w.move.assert_called_once_with(x, y)
+
+
+def test_Window_size_window_on_the_primary_screen():
+    """A saved position and size on the (only) screen are used as they are."""
+    w = _sizable_window()
+    with (
+        mock.patch(
+            "mu.interface.main.QApplication.primaryScreen",
+            _primary_screen_mock(1024, 768),
+        ),
+        mock.patch(
+            "mu.interface.main.QGuiApplication.screenAt",
+            _screens_at((0, 0, 1024, 768)),
+        ),
+    ):
+        w.size_window(x=0, y=10, w=700, h=500)
+    w.resize.assert_called_once_with(700, 500)
+    w.move.assert_called_once_with(0, 10)
+
+
+def test_Window_size_window_on_a_second_monitor():
+    """
+    A position on a second monitor (here to the left of the primary one, so
+    its x is negative) is kept: issue #1613's check only knew the primary.
+    """
+    w = _sizable_window()
+    screens = _screens_at((0, 0, 1920, 1080), (-1280, 0, 1280, 1024))
+    with (
+        mock.patch(
+            "mu.interface.main.QApplication.primaryScreen",
+            _primary_screen_mock(1920, 1080),
+        ),
+        mock.patch("mu.interface.main.QGuiApplication.screenAt", screens),
+    ):
+        w.size_window(x=-1200, y=40, w=800, h=600)
+    w.move.assert_called_once_with(-1200, 40)
+
+
+def test_Window_size_window_on_an_unplugged_monitor():
+    """
+    A position on a monitor that's no longer connected is brought back to
+    the middle of the primary screen.
+    """
+    w = _sizable_window()
+    with (
+        mock.patch(
+            "mu.interface.main.QApplication.primaryScreen",
+            _primary_screen_mock(1920, 1080),
+        ),
+        mock.patch(
+            "mu.interface.main.QGuiApplication.screenAt",
+            _screens_at((0, 0, 1920, 1080)),
+        ),
+    ):
+        w.size_window(x=2200, y=40, w=800, h=600)
+    w.move.assert_called_once_with((1920 - 819) // 2, (1080 - 614) // 2)
+
+
+def test_Window_size_window_without_a_complete_position():
+    """With only one coordinate saved the window is centred."""
+    w = _sizable_window()
+    with (
+        mock.patch(
+            "mu.interface.main.QApplication.primaryScreen",
+            _primary_screen_mock(1024, 768),
+        ),
+        mock.patch("mu.interface.main.QGuiApplication.screenAt") as screen_at,
+    ):
+        w.size_window(x=100)
+    screen_at.assert_not_called()
+    w.move.assert_called_once_with((1024 - 819) // 2, (768 - 614) // 2)
 
 
 def test_Window_reset_annotations():
@@ -1839,50 +1964,33 @@ def test_Window_connect_tab_rename():
     mock_shortcut().activated.connect.assert_called_once_with(mock_handler)
 
 
-def test_Window_open_directory_from_os_windows():
+def test_Window_open_directory_from_os():
     """
-    Ensure the file explorer for Windows is called for the expected path.
-    """
-    w = mu.interface.main.Window()
-    with (
-        mock.patch("mu.interface.main.sys") as mock_sys,
-        mock.patch("mu.interface.main.os") as mock_os,
-    ):
-        path = "c:\\a\\path\\"
-        mock_sys.platform = "win32"
-        w.open_directory_from_os(path)
-        mock_os.startfile.assert_called_once_with(path)
-
-
-def test_Window_open_directory_from_os_darwin():
-    """
-    Ensure the file explorer for OSX is called for the expected path.
+    The folder is handed to the desktop (Qt's QDesktopServices) as a file
+    URL, which returns at once, rather than run through a shell and waited
+    for.
     """
     w = mu.interface.main.Window()
+    path = "/home/user/mu_code/images/"
     with (
-        mock.patch("mu.interface.main.sys") as mock_sys,
-        mock.patch("mu.interface.main.os.system") as mock_system,
+        mock.patch(
+            "mu.interface.main.QDesktopServices.openUrl", return_value=True
+        ) as open_url,
+        mock.patch("mu.interface.main.os.system") as system,
     ):
-        path = "/home/user/mu_code/images/"
-        mock_sys.platform = "darwin"
         w.open_directory_from_os(path)
-        mock_system.assert_called_once_with('open "{}"'.format(path))
+    (url,), _kwargs = open_url.call_args
+    assert url.isLocalFile()
+    assert url.toLocalFile() == path
+    system.assert_not_called()
 
 
-def test_Window_open_directory_from_os_freedesktop():
-    """
-    Ensure the file explorer for FreeDesktop (Linux) is called for the
-    expected path.
-    """
+def test_Window_open_directory_from_os_fails(caplog):
+    """If the desktop can't open it, that's logged."""
     w = mu.interface.main.Window()
-    with (
-        mock.patch("mu.interface.main.sys") as mock_sys,
-        mock.patch("mu.interface.main.os.system") as mock_system,
-    ):
-        path = "/home/user/mu_code/images/"
-        mock_sys.platform = "linux"
-        w.open_directory_from_os(path)
-        mock_system.assert_called_once_with('xdg-open "{}"'.format(path))
+    with mock.patch("mu.interface.main.QDesktopServices.openUrl", return_value=False):
+        w.open_directory_from_os("/nowhere")
+    assert "Unable to open /nowhere" in caplog.text
 
 
 def test_Window_open_file_event():
@@ -2338,3 +2446,13 @@ def test_StatusBar_device_connected_adafruit_feather(adafruit_feather):
     sb.set_message = mock.MagicMock()
     sb.device_connected(adafruit_feather)
     assert sb.set_message.call_count == 1
+
+
+def test_Window_size_window_with_real_screens():
+    """Qt's own screenAt, unmocked: on the screen kept, far off it centred."""
+    w = mu.interface.main.Window()
+    screen = QApplication.primaryScreen().geometry()
+    w.size_window(x=screen.x() + 5, y=screen.y() + 5, w=300, h=200)
+    assert (w.x(), w.y()) == (screen.x() + 5, screen.y() + 5)
+    w.size_window(x=screen.x() - 100000, y=screen.y() - 100000, w=300, h=200)
+    assert w.x() == screen.x() + (screen.width() - w.geometry().width()) // 2

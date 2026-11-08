@@ -568,7 +568,7 @@ def test_plotter_available(host, charts):
 
 def test_log_command(host, monkeypatch):
     """
-    A plugin's equivalent commands go into the same "What Nu ran" log as
+    A plugin's equivalent commands go into the same "What Nu Ran" log as
     uv's, so the learner sees (and can type) them; the plugin finishes the
     record it gets back.
     """

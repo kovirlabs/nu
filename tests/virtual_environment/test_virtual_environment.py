@@ -427,6 +427,128 @@ def test_ensure_bundled_python_missing_interpreter(venv, tmp_path, workspace_dir
         assert venv.ensure_bundled_python() is None
 
 
+def _extracted_builds(data_dir, *names):
+    """Fake extracted CPython builds: DATA_DIR/python/<name>/python/bin."""
+    root = os.path.join(str(data_dir), "python")
+    for name in names:
+        os.makedirs(os.path.join(root, name, "python", "bin"))
+    return root
+
+
+def _write_pyvenv_cfg(venv, home):
+    with open(os.path.join(venv.path, "pyvenv.cfg"), "w", encoding="utf-8") as cfg:
+        cfg.write(
+            "home = %s\nimplementation = CPython\nversion_info = 3.11.15\n" % home
+        )
+
+
+def test_remove_old_bundled_pythons(venv, workspace_dirpath):
+    """
+    After an upgrade, builds other than the current one go, unless the
+    environment is based on one; a leftover file is left alone.
+    """
+    root = _extracted_builds(
+        workspace_dirpath,
+        "cpython-3.11.9-old",
+        "cpython-3.11.10-older.partial",
+        "cpython-3.11.12-in-use",
+        "cpython-3.11.15-new",
+        "cpython-3.11.15-new.partial",
+    )
+    open(os.path.join(root, "notes.txt"), "w").close()
+    _write_pyvenv_cfg(
+        venv, os.path.join(root, "cpython-3.11.12-in-use", "python", "bin")
+    )
+    archive = "/bundle/cpython-3.11.15-new.tar.gz"
+    with mock.patch.object(mu.wheels, "bundled_python_archive", return_value=archive):
+        removed = venv.remove_old_bundled_pythons()
+    assert removed == [
+        os.path.join(root, "cpython-3.11.10-older.partial"),
+        os.path.join(root, "cpython-3.11.9-old"),
+    ]
+    assert sorted(os.listdir(root)) == [
+        "cpython-3.11.12-in-use",
+        "cpython-3.11.15-new",
+        "cpython-3.11.15-new.partial",
+        "notes.txt",
+    ]
+
+
+def test_remove_old_bundled_pythons_once_the_environment_moved_on(
+    venv, workspace_dirpath
+):
+    """The environment recreated on the new build: the old one goes."""
+    root = _extracted_builds(workspace_dirpath, "cpython-3.11.9-old", "cpython-3.11.15")
+    _write_pyvenv_cfg(venv, os.path.join(root, "cpython-3.11.15", "python", "bin"))
+    archive = "/bundle/cpython-3.11.15.tar.gz"
+    with mock.patch.object(mu.wheels, "bundled_python_archive", return_value=archive):
+        venv.remove_old_bundled_pythons()
+    assert os.listdir(root) == ["cpython-3.11.15"]
+
+
+def test_remove_old_bundled_pythons_not_an_installer_build(venv, workspace_dirpath):
+    """A dev checkout bundles no Python, so nothing there is Nu's to remove."""
+    root = _extracted_builds(workspace_dirpath, "cpython-3.11.9-old")
+    with mock.patch.object(mu.wheels, "bundled_python_archive", return_value=None):
+        assert venv.remove_old_bundled_pythons() == []
+    assert os.listdir(root) == ["cpython-3.11.9-old"]
+
+
+def test_remove_old_bundled_pythons_nothing_extracted(venv, workspace_dirpath):
+    archive = "/bundle/cpython-3.11.15.tar.gz"
+    with mock.patch.object(mu.wheels, "bundled_python_archive", return_value=archive):
+        assert venv.remove_old_bundled_pythons() == []
+
+
+def test_remove_old_bundled_pythons_without_pyvenv_cfg(venv, workspace_dirpath):
+    """No pyvenv.cfg to read: nothing in use but the current build."""
+    root = _extracted_builds(workspace_dirpath, "cpython-3.11.9-old", "cpython-3.11.15")
+    archive = "/bundle/cpython-3.11.15.tar.gz"
+    with mock.patch.object(mu.wheels, "bundled_python_archive", return_value=archive):
+        venv.remove_old_bundled_pythons()
+    assert os.listdir(root) == ["cpython-3.11.15"]
+
+
+def test_remove_old_bundled_pythons_removal_fails(venv, workspace_dirpath, caplog):
+    """A build that can't be removed (in use on Windows) is logged and kept."""
+    root = _extracted_builds(workspace_dirpath, "cpython-3.11.9-old", "cpython-3.11.15")
+    archive = "/bundle/cpython-3.11.15.tar.gz"
+    with (
+        mock.patch.object(mu.wheels, "bundled_python_archive", return_value=archive),
+        mock.patch.object(
+            mu.virtual_environment.shutil, "rmtree", side_effect=OSError("busy")
+        ),
+    ):
+        assert venv.remove_old_bundled_pythons() == []
+    assert "Unable to remove" in caplog.text
+    assert sorted(os.listdir(root)) == ["cpython-3.11.15", "cpython-3.11.9-old"]
+
+
+def test_is_within(tmp_path):
+    inner = tmp_path / "a" / "b"
+    inner.mkdir(parents=True)
+    assert mu.virtual_environment.is_within(str(inner), str(tmp_path / "a"))
+    assert mu.virtual_environment.is_within(str(tmp_path / "a"), str(tmp_path / "a"))
+    assert not mu.virtual_environment.is_within(
+        str(tmp_path / "ab"), str(tmp_path / "a")
+    )
+    with mock.patch.object(
+        mu.virtual_environment.os.path, "commonpath", side_effect=ValueError
+    ):
+        assert not mu.virtual_environment.is_within("C:\\a", "D:\\a")
+
+
+def test_ensure_and_create_removes_old_bundled_pythons(venv):
+    """Once the environment is good, startup tidies away unused builds."""
+    with (
+        mock.patch.object(os.path, "exists", return_value=True),
+        mock.patch.object(venv, "ensure"),
+        mock.patch.object(venv, "remove_old_bundled_pythons") as remove,
+    ):
+        venv.ensure_and_create()
+    remove.assert_called_once_with()
+
+
 def test_bundled_python_archive_matches_running_version(tmp_path):
     version = "%d.%d" % sys.version_info[:2]
     for name in (

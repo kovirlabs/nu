@@ -275,15 +275,17 @@ def test_save_unable_to_encode(mocked_logger, mocked_open):
 
 @patch.object(mu.settings, "logger")
 def test_load_file_not_found(mocked_logger):
-    """When a settings object can't be found log a warning and carry on with that
-    filepath held for later
+    """When a settings object can't be found log it (at INFO: it's normal on
+    the first run, and a warning logged before logging is set up would go to
+    stderr) and carry on with that filepath held for later
     """
     filepath = rstring()
     assert not os.path.exists(filepath), "Unexpectedly, %s actually exists!" % filepath
     settings = mu.settings.SettingsBase()
     settings.load(filepath)
 
-    assert mocked_logger.warning.called
+    assert mocked_logger.info.called
+    assert not mocked_logger.warning.called
     assert settings.filepath == filepath
 
 

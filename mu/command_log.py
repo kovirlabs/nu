@@ -6,10 +6,11 @@ that, every uv command Nu runs (creating the environment, adding, removing
 and listing packages, running a script with inline dependencies) is recorded
 here exactly as it ran, so the learner can see it — and type it themselves.
 The `Uv` wrapper in `mu.virtual_environment` records each command it runs,
-so no caller can forget to.
+so no caller can forget to, and plugins add theirs (e.g. micro:bit's
+`mpremote`) with `Host.log_command`.
 
 GUI-free on purpose: the UI renders `command_log.render()` (see the
-"What Nu ran" section of the admin dialog), and each command also goes to
+"What Nu Ran" section of the admin dialog), and each command also goes to
 Nu's normal log file at INFO level, with uv's absolute path.
 
 Copyright (c) 2026 the Nu contributors (see the AUTHORS file).
@@ -197,7 +198,7 @@ class CommandLog:
         """
         records = self.records()
         if not records:
-            return _("Nu hasn't run any uv commands yet.")
+            return _("Nu hasn't run any commands yet.")
         blocks = []
         for record in records:
             details = [record.started.strftime("%H:%M:%S")]

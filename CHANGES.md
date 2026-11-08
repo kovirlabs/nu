@@ -15,45 +15,33 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
 * Nu runs on **PyQt6** and **Python 3.11–3.14**. The PyQt5 / Python 3.5-era
   stack is gone.
 * **Modes:** Python 3, the Graphical Debugger, Pygame Zero and CircuitPython.
-  The micro:bit, ESP MicroPython, Raspberry Pi Pico, Pyboard, Lego, Snek and
-  Web modes were removed (their tooling was unmaintained). micro:bit is coming
-  back as a plugin on maintained tooling (opt-in for now, see below).
+  The ESP MicroPython, Raspberry Pi Pico, Pyboard, Lego, Snek and Web modes
+  were removed, because their tools are no longer maintained. So was Mu's
+  micro:bit mode; a new one is on its way (see **Added**).
 * Your programs' Python environment is now created and managed with
   [uv](https://docs.astral.sh/uv/).
 * **Help** opens Nu's own [Using Nu](https://kovirlabs.github.io/nu/help/)
   page instead of codewith.mu.
 
-### New
+### Added
 
 * **Native installers** built with Briefcase: Windows `.msi`, macOS `.app`
   (Apple Silicon) and Linux `.AppImage`, published with each GitHub release.
 * **Works offline from first launch.** The installers carry a Python for your
   programs' environment, so the first start needs no internet.
-* **Plugins (experimental).** Plugins can add modes, with their own icons,
-  and say which packages their modes need in your programs' environment. Drop
-  one into Nu's plugins folder, or install one as a package; a plugin that
-  fails is skipped or reported (errors in its background threads too), and Nu
-  keeps running. The plugin API is at version 0.5 and may change. See
-  [Writing a Nu plugin](https://kovirlabs.github.io/nu/plugins/).
-* **A Plugins tab.** Click the cog and choose **Plugins** to see every plugin
-  Nu found: where it comes from, whether it's on, and the modes it adds. If
-  one couldn't start, it says why in plain words, with the error underneath
-  to copy for whoever wrote it. Untick a plugin to switch it off (CircuitPython
-  and Pygame Zero too), tick it to switch it back on; the change happens when
-  you restart Nu. **Open plugins folder** takes you to where you add your
-  own. See [Managing plugins](https://kovirlabs.github.io/nu/plugins/#managing-plugins).
 * **See your Python environment.** In Python 3 and Pygame Zero modes the
   status bar shows the environment your programs run in
-  (`Environment: mu_venv · Python 3.11`). Click it for the new **Environment**
+  (`Environment: mu_venv · Python 3.11`). Click it for the **Environment**
   tab: where the environment is, which Python it has, and the exact commands
   to activate it or use it with uv from a terminal, each with a **Copy**
-  button. The package and environment-variable editors moved there.
-* **What Nu ran.** Every `uv` command Nu runs for you (making the
-  environment, adding, removing and listing packages, running a program) is
-  listed on the Environment tab as you'd type it, with whether it worked. When
-  you add or remove packages, the progress window shows the real command too.
-  Modes without that environment (boards) show the list as a **What Nu ran**
-  tab of its own, with the commands a plugin ran (micro:bit's `mpremote`).
+  button. Adding and removing packages, and setting environment variables,
+  happen there too.
+* **What Nu Ran.** Every command Nu runs for you (making the environment,
+  adding, removing and listing packages, running a program with `uv`, and
+  the commands a plugin runs, such as micro:bit's `mpremote`) is listed as
+  you'd type it, with whether it worked. It's on the Environment tab, or a
+  tab of its own in modes without that environment (boards). When you add or
+  remove packages, the progress window shows the real command too.
 * **Programs can list the packages they need.** If a program starts with a
   `# /// script` block ([PEP 723](https://peps.python.org/pep-0723/)) such as
   `# dependencies = ["cowsay"]`, **Run** runs it with `uv run`, which fetches
@@ -61,37 +49,56 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   something goes wrong (no internet, a misspelt package) a `Hint:` line says
   what to try. Programs without the block run as before. See
   [Your Python environment](https://kovirlabs.github.io/nu/environment/).
-* **Private crash reports.** If Nu crashes it shows the details with a **Copy
-  to clipboard** button. Mu used to open codewith.mu with the details in the
-  address; Nu never sends anything by itself.
-
-### Added (opt-in, needs hardware validation)
-
-* **BBC micro:bit mode is back**, as a plugin (`nu-microbit`) built on
-  maintained tools only. **Flash** puts the current tab on the micro:bit as
-  `main.py` with [mpremote](https://docs.micropython.org/en/latest/reference/mpremote.html),
+* **Plugins (experimental).** Plugins add modes to Nu, with their own icons,
+  and can say which packages their modes need in your programs' environment.
+  Drop one into Nu's plugins folder, or install one as a package. A plugin
+  that fails, even in its background threads, is skipped or reported, and Nu
+  keeps running. See
+  [Writing a Nu plugin](https://kovirlabs.github.io/nu/plugins/).
+* **A Plugins tab.** Click the cog and choose **Plugins** to see every plugin
+  Nu found: where it comes from, whether it's on, and the modes it adds. If
+  one couldn't start, it says why in plain words, with the error underneath
+  to copy for whoever wrote it. Untick a plugin to switch it off, tick it to
+  switch it back on; the change happens when you restart Nu. **Open plugins
+  folder** takes you to where you add your own. See
+  [Managing plugins](https://kovirlabs.github.io/nu/plugins/#managing-plugins).
+* **BBC micro:bit mode is back, opt-in (it needs testing on real
+  micro:bits first).** It's a plugin (`nu-microbit`) built on maintained
+  tools only. **Flash** puts the current tab on the micro:bit as `main.py`
+  with [mpremote](https://docs.micropython.org/en/latest/reference/mpremote.html),
   first putting MicroPython on (copied to the MICROBIT drive) if it isn't
   there; **Shift+Flash** puts it back on anyway. MicroPython (V1 1.1.1, V2
   2.1.2) is downloaded from its official releases on first use and checked,
   never shipped inside Nu; offline, Nu says which file to put where. Each step
-  shows in the status bar, and the commands are listed under **What Nu ran**.
-  **REPL** and **Plotter** work as in CircuitPython mode, and autocomplete
-  knows micro:bit MicroPython 2.x (sound, microphone, logo, `log`, `power`,
-  radio, music…). It hasn't been tried on real micro:bits yet, so it isn't in
-  the installers: run Nu from source with `uv sync --extra microbit`. See
+  shows in the status bar. **REPL** and **Plotter** work as in CircuitPython
+  mode, and autocomplete knows micro:bit MicroPython 2.x (sound, microphone,
+  logo, `log`, `power`, radio, music…). Until it has been tried on real
+  micro:bits it isn't in the installers: run Nu from source with
+  `uv sync --extra microbit`. See
   [The BBC micro:bit](https://kovirlabs.github.io/nu/microbit/).
-* Plugin API **0.5**: `Host.log_command`, `Host.current_device` and
-  `Host.data_dir` (plugins written for 0.4 need `api_version = "0.5"`).
+* **Private crash reports.** If Nu crashes it shows the details with a **Copy
+  to clipboard** button. Mu used to open codewith.mu with the details in the
+  address; Nu never sends anything by itself.
+* **Ukrainian is selectable** in the **Select Language** tab; before, it was
+  only used if your computer was set to Ukrainian.
 
 ### Changed
 
-* **Pygame Zero is now a bundled plugin** (`nu-pygamezero`). It's installed
-  with Nu and switched on as before, and works the same way (saved sessions in
-  Pygame Zero mode carry on), but it's built on the public plugin API, so it
-  can be switched off like any other plugin.
-* **CircuitPython is now a bundled plugin** too (`nu-circuitpython`), installed
-  with Nu and switched on as before; saved sessions in CircuitPython mode carry
-  on. Nu's own modes are now just Python 3 and the Debugger.
+* **Pygame Zero and CircuitPython are now plugins that come with Nu**
+  (`nu-pygamezero`, `nu-circuitpython`). They're installed and switched on as
+  before, saved sessions in those modes carry on, and they work the same way,
+  but like any plugin they can be switched off on the Plugins tab. Nu's own
+  modes are now just Python 3 and the Debugger.
+* **Narrow windows:** when the toolbar's labels don't fit (in a long
+  translation, such as Ukrainian, in a window narrower than about 1024
+  pixels) the buttons show their icons only, with their names in the
+  tooltips, rather than hiding **Help** and **Quit** off the right edge.
+* The admin dialog's tabs are named consistently: **Current Log**,
+  **Environment** (with **Packages**, **Environment Variables** and **What
+  Nu Ran**), **Plugins** and **Select Language**.
+* Nu removes the copy of Python an earlier version of Nu unpacked for your
+  programs' environment (about 70 MB each) once nothing uses it, instead of
+  keeping every one after each upgrade.
 
 ### Fixed
 
@@ -102,12 +109,12 @@ PyQt6 and uv, found by checking Nu against Mu:
   problems are shown under the lines again.
 * **Tidy** works on code that uses newer Python syntax, such as `match`
   statements, instead of saying the code contains problems.
-* The **admin dialog** (Ctrl+Shift+D, or the icon at the right of the status
+* The **admin dialog** (Ctrl+Shift+D, or the cog at the right of the status
   bar) opens again in Python 3 and Pygame Zero modes; it crashed Nu while
   listing your installed packages.
-* The admin dialog's **Third Party Packages** list shows only packages you
-  added again, not ones Nu installed for itself (such as `jupyter-client`),
-  so removing lines there can't uninstall the REPL's own packages.
+* The admin dialog's package list shows only packages you added again, not
+  ones Nu installed for itself (such as `jupyter-client`), so removing lines
+  there can't uninstall the REPL's own packages.
 * Adding or removing packages in the admin dialog works again: the install
   was stopped as soon as it started and the progress window never finished.
 * The Python 3 **REPL** button starts the Jupyter REPL again instead of
@@ -120,14 +127,29 @@ PyQt6 and uv, found by checking Nu against Mu:
   and mode messages, and more) had fallen back to English in every language;
   it's translated again in 13 of them. Recent fixes to the French and Russian
   translations that never reached the app are now included too.
-* **Ukrainian is selectable** in the admin dialog's **Select Language** tab;
-  before, it was only used if your computer was set to Ukrainian.
+
+And older problems, found while checking the whole app:
+
+* Nu no longer freezes when Pygame Zero's **Images**, **Fonts**, **Sounds**
+  or **Music** button, or **Open plugins folder**, opens a folder: on some
+  Linux desktops it waited until the file manager was closed.
+* With more than one monitor, Nu opens where you left it, even on a second
+  monitor; only a position on a monitor that's no longer connected is
+  moved back to the main screen. (Mu only knew about the main screen.)
+* Settings Nu or a plugin changes (such as switching a plugin off) are now
+  saved; they were lost when Nu closed.
+* Opening the admin dialog in a board's mode no longer runs `uv pip list`
+  for a package list that mode doesn't show.
 
 ### Security
 
 * All open Dependabot and CodeQL alerts are resolved, and the bundled Jupyter
   stack requires `tornado>=6.5.9` (fixes several advisories in the REPL's
   server library). If you installed a 2.0.0 beta, please upgrade.
+* The **REPL**'s connection to the Python running your code is encrypted
+  where the installed Jupyter packages support it, so other people using
+  the same computer can't read it. (It also stops the kernel printing a
+  "running over TCP without encryption" warning each time.)
 
 ### Known limitations
 
@@ -143,6 +165,20 @@ PyQt6 and uv, found by checking Nu against Mu:
   needs a review for the new name. To help, see
   [Translating Nu](https://kovirlabs.github.io/nu/translations/).
 * In the installers, plugins can only be added through the plugins folder.
+* The **plugin API** (version 0.5) may still change; plugins say which
+  version they were written for, and Nu skips ones it can't run.
+
+### For developers
+
+* Plugin API **0.5**: `Host.log_command`, `Host.current_device` and
+  `Host.data_dir` (plugins written for 0.4 need `api_version = "0.5"`). See
+  [What changed](https://kovirlabs.github.io/nu/plugins/).
+* The test suite never touches your real Nu data, workspace or IPython
+  profile, and runs against a running Nu: `MU_DATA_DIR` and `MU_HOME_DIR`
+  (also handy for a throwaway profile) point Nu's data and home folders
+  elsewhere. Every test file can be run on its own, in any order.
+* Every text file in the repository uses LF line endings
+  (`.gitattributes`).
 
 ## Mu 1.2.2 and earlier
 
