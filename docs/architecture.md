@@ -23,12 +23,13 @@ The code is found in the `mu` directory and organised in the following way:
 * The Python3 debugger consists of a debug client and debug runner found in the `debugger` namespace. A description of how the debugger works can be found in [debugger](debugger.md).
 * Interacting with the UI layer is done via the `Window` class in the `interface.main` module. Mu specific UI code used by the `Window` class found in the other modules in the namespace.
 * Internationalization (I18n) related assets are found under `locale`. Learn how this works via [translations](translations.md).
-* Modes are found under the `modes` namespace. They all inherit from a `BaseMode` class and there's a tutorial for [modes](modes.md). The core's modes are Python 3, the Debugger and (for now) CircuitPython; the rest come from plugins.
+* Modes are found under the `modes` namespace. They all inherit from a `BaseMode` class and there's a tutorial for [modes](modes.md). The core's modes are Python 3 and the Debugger; every other mode comes from a plugin.
 * The plugin host is the `plugin` namespace: the public, versioned `mu.plugin` API, plugin discovery (`plugin.loader`) and error isolation (`plugin.errors`). See [plugins](plugins.md).
 * Graphical assets, fonts and CSS descriptions for the themes are all found under `resources`.
 
-Bundled plugins live outside `mu`, under `plugins/<name>/` (e.g.
-`plugins/pygamezero`, the Pygame Zero mode): each is its own package, a member
+Bundled plugins live outside `mu`, under `plugins/<name>/`
+(`plugins/circuitpython` and `plugins/pygamezero`, the CircuitPython and Pygame
+Zero modes): each is its own package, a member
 of the repo's uv workspace, installed with Nu and found through its
 `mu.plugins` entry point exactly like a community plugin. `plugins/example` is
 the template for writing one. See [plugins](plugins.md) and

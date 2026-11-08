@@ -56,7 +56,7 @@ class ExamplePlugin(ModePlugin):
     name = "Example"
     # The plugin API version this was written against. Always a literal: Nu
     # compares it with the API it provides and skips the plugin if they clash.
-    api_version = "0.2"
+    api_version = "0.3"
     mode = ExampleMode
     # The folder of images the mode uses, registered before the mode.
     images = os.path.join(os.path.dirname(__file__), "images")

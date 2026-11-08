@@ -248,7 +248,10 @@ _TRANSLATE_IGNORE_DIRNAMES = {
 }
 # Bundled plugins use Nu's own message catalog, so their packages are
 # extracted too (but not their API stubs or tests).
-_TRANSLATE_PLUGIN_PACKAGES = [os.path.join("plugins", "pygamezero", "nu_pygamezero")]
+_TRANSLATE_PLUGIN_PACKAGES = [
+    os.path.join("plugins", "circuitpython", "nu_circuitpython"),
+    os.path.join("plugins", "pygamezero", "nu_pygamezero"),
+]
 
 
 def _translate_ignore(dirname):

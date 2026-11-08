@@ -8,6 +8,7 @@ resolution-markers = [
 
 [manifest]
 members = [
+    "nu-circuitpython",
     "nu-editor",
     "nu-example-plugin",
     "nu-pygamezero",
@@ -1292,14 +1293,25 @@ wheels = [
 ]
 
 [[package]]
+name = "nu-circuitpython"
+version = "0.1.0"
+source = { editable = "plugins/circuitpython" }
+dependencies = [
+    { name = "adafruit-board-toolkit" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "adafruit-board-toolkit", specifier = "~=1.1" }]
+
+[[package]]
 name = "nu-editor"
 source = { editable = "." }
 dependencies = [
-    { name = "adafruit-board-toolkit" },
     { name = "black" },
     { name = "flake8" },
     { name = "ipykernel" },
     { name = "jupyter-client" },
+    { name = "nu-circuitpython" },
     { name = "nu-pygamezero" },
     { name = "nudatus" },
     { name = "packaging" },
@@ -1383,7 +1395,6 @@ utils = [
 
 [package.metadata]
 requires-dist = [
-    { name = "adafruit-board-toolkit", specifier = "~=1.1" },
     { name = "babel", marker = "extra == 'all'" },
     { name = "babel", marker = "extra == 'dev'" },
     { name = "babel", marker = "extra == 'i18n'" },
@@ -1408,6 +1419,7 @@ requires-dist = [
     { name = "mkdocstrings", extras = ["python"], marker = "extra == 'all'" },
     { name = "mkdocstrings", extras = ["python"], marker = "extra == 'dev'" },
     { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'" },
+    { name = "nu-circuitpython", editable = "plugins/circuitpython" },
     { name = "nu-pygamezero", editable = "plugins/pygamezero" },
     { name = "nudatus", specifier = ">=0.0.3" },
     { name = "packaging", specifier = ">=22" },

@@ -321,6 +321,28 @@ class Host:
         """
         return SHARED_APIS + PYTHON3_APIS + PI_APIS
 
+    def shared_apis(self):
+        """
+        The autocomplete and call tip entries every Python has, MicroPython
+        and CircuitPython included (built-ins, and str, list and dict
+        methods), as a new list a MicroPython-family mode's `api()` can add
+        its board's own to.
+        """
+        return list(SHARED_APIS)
+
+    @property
+    def plotter_available(self):
+        """
+        True if Nu can show the plotter (the optional PyQt6-Charts package is
+        installed). Offer a Plotter button (`MicroPythonMode.toggle_plotter`)
+        only when it is.
+        """
+        # Read when asked, not at import: the panes module is the one place
+        # that knows whether Qt Charts imported.
+        from ..interface import panes
+
+        return panes.CHARTS
+
     # --- housekeeping ---
 
     def settings(self, namespace):

@@ -46,11 +46,7 @@ from .logic import Editor, LOG_FILE, LOG_DIR, ENCODING
 from .interface import Window
 from .interface.dialogs import CrashDialog
 from .resources import load_icon, load_movie, load_pixmap
-from .modes import (
-    PythonMode,
-    CircuitPythonMode,
-    DebugMode,
-)
+from .modes import PythonMode, DebugMode
 from .plugin import Host
 from .plugin import errors as plugin_errors
 from .plugin.loader import load_plugins
@@ -266,7 +262,7 @@ def setup_modes(editor, view):
     fails to load is logged and skipped.
     """
     host = Host(editor, view)
-    for mode_class in (PythonMode, CircuitPythonMode, DebugMode):
+    for mode_class in (PythonMode, DebugMode):
         host.register_mode(mode_class)
     host.plugin_records = load_plugins(host)
     plugin_errors.install(host._error_handler)

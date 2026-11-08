@@ -22,6 +22,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from ..logic import Device
 from ..modes.base import BaseMode as Mode, MicroPythonMode
 from .base import PLUGIN_API_VERSION, Plugin, ModePlugin, check_compatible
 from .errors import PluginError
@@ -33,6 +34,7 @@ __all__ = [
     "ModePlugin",
     "Mode",
     "MicroPythonMode",
+    "Device",
     "Host",
     "PluginSettings",
     "PluginError",

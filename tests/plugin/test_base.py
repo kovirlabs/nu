@@ -27,6 +27,17 @@ def test_public_api_reexports_modes():
         assert hasattr(mu.plugin, name)
 
 
+def test_public_api_reexports_device():
+    """
+    A MicroPython-family mode builds the Device its compatible_board returns
+    from mu.plugin (0.3), not mu.logic.
+    """
+    import mu.logic
+
+    assert mu.plugin.Device is mu.logic.Device
+    assert "Device" in mu.plugin.__all__
+
+
 def test_core_version_is_compatible_with_itself():
     assert check_compatible(PLUGIN_API_VERSION) is None
 
@@ -37,7 +48,7 @@ def test_core_version_is_compatible_with_itself():
         ("1.0", "1.0"),
         ("1.0", "1.3"),  # older minor on a 1.x core: additive, so fine
         ("1.3", "1.3"),
-        ("0.2", "0.2"),
+        ("0.3", "0.3"),
     ],
 )
 def test_check_compatible_accepts(api_version, core_version):
@@ -49,8 +60,8 @@ def test_check_compatible_accepts(api_version, core_version):
     [
         ("2.0", "1.0", "targets plugin API 2.0"),  # different major
         ("1.0", "2.0", "targets plugin API 1.0"),
-        ("0.1", "0.2", "targets plugin API 0.1"),  # 0.x minors may break
-        ("0.3", "0.2", "targets plugin API 0.3"),
+        ("0.2", "0.3", "targets plugin API 0.2"),  # 0.x minors may break
+        ("0.4", "0.3", "targets plugin API 0.4"),
         ("1.4", "1.3", "newer than this Nu's 1.3"),  # needs a newer core
         (None, "1.0", "no valid api_version"),
         ("1", "1.0", "no valid api_version"),

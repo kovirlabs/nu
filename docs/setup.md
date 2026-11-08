@@ -43,7 +43,7 @@ If you prefer not to use uv, any Python 3.11+ virtual environment works:
 ```
 python3 -m venv .venv
 source .venv/bin/activate          # Windows: .\.venv\Scripts\activate
-pip install -e ./plugins/pygamezero -e ".[dev]"
+pip install -e ./plugins/circuitpython -e ./plugins/pygamezero -e ".[dev]"
 ```
 
 pip doesn't know about the uv workspace, so the bundled plugins (which

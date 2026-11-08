@@ -104,12 +104,6 @@ API autocomplete and call tips can be found in the `mu.modes.api` namespace.
 
 ::: mu.modes.base
 
-### `mu.modes.circuitpython`
-
-CircuitPython mode for Adafruit boards (and others).
-
-::: mu.modes.circuitpython
-
 ### `mu.modes.debugger`
 
 The Python 3 debugger mode.
@@ -125,6 +119,15 @@ The Python 3 editing mode.
 ## Bundled plugins
 
 Plugins shipped with Nu, in `plugins/` (see [plugins](plugins.md)).
+
+### `nu_circuitpython`
+
+The CircuitPython mode for Adafruit boards (and others), as a bundled plugin
+(`plugins/circuitpython`).
+
+::: nu_circuitpython
+
+::: nu_circuitpython.mode
 
 ### `nu_pygamezero`
 

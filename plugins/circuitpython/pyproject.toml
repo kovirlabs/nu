@@ -1,0 +1,39 @@
+# CircuitPython for Nu: a bundled plugin (Phase 5c, see TODO.md).
+#
+# It lives in Nu's repo as a uv workspace member, and nu-editor depends on it,
+# but it's an ordinary, independently publishable package: Nu finds it through
+# the "mu.plugins" entry point below, exactly as it finds a community plugin.
+# Publish it to PyPI before a nu-editor release that needs it (see
+# docs/packaging.md).
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nu-circuitpython"
+version = "0.1.0"
+description = "The CircuitPython mode for the Nu editor: write code for CircuitPython boards."
+readme = "README.md"
+license = "GPL-3.0-or-later"
+requires-python = ">=3.11"
+authors = [
+    { name = "Evan Gress", email = "kovirlabs@kovir.org" },
+    { name = "Kovir Labs", email = "kovirlabs@kovir.org" },
+]
+# No dependency on nu-editor: a plugin is installed into the environment Nu
+# runs from, which provides mu.plugin (and nu-editor depends on this package).
+# adafruit-board-toolkit tells which serial ports are CircuitPython REPLs
+# (pyserial, which it uses, is one of Nu's own dependencies too).
+dependencies = ["adafruit-board-toolkit~=1.1"]
+
+[project.urls]
+Homepage = "https://github.com/kovirlabs/nu"
+
+# No learner-env extra: the learner's CircuitPython code runs on the board,
+# not in the learner's Python environment, so the mode needs nothing there.
+
+[project.entry-points."mu.plugins"]
+circuitpython = "nu_circuitpython:CircuitPythonPlugin"
+
+[tool.hatch.build.targets.wheel]
+packages = ["nu_circuitpython"]

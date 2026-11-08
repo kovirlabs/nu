@@ -345,7 +345,7 @@ drop-in dir covers them.
   can't install into, so entry-point discovery only sees bundled plugins there; the
   drop-in folder is the only user route until 5d puts a plugin env on `sys.path`.
 
-**5c. Convert the specialized modes to bundled plugins (proof of the API):**
+**5c. Convert the specialized modes to bundled plugins (proof of the API):** ✅ DONE
 - [x] Scaffold a `plugins/` **uv workspace** (`[tool.uv.workspace]`): each bundled plugin is
   `plugins/<name>/` with its own `pyproject.toml` + `mu.plugins` entry point — independently
   buildable/publishable, sharing the repo lockfile. (`plugins/example` is a member but not a
@@ -354,7 +354,7 @@ drop-in dir covers them.
   (`./plugins/<name>`); pip installs from a checkout pass the path. Publishing order:
   bundled plugins to PyPI **before** the `nu-editor` release that needs them
   (`docs/packaging.md`).
-- Move the specialized modes out of the core set into bundled plugins loaded through the same
+- [x] Move the specialized modes out of the core set into bundled plugins loaded through the same
   entry-point path (shipped + enabled by default) — they become the reference plugins. Keep
   **Python 3 + Debugger** in core.
   - [x] **Pygame Zero** → `plugins/pygamezero` (`nu-pygamezero`, `nu_pygamezero`, entry point
@@ -365,8 +365,13 @@ drop-in dir covers them.
     mode names in `dialogs.py`/`logic.py`), the `learner-env` extra (replacing
     `wheels.mode_packages`' pgzero entry) and `Host.save_current` / `run_program` /
     `stop_program` / `update_action` / `python_apis`.
-  - [ ] **CircuitPython** (5c part 2).
-- Relocate each plugin's API stubs (`modes/api/`), wheels, icons, and settings into its
+  - [x] **CircuitPython** → `plugins/circuitpython` (`nu-circuitpython`, `nu_circuitpython`,
+    entry point `circuitpython`, mode key unchanged). Built only on `mu.plugin`; plugin API
+    **0.3** adds what a `MicroPythonMode` plugin needs: `mu.plugin.Device` (what
+    `compatible_board` returns), `Host.shared_apis()` (the autocomplete entries every Python
+    has, for a board mode) and `Host.plotter_available` (Qt Charts present). The core's
+    modes are now just **Python 3 + Debugger**; it no longer names or imports CircuitPython.
+- [x] Relocate each plugin's API stubs (`modes/api/`), wheels, icons, and settings into its
   own package; keep the suite green (port mode tests → plugin tests).
   - [x] Pygame Zero: stubs → `nu_pygamezero/api/`, icons → `nu_pygamezero/images/`, demo
     assets → `nu_pygamezero/assets/`, wheels → its `learner-env` extra, tests →
@@ -374,7 +379,13 @@ drop-in dir covers them.
     `plugins/`; tests' shared fixtures moved to the root `conftest.py`). It had no settings
     of its own. Its strings stay in Nu's catalog (`make translate_*` extracts bundled
     plugins too).
-  - [ ] CircuitPython (5c part 2).
+  - [x] CircuitPython: stubs (`ADAFRUIT_APIS`) → `nu_circuitpython/api/`, icons →
+    `nu_circuitpython/images/` (the Serial button's renamed `circuitpython-serial`, per the
+    plugin-name prefix convention; `plotter` stays a core icon), tests + mount fixtures →
+    `plugins/circuitpython/tests/` (now 100% coverage). Its runtime dependency
+    `adafruit-board-toolkit` moved from the core's dependencies/Briefcase `requires` to the
+    plugin's (`pyserial` stays in core: `MicroPythonMode` uses it). No `learner-env` extra:
+    CircuitPython code runs on the board. It had no settings of its own.
 
 **5d. Plugin dependencies via uv (ties into Phase 4):**
 - [ ] A plugin declares its PyPI runtime deps; installing the plugin **uv-installs** the
