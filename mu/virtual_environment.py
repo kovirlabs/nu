@@ -619,6 +619,9 @@ class VirtualEnvironment(object):
 
     def __init__(self, dirpath=None):
         self.process = Process()
+        # The uv process installing/removing user packages (see
+        # install_user_packages), referenced so it isn't destroyed mid-run.
+        self.user_package_process = None
         self._is_windows = sys.platform == "win32"
         self._bin_extension = ".exe" if self._is_windows else ""
         self.settings = settings.VirtualEnvironmentSettings()
@@ -1253,14 +1256,18 @@ class VirtualEnvironment(object):
         Install user defined packages.
         """
         logger.info("Installing user packages: %s", ", ".join(packages))
-        self._uv().install(packages, slots=slots, upgrade=True)
+        # Keep the process alive: Qt destroys (and kills) a QProcess as soon
+        # as nothing references it.
+        self.user_package_process = self._uv().install(
+            packages, slots=slots, upgrade=True
+        )
 
     def remove_user_packages(self, packages, slots=Process.Slots()):
         """
         Remove user defined packages.
         """
         logger.info("Removing user packages: %s", ", ".join(packages))
-        self._uv().uninstall(packages, slots=slots)
+        self.user_package_process = self._uv().uninstall(packages, slots=slots)
 
     def installed_packages(self):
         """

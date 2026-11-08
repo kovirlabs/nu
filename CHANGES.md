@@ -51,6 +51,8 @@ Regressions from the move to PyQt6, found by checking Nu against Mu 1.2.2:
 * The admin dialog's **Third Party Packages** list shows only packages you
   added again, not ones Nu installed for itself (such as `jupyter-client`),
   so removing lines there can't uninstall the REPL's own packages.
+* Adding or removing packages in the admin dialog works again: the install
+  was stopped as soon as it started and the progress window never finished.
 * The Python 3 **REPL** button starts the Jupyter REPL again instead of
   crashing Nu.
 

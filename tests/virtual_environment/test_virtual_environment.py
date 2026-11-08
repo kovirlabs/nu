@@ -572,6 +572,39 @@ def test_install_user_packages(venv):
         assert kwargs.get("upgrade") is True
 
 
+@pytest.mark.parametrize("method", ["install_user_packages", "remove_user_packages"])
+def test_user_package_process_runs_to_completion(qtapp, venv, method):
+    """
+    Regression: the uv process behind the admin dialog's package install /
+    removal must be kept alive until it finishes. Nothing held a reference to
+    it, so Qt destroyed the QProcess while uv was still running ("QProcess:
+    Destroyed while process is still running"), the package was never
+    installed and the "finished" slot never fired, leaving the dialog stuck.
+
+    A real QProcess is run (Python standing in for uv: it exits straight away
+    with an error, which is fine -- we only need "finished" to arrive).
+    """
+    import gc
+    import time
+    from PyQt6.QtCore import QEventLoop
+
+    finished = []
+    fake_uv = mu.virtual_environment.Uv(
+        uv_executable=sys.executable, venv_path=venv.path
+    )
+    with mock.patch.object(VE, "_uv", return_value=fake_uv):
+        getattr(venv, method)(
+            ["arrr"], slots=VE.Slots(finished=lambda: finished.append(True))
+        )
+    del fake_uv
+    deadline = time.time() + 20
+    while not finished and time.time() < deadline:
+        gc.collect()
+        qtapp.processEvents(QEventLoop.ProcessEventsFlag.AllEvents, 50)
+        time.sleep(0.01)
+    assert finished
+
+
 def test_remove_user_packages(venv):
     """Ensure that, given a list of packages, we uv-uninstall them
 
