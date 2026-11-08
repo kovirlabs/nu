@@ -305,6 +305,9 @@ drop-in dir covers them.
   so it can't clash with core buttons); the core still names modes in
   `interface/dialogs.py` (`["python", "pygamezero"]`) and `logic.py` (copies Pygame Zero
   assets); `wheels.mode_packages` is a single global list. Fix these in 5b–5d.
+  → All three fixed in 5c part 1 (plugin API 0.2): plugins register image folders,
+  modes declare `uses_user_environment` / `ensure_workspace_assets`, and plugins list
+  learner-env packages as a `learner-env` extra.
 
 **5b. Plugin discovery + loading:** ✅ DONE
 - [x] `mu/plugin/loader.py` discovers installed plugins via `importlib.metadata` entry
@@ -343,20 +346,48 @@ drop-in dir covers them.
   drop-in folder is the only user route until 5d puts a plugin env on `sys.path`.
 
 **5c. Convert the specialized modes to bundled plugins (proof of the API):**
-- [ ] Scaffold a `plugins/` **uv workspace** (`[tool.uv.workspace]`): each bundled plugin is
+- [x] Scaffold a `plugins/` **uv workspace** (`[tool.uv.workspace]`): each bundled plugin is
   `plugins/<name>/` with its own `pyproject.toml` + `mu.plugins` entry point — independently
-  buildable/publishable, sharing the repo lockfile.
-- [ ] Move **CircuitPython** and **Pygame Zero** out of the core set into bundled plugins
-  loaded through the same entry-point path (shipped + enabled by default) — they become the
-  reference plugins. Keep **Python 3 + Debugger** in core.
-- [ ] Relocate each plugin's API stubs (`modes/api/`), wheels, icons, and settings into its
+  buildable/publishable, sharing the repo lockfile. (`plugins/example` is a member but not a
+  dependency.) `nu-editor` depends on each bundled plugin by name, resolved from the
+  workspace by `[tool.uv.sources]`; Briefcase `requires` lists it as a local path
+  (`./plugins/<name>`); pip installs from a checkout pass the path. Publishing order:
+  bundled plugins to PyPI **before** the `nu-editor` release that needs them
+  (`docs/packaging.md`).
+- Move the specialized modes out of the core set into bundled plugins loaded through the same
+  entry-point path (shipped + enabled by default) — they become the reference plugins. Keep
+  **Python 3 + Debugger** in core.
+  - [x] **Pygame Zero** → `plugins/pygamezero` (`nu-pygamezero`, `nu_pygamezero`, entry point
+    `pygamezero`, mode key unchanged). Built only on `mu.plugin`; to make that possible,
+    plugin API **0.2** adds plugin images (`Host.register_images` / `ModePlugin.images`;
+    a name clash with a core or other plugin image raises, so the plugin is skipped),
+    `Mode.uses_user_environment` + `Mode.ensure_workspace_assets` (replacing the hardcoded
+    mode names in `dialogs.py`/`logic.py`), the `learner-env` extra (replacing
+    `wheels.mode_packages`' pgzero entry) and `Host.save_current` / `run_program` /
+    `stop_program` / `update_action` / `python_apis`.
+  - [ ] **CircuitPython** (5c part 2).
+- Relocate each plugin's API stubs (`modes/api/`), wheels, icons, and settings into its
   own package; keep the suite green (port mode tests → plugin tests).
+  - [x] Pygame Zero: stubs → `nu_pygamezero/api/`, icons → `nu_pygamezero/images/`, demo
+    assets → `nu_pygamezero/assets/`, wheels → its `learner-env` extra, tests →
+    `plugins/pygamezero/tests/` (pytest `testpaths`/`pythonpath`, coverage includes
+    `plugins/`; tests' shared fixtures moved to the root `conftest.py`). It had no settings
+    of its own. Its strings stay in Nu's catalog (`make translate_*` extracts bundled
+    plugins too).
+  - [ ] CircuitPython (5c part 2).
 
 **5d. Plugin dependencies via uv (ties into Phase 4):**
 - [ ] A plugin declares its PyPI runtime deps; installing the plugin **uv-installs** the
   package + deps into the user env (or a dedicated plugin env). "Add a plugin" reuses the
   Phase 4b uv buttons and echoes the real command.
 - [ ] Offline-first: bundled plugins' wheels ship in the installer wheelhouse (`mu/wheels`).
+  Minimal version done in 5c part 1: `wheels.baseline_packages()` adds every installed
+  plugin's `learner-env` requirements (read from metadata, so it works for switched-off
+  plugins and in the bare build Python), and `build.yml` installs the bundled plugins
+  (`--no-deps`) before `python -m mu.wheels --package`. Left for 5d: installing a plugin's
+  learner-env packages into an **existing** environment when the plugin is added (today
+  they're installed only when the env is created/recreated, e.g. on a Nu upgrade); only the
+  core's packages are verified by `ensure_key_modules`; drop-in plugins can't declare any.
 
 **5e. Plugin management UX:**
 - [ ] A **"Plugins"** admin tab: list bundled / installed / available, enable/disable,

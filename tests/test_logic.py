@@ -813,7 +813,8 @@ def test_editor_setup():
     e = mu.logic.Editor(view)
     mock_mode = mock.MagicMock()
     mock_mode.workspace_dir.return_value = "foo"
-    mock_modes = {"python": mock_mode}
+    other_mode = mock.MagicMock()
+    mock_modes = {"python": mock_mode, "other": other_mode}
     with (
         mock.patch("os.path.exists", return_value=False),
         mock.patch("os.makedirs", return_value=None) as mkd,
@@ -821,11 +822,14 @@ def test_editor_setup():
         mock.patch("shutil.copytree") as mock_shutil_copytree,
     ):
         e.setup(mock_modes)
-        assert mkd.call_count == 5
+        assert mkd.call_count == 1
         assert mkd.call_args_list[0][0][0] == "foo"
-        asset_len = len(mu.logic.DEFAULT_IMAGES) + len(mu.logic.DEFAULT_SOUNDS)
-        assert mock_shutil_copy.call_count == asset_len
+        assert mock_shutil_copy.call_count == 0
         assert mock_shutil_copytree.call_count == 2
+    # Each mode puts what it needs in the workspace (e.g. Pygame Zero's
+    # images and sounds folders).
+    mock_mode.ensure_workspace_assets.assert_called_once_with("foo")
+    other_mode.ensure_workspace_assets.assert_called_once_with("foo")
     assert e.modes == mock_modes
     view.set_usb_checker.assert_called_once_with(1, e.connected_devices.check_usb)
 

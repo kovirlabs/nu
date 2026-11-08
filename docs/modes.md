@@ -20,8 +20,12 @@ some modes are only available as transitional modes (i.e. they may not be
 selected by the user). A good example of such a "transitional" mode is the
 Python 3 debugger, which can only be accessed from the standard Python 3 mode.
 
-Mu contains the following modes, although it is very easy to add more (the
-images below are used with permission, see [copyright](copyright.md)).
+Nu's **core** modes are **Python 3**, the **Debugger** and (until it moves to a
+plugin too, Phase 5c part 2) **CircuitPython**. Everything else is a
+[plugin](plugins.md): **Pygame Zero** is a *bundled* plugin, shipped and switched
+on by default, that lives in this repo under `plugins/pygamezero/`. The
+descriptions below are inherited from Mu and include modes this fork has dropped
+(the images below are used with permission, see [copyright](copyright.md)).
 
 ### Adafruit Mode
 
@@ -55,6 +59,11 @@ user interface to the simple file system on the device.
 ### Pygame Zero / PyGame Mode
 
 ![](pygame.png)
+
+!!! note
+    Pygame Zero is a bundled plugin: the `nu-pygamezero` package in
+    `plugins/pygamezero/`, built on the public [plugin API](plugins.md) only.
+    It's the best worked example of a full mode as a plugin.
 
 [PyGame](http://pygame.org/) (or, more correctly: "pygame") is a cross
 platform set of Python libraries for writing games.
@@ -114,8 +123,21 @@ Python mode.
 
 ## Create a New Mode
 
+!!! note "Write new modes as plugins"
+    A new mode should be a [plugin](plugins.md): a package with a `mu.plugins`
+    entry point that imports only `mu.plugin`, starting from the template in
+    `plugins/example/`. The class, attributes, actions and `api` described
+    below are the same for a plugin mode (`mu.plugin.Mode` *is* `BaseMode`),
+    but instead of registering it in `mu/app.py` you register it from your
+    plugin, its icons live in your plugin's own `images` folder, and you reach
+    the editor through `self.host` rather than `self.editor` and `self.view`.
+    The Pygame Zero mode (`plugins/pygamezero/nu_pygamezero/mode.py`) shows all
+    of this. The steps below describe the built-in, in-core route used by the
+    core's own modes.
+
 It's very easy to create new mode for Mu. The following tutorial explains how
-we created the Pygame Zero mode.
+we created the Pygame Zero mode (it has since become a bundled plugin, so its
+code now lives in `plugins/pygamezero/`).
 
 ### Create a Class
 
@@ -155,7 +177,8 @@ The attributes that must be changed are:
 * `description` -- a short description of the mode to be displayed in the
   mode picker. For example, "Make games with Pygame Zero".
 * `icon` -- an icon used to represent the mode in the mode picker. This must
-  be a `.png` image file found in the `mu/resources/images` directory.
+  be a `.png` (or `.svg`) image file found in the `mu/resources/images`
+  directory, or in a plugin's registered images folder.
 
 Additional attritbutes with safe default values set in the `BaseMode` class
 which may be of value for you to change are:
@@ -164,6 +187,14 @@ which may be of value for you to change are:
   this value is 0 (zero) Mu will not auto-save changed files when in this mode.
 * `builtins` -- a list of strings defining symbols that Mu's code checker
   must assume are builtins (above and beyond Python's standard builtins).
+* `uses_user_environment` -- set it to `True` if the mode runs the learner's
+  programs in Nu's Python environment, so the admin dialog shows that
+  environment's variables and third-party packages.
+
+A mode may also override `ensure_workspace_assets(workspace_dir)`, which Nu
+calls for every mode at startup to put what it needs into the workspace (Pygame
+Zero creates its `images`, `fonts`, `sounds` and `music` folders with the
+tutorials' demo files). It must leave anything already there alone.
 
 !!! note
     When creating strings that will be seen by users please remember to use
@@ -302,21 +333,22 @@ as input and emit to stdout a list of strings for the API that conform to
 Scintilla's protocol to be used by autocomplete and call-tips.
 
 In the case of the Pygame Zero mode, the output from the `mkapi.py` command
-ended up in `mu.modes.api.PYGAMEZERO_APIS`. The list itself is in the
-`pygamezero.py` file in the `mu/modes/api` directory, and the
-`__init__.py` found therein exposes it via the `__all__` list.
+ended up in `PYGAMEZERO_APIS`. The list itself is in the plugin's
+`nu_pygamezero/api/pygamezero.py` file, and the `__init__.py` found therein
+exposes it via the `__all__` list. (The core's own modes keep theirs in
+`mu/modes/api`.)
 
 Back in the `PyGameZeroMode` class the `api` method simply returns a
-concatenated list of the APIs that a user of the mode may use:
+concatenated list of the APIs that a user of the mode may use: the Python 3
+mode's entries, which the plugin gets from its host, plus its own:
 
 ```
-from mu.modes.api import (PYTHON3_APIS, SHARED_APIS, PI_APIS,
-                          PYGAMEZERO_APIS)
+from .api import PYGAMEZERO_APIS
 
 ... later in the PyGameZeroMode class ...
 
 def api(self):
-    return SHARED_APIS + PYTHON3_APIS + PI_APIS + PYGAMEZERO_APIS
+    return self.host.python_apis() + PYGAMEZERO_APIS
 ```
 
 With these relatively simple steps, it's possible to create quite powerful

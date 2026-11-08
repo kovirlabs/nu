@@ -1,0 +1,43 @@
+# Pygame Zero for Nu: a bundled plugin (Phase 5c, see TODO.md).
+#
+# It lives in Nu's repo as a uv workspace member, and nu-editor depends on it,
+# but it's an ordinary, independently publishable package: Nu finds it through
+# the "mu.plugins" entry point below, exactly as it finds a community plugin.
+# Publish it to PyPI before a nu-editor release that needs it (see
+# docs/packaging.md).
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nu-pygamezero"
+version = "0.1.0"
+description = "The Pygame Zero mode for the Nu editor: make games with Pygame Zero."
+readme = "README.md"
+license = "GPL-3.0-or-later"
+requires-python = ">=3.11"
+authors = [
+    { name = "Evan Gress", email = "kovirlabs@kovir.org" },
+    { name = "Kovir Labs", email = "kovirlabs@kovir.org" },
+]
+# No dependency on nu-editor: a plugin is installed into the environment Nu
+# runs from, which provides mu.plugin (and nu-editor depends on this package).
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/kovirlabs/nu"
+
+# What Pygame Zero games need in the learner's environment, where they run.
+# Nu installs these with its own baseline packages and bundles their wheels in
+# the installers (mu.wheels reads this extra from the installed metadata).
+# pygame backs pgzero. The old `pygame<2.1.3` cap was a macOS 10.x workaround
+# (mu-editor/mu#2423); pygame <2.1.3 ships no wheels for Python 3.12+, so
+# require one new enough to have wheels across the supported Python range.
+[project.optional-dependencies]
+learner-env = ["pgzero>=1.2.1", "pygame>=2.6"]
+
+[project.entry-points."mu.plugins"]
+pygamezero = "nu_pygamezero:PygameZeroPlugin"
+
+[tool.hatch.build.targets.wheel]
+packages = ["nu_pygamezero"]

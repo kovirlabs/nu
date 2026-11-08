@@ -53,3 +53,13 @@ def no_plugin_error_handler(monkeypatch):
     from mu.plugin import errors
 
     monkeypatch.setattr(errors, "_active", None)
+
+
+@pytest.fixture(autouse=True)
+def no_plugin_images():
+    """Don't let one test's plugin images leak into another"""
+    from mu import resources
+
+    yield
+    for directory in resources.plugin_image_dirs():
+        resources.unregister_image_dir(directory)

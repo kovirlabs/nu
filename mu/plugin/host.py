@@ -18,11 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import logging
+import os
 
 from PyQt6.QtWidgets import QMessageBox
 
-from .. import settings
+from .. import resources, settings
+from ..modes.api import PI_APIS, PYTHON3_APIS, SHARED_APIS
 from ..modes.base import BaseMode
+from ..virtual_environment import venv
 from .base import PLUGIN_API_VERSION, check_compatible
 from .errors import PluginErrorHandler
 
@@ -79,6 +82,8 @@ class Host:
         self._view = view
         self._modes = {}  # short_name -> mode instance
         self._owners = {}  # short_name -> owning plugin (None for the core)
+        self._image_dirs = []  # (owning plugin or None, folder) pairs
+        self._runner = None  # the program started by run_program
         self._plugins = []
         self._loading = None  # the plugin whose register() is running
         #: What happened to each discovered plugin (mu.plugin.loader.PluginRecord),
@@ -119,6 +124,7 @@ class Host:
         except Exception:
             logger.exception("Plugin %s failed to register; skipping it", name)
             self._remove_modes_of(plugin)
+            self._remove_images_of(plugin)
             return False
         finally:
             self._loading = None
@@ -137,6 +143,7 @@ class Host:
         except Exception:
             logger.exception("Plugin %s failed to unregister", name)
         self._remove_modes_of(plugin)
+        self._remove_images_of(plugin)
         if plugin in self._plugins:
             self._plugins.remove(plugin)
         logger.info("Unloaded plugin %s", name)
@@ -156,6 +163,12 @@ class Host:
                     mode.stop()
                 except Exception:
                     logger.exception("Mode %s failed to stop", short_name)
+
+    def _remove_images_of(self, plugin):
+        for owner, directory in list(self._image_dirs):
+            if owner is plugin:
+                resources.unregister_image_dir(directory)
+                self._image_dirs.remove((owner, directory))
 
     # --- registration (call from Plugin.register) ---
 
@@ -181,6 +194,20 @@ class Host:
         self._modes[short_name] = mode
         self._owners[short_name] = self._loading
         return mode
+
+    def register_images(self, directory):
+        """
+        Make the images in `directory` (a str or os.PathLike) available by
+        name, after Nu's own: a mode's `icon`, an action's `name` and
+        `update_action(icon=...)` then find `name.svg` / `name.png` there.
+
+        Every image name must be new. If one matches an image Nu or another
+        plugin already has, this raises ValueError naming it, so the plugin
+        fails to register and is skipped. The images are removed again when
+        the plugin unloads.
+        """
+        resources.register_image_dir(directory)
+        self._image_dirs.append((self._loading, directory))
 
     # --- talking to the learner ---
 
@@ -222,6 +249,77 @@ class Host:
     def open_directory(self, path):
         """Open `path` in the operating system's file manager."""
         self._view.open_directory_from_os(path)
+
+    def save_current(self):
+        """
+        Save the current tab, asking the learner for a file name if it has
+        none yet. Return its path, or None if there's no tab or the learner
+        cancelled naming it.
+        """
+        tab = self._view.current_tab
+        if tab is None:
+            return None
+        if tab.path is None:
+            self._editor.save()  # asks for a name
+        if tab.path and tab.isModified():
+            self._editor.save_tab_to_file(tab)
+        return tab.path
+
+    def update_action(self, name, display_name=None, description=None, icon=None):
+        """
+        Change the toolbar button for the current mode's action `name`: its
+        label, its tooltip and/or its icon (an image name, looked up like a
+        mode's icons). Anything not given is left as it is. Raises ValueError
+        if there's no such button (e.g. another mode is current).
+        """
+        slot = self._view.button_bar.slots.get(name)
+        if slot is None:
+            raise ValueError("There's no toolbar button called {!r}".format(name))
+        if icon is not None:
+            slot.setIcon(resources.load_icon(icon))
+        if display_name is not None:
+            slot.setText(display_name)
+        if description is not None:
+            slot.setToolTip(description)
+
+    # --- running the learner's program ---
+
+    def run_program(self, path, python_args=None, interactive=False):
+        """
+        Run the Python program at `path` the way the Run button does: with the
+        learner's Python environment and environment variables, from the
+        program's folder, its output in the output pane. `python_args` go to
+        Python before the program (e.g. `["-m", "pgzero"]`); `interactive`
+        leaves a Python prompt open when it finishes. Return True if it
+        started. Save it first (see `save_current`).
+        """
+        self._runner = self._view.add_python3_runner(
+            interpreter=venv.interpreter,
+            script_name=path,
+            working_directory=os.path.dirname(path),
+            interactive=interactive,
+            envars=self._editor.envars,
+            python_args=python_args,
+        )
+        if self._runner is None:
+            return False
+        self._runner.process.waitForStarted()
+        return True
+
+    def stop_program(self):
+        """Stop the program `run_program` started, and close its pane."""
+        if self._runner:
+            self._runner.stop_process()
+            self._runner = None
+        self._view.remove_python_runner()
+
+    def python_apis(self):
+        """
+        The autocomplete and call tip entries of Nu's Python 3 mode (Python's
+        built-ins and standard library, and common Raspberry Pi libraries),
+        as a new list a mode's `api()` can add its own to.
+        """
+        return SHARED_APIS + PYTHON3_APIS + PI_APIS
 
     # --- housekeeping ---
 

@@ -8,13 +8,15 @@ import subprocess
 
 PYTEST = "pytest"
 RUFF = "ruff"
-# Paths ruff lints and formats. Excludes (mu/contrib, mu/modes/api, docs) are
+# Paths ruff lints and formats. Excludes (mu/contrib, the API stubs, docs) are
 # configured in pyproject.toml's [tool.ruff].
 RUFF_TARGETS = [
     "make.py",
     "run.py",
+    "conftest.py",
     "mu",
     "package",
+    "plugins",
     "tests",
     "utils",
 ]
@@ -118,7 +120,10 @@ def coverage():
             "--cov-report",
             "term-missing",
             "--cov=mu",
+            # The bundled plugins (their tests are omitted in pyproject.toml).
+            "--cov=plugins",
             "tests/",
+            "plugins/",
         ]
     ).returncode
 
@@ -241,22 +246,28 @@ _TRANSLATE_IGNORE_DIRNAMES = {
     os.path.join("mu", "modes", "api"),
     os.path.join("mu", "contrib"),
 }
+# Bundled plugins use Nu's own message catalog, so their packages are
+# extracted too (but not their API stubs or tests).
+_TRANSLATE_PLUGIN_PACKAGES = [os.path.join("plugins", "pygamezero", "nu_pygamezero")]
 
 
 def _translate_ignore(dirname):
     """Return True if `dirname` files should be excluded from translation."""
+    if os.path.basename(dirname) == "api":
+        return True  # generated API stubs (mu/modes/api, plugins' api)
     return any(dirname.startswith(dn) for dn in _TRANSLATE_IGNORE_DIRNAMES)
 
 
 def _translate_filenames():
     """Returns a sorted list of filenames with translatable strings."""
     py_filenames = []
-    for dirname, _, filenames in os.walk("mu"):
-        if _translate_ignore(dirname):
-            continue
-        py_filenames.extend(
-            os.path.join(dirname, fn) for fn in filenames if fn.endswith(".py")
-        )
+    for top in ["mu"] + _TRANSLATE_PLUGIN_PACKAGES:
+        for dirname, _, filenames in os.walk(top):
+            if _translate_ignore(dirname):
+                continue
+            py_filenames.extend(
+                os.path.join(dirname, fn) for fn in filenames if fn.endswith(".py")
+            )
     return sorted(py_filenames)
 
 

@@ -1,5 +1,5 @@
 """
-The Pygame Zero mode for the Mu editor.
+The Pygame Zero mode for Nu.
 
 Copyright (c) 2015-2017 Nicholas H.Tollervey and others (see the AUTHORS file).
 
@@ -18,17 +18,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os
-import logging
-from mu.modes.base import BaseMode
-from mu.modes.api import PYTHON3_APIS, SHARED_APIS, PI_APIS, PYGAMEZERO_APIS
-from mu.resources import load_icon
-from ..virtual_environment import venv
+import shutil
+
+from mu.plugin import Mode
+
+from .api import PYGAMEZERO_APIS
+
+#: Demo images and sounds the Pygame Zero tutorials use, copied into the
+#: learner's workspace (assets/images -> images/, assets/sounds -> sounds/).
+ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
+#: The folders Pygame Zero loads a game's assets from, next to the game.
+ASSET_TYPES = ("images", "fonts", "sounds", "music")
 
 
-logger = logging.getLogger(__name__)
-
-
-class PyGameZeroMode(BaseMode):
+class PyGameZeroMode(Mode):
     """
     Represents the functionality required by the PyGameZero mode.
     """
@@ -37,7 +40,11 @@ class PyGameZeroMode(BaseMode):
     short_name = "pygamezero"
     description = _("Make games with Pygame Zero.")
     icon = "pygamezero"
-    runner = None
+    # Games run in the learner's environment, which has pgzero installed (the
+    # plugin's learner-env extra).
+    uses_user_environment = True
+    #: True while a game started by the Play button is running.
+    running = False
     builtins = [
         "clock",
         "music",
@@ -103,69 +110,68 @@ class PyGameZeroMode(BaseMode):
         Return a list of API specifications to be used by auto-suggest and call
         tips.
         """
-        return SHARED_APIS + PYTHON3_APIS + PI_APIS + PYGAMEZERO_APIS
+        return self.host.python_apis() + PYGAMEZERO_APIS
+
+    def ensure_workspace_assets(self, workspace_dir):
+        """
+        Make the folders Pygame Zero looks in for a game's images, fonts,
+        sounds and music. New images and sounds folders get the demo files
+        the tutorials use; existing folders are left alone.
+        """
+        for asset_type in ASSET_TYPES:
+            asset_path = os.path.join(workspace_dir, asset_type)
+            if os.path.exists(asset_path):
+                continue
+            self.host.logger("pygamezero").debug("Creating directory: %s", asset_path)
+            os.makedirs(asset_path)
+            demo_path = os.path.join(ASSETS_DIR, asset_type)
+            if os.path.isdir(demo_path):
+                for filename in os.listdir(demo_path):
+                    shutil.copy(os.path.join(demo_path, filename), asset_path)
 
     def play_toggle(self, event):
         """
         Handles the toggling of the play button to start/stop a script.
         """
-        if self.runner:
+        if self.running:
             self.stop_game()
-            play_slot = self.view.button_bar.slots["play"]
-            play_slot.setIcon(load_icon("play"))
-            play_slot.setText(_("Play"))
-            play_slot.setToolTip(_("Play your Pygame Zero game."))
+            self.host.update_action(
+                "play",
+                display_name=_("Play"),
+                description=_("Play your Pygame Zero game."),
+                icon="play",
+            )
             self.set_buttons(modes=True)
         else:
             self.run_game()
-            if self.runner:
-                play_slot = self.view.button_bar.slots["play"]
-                play_slot.setIcon(load_icon("stop"))
-                play_slot.setText(_("Stop"))
-                play_slot.setToolTip(_("Stop your Pygame Zero game."))
+            if self.running:
+                self.host.update_action(
+                    "play",
+                    display_name=_("Stop"),
+                    description=_("Stop your Pygame Zero game."),
+                    icon="stop",
+                )
                 self.set_buttons(modes=False)
 
     def run_game(self):
         """
         Run the current game.
         """
-        # Grab the Python file.
-        tab = self.view.current_tab
-        if tab is None:
-            logger.debug("There is no active text editor.")
+        if self.host.current_text() is None:
+            self.host.logger("pygamezero").debug("There is no active text editor.")
             self.stop_game()
             return
-        if tab.path is None:
-            # Unsaved file.
-            self.editor.save()
-        if tab.path:
-            # If needed, save the script.
-            if tab.isModified():
-                self.editor.save_tab_to_file(tab)
-            logger.debug(tab.text())
-            envars = self.editor.envars
-            args = ["-m", "pgzero"]
-            cwd = os.path.dirname(tab.path)
-
-            self.runner = self.view.add_python3_runner(
-                interpreter=venv.interpreter,
-                script_name=tab.path,
-                working_directory=cwd,
-                interactive=False,
-                envars=envars,
-                python_args=args,
-            )
-            self.runner.process.waitForStarted()
+        path = self.host.save_current()
+        if path:
+            self.running = self.host.run_program(path, python_args=["-m", "pgzero"])
 
     def stop_game(self):
         """
         Stop the currently running game.
         """
-        logger.debug("Stopping script.")
-        if self.runner:
-            self.runner.stop_process()
-            self.runner = None
-        self.view.remove_python_runner()
+        self.host.logger("pygamezero").debug("Stopping script.")
+        self.host.stop_program()
+        self.running = False
 
     def show_images(self, event):
         """
@@ -174,7 +180,7 @@ class PyGameZeroMode(BaseMode):
         This should open the host OS's file system explorer so users can drag
         new files into the opened folder.
         """
-        self.view.open_directory_from_os(self.assets_dir("images"))
+        self.host.open_directory(self.assets_dir("images"))
 
     def show_fonts(self, event):
         """
@@ -183,7 +189,7 @@ class PyGameZeroMode(BaseMode):
         This should open the host OS's file system explorer so users can drag
         new files into the opened folder.
         """
-        self.view.open_directory_from_os(self.assets_dir("fonts"))
+        self.host.open_directory(self.assets_dir("fonts"))
 
     def show_sounds(self, event):
         """
@@ -192,7 +198,7 @@ class PyGameZeroMode(BaseMode):
         This should open the host OS's file system explorer so users can drag
         new files into the opened folder.
         """
-        self.view.open_directory_from_os(self.assets_dir("sounds"))
+        self.host.open_directory(self.assets_dir("sounds"))
 
     def show_music(self, event):
         """
@@ -201,4 +207,4 @@ class PyGameZeroMode(BaseMode):
         This should open the host OS's file system explorer so users can drag
         new files into the opened folder.
         """
-        self.view.open_directory_from_os(self.assets_dir("music"))
+        self.host.open_directory(self.assets_dir("music"))

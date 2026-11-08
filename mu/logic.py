@@ -67,25 +67,6 @@ EXPANDED_IMPORT = (
     "accelerometer, display, uart, spi, panic, pin13, "
     "pin12, pin11, pin10, compass"
 )
-# Default images to copy over for use in PyGameZero demo apps.
-DEFAULT_IMAGES = [
-    "alien.png",
-    "alien_hurt.png",
-    "cat1.png",
-    "cat2.png",
-    "cat3.png",
-    "cat4.png",
-    "splat.png",
-]
-# Default sound effects to copy over for use in PyGameZero demo apps.
-DEFAULT_SOUNDS = [
-    "eep.wav",
-    "meow1.wav",
-    "meow2.wav",
-    "meow3.wav",
-    "meow4.wav",
-    "splat.wav",
-]
 MOTD = [  # Candidate phrases for the message of the day (MOTD).
     _("Hello, World!"),
     _(
@@ -808,27 +789,9 @@ class Editor(QObject):
         if not os.path.exists(wd):
             logger.debug("Creating directory: {}".format(wd))
             os.makedirs(wd)
-        # Ensure PyGameZero assets are copied over.
-        images_path = os.path.join(wd, "images")
-        fonts_path = os.path.join(wd, "fonts")
-        sounds_path = os.path.join(wd, "sounds")
-        music_path = os.path.join(wd, "music")
-        if not os.path.exists(images_path):
-            logger.debug("Creating directory: {}".format(images_path))
-            os.makedirs(images_path)
-            for img in DEFAULT_IMAGES:
-                shutil.copy(path(img, "pygamezero/"), os.path.join(images_path, img))
-        if not os.path.exists(fonts_path):
-            logger.debug("Creating directory: {}".format(fonts_path))
-            os.makedirs(fonts_path)
-        if not os.path.exists(sounds_path):
-            logger.debug("Creating directory: {}".format(sounds_path))
-            os.makedirs(sounds_path)
-            for sfx in DEFAULT_SOUNDS:
-                shutil.copy(path(sfx, "pygamezero/"), os.path.join(sounds_path, sfx))
-        if not os.path.exists(music_path):
-            logger.debug("Creating directory: {}".format(music_path))
-            os.makedirs(music_path)
+        # Let each mode put what it needs in the workspace.
+        for mode in self.modes.values():
+            mode.ensure_workspace_assets(wd)
         # Ensure Web based assets are copied over.
         template_path = os.path.join(wd, "templates")
         static_path = os.path.join(wd, "static")

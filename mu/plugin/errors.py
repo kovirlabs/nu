@@ -76,6 +76,7 @@ GUARDED_MODE_METHODS = {
     "remove_repl": None,
     "remove_plotter": None,
     "remove_fs": None,
+    "ensure_workspace_assets": None,
 }
 
 

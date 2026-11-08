@@ -42,6 +42,8 @@ def test_base_mode():
     assert bm.workspace_dir()
     assert bm.api() == NotImplemented
     assert bm.builtins is None
+    assert bm.uses_user_environment is False
+    assert bm.ensure_workspace_assets("/some/workspace") is None
 
 
 @pytest.mark.skip("No longer needed now that settings are part of the settings module")

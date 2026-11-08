@@ -92,11 +92,17 @@ jobs:
         run: python -m pip install --upgrade pip briefcase==0.4.2 uv
 
       # Bundle what the first launch needs so it works offline: the baseline
-      # wheels zip (pgzero/pygame/ipykernel + deps, mu/wheels/<version>.zip)
-      # plus a relocatable CPython and a pip wheel (mu/wheels/python/) that the
-      # learner's environment is built from.
+      # wheels zip (ipykernel + what the bundled plugins declare in their
+      # learner-env extra, e.g. pgzero/pygame, + deps;
+      # mu/wheels/<version>.zip) plus a relocatable CPython and a pip wheel
+      # (mu/wheels/python/) that the learner's environment is built from.
+      # mu.wheels reads the plugins' needs from their installed metadata, so
+      # install them first (--no-deps: only their metadata is needed here;
+      # Briefcase installs them into the app from `requires`).
       - name: Build offline baseline wheels and Python
-        run: python -m mu.wheels --package
+        run: |
+          python -m pip install --no-deps ./plugins/pygamezero
+          python -m mu.wheels --package
 
       - name: Briefcase create
         run: briefcase create ${{ matrix.briefcase-platform }} ${{ matrix.briefcase-format }} ${{ matrix.docker-arg }}

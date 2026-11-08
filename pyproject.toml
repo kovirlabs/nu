@@ -85,6 +85,9 @@ dependencies = [
     "black>=24",
     "platformdirs>=2.6",
     "semver>=2.8.0",
+    "packaging>=22",
+    # Reads the learner-env requirements plugins declare (mu/wheels).
+    "packaging>=22",
     # `uv` creates and manages the user's virtual environment (Phase 4a, see
     # TODO.md) — it replaces the old `python -m virtualenv` call in
     # mu/virtual_environment.py. The PyPI `uv` package ships the binary, which
@@ -92,6 +95,13 @@ dependencies = [
     "uv>=0.5",
     "wheel",
     "pywin32; sys_platform == 'win32'",
+    # Bundled plugins (Phase 5c): separate packages under plugins/, installed
+    # with Nu and found through their `mu.plugins` entry points like any other
+    # plugin. In this repo uv resolves them from the workspace (see
+    # [tool.uv.sources]); a published nu-editor needs them on PyPI first (see
+    # docs/packaging.md). pip installs from a checkout need the path too:
+    # `pip install ./plugins/pygamezero .`
+    "nu-pygamezero>=0.1",
 ]
 
 [project.urls]
@@ -133,6 +143,22 @@ all = [
     "nu-editor[utils]",
     "nu-editor[lint]",
 ]
+
+# ---------------------------------------------------------------------------
+# uv workspace (Phase 5c, see TODO.md and docs/packaging.md).
+#
+# Bundled plugins live in-repo under plugins/<name>/, each its own
+# independently buildable and publishable package with a `mu.plugins` entry
+# point, sharing this repo's uv.lock. plugins/example is a member too (so it's
+# locked and buildable) but, being a template, nothing depends on it.
+# ---------------------------------------------------------------------------
+[tool.uv.workspace]
+members = ["plugins/*"]
+
+# uv-only: resolve the bundled plugins from this checkout. Built metadata (the
+# sdist/wheel on PyPI) keeps the plain `nu-pygamezero>=0.1` requirement.
+[tool.uv.sources]
+nu-pygamezero = { workspace = true }
 
 [tool.hatch.version]
 # mu/__init__.py stays the single version source (also parsed by the
@@ -198,7 +224,11 @@ sources = ["mu"]
 # [project.dependencies] above (the app's own `mu` package comes from `sources`,
 # not from here). `uv` MUST stay listed: its wheel ships the binary that
 # find_uv()/uv.find_uv_bin() resolves at runtime in the packaged app.
+# The bundled plugins are listed as local paths, relative to this file:
+# Briefcase pip-installs them from the checkout (so their entry points and
+# package data are in the app), not from PyPI.
 requires = [
+    "./plugins/pygamezero",
     "PyQt6>=6.6",
     "PyQt6-QScintilla>=2.14",
     "PyQt6-Charts>=6.6",
@@ -254,6 +284,7 @@ builtins = ["_"]
 extend-exclude = [
     "mu/contrib",     # vendored third-party code (now empty)
     "mu/modes/api",   # generated API stubs
+    "plugins/*/nu_*/api",  # plugins' generated API stubs
     "docs",
 ]
 
@@ -269,6 +300,11 @@ ignore = [
 [tool.pytest.ini_options]
 filterwarnings = ["ignore::DeprecationWarning"]
 addopts = "--random-order"
+# The core's tests, then each bundled plugin's (plugins/<name>/tests). The
+# plugins' sources go on sys.path so their tests (and coverage) use this
+# checkout even when the plugin is installed non-editable (e.g. by pip in CI).
+testpaths = ["tests", "plugins"]
+pythonpath = ["plugins/pygamezero", "plugins/example"]
 
 [tool.coverage.run]
 omit = [
@@ -276,4 +312,5 @@ omit = [
     "mu/mu_debug.py",
     "mu/__main__.py",
     "mu/wheels/*",
+    "plugins/*/tests/*",
 ]

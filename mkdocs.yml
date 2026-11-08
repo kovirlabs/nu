@@ -38,7 +38,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: ["."]
+          paths: [".", "plugins/pygamezero"]
           options:
             show_root_heading: true
             show_source: true

@@ -1209,9 +1209,9 @@ class VirtualEnvironment(object):
         """
         Install all packages needed for non-core activity.
 
-        Each mode needs one or more packages to be able to run: pygame zero
-        mode needs pgzero and its dependencies; web mode needs Flask and so on.
-        We intend to ship with all the necessary wheels for those packages so
+        The core needs a few packages (the REPL's kernel), and plugins
+        declare what their modes need (see `wheels.baseline_packages`). The
+        installers ship with all the necessary wheels for those packages so
         no network access is needed. But if the wheels aren't found, because
         we're not running from an installer, then just pip install in the
         usual way.

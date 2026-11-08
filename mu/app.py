@@ -50,7 +50,6 @@ from .modes import (
     PythonMode,
     CircuitPythonMode,
     DebugMode,
-    PyGameZeroMode,
 )
 from .plugin import Host
 from .plugin import errors as plugin_errors
@@ -262,11 +261,12 @@ def setup_modes(editor, view):
     Create a dictionary of the available modes, keyed by short name.
 
     The built-in modes are registered through a plugin Host, then every
-    installed or dropped-in plugin that is switched on is loaded into it. A
-    plugin that fails to load is logged and skipped.
+    installed or dropped-in plugin that is switched on is loaded into it
+    (including the bundled ones, which are installed with Nu). A plugin that
+    fails to load is logged and skipped.
     """
     host = Host(editor, view)
-    for mode_class in (PythonMode, CircuitPythonMode, DebugMode, PyGameZeroMode):
+    for mode_class in (PythonMode, CircuitPythonMode, DebugMode):
         host.register_mode(mode_class)
     host.plugin_records = load_plugins(host)
     plugin_errors.install(host._error_handler)
@@ -374,8 +374,9 @@ def run():
     setup_exception_handler()
     check_only_running_once()
 
-    # Remove the VIRTUAL_ENV env var: when set, prevents pgzero mode from working
-    # if Mu is installed from source/PyPI into a virtual environment.
+    # Remove the VIRTUAL_ENV env var: when set, it stops programs run in the
+    # learner's environment (e.g. Pygame Zero games) from finding their
+    # packages if Mu is installed from source/PyPI into a virtual environment.
     os.environ.pop("VIRTUAL_ENV", None)
 
     #

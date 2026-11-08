@@ -4,6 +4,7 @@
 import os
 import sys
 import glob
+import importlib.metadata
 import logging
 import json
 import platform
@@ -13,6 +14,8 @@ import tempfile
 import urllib.parse
 import urllib.request
 import zipfile
+
+from packaging.requirements import InvalidRequirement, Requirement
 
 from .. import __version__ as mu_version
 
@@ -43,24 +46,86 @@ ZIP_FILEPATH = os.path.join(WHEELS_DIRPATH, mu_version + ".zip")
 PYTHON_DIRPATH = os.path.join(WHEELS_DIRPATH, "python")
 
 #
-# List of base packages to support modes
+# The packages the core itself needs in the learner's environment. Modes'
+# packages come from their plugins (see `plugin_packages`).
 # The first element should be the importable name (so "serial" rather than "pyserial")
 # The second element is passed to `pip download|install`
 # Any additional elements are passed to `pip` for specific purposes
 #
 mode_packages = [
-    # pygame backs pgzero. The old `pygame<2.1.3` cap was a macOS 10.x
-    # workaround (mu-editor/mu#2423); it's obsolete now that we target
-    # macOS 11+ and Python 3.11–3.14, and it actively breaks modern builds —
-    # pygame <2.1.3 ships no wheels for Python 3.12+, so `pip download` would
-    # fall back to building from sdist (and fail). Require a pygame new enough
-    # to have wheels across the supported Python range.
-    ("pgzero", ("pgzero>=1.2.1", "pygame>=2.6")),
     # The version of ipykernel here should match the one used by qtconsole as
     # specified in pyproject.toml. Mirrored from [project].dependencies.
     # tornado is a security floor for ipykernel's dependency (see pyproject.toml).
     ("ipykernel", ("ipykernel>=6.29", "tornado>=6.5.9")),
 ]
+
+#
+# Plugins say what the learner's environment needs for their modes as an
+# extra of their package, e.g. in a plugin's pyproject.toml:
+#
+#   [project.optional-dependencies]
+#   learner-env = ["pgzero>=1.2.1", "pygame>=2.6"]
+#
+# It's read from the installed package's metadata, so a plugin needn't be
+# imported (or switched on) for its needs to be known, and this works in the
+# bare Python that builds the installers' wheelhouse, which has no PyQt6.
+#
+#: The entry point group plugins advertise themselves in. The same as
+#: mu.plugin.loader.ENTRY_POINT_GROUP, which can't be imported here (it needs
+#: Qt).
+PLUGIN_ENTRY_POINT_GROUP = "mu.plugins"
+#: The extra a plugin package lists its learner-environment packages under.
+LEARNER_ENV_EXTRA = "learner-env"
+
+
+def learner_env_requirements(dist):
+    """
+    The requirements the distribution `dist` lists under its learner-env
+    extra that apply on this platform, as strings without their markers.
+    """
+    found = []
+    for text in dist.requires or []:
+        try:
+            requirement = Requirement(text)
+        except InvalidRequirement:
+            logger.warning("Ignoring unreadable requirement %r of %s", text, dist.name)
+            continue
+        marker = requirement.marker
+        if (
+            marker is None
+            or not marker.evaluate({"extra": LEARNER_ENV_EXTRA})
+            or marker.evaluate({"extra": ""})
+        ):
+            continue  # not for the learner env, or not on this platform
+        requirement.marker = None
+        found.append(str(requirement))
+    return found
+
+
+def plugin_packages(entry_points=importlib.metadata.entry_points):
+    """
+    The learner-environment packages of every installed plugin, as
+    `(distribution name, (requirement, ...))` pairs like `mode_packages`.
+    Every installed plugin counts, switched on or off, so switching one
+    doesn't change the environment.
+    """
+    packages = []
+    seen = set()
+    for entry_point in entry_points(group=PLUGIN_ENTRY_POINT_GROUP):
+        dist = entry_point.dist
+        if dist is None or dist.name in seen:
+            continue
+        seen.add(dist.name)
+        requirements = learner_env_requirements(dist)
+        if requirements:
+            packages.append((dist.name, tuple(requirements)))
+    return packages
+
+
+def baseline_packages():
+    """Everything the learner's environment starts with: the core's
+    packages, then the installed plugins'."""
+    return mode_packages + plugin_packages()
 
 
 def os_compatibility_flags():
@@ -110,8 +175,14 @@ def remove_dist_files(dirpath, logger):
         os.remove(rm_filepath)
 
 
-def pip_download(dirpath, logger, additional_flags=[]):
-    for name, pip_identifiers, *extra_flags in mode_packages:
+def pip_download(dirpath, logger, additional_flags=[], packages=None):
+    """
+    Download wheels for `packages` (default: `baseline_packages()`) into
+    `dirpath`.
+    """
+    if packages is None:
+        packages = baseline_packages()
+    for name, pip_identifiers, *extra_flags in packages:
         logger.info(
             "Running pip download for %s / %s / %s / %s",
             name,
@@ -194,9 +265,10 @@ def zip_wheels(zip_filepath, dirpath, logger=logger):
 def download(zip_filepath=ZIP_FILEPATH, logger=logger, os_old_compat=False):
     """Download from PyPI, convert to wheels, and zip up
 
-    To make all the libraries available for Mu modes (eg pygame zero, Flask etc.)
-    we `pip download` them to a temporary location and then pack them into a
-    zip file which is tagged with the current Mu version number
+    To make all the libraries available for Mu modes (the core's, and those
+    installed plugins declare) we `pip download` them to a temporary
+    location and then pack them into a zip file which is tagged with the
+    current Mu version number
 
     We allow `logger` to be overridden because output from the
     virtual_environment module logger goes to the splash screen, while

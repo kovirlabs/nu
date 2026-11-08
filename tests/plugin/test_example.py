@@ -10,6 +10,7 @@ from unittest import mock
 
 import pytest
 
+from mu import resources
 from mu.plugin import PLUGIN_API_VERSION, Host
 
 EXAMPLE_DIR = os.path.join(
@@ -54,6 +55,21 @@ def test_loads_into_a_host(nu_example, host):
     (action,) = mode.actions()
     assert action["handler"] == mode.count_lines
     assert mode.api() == []
+
+
+def test_ships_its_own_icons(nu_example, host):
+    """
+    The mode's icon and its button's icon come from the plugin's images.
+    """
+    host.load_plugin(nu_example.ExamplePlugin())
+    mode = host.modes["example"]
+    images = os.path.abspath(
+        os.path.join(os.path.dirname(nu_example.__file__), "images")
+    )
+    (action,) = mode.actions()
+    for name in (mode.icon, action["name"]):
+        assert resources.image_path(name, ".svg") == os.path.join(images, name + ".svg")
+        assert not resources.load_icon(name).isNull()
 
 
 def test_count_lines(nu_example, host):
