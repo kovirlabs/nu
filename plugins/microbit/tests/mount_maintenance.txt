@@ -1,0 +1,2 @@
+/dev/mapper/vg-root on / type ext4 (rw,relatime,errors=remount-ro,data=ordered)
+/dev/sdc on /media/learner/MAINTENANCE type vfat (rw,nosuid,nodev,relatime,uhelper=udisks2)

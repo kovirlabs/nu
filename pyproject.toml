@@ -123,6 +123,12 @@ docs = ["mkdocs-material", "mkdocstrings[python]"]
 package = ["build", "wheel", "twine", "briefcase>=0.3.19"]
 i18n = ["babel"]
 utils = ["beautifulsoup4", "requests"]
+# BBC micro:bit (Phase 6): opt-in until the maintainer has validated it on
+# real V1 and V2 boards, so it's NOT in the dependencies above or Briefcase's
+# `requires` below. `uv sync --all-extras` installs it in a checkout (CI's pip
+# lines pass ./plugins/microbit); promoting it to a default-enabled bundled
+# plugin is Phase 6c (see docs/packaging.md).
+microbit = ["nu-microbit>=0.1"]
 # ruff is the dev lint+format tool (replaces flake8/pycodestyle/pyflakes/black
 # *as dev tools*; those stay as runtime deps for the in-editor checker and the
 # "Tidy" button — see [project.dependencies] above).
@@ -159,6 +165,7 @@ members = ["plugins/*"]
 [tool.uv.sources]
 nu-circuitpython = { workspace = true }
 nu-pygamezero = { workspace = true }
+nu-microbit = { workspace = true }
 
 [tool.hatch.version]
 # mu/__init__.py stays the single version source (also parsed by the
@@ -304,7 +311,12 @@ addopts = "--random-order"
 # plugins' sources go on sys.path so their tests (and coverage) use this
 # checkout even when the plugin is installed non-editable (e.g. by pip in CI).
 testpaths = ["tests", "plugins"]
-pythonpath = ["plugins/circuitpython", "plugins/pygamezero", "plugins/example"]
+pythonpath = [
+    "plugins/circuitpython",
+    "plugins/pygamezero",
+    "plugins/microbit",
+    "plugins/example",
+]
 
 [tool.coverage.run]
 omit = [

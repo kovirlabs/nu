@@ -1,0 +1,3 @@
+/dev/disk1s1 on / (apfs, local, journaled)
+devfs on /dev (devfs, local, nobrowse)
+/dev/disk4 on /Volumes/MICROBIT (msdos, local, nodev, nosuid, noowners)

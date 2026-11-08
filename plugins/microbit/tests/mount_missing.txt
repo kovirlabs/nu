@@ -1,0 +1,3 @@
+sysfs on /sys type sysfs (rw,nosuid,nodev,noexec,relatime)
+/dev/mapper/vg-root on / type ext4 (rw,relatime,errors=remount-ro,data=ordered)
+/dev/sdb on /media/learner/CIRCUITPY type vfat (rw,nosuid,nodev,relatime,uhelper=udisks2)
