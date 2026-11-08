@@ -1,11 +1,54 @@
-from unittest import mock
+"""
+Shared fixtures for Nu's tests and the bundled plugins' tests.
 
-import pytest
+Before anything imports `mu`, the whole session is pointed at a throwaway
+folder (see `_isolate_session`), so a test run never reads or writes the
+developer's real Nu data (settings, session, venv.json, plugins folder) or
+workspace (~/mu_code), even through module-level objects created at import
+time, such as `mu.virtual_environment.venv`, which registers its settings to
+be saved at exit.
+"""
+
+import atexit
 import os
 import random
-from PyQt6.QtWidgets import QApplication
+import shutil
+import tempfile
+from unittest import mock
 
-from mu import settings
+
+def _isolate_session():
+    """
+    Point Nu's data folder and home folder, and IPython's (the REPL tests
+    start a real IPython shell), at a new temporary folder (removed at exit),
+    and give the single-instance lock a name of its own so tests
+    never clash with a Nu that's running. Returns the folder.
+    """
+    root = tempfile.mkdtemp(prefix="nu-tests-")
+    folders = (
+        ("MU_DATA_DIR", "data"),
+        ("MU_HOME_DIR", "home"),
+        ("IPYTHONDIR", "ipython"),
+    )
+    for name, folder in folders:
+        os.environ[name] = os.path.join(root, folder)
+        os.mkdir(os.environ[name])
+    os.environ["MU_TEST_SUPPORT_RANDOM_APP_NAME_EXT"] = "_session_{}".format(
+        random.randint(0, 100000000)
+    )
+    # Registered before mu's own atexit saves, so it runs after them.
+    atexit.register(shutil.rmtree, root, ignore_errors=True)
+    return root
+
+
+# The real folders, for the test that checks they aren't used.
+REAL_HOME = os.path.expanduser("~")
+SESSION_ROOT = _isolate_session()
+
+import pytest  # noqa: E402
+from PyQt6.QtWidgets import QApplication  # noqa: E402
+
+from mu import settings  # noqa: E402
 
 # Keep global reference to avoid being garbage collected
 _qapp_instance = None
@@ -32,11 +75,12 @@ def disable_autosave():
 @pytest.fixture(autouse=True)
 def temp_shared_mem_app_name():
     """Make multi-instance execution blocking shared memory app name unique for tests"""
+    session_name = os.environ["MU_TEST_SUPPORT_RANDOM_APP_NAME_EXT"]
     os.environ["MU_TEST_SUPPORT_RANDOM_APP_NAME_EXT"] = "_" + str(
         random.randint(0, 100000000)
     )
     yield
-    os.environ.pop("MU_TEST_SUPPORT_RANDOM_APP_NAME_EXT", "")
+    os.environ["MU_TEST_SUPPORT_RANDOM_APP_NAME_EXT"] = session_name
 
 
 @pytest.fixture(autouse=True)
@@ -63,3 +107,4 @@ def no_plugin_images():
     yield
     for directory in resources.plugin_image_dirs():
         resources.unregister_image_dir(directory)
+
