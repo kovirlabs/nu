@@ -1397,6 +1397,29 @@ def test_PythonProcessPane_finished_shows_numeric_status():
     assert ppp.toPlainText().endswith("exit code: 1 status: 1")
 
 
+def test_PythonProcessPane_finished_waits_for_the_last_output():
+    """
+    If the process ends while its last output is still being read (a fast
+    program, or `uv run`, which exits as soon as the program does), FINISHED
+    goes after all the output, not in the middle of it.
+    """
+    ppp = mu.interface.panes.PythonProcessPane()
+    ppp.process = mock.MagicMock()
+    ppp.process.read.side_effect = [b"the last line\n", b""]
+    ppp.reading_stdout = True
+    ppp.finished(0, 0)
+    assert "FINISHED" not in ppp.toPlainText()
+    with mock.patch("mu.interface.panes.QTimer") as timer:
+        ppp.read_from_stdout()  # Reads the last chunk...
+        timer.singleShot.assert_called_once_with(2, ppp.read_from_stdout)
+        ppp.read_from_stdout()  # ...then finds no more.
+    assert ppp.reading_stdout is False
+    assert ppp.toPlainText() == (
+        "the last line\n\n\n---------- FINISHED ----------\nexit code: 0 status: 0"
+    )
+    assert ppp.pending_finish is None
+
+
 def test_PythonProcessPane_context_menu():
     """
     Ensure the context menu for the REPL is configured correctly for non-OSX

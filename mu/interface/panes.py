@@ -546,6 +546,9 @@ class PythonProcessPane(QTextEdit):
         self.stdout_buffer = b""  # contains non-decoded bytes from stdout.
         self.reading_stdout = False  # flag showing if already reading stdout.
         self.is_interactive = False  # flag if the process is interactive mode.
+        # (exit code, status) of a process that ended while its output was
+        # still being read; see finished.
+        self.pending_finish = None
 
     def start_process(
         self,
@@ -680,6 +683,11 @@ class PythonProcessPane(QTextEdit):
         """
         Handle when the child process finishes.
         """
+        if self.reading_stdout:
+            # The last of its output is still being read (in chunks, see
+            # read_from_stdout): say FINISHED after it, not in the middle.
+            self.pending_finish = (code, status)
+            return
         self.running = False
         cursor = self.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End)
@@ -963,6 +971,10 @@ class PythonProcessPane(QTextEdit):
             QTimer.singleShot(2, self.read_from_stdout)
         else:
             self.reading_stdout = False
+            if self.pending_finish:
+                code, status = self.pending_finish
+                self.pending_finish = None
+                self.finished(code, status)
 
     def write_to_stdin(self, data):
         """

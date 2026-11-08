@@ -277,22 +277,17 @@ def test_uv_run_blocking_records_the_command(log):
 
     def fake_run_blocking(self, command, args, wait_for_s=30.0, **envvars):
         self.process = _fake_qprocess(0)
-        return "Using Python 3.11 environment\n[]"
+        return "Using CPython 3.11.15\nCreating virtual environment at: /env"
 
     with mock.patch.object(VE.Process, "run_blocking", fake_run_blocking):
-        uv.list_packages()
+        uv.create_venv("/env", python="3.11")
     (record,) = log.records()
-    assert record.argv == [
-        "/opt/uv",
-        "pip",
-        "list",
-        "--format=json",
-        "--quiet",
-        "--python",
-        "/env/bin/python",
-    ]
+    assert record.argv == ["/opt/uv", "venv", "--python", "3.11", "/env"]
     assert record.finished and record.exit_code == 0
-    assert record.output_tail() == ["Using Python 3.11 environment", "[]"]
+    assert record.output_tail() == [
+        "Using CPython 3.11.15",
+        "Creating virtual environment at: /env",
+    ]
 
 
 def test_uv_run_blocking_records_a_failure_and_reraises(log):
@@ -431,3 +426,20 @@ def test_uv_script_command(log):
     assert record.note == "Its output is in the Run pane."
     assert not record.finished
     assert log.records() == [record]
+
+
+def test_uv_list_packages_record_skips_the_json(log):
+    """`uv pip list --format=json` is shown in the log, but not its JSON (Nu
+    reads that); a note says what it's for."""
+    uv = Uv(uv_executable="/opt/uv", venv_path="/env/bin/python")
+
+    def fake_run_blocking(self, command, args, wait_for_s=30.0, **envvars):
+        self.process = _fake_qprocess(0)
+        return '[{"name": "pgzero", "version": "1.2.1"}]'
+
+    with mock.patch.object(VE.Process, "run_blocking", fake_run_blocking):
+        uv.list_packages()
+    (record,) = log.records()
+    assert record.output_tail() == []
+    assert record.note == "Nu reads this list to show your packages."
+    assert record.exit_code == 0

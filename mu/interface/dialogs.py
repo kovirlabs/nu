@@ -559,10 +559,13 @@ class PackageDialog(QDialog):
         self.setWindowTitle(_("Third Party Package Status"))
         widget_layout = QVBoxLayout()
         self.setLayout(widget_layout)
-        # Text area for pip output.
+        # Text area for the commands and their output, wrapped so the end
+        # of a long command (the packages) shows.
         self.text_area = QPlainTextEdit()
         self.text_area.setReadOnly(True)
-        self.text_area.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+        self.text_area.setWordWrapMode(
+            QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere
+        )
         widget_layout.addWidget(self.text_area)
         # Buttons.
         self.button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)

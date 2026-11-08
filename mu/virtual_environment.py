@@ -532,10 +532,16 @@ class Uv(object):
             return None
         return qprocess.exitCode()
 
-    def run_blocking(self, command, *args, wait_for_s=180.0, **envvars):
-        """Run a uv subcommand synchronously and return its combined output."""
+    def run_blocking(
+        self, command, *args, wait_for_s=180.0, note=None, keep_output=True, **envvars
+    ):
+        """Run a uv subcommand synchronously and return its combined output.
+
+        In the command log, `note` is shown under the command, and its output
+        is left out if `keep_output` is False (it's still logged on error).
+        """
         argv = self._argv(command, args)
-        record = command_log.start([self.executable, *argv])
+        record = command_log.start([self.executable, *argv], note=note)
         process = Process()
         try:
             output = process.run_blocking(
@@ -547,7 +553,7 @@ class Uv(object):
         except VirtualEnvironmentError as exc:
             record.finish(self._exit_code(process), exc.message)
             raise
-        record.finish(self._exit_code(process), output)
+        record.finish(self._exit_code(process), output if keep_output else None)
         return output
 
     def run_subprocess(self, command, *args):
@@ -641,7 +647,13 @@ class Uv(object):
     def list_packages(self):
         """Return ``(name, version)`` tuples for packages in the target env."""
         output = self.run_blocking(
-            "pip", "list", "--format=json", "--quiet", *self._python_args()
+            "pip",
+            "list",
+            "--format=json",
+            "--quiet",
+            *self._python_args(),
+            note=_("Nu reads this list to show your packages."),
+            keep_output=False,
         )
         # Process merges stderr into the output, where uv reports e.g. the
         # environment it selected, so parse only the JSON line.
