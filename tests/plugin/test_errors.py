@@ -16,7 +16,7 @@ from PyQt6.QtWidgets import QApplication
 import mu.app
 from mu import settings
 from mu.modes.base import BaseMode
-from mu.plugin import Host, PluginError, errors, loader
+from mu.plugin import PLUGIN_API_VERSION, Host, PluginError, errors, loader
 from mu.plugin.errors import GUARDED_MODE_METHODS, PluginErrorHandler
 from mu.plugin.loader import PluginRecord
 
@@ -50,7 +50,7 @@ PLUGIN_MODULE = textwrap.dedent(
 
     class BuggyPlugin(ModePlugin):
         name = "Buggy"
-        api_version = "0.1"
+        api_version = "{api_version}"
         mode = BuggyMode
     """
 )
@@ -66,7 +66,9 @@ def plugin_module(tmp_path):
     """Import a real plugin module from a file, as the drop-in loader does."""
     name = "buggy_" + uuid.uuid4().hex[:8]
     path = tmp_path / (name + ".py")
-    path.write_text(PLUGIN_MODULE.format(short_name=name))
+    path.write_text(
+        PLUGIN_MODULE.format(short_name=name, api_version=PLUGIN_API_VERSION)
+    )
     module = loader._import_dropin(name, str(path))
     yield module
     sys.modules.pop(name, None)

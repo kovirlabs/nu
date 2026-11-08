@@ -1450,6 +1450,9 @@ name = "nu-example-plugin"
 version = "0.1.0"
 source = { editable = "plugins/example" }
 
+[package.metadata]
+provides-extras = ["learner-env"]
+
 [[package]]
 name = "nudatus"
 version = "0.0.5"

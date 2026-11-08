@@ -10,6 +10,7 @@ import pytest
 from PyQt6.QtWidgets import QMessageBox
 
 from mu import resources, settings
+from mu.virtual_environment import venv
 from mu.app import setup_modes
 from mu.plugin import PLUGIN_API_VERSION, Host, ModePlugin, Plugin, PluginSettings
 from mu.modes.base import BaseMode
@@ -347,3 +348,135 @@ def test_register_images_from_the_core_are_kept(host, image_dir):
     host.load_plugin(AlphaPlugin())
     host.unload_plugin(host.plugins[0])
     assert resources.plugin_image_dirs() == [str(image_dir)]
+
+
+# --- running the learner's program ---
+
+
+def test_save_current_no_tab(host):
+    host._view.current_tab = None
+    assert host.save_current() is None
+    host._editor.save.assert_not_called()
+
+
+def test_save_current_saved_and_unchanged(host):
+    tab = host._view.current_tab
+    tab.path = "/work/game.py"
+    tab.isModified.return_value = False
+    assert host.save_current() == "/work/game.py"
+    host._editor.save.assert_not_called()
+    host._editor.save_tab_to_file.assert_not_called()
+
+
+def test_save_current_saves_changes(host):
+    tab = host._view.current_tab
+    tab.path = "/work/game.py"
+    tab.isModified.return_value = True
+    assert host.save_current() == "/work/game.py"
+    host._editor.save_tab_to_file.assert_called_once_with(tab)
+
+
+def test_save_current_names_an_unsaved_tab(host):
+    """
+    An unnamed tab is saved through the editor, which asks for a name.
+    """
+    tab = host._view.current_tab
+    tab.path = None
+
+    def save():
+        tab.path = "/work/new.py"
+        tab.isModified.return_value = False
+
+    host._editor.save.side_effect = save
+    assert host.save_current() == "/work/new.py"
+    host._editor.save_tab_to_file.assert_not_called()
+
+
+def test_save_current_naming_cancelled(host):
+    host._view.current_tab.path = None
+    assert host.save_current() is None
+    host._editor.save.assert_called_once_with()
+
+
+def test_run_program(host):
+    """
+    The program runs in the learner's environment, from its own folder, with
+    the learner's environment variables, its output in the output pane.
+    """
+    host._editor.envars = [["name", "value"]]
+    runner = host._view.add_python3_runner.return_value
+    with mock.patch.object(venv, "interpreter", "/venv/bin/python"):
+        assert host.run_program("/work/game.py", python_args=["-m", "pgzero"])
+    host._view.add_python3_runner.assert_called_once_with(
+        interpreter="/venv/bin/python",
+        script_name="/work/game.py",
+        working_directory="/work",
+        interactive=False,
+        envars=[["name", "value"]],
+        python_args=["-m", "pgzero"],
+    )
+    runner.process.waitForStarted.assert_called_once_with()
+
+
+def test_run_program_interactive(host):
+    with mock.patch.object(venv, "interpreter", "/venv/bin/python"):
+        host.run_program("/work/game.py", interactive=True)
+    kwargs = host._view.add_python3_runner.call_args.kwargs
+    assert kwargs["interactive"] is True
+    assert kwargs["python_args"] is None
+
+
+def test_run_program_not_started(host):
+    host._view.add_python3_runner.return_value = None
+    assert host.run_program("/work/game.py") is False
+
+
+def test_stop_program(host):
+    runner = host._view.add_python3_runner.return_value
+    host.run_program("/work/game.py")
+    host.stop_program()
+    runner.stop_process.assert_called_once_with()
+    host._view.remove_python_runner.assert_called_once_with()
+    host.stop_program()  # nothing running: just tidies the pane
+    runner.stop_process.assert_called_once_with()
+    assert host._view.remove_python_runner.call_count == 2
+
+
+def test_update_action(host):
+    slot = mock.MagicMock()
+    host._view.button_bar.slots = {"play": slot}
+    with mock.patch("mu.plugin.host.resources.load_icon") as load_icon:
+        host.update_action(
+            "play", display_name="Stop", description="Stop it.", icon="stop"
+        )
+    load_icon.assert_called_once_with("stop")
+    slot.setIcon.assert_called_once_with(load_icon.return_value)
+    slot.setText.assert_called_once_with("Stop")
+    slot.setToolTip.assert_called_once_with("Stop it.")
+
+
+def test_update_action_changes_only_whats_given(host):
+    slot = mock.MagicMock()
+    host._view.button_bar.slots = {"play": slot}
+    host.update_action("play", display_name="Go")
+    slot.setText.assert_called_once_with("Go")
+    slot.setIcon.assert_not_called()
+    slot.setToolTip.assert_not_called()
+
+
+def test_update_action_unknown_button(host):
+    host._view.button_bar.slots = {}
+    with pytest.raises(ValueError, match="'play'"):
+        host.update_action("play", display_name="Go")
+
+
+def test_python_apis(host):
+    """
+    Plugins can build on the autocomplete entries of Nu's Python 3 mode.
+    """
+    from mu.modes.api import PI_APIS, PYTHON3_APIS, SHARED_APIS
+
+    apis = host.python_apis()
+    assert apis == SHARED_APIS + PYTHON3_APIS + PI_APIS
+    apis.append("mine")
+    assert "mine" not in host.python_apis()

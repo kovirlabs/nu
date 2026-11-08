@@ -1,7 +1,8 @@
 # A minimal Nu plugin: copy this directory to start your own.
 #
-# Nu finds installed plugins through the "mu.plugins" entry point below (that
-# discovery lands in Phase 5b; see docs/plugins.md).
+# Nu finds installed plugins through the "mu.plugins" entry point below (see
+# docs/plugins.md). Files in the package folder, like images/, are included in
+# the wheel automatically.
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -17,6 +18,12 @@ requires-python = ">=3.11"
 # runs from, which already provides mu.plugin. List your own runtime
 # dependencies here.
 dependencies = []
+
+# Packages your mode needs in the learner's environment (where their programs
+# run), e.g. a library their code imports. Nu installs them with its own when
+# it builds that environment. This example needs none.
+[project.optional-dependencies]
+learner-env = []
 
 [project.entry-points."mu.plugins"]
 example = "nu_example:ExamplePlugin"
