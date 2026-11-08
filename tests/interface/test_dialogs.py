@@ -144,8 +144,9 @@ def test_AdminDialog_setup_python_mode():
     packages = "foo\nbar\nbaz\n"
     mock_window = QWidget()
     mode = mock.MagicMock()
-    mode.short_name = "python"
+    mode.short_name = "a-mode-that-runs-code"
     mode.name = "Python 3"
+    mode.uses_user_environment = True
     modes = mock.MagicMock()
     device_list = mu.logic.DeviceList(modes)
     ad = mu.interface.dialogs.AdminDialog(mock_window)
@@ -169,8 +170,9 @@ def test_AdminDialog_setup():
     packages = "foo\nbar\nbaz\n"
     mock_window = QWidget()
     mode = mock.MagicMock()
-    mode.short_name = "debugger"
+    mode.short_name = "python"
     mode.name = "Debugger"
+    mode.uses_user_environment = False
     modes = mock.MagicMock()
     device_list = mu.logic.DeviceList(modes)
     ad = mu.interface.dialogs.AdminDialog(mock_window)

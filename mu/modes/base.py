@@ -177,6 +177,10 @@ class BaseMode(QObject):
     file_extensions = []
     module_names = MODULE_NAMES
     code_template = _("# Write your code here :-)")
+    #: True if the mode runs the learner's programs in Nu's Python environment
+    #: (the uv-managed one), so the admin dialog shows that environment's
+    #: variables and third-party packages.
+    uses_user_environment = False
     #: The mu.plugin.Host that registered this mode (set by Host.register_mode).
     host = None
 
@@ -227,12 +231,23 @@ class BaseMode(QObject):
 
         return workspace_dir
 
+    def ensure_workspace_assets(self, workspace_dir):
+        """
+        Make sure `workspace_dir` has whatever this mode needs in it, e.g.
+        folders for a game's images and sounds, with some examples.
+
+        Nu calls this for every mode each time it starts, once the workspace
+        exists, so it must leave things the learner already has alone. The
+        default does nothing.
+        """
+        pass
+
     def assets_dir(self, asset_type):
         """
         Determine (and create) the directory for a set of assets
 
-        This supports the [Images] and [Sounds] &c. buttons in pygamezero
-        mode and possibly other modes, too.
+        This supports buttons that open a mode's asset folders (e.g. a games
+        mode's [Images] and [Sounds]).
 
         If a tab is current and has an active file, the assets directory
         is looked for under that path; otherwise the workspace directory

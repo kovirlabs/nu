@@ -19,13 +19,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import logging
+import shutil
 from mu.modes.base import BaseMode
 from mu.modes.api import PYTHON3_APIS, SHARED_APIS, PI_APIS, PYGAMEZERO_APIS
-from mu.resources import load_icon
+from mu.resources import load_icon, path
 from ..virtual_environment import venv
 
 
 logger = logging.getLogger(__name__)
+
+# Demo images and sound effects copied into a new workspace, for the Pygame
+# Zero tutorials.
+DEFAULT_IMAGES = [
+    "alien.png",
+    "alien_hurt.png",
+    "cat1.png",
+    "cat2.png",
+    "cat3.png",
+    "cat4.png",
+    "splat.png",
+]
+DEFAULT_SOUNDS = [
+    "eep.wav",
+    "meow1.wav",
+    "meow2.wav",
+    "meow3.wav",
+    "meow4.wav",
+    "splat.wav",
+]
 
 
 class PyGameZeroMode(BaseMode):
@@ -38,6 +59,7 @@ class PyGameZeroMode(BaseMode):
     description = _("Make games with Pygame Zero.")
     icon = "pygamezero"
     runner = None
+    uses_user_environment = True
     builtins = [
         "clock",
         "music",
@@ -104,6 +126,24 @@ class PyGameZeroMode(BaseMode):
         tips.
         """
         return SHARED_APIS + PYTHON3_APIS + PI_APIS + PYGAMEZERO_APIS
+
+    def ensure_workspace_assets(self, workspace_dir):
+        """
+        Make the folders Pygame Zero looks in for a game's images, fonts,
+        sounds and music. New images and sounds folders get the demo files
+        the tutorials use; existing folders are left alone.
+        """
+        defaults = {"images": DEFAULT_IMAGES, "sounds": DEFAULT_SOUNDS}
+        for asset_type in ("images", "fonts", "sounds", "music"):
+            asset_path = os.path.join(workspace_dir, asset_type)
+            if os.path.exists(asset_path):
+                continue
+            logger.debug("Creating directory: {}".format(asset_path))
+            os.makedirs(asset_path)
+            for filename in defaults.get(asset_type, []):
+                shutil.copy(
+                    path(filename, "pygamezero/"), os.path.join(asset_path, filename)
+                )
 
     def play_toggle(self, event):
         """

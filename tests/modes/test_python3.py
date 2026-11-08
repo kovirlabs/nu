@@ -142,6 +142,7 @@ def test_python_mode():
     assert pm.description is not None
     assert pm.icon == "python"
     assert pm.is_debugger is False
+    assert pm.uses_user_environment is True
     assert pm.editor == editor
     assert pm.view == view
 

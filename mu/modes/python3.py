@@ -135,6 +135,7 @@ class PythonMode(BaseMode):
     icon = "python"
     runner = None
     has_debugger = True
+    uses_user_environment = True
     kernel_runner = None
     stop_kernel = pyqtSignal()
 

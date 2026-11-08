@@ -4,7 +4,7 @@ Tests for the PyGameZero mode.
 """
 
 import os.path
-from mu.modes.pygamezero import PyGameZeroMode
+from mu.modes.pygamezero import PyGameZeroMode, DEFAULT_IMAGES, DEFAULT_SOUNDS
 from mu.modes.api import PYTHON3_APIS, SHARED_APIS, PI_APIS, PYGAMEZERO_APIS
 from mu.virtual_environment import venv
 from unittest import mock
@@ -298,3 +298,40 @@ def test_pgzero_show_music_no_file():
     pm.show_music(None)
     music_dir = os.path.join(pm.workspace_dir(), "music")
     view.open_directory_from_os.assert_called_once_with(music_dir)
+
+
+def test_pgzero_uses_the_user_environment():
+    """
+    Pygame Zero games run in the learner's environment, so the admin dialog
+    shows its environment variables and third-party packages.
+    """
+    assert PyGameZeroMode.uses_user_environment is True
+
+
+def test_pgzero_ensure_workspace_assets(tmp_path):
+    """
+    The asset folders Pygame Zero looks in are created in the workspace, and
+    the demo images and sounds are copied into new ones.
+    """
+    pm = PyGameZeroMode(mock.MagicMock(), mock.MagicMock())
+    pm.ensure_workspace_assets(str(tmp_path))
+    assert sorted(os.listdir(tmp_path)) == ["fonts", "images", "music", "sounds"]
+    assert sorted(os.listdir(tmp_path / "images")) == sorted(DEFAULT_IMAGES)
+    assert sorted(os.listdir(tmp_path / "sounds")) == sorted(DEFAULT_SOUNDS)
+    assert "alien.png" in DEFAULT_IMAGES
+    assert "eep.wav" in DEFAULT_SOUNDS
+
+
+def test_pgzero_ensure_workspace_assets_keeps_existing_folders(tmp_path):
+    """
+    Folders the learner already has are left alone: nothing is copied back
+    into them, so deleted demo files stay deleted.
+    """
+    for name in ("images", "sounds"):
+        (tmp_path / name).mkdir()
+    pm = PyGameZeroMode(mock.MagicMock(), mock.MagicMock())
+    pm.ensure_workspace_assets(str(tmp_path))
+    assert os.listdir(tmp_path / "images") == []
+    assert os.listdir(tmp_path / "sounds") == []
+    assert (tmp_path / "fonts").is_dir()
+    assert (tmp_path / "music").is_dir()

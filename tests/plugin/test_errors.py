@@ -431,3 +431,10 @@ def test_a_failing_plugin_button_does_not_crash_nu(host, loaded, monkeypatch):
     reported_plugin, exc, tb = report.call_args.args
     assert reported_plugin is plugin
     assert isinstance(exc, ZeroDivisionError)
+
+
+def test_startup_hooks_are_guarded():
+    """
+    A plugin mode failing to set up the workspace mustn't stop Nu starting.
+    """
+    assert GUARDED_MODE_METHODS["ensure_workspace_assets"] is None
