@@ -29,13 +29,22 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   (Apple Silicon) and Linux `.AppImage`, published with each GitHub release.
 * **Works offline from first launch.** The installers carry a Python for your
   programs' environment, so the first start needs no internet.
-* **Plugins (experimental).** Plugins can add modes. Drop one into Nu's
-  plugins folder, or install one as a package; a plugin that fails is skipped
-  or reported, and Nu keeps running. The plugin API is at version 0.1 and may
-  change. See [Writing a Nu plugin](https://kovirlabs.github.io/nu/plugins/).
+* **Plugins (experimental).** Plugins can add modes, with their own icons,
+  and say which packages their modes need in your programs' environment. Drop
+  one into Nu's plugins folder, or install one as a package; a plugin that
+  fails is skipped or reported, and Nu keeps running. The plugin API is at
+  version 0.2 and may change. See
+  [Writing a Nu plugin](https://kovirlabs.github.io/nu/plugins/).
 * **Private crash reports.** If Nu crashes it shows the details with a **Copy
   to clipboard** button. Mu used to open codewith.mu with the details in the
   address; Nu never sends anything by itself.
+
+### Changed
+
+* **Pygame Zero is now a bundled plugin** (`nu-pygamezero`). It's installed
+  with Nu and switched on as before, and works the same way (saved sessions in
+  Pygame Zero mode carry on), but it's built on the public plugin API, so it
+  can be switched off like any other plugin.
 
 ### Fixed
 

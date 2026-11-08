@@ -116,17 +116,23 @@ The Python 3 debugger mode.
 
 ::: mu.modes.debugger
 
-### `mu.modes.pygamezero`
-
-The Pygame Zero / pygame mode.
-
-::: mu.modes.pygamezero
-
 ### `mu.modes.python3`
 
 The Python 3 editing mode.
 
 ::: mu.modes.python3
+
+## Bundled plugins
+
+Plugins shipped with Nu, in `plugins/` (see [plugins](plugins.md)).
+
+### `nu_pygamezero`
+
+The Pygame Zero / pygame mode, as a bundled plugin (`plugins/pygamezero`).
+
+::: nu_pygamezero
+
+::: nu_pygamezero.mode
 
 ## `mu.resources`
 

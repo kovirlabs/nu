@@ -17,6 +17,50 @@ single definition in
 | macOS | zipped `.app` (ad-hoc signed) | `macos-latest` (Apple Silicon) |
 | Linux | `.AppImage` | `ubuntu-latest` |
 
+## Bundled plugins: the uv workspace
+
+The repo is a **uv workspace** (`[tool.uv.workspace] members = ["plugins/*"]`
+in `pyproject.toml`). Each bundled plugin is its own package under
+`plugins/<name>/`, with its own `pyproject.toml`, version and `mu.plugins`
+entry point, sharing the repo's `uv.lock`. Today that's **`nu-pygamezero`**
+(`plugins/pygamezero`); `plugins/example` is a member too, so it's locked and
+buildable, but it's a template and nothing depends on it.
+
+`nu-editor` depends on each bundled plugin by name (`nu-pygamezero>=0.1`), and
+`[tool.uv.sources]` resolves that name from the workspace, so:
+
+- **Development:** `uv sync` installs the bundled plugins editable into `.venv`,
+  and Nu finds them through their entry points, the same way it finds a
+  community plugin. The tests for each live in `plugins/<name>/tests` and run
+  with Nu's.
+- **pip from a checkout** (as CI's test job does): pip doesn't read
+  `[tool.uv.sources]`, so give it the paths too:
+  `pip install ./plugins/pygamezero ".[dev]"`.
+- **Installers:** `[tool.briefcase.app.mu].requires` lists each bundled plugin
+  as a local path, relative to the project root (`"./plugins/pygamezero"`).
+  Briefcase turns a requirement containing a path separator into an absolute
+  path from the project root and pip-installs it into the app, entry points and
+  package data (icons, demo assets) included. (Checked against Briefcase
+  0.4.2's `briefcase/commands/create.py`: `_is_local_path` and
+  `_write_requirements_file`.)
+- **Publishing to PyPI:** `[tool.uv.sources]` is uv-only; the built `nu-editor`
+  sdist/wheel just says `Requires-Dist: nu-pygamezero>=0.1`. So **each bundled
+  plugin must be published to PyPI before the `nu-editor` release that needs
+  it** (or `pip install nu-editor` can't resolve). Build and upload a plugin
+  from its folder (`uv build plugins/pygamezero`, then upload as usual); bump
+  its own version when it changes, independently of Nu's.
+
+### What the learner's environment gets from plugins
+
+A plugin lists the packages its modes need *in the learner's environment*
+(where their programs run, not where Nu runs) as an extra called
+`learner-env`, e.g. Pygame Zero's `learner-env = ["pgzero>=1.2.1",
+"pygame>=2.6"]`. `mu.wheels.baseline_packages()` is the core's own list
+(`ipykernel`) plus the `learner-env` requirements of every installed
+distribution with a `mu.plugins` entry point, read from package metadata
+without importing the plugin. That's what goes into the offline wheelhouse and
+what a new learner environment is built with.
+
 ## Building installers (Briefcase)
 
 CI is the release path: `.github/workflows/build.yml` builds one OS per job and
@@ -28,7 +72,7 @@ pre-release segment such as `v2.0.0rc1` publishes as a pre-release). See
 [Release process](release.md).
 
 Locally (inside a pip-enabled virtualenv with the `package` extra,
-`pip install -e ".[package]"`):
+`uv sync --extra package`, or with pip `pip install -e ./plugins/pygamezero -e ".[package]"`):
 
 ```
 $ make win64     # 64-bit Windows MSI
@@ -48,14 +92,19 @@ demand).
 - A pinned **`uv`** binary — it rides in via the PyPI `uv` wheel, and
   `find_uv()` locates it at runtime through `uv.find_uv_bin()` (no `PATH` or
   `MU_UV` needed in the packaged app).
+- The bundled plugins (`plugins/*`), installed by Briefcase from the local
+  paths in `requires`.
 - The **baseline wheels zip** (`mu/wheels/<version>.zip`), so the learner's
-  baseline packages install without the network.
+  baseline packages install without the network: the core's (`ipykernel`)
+  plus the bundled plugins' `learner-env` packages (`pgzero`, `pygame`).
 - A relocatable **CPython** (the python-build-standalone build uv itself would
   install, matching the app's Python X.Y and the runner's platform) plus a
   **pip wheel**, in `mu/wheels/python/`.
 
 `python -m mu.wheels --package` fetches all three before packaging (it needs
-`uv` installed, to look up the CPython download).
+`uv` installed, to look up the CPython download, and the bundled plugins
+installed, to read their `learner-env` needs; CI's build job installs them
+with `pip install --no-deps ./plugins/pygamezero`, which needs no PyQt6).
 
 At first launch Nu extracts the bundled CPython into its data directory (a
 stable, writable path: the app bundle may be read-only, and an AppImage is

@@ -14,7 +14,8 @@ and **Python 3.11+** (verified through 3.14).
 
 Nu uses [uv](https://docs.astral.sh/uv/) to manage its development environment.
 `uv sync` downloads a managed CPython, creates a `.venv`, and installs the
-project (editable) with its runtime dependencies:
+project (editable) with its runtime dependencies, including the bundled
+plugins in `plugins/` (the repo is a uv workspace; see [packaging](packaging.md)):
 
 ```
 uv sync                 # runtime deps only
@@ -42,8 +43,11 @@ If you prefer not to use uv, any Python 3.11+ virtual environment works:
 ```
 python3 -m venv .venv
 source .venv/bin/activate          # Windows: .\.venv\Scripts\activate
-pip install -e ".[dev]"
+pip install -e ./plugins/pygamezero -e ".[dev]"
 ```
+
+pip doesn't know about the uv workspace, so the bundled plugins (which
+`nu-editor` depends on) are given as paths.
 
 ## Running the tests
 
