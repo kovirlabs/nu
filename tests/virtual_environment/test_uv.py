@@ -176,7 +176,30 @@ def test_uv_list_packages_targets_venv():
     with mock.patch.object(VE.Process, "run_blocking", return_value="[]"):
         uv.list_packages()
         args, _ = VE.Process.run_blocking.call_args
-    assert args[1] == ["pip", "list", "--format=json", "--python", "/tmp/env"]
+    assert args[1] == [
+        "pip",
+        "list",
+        "--format=json",
+        "--quiet",
+        "--python",
+        "/tmp/env",
+    ]
+
+
+def test_uv_list_packages_ignores_uv_status_lines():
+    """
+    Regression: uv reports the environment it selected ("Using Python 3.11.15
+    environment at: ...") on stderr, and Process merges stderr into the output.
+    That line must not break the JSON parse -- it used to raise
+    JSONDecodeError, which crashed Nu when opening the admin dialog.
+    """
+    uv = Uv(uv_executable="uv", venv_path="/tmp/env")
+    output = (
+        "Using Python 3.11.15 environment at: /tmp/env\n"
+        '[{"name": "pgzero", "version": "1.2.1"}]\n'
+    )
+    with mock.patch.object(VE.Process, "run_blocking", return_value=output):
+        assert uv.list_packages() == [("pgzero", "1.2.1")]
 
 
 #

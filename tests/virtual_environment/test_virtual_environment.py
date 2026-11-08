@@ -235,6 +235,13 @@ def test_create_virtual_environment_on_disk(venv_dirpath, test_wheels):
     assert os.path.samefile(result, expected_result)
 
     #
+    # The real uv can list the packages (its status output mustn't break the
+    # parse) and everything installed at creation counts as baseline.
+    #
+    _, user_packages = venv.installed_packages()
+    assert user_packages == []
+
+    #
     # Issue #1372 -- venv creation fails for paths with a space
     #
     with mock.patch.object(VE, "ensure_key_modules"):
@@ -764,7 +771,7 @@ def test_uv_list_packages(uv_process):
     uv = UV(uv_executable="/x/uv", venv_path="/venv")
     assert uv.list_packages() == [("a", "1"), ("b", "2")]
     (_, args), _ = uv_process.run_blocking.call_args
-    assert args == ["pip", "list", "--format=json", "--python", "/venv"]
+    assert args == ["pip", "list", "--format=json", "--quiet", "--python", "/venv"]
 
 
 def test_uv_run_connects_supplied_slots(uv_process):

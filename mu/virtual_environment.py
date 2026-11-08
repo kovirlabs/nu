@@ -563,8 +563,14 @@ class Uv(object):
 
     def list_packages(self):
         """Return ``(name, version)`` tuples for packages in the target env."""
-        output = self.run_blocking("pip", "list", "--format=json", *self._python_args())
-        return [(p["name"], p["version"]) for p in json.loads(output)]
+        output = self.run_blocking(
+            "pip", "list", "--format=json", "--quiet", *self._python_args()
+        )
+        # Process merges stderr into the output, where uv reports e.g. the
+        # environment it selected, so parse only the JSON line.
+        json_lines = [line for line in output.splitlines() if line.startswith("[")]
+        packages = json.loads(json_lines[0] if json_lines else output)
+        return [(p["name"], p["version"]) for p in packages]
 
 
 class SplashLogHandler(logging.NullHandler):
