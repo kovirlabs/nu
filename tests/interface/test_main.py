@@ -1946,50 +1946,33 @@ def test_Window_connect_tab_rename():
     mock_shortcut().activated.connect.assert_called_once_with(mock_handler)
 
 
-def test_Window_open_directory_from_os_windows():
+def test_Window_open_directory_from_os():
     """
-    Ensure the file explorer for Windows is called for the expected path.
-    """
-    w = mu.interface.main.Window()
-    with (
-        mock.patch("mu.interface.main.sys") as mock_sys,
-        mock.patch("mu.interface.main.os") as mock_os,
-    ):
-        path = "c:\\a\\path\\"
-        mock_sys.platform = "win32"
-        w.open_directory_from_os(path)
-        mock_os.startfile.assert_called_once_with(path)
-
-
-def test_Window_open_directory_from_os_darwin():
-    """
-    Ensure the file explorer for OSX is called for the expected path.
+    The folder is handed to the desktop (Qt's QDesktopServices) as a file
+    URL, which returns at once, rather than run through a shell and waited
+    for.
     """
     w = mu.interface.main.Window()
+    path = "/home/user/mu_code/images/"
     with (
-        mock.patch("mu.interface.main.sys") as mock_sys,
-        mock.patch("mu.interface.main.os.system") as mock_system,
+        mock.patch(
+            "mu.interface.main.QDesktopServices.openUrl", return_value=True
+        ) as open_url,
+        mock.patch("mu.interface.main.os.system") as system,
     ):
-        path = "/home/user/mu_code/images/"
-        mock_sys.platform = "darwin"
         w.open_directory_from_os(path)
-        mock_system.assert_called_once_with('open "{}"'.format(path))
+    (url,), _kwargs = open_url.call_args
+    assert url.isLocalFile()
+    assert url.toLocalFile() == path
+    system.assert_not_called()
 
 
-def test_Window_open_directory_from_os_freedesktop():
-    """
-    Ensure the file explorer for FreeDesktop (Linux) is called for the
-    expected path.
-    """
+def test_Window_open_directory_from_os_fails(caplog):
+    """If the desktop can't open it, that's logged."""
     w = mu.interface.main.Window()
-    with (
-        mock.patch("mu.interface.main.sys") as mock_sys,
-        mock.patch("mu.interface.main.os.system") as mock_system,
-    ):
-        path = "/home/user/mu_code/images/"
-        mock_sys.platform = "linux"
-        w.open_directory_from_os(path)
-        mock_system.assert_called_once_with('xdg-open "{}"'.format(path))
+    with mock.patch("mu.interface.main.QDesktopServices.openUrl", return_value=False):
+        w.open_directory_from_os("/nowhere")
+    assert "Unable to open /nowhere" in caplog.text
 
 
 def test_Window_open_file_event():

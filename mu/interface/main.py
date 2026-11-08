@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import sys
 import logging
 import os.path
-from PyQt6.QtCore import QPoint, QSize, Qt, pyqtSignal, QTimer
+from PyQt6.QtCore import QPoint, QSize, Qt, QUrl, pyqtSignal, QTimer
 from PyQt6.QtWidgets import (
     QToolBar,
     QWidget,
@@ -44,6 +44,7 @@ from PyQt6.QtGui import (
     QKeySequence,
     QStandardItemModel,
     QCursor,
+    QDesktopServices,
 )
 from mu import __version__
 from mu.interface.dialogs import (
@@ -1181,16 +1182,14 @@ class Window(QMainWindow):
         """
         Given the path to a directory, open the OS's built in filesystem
         explorer for that path. Works with Windows, OSX and Linux.
+
+        Qt asks the desktop to open it and returns at once. (Running
+        `xdg-open` with os.system waited for it, which froze Nu until the
+        file manager was closed where xdg-open runs it directly, and passed
+        the path through a shell.)
         """
-        if sys.platform == "win32":
-            # Windows
-            os.startfile(path)
-        elif sys.platform == "darwin":
-            # OSX
-            os.system('open "{}"'.format(path))
-        else:
-            # Assume freedesktop.org on unix-y.
-            os.system('xdg-open "{}"'.format(path))
+        if not QDesktopServices.openUrl(QUrl.fromLocalFile(path)):
+            logger.warning("Unable to open %s in the file manager", path)
 
     def connect_find_replace(self, handler, shortcut):
         """
