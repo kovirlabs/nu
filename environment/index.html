@@ -1637,6 +1637,9 @@ open the <strong>Environment</strong> tab, which shows:</p>
 </table>
 <p>You'll only see the environment in modes that use it. CircuitPython runs
 your code on the board, so it doesn't show it.</p>
+<p>Some <a href="../plugins/#managing-plugins">plugins</a> need packages in this
+environment for their mode (Pygame Zero needs <code>pgzero</code> and <code>pygame</code>). Nu
+installs those itself when it makes the environment.</p>
 <h2 id="adding-and-removing-packages">Adding and removing packages<a class="headerlink" href="#adding-and-removing-packages" title="Permanent link">&para;</a></h2>
 <p>On the Environment tab, open <strong>Packages</strong>, put each package's name on its own
 line (e.g. <code>cowsay</code>), and click <strong>OK</strong>. To remove a package, delete its line.

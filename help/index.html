@@ -1807,10 +1807,14 @@ package such as <code>requests</code>, click that, open <strong>Packages</strong
 the packages it needs in a <code># /// script</code> block, and <strong>Run</strong> fetches them. See
 <a href="../environment/">Your Python environment</a>.</p>
 <p>The <strong>cog</strong> in the bottom-right corner opens the same window, which also has
-Nu's log and the language setting.</p>
+Nu's log, your plugins and the language setting.</p>
 <h2 id="plugins">Plugins<a class="headerlink" href="#plugins" title="Permanent link">&para;</a></h2>
-<p>Plugins add new modes to Nu. To try one, put its <code>.py</code> file (or folder) in
-Nu's plugins folder and restart Nu:</p>
+<p>Plugins add new modes to Nu. The <strong>Plugins</strong> tab (click the <strong>cog</strong>) lists
+them: where each comes from, whether it's on and, if it couldn't start, why.
+Untick one to switch it off, or tick it to switch it back on; changes take
+effect when you restart Nu.</p>
+<p>To try a new plugin, click <strong>Open plugins folder</strong> on that tab, put the
+plugin's <code>.py</code> file (or folder) there, and restart Nu. The folder is:</p>
 <table>
 <thead>
 <tr>
@@ -1834,7 +1838,8 @@ Nu's plugins folder and restart Nu:</p>
 </tbody>
 </table>
 <p>Plugins are Python code that runs inside Nu, so only add ones you trust. If a
-plugin has a problem, Nu tells you and keeps running. To write one, see
+plugin has a problem, Nu tells you and keeps running. See
+<a href="../plugins/#managing-plugins">Managing plugins</a>, and to write one,
 <a href="../plugins/">Writing a Nu plugin</a>.</p>
 <h2 id="something-went-wrong">Something went wrong?<a class="headerlink" href="#something-went-wrong" title="Permanent link">&para;</a></h2>
 <ul>
