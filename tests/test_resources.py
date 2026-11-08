@@ -153,7 +153,7 @@ def plugin_images(tmp_path):
     A folder of plugin images ("rocket.png", "rocket.svg" and "badge.png"),
     unregistered again after the test.
     """
-    core_png = mu.resources.path("python", ext=".png")
+    core_png = mu.resources.path("checked", ext=".png")  # any real PNG
     directory = tmp_path / "images"
     directory.mkdir()
     for name in ("rocket.png", "badge.png"):

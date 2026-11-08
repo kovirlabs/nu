@@ -108,7 +108,11 @@ status, with these notes:
   behind as unused files in `mu/resources/images`; the micro:bit plugin moved
   them in (the Flash icon renamed from `flash`), byte-for-byte identical to
   upstream Mu's, so they carry Mu's copyright and licence, nothing new.
-* **The Python logo** (`python.png`, `python.svg`): see python.png above.
+* **The Python logo** (`python.svg`): see python.png above.
+* **Nu's own artwork.** The app icon (`icon.png`, and `package/icons` for the
+  installers) is Nu's, not Mu's. The splash screens (`splash_screen.png`,
+  `splash_fail.png`) and the Mode button (`modes.png`) are drawn from it by
+  `utils/make_artwork.py`, replacing Mu's logo artwork.
 
 ## Mu's design archive
 
