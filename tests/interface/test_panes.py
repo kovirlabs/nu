@@ -2714,3 +2714,24 @@ def test_PythonProcessPane_read_from_stdout_program_done():
     assert text.startswith("done\n--- Your program has finished.")
     assert text.endswith("---\n>>> ")
     ppp.on_append_text.emit.assert_called_once_with(b">>> ")
+
+
+def test_JupyterREPLPane_friendly_banner():
+    """
+    The REPL greets the learner with the Python it runs, not qtconsole's and
+    IPython's banners.
+    """
+    jw = mu.interface.panes.JupyterREPLPane()
+    rep = {
+        "content": {
+            "banner": "IPython 9 -- An enhanced Interactive Python. Tip: vi",
+            "language_info": {"name": "python", "version": "3.12.4"},
+        }
+    }
+    with mock.patch(
+        "qtconsole.jupyter_widget.JupyterWidget._handle_kernel_info_reply"
+    ) as handler:
+        jw._handle_kernel_info_reply(rep)
+    handler.assert_called_once_with(rep)
+    assert rep["content"]["banner"] == ""
+    assert jw.banner.startswith("Python 3.12.4 - type some Python")

@@ -91,6 +91,23 @@ class JupyterREPLPane(RichJupyterWidget):
         super().__init__(parent)
         self.set_theme(theme)
         self.console_height = 10
+        self.banner = ""  # Set when the kernel says which Python it runs.
+
+    def _handle_kernel_info_reply(self, rep):
+        """
+        Show a short, friendly banner instead of qtconsole's and IPython's
+        (versions, licence and "editing mode like vi or emacs" tips), with
+        the version of the Python the REPL runs (the learner's environment's,
+        which needn't be Nu's own).
+        """
+        content = rep["content"]
+        version = content.get("language_info", {}).get("version", "")
+        self.banner = (
+            _("Python {} - type some Python and press Enter to run it.").format(version)
+            + "\n"
+        )
+        content["banner"] = ""
+        super()._handle_kernel_info_reply(rep)
 
     def _append_plain_text(self, text, *args, **kwargs):
         """

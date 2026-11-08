@@ -17,6 +17,17 @@ from mu.interface.panes import CHARTS, PlotterPane
 import sys
 
 
+@pytest.fixture(autouse=True)
+def mocked_dock_sizes(request, monkeypatch):
+    """
+    Most tests here dock mocked panes, which Qt can't resize: the real
+    resizing is tested in test_Window_give_editor_room.
+    """
+    if request.node.name == "test_Window_give_editor_room":
+        return
+    monkeypatch.setattr(mu.interface.main.Window, "resizeDocks", mock.MagicMock())
+
+
 def test_ButtonBar_init():
     """
     Ensure everything is set and configured given a new instance of the
@@ -129,11 +140,14 @@ def test_ButtonBar_set_responsive_mode_icons_only_when_labels_do_not_fit():
     for name in ("new", "load", "save", "run", "debug", "help", "quit"):
         bb.addAction(name, "A rather long translated label", "tooltip")
     style = bb.toolButtonStyle
-    bb.set_responsive_mode(2000, 800)
+    # Plenty of room, whatever fonts the tests before this one left set up
+    # (the seven labels need nearly 2000 px at some font sizes).
+    roomy = 6000
+    bb.set_responsive_mode(roomy, 800)
     assert style() == Qt.ToolButtonStyle.ToolButtonTextUnderIcon
     bb.set_responsive_mode(600, 800)
     assert style() == Qt.ToolButtonStyle.ToolButtonIconOnly
-    bb.set_responsive_mode(2000, 800)
+    bb.set_responsive_mode(roomy, 800)
     assert style() == Qt.ToolButtonStyle.ToolButtonTextUnderIcon
 
 
@@ -1033,7 +1047,7 @@ def test_Window_add_python3_plotter():
         w.add_python3_plotter(mock_mode)
     w.data_received.connect.assert_called_once_with(mock_plotter.process_tty_data)
     mock_plotter.data_flood.connect.assert_called_once_with(mock_mode.on_data_flood)
-    w.add_plotter.assert_called_once_with(mock_plotter, "Python3 data tuple")
+    w.add_plotter.assert_called_once_with(mock_plotter, "Python")
 
 
 def test_Window_add_jupyter_repl():
@@ -1058,7 +1072,7 @@ def test_Window_add_jupyter_repl():
     assert mock_pane.kernel_manager == mock_kernel_manager
     assert mock_pane.kernel_client == mock_kernel_client
     mock_kernel_client.start_channels.assert_called_once_with()
-    w.add_repl.assert_called_once_with(mock_pane, "Python3 (Jupyter)")
+    w.add_repl.assert_called_once_with(mock_pane, "Python")
 
 
 def test_Window_add_repl():
@@ -1223,8 +1237,9 @@ def test_Window_update_debug_inspector():
         w.update_debug_inspector(locals_dict)
     w.debug_model.rowCount.assert_called_once_with()
     w.debug_model.setHorizontalHeaderLabels(["Name", "Value"])
-    # You just have to believe this is correct. I checked! :-)
-    assert mock_standard_item.call_count == 22
+    # You just have to believe this is correct. I checked! :-) (Python's own
+    # __dunder__ names aren't shown.)
+    assert mock_standard_item.call_count == 18
 
 
 def test_Window_update_debug_inspector_with_exception():
@@ -2456,3 +2471,24 @@ def test_Window_size_window_with_real_screens():
     assert (w.x(), w.y()) == (screen.x() + 5, screen.y() + 5)
     w.size_window(x=screen.x() - 100000, y=screen.y() - 100000, w=300, h=200)
     assert w.x() == screen.x() + (screen.width() - w.geometry().width()) // 2
+
+
+def test_Window_give_editor_room():
+    """
+    A pane docked below the editor starts a third of the window high; one
+    docked at the side is left to Qt.
+    """
+    from PyQt6.QtWidgets import QDockWidget
+
+    w = mu.interface.main.Window()
+    w.resize(900, 900)
+    dock = QDockWidget("Pane")
+    w.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, dock)
+    with mock.patch.object(w, "resizeDocks") as resize:
+        w.give_editor_room(dock, Qt.DockWidgetArea.BottomDockWidgetArea)
+        resize.assert_called_once_with([dock], [300], Qt.Orientation.Vertical)
+        resize.reset_mock()
+        w.give_editor_room(dock, Qt.DockWidgetArea.LeftDockWidgetArea)
+        resize.assert_not_called()
+    # And Qt takes the real thing.
+    w.give_editor_room(dock, Qt.DockWidgetArea.BottomDockWidgetArea)
