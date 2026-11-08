@@ -226,9 +226,10 @@ which may be of value for you to change are:
   environment's variables and third-party packages.
 
 A mode may also override `ensure_workspace_assets(workspace_dir)`, which Nu
-calls for every mode at startup to put what it needs into the workspace (Pygame
-Zero creates its `images`, `fonts`, `sounds` and `music` folders with the
-tutorials' demo files). It must leave anything already there alone.
+calls the first time the mode is used in a session (including the mode Nu
+starts in) to put what it needs into the workspace (Pygame Zero creates its
+`images`, `fonts`, `sounds` and `music` folders with the tutorials' demo files).
+It must leave anything already there alone.
 
 !!! note
     When creating strings that will be seen by users please remember to use

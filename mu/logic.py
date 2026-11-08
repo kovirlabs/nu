@@ -798,9 +798,11 @@ class Editor(QObject):
         if not os.path.exists(wd):
             logger.debug("Creating directory: {}".format(wd))
             os.makedirs(wd)
-        # Let each mode put what it needs in the workspace.
-        for mode in self.modes.values():
-            mode.ensure_workspace_assets(wd)
+        # Each mode puts what it needs in the workspace when it's first used
+        # (see change_mode), so a mode the learner never picks (Pygame Zero's
+        # images, sounds... folders) doesn't fill it with folders.
+        self.workspace_assets_done = set()
+        self.workspace_assets_dir = wd
         # Start the timer to poll every second for an attached or removed
         # USB device.
         self._view.set_usb_checker(1, self.connected_devices.check_usb)
@@ -1527,6 +1529,12 @@ class Editor(QObject):
         self.modes[self.mode].deactivate()
         # Re-assign to new mode.
         self.mode = mode
+        # The first time the mode's used, let it put what it needs in the
+        # workspace (e.g. Pygame Zero's images and sounds folders).
+        assets_dir = getattr(self, "workspace_assets_dir", None)
+        if assets_dir and mode not in self.workspace_assets_done:
+            self.workspace_assets_done.add(mode)
+            self.modes[mode].ensure_workspace_assets(assets_dir)
         # Activate new mode
         self.modes[mode].activate()
         # Update buttons.

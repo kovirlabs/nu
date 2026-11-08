@@ -823,10 +823,10 @@ def test_editor_setup():
         e.setup(mock_modes)
         assert mkd.call_count == 1
         assert mkd.call_args_list[0][0][0] == "foo"
-    # Each mode puts what it needs in the workspace (e.g. Pygame Zero's
-    # images and sounds folders).
-    mock_mode.ensure_workspace_assets.assert_called_once_with("foo")
-    other_mode.ensure_workspace_assets.assert_called_once_with("foo")
+    # Modes put what they need in the workspace when first used (see
+    # change_mode), not all of them at startup.
+    mock_mode.ensure_workspace_assets.assert_not_called()
+    other_mode.ensure_workspace_assets.assert_not_called()
     assert e.modes == mock_modes
     view.set_usb_checker.assert_called_once_with(1, e.connected_devices.check_usb)
 
@@ -846,7 +846,9 @@ def test_editor_setup_new_workspace(tmp_path):
     assert wd.is_dir()
     assert not (wd / "templates").exists()
     assert not (wd / "static").exists()
-    mock_mode.ensure_workspace_assets.assert_called_once_with(str(wd))
+    # The mode adds its own things when it's first used (change_mode).
+    mock_mode.ensure_workspace_assets.assert_not_called()
+    assert e.workspace_assets_dir == str(wd)
 
 
 def test_editor_connect_to_status_bar():
@@ -3796,3 +3798,34 @@ def test_quit_program_finished_no_question(mocked_session):
         with mock.patch("PyQt6.QtCore.QCoreApplication.exit"):
             ed.quit()
         view.show_confirmation.assert_not_called()
+
+
+def test_change_mode_ensures_workspace_assets_once():
+    """
+    The first time a mode is used it puts what it needs in the workspace;
+    switching back to it later doesn't ask again.
+    """
+    view = mock.MagicMock()
+    ed = mu.logic.Editor(view)
+    python = mock.MagicMock()
+    python.workspace_dir.return_value = "ws"
+    python.actions.return_value = []
+    python.save_timeout = 0
+    games = mock.MagicMock()
+    games.workspace_dir.return_value = "ws"
+    games.actions.return_value = []
+    games.save_timeout = 0
+    with (
+        mock.patch("os.path.exists", return_value=True),
+        mock.patch("os.makedirs"),
+    ):
+        ed.setup({"python": python, "games": games})
+    ed.mode = "python"
+    ed.change_mode("python")
+    python.ensure_workspace_assets.assert_called_once_with("ws")
+    games.ensure_workspace_assets.assert_not_called()
+    ed.change_mode("games")
+    ed.change_mode("python")
+    ed.change_mode("games")
+    python.ensure_workspace_assets.assert_called_once_with("ws")
+    games.ensure_workspace_assets.assert_called_once_with("ws")
