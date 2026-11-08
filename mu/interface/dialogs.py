@@ -659,6 +659,7 @@ class LocaleWidget(QWidget):
         "русский язык": "ru_RU",
         "Slovenský": "sk_SK",
         "Svenska": "sv",
+        "Українська": "uk_UA",
         "tiếng Việt": "vi",
         "中文": "zh_CN",
     }
