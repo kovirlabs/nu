@@ -13,7 +13,9 @@ import atexit
 import os
 import random
 import shutil
+import sys
 import tempfile
+import threading
 from unittest import mock
 
 
@@ -46,6 +48,7 @@ REAL_HOME = os.path.expanduser("~")
 SESSION_ROOT = _isolate_session()
 
 import pytest  # noqa: E402
+from PyQt6.QtCore import QCoreApplication  # noqa: E402
 from PyQt6.QtWidgets import QApplication  # noqa: E402
 
 from mu import settings  # noqa: E402
@@ -108,3 +111,35 @@ def no_plugin_images():
     for directory in resources.plugin_image_dirs():
         resources.unregister_image_dir(directory)
 
+
+def _refuse_to_quit(*args, **kwargs):
+    raise AssertionError(
+        "A test asked the QApplication to quit. With no event loop running, "
+        "that makes every later QEventLoop.exec() return at once; patch "
+        "QCoreApplication.exit (or quit) in the test instead."
+    )
+
+
+@pytest.fixture(autouse=True)
+def no_application_quit(monkeypatch):
+    """Fail a test that would leave the QApplication quitting for the rest"""
+    monkeypatch.setattr(QCoreApplication, "exit", staticmethod(_refuse_to_quit))
+    monkeypatch.setattr(QCoreApplication, "quit", staticmethod(_refuse_to_quit))
+
+
+@pytest.fixture(autouse=True)
+def restore_exception_hooks():
+    """Undo a test's `mu.app.setup_exception_handler()` (or other hooks)"""
+    import mu.app
+
+    saved = (
+        sys.excepthook,
+        threading.excepthook,
+        mu.app._previous_thread_excepthook,
+    )
+    yield
+    (
+        sys.excepthook,
+        threading.excepthook,
+        mu.app._previous_thread_excepthook,
+    ) = saved
