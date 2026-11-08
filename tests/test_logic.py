@@ -1350,6 +1350,11 @@ def test_load_not_python_or_hex():
     with mock.patch("os.path.isfile", return_value=True):
         ed._load("unknown_filetype.foo")
     assert view.show_message.call_count == 1
+    # Nu no longer has a mode that opens .hex files (micro:bit was removed),
+    # so the message mustn't offer them.
+    message, info = view.show_message.call_args[0]
+    assert "hex" not in info
+    assert "Python" in info
 
 
 def test_load_recovers_from_oserror():

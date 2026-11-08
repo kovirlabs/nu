@@ -1031,11 +1031,7 @@ class Editor(QObject):
                             break
                 else:
                     message = _("Nu was not able to open this file")
-                    info = _(
-                        "Currently Nu only works with Python source "
-                        "files or hex files created with embedded "
-                        "MicroPython code."
-                    )
+                    info = _("Currently Nu only works with Python source files.")
                     self._view.show_message(message, info)
                     return
         except OSError:
