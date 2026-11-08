@@ -226,6 +226,10 @@ def translate_begin(lang=""):
         mu_po_filename,
         "--locale={locale}".format(locale=lang),
     ]
+    if update:
+        # Don't keep translations of strings Nu no longer has (#~ entries):
+        # git keeps the history, see utils/recover_renamed_translations.py.
+        cmd.append("--ignore-obsolete")
     result = subprocess.run(cmd).returncode
 
     print(
@@ -241,7 +245,6 @@ def translate_begin(lang=""):
 
 _TRANSLATE_IGNORE_DIRNAMES = {
     os.path.join("mu", "modes", "api"),
-    os.path.join("mu", "contrib"),
 }
 # Bundled plugins use Nu's own message catalog, so their packages are
 # extracted too (but not their API stubs or tests).
