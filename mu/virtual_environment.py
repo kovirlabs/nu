@@ -158,6 +158,19 @@ def pyvenv_version(path):
     return None
 
 
+def activate_command(path, windows=None):
+    """
+    The command to activate the environment at `path` in a terminal, quoted
+    for this OS (or Windows', if `windows`): running ``Scripts\\activate``
+    works in both cmd and PowerShell; elsewhere it's ``source bin/activate``.
+    """
+    if windows is None:
+        windows = sys.platform == "win32"
+    if windows:
+        return quote_command([os.path.join(path, "scripts", "activate")], windows)
+    return quote_command(["source", os.path.join(path, "bin", "activate")], windows)
+
+
 def environment_display_name(folder):
     """
     A short, stable name for the environment in `folder` (a folder name):
@@ -922,12 +935,7 @@ class VirtualEnvironment(object):
             uv_path = find_uv()
         except UvNotFound:
             uv_path = None
-        activate_script = os.path.join(self._bin_directory, "activate")
-        if self._is_windows:
-            # Running Scripts\activate works in both cmd and PowerShell.
-            activate = quote_command([activate_script])
-        else:
-            activate = quote_command(["source", activate_script])
+        activate = activate_command(self.path, self._is_windows)
         python = ["--python", self.interpreter]
         return {
             "name": self.display_name,
