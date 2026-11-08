@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#mus-architecture" class="md-skip">
+        <a href="#nus-architecture" class="md-skip">
           Skip to content
         </a>
       
@@ -738,6 +738,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#how-nu-starts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How Nu starts
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1236,14 +1247,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../website/" class="md-nav__link">
+      <a href="../docs-site/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Website
+    The documentation site
   
 
     
@@ -1511,6 +1522,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#how-nu-starts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How Nu starts
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1531,26 +1553,29 @@
   
 
 
-<h1 id="mus-architecture">Mu's Architecture<a class="headerlink" href="#mus-architecture" title="Permanent link">&para;</a></h1>
-<p>This section provides a high level overview of how the various parts of Mu
-fit together.</p>
+<h1 id="nus-architecture">Nu's architecture<a class="headerlink" href="#nus-architecture" title="Permanent link">&para;</a></h1>
+<p>This section provides a high level overview of how the various parts of Nu
+fit together. Nu keeps Mu's architecture; what's new is mostly the plugin
+host and the uv-managed learner environment.</p>
 <h2 id="key-concepts">Key Concepts<a class="headerlink" href="#key-concepts" title="Permanent link">&para;</a></h2>
 <p>The key concepts you should know are:</p>
 <ul>
-<li>Mu uses the <a href="https://riverbankcomputing.com/software/pyqt/intro">PyQt6 framework</a> (that makes the <a href="https://www.qt.io/">Qt</a> GUI toolkit available to Python) for making its user interface.</li>
-<li>Mu is a modal editor: the behaviour of Mu changes, depending on mode.</li>
+<li>Nu uses the <a href="https://riverbankcomputing.com/software/pyqt/intro">PyQt6 framework</a> (that makes the <a href="https://www.qt.io/">Qt</a> GUI toolkit available to Python) for making its user interface.</li>
+<li>Nu is a modal editor: the behaviour of Nu changes, depending on mode.</li>
 <li>There are a number of core features and behaviours that are always available and never vary, no matter the mode.</li>
 <li>The text area into which users type code is based on a <a href="http://www.scintilla.org/">Scintilla</a> based widget.</li>
-<li>Mu is easy to internationalise using Python's standard <code>gettext</code> based modules and tools.</li>
-<li>Mu's code base is small, well documented and has 100% unit test coverage.</li>
+<li>Nu is easy to internationalise using Python's standard <code>gettext</code> based modules and tools.</li>
+<li>Nu's code base is small and well documented, and its tests cover almost every line (see <a href="../tests/">tests</a>).</li>
 </ul>
 <h2 id="code-structure">Code Structure<a class="headerlink" href="#code-structure" title="Permanent link">&para;</a></h2>
 <p>The code is found in the <code>mu</code> directory and organised in the following way:</p>
 <ul>
 <li>The application is created and configured in <code>app.py</code>.</li>
-<li>Most of the fundamental logic for Mu is in <code>logic.py</code>.</li>
+<li>Most of the fundamental logic for Nu is in <code>logic.py</code> (the <code>Editor</code> class). It
+  never touches Qt directly: it drives the user interface through the <code>view</code>
+  it's given, which is what makes it testable.</li>
 <li>The Python3 debugger consists of a debug client and debug runner found in the <code>debugger</code> namespace. A description of how the debugger works can be found in <a href="../debugger/">debugger</a>.</li>
-<li>Interacting with the UI layer is done via the <code>Window</code> class in the <code>interface.main</code> module. Mu specific UI code used by the <code>Window</code> class found in the other modules in the namespace.</li>
+<li>Interacting with the UI layer is done via the <code>Window</code> class in the <code>interface.main</code> module. The rest of the UI code used by the <code>Window</code> class is in the other modules in the namespace (<code>editor</code>, <code>panes</code>, <code>dialogs</code>, <code>themes</code>, <code>workers</code>).</li>
 <li>Internationalization (I18n) related assets are found under <code>locale</code>. Learn how this works via <a href="../translations/">translations</a>.</li>
 <li>Modes are found under the <code>modes</code> namespace. They all inherit from a <code>BaseMode</code> class and there's a tutorial for <a href="../modes/">modes</a>. The core's modes are Python 3 and the Debugger; every other mode comes from a plugin.</li>
 <li>The learner's Python environment (where Python 3 and Pygame Zero programs
@@ -1564,33 +1589,57 @@ fit together.</p>
   status bar's environment indicator and the admin dialog's Environment tab
   show it all; see <a href="../environment/">Your Python environment</a>.</li>
 <li>The plugin host is the <code>plugin</code> namespace: the public, versioned <code>mu.plugin</code> API, plugin discovery (<code>plugin.loader</code>) and error isolation (<code>plugin.errors</code>). See <a href="../plugins/">plugins</a>.</li>
+<li>Settings (<code>settings.json</code>, <code>session.json</code>, <code>venv.json</code>) are read and written by <code>settings.py</code>; where they live is in <code>config.py</code>. See <a href="../design/settings-and-sessions/#nu-today">settings and sessions</a>.</li>
 <li>Graphical assets, fonts and CSS descriptions for the themes are all found under <code>resources</code>.</li>
 </ul>
 <p>Bundled plugins live outside <code>mu</code>, under <code>plugins/&lt;name&gt;/</code>
 (<code>plugins/circuitpython</code> and <code>plugins/pygamezero</code>, the CircuitPython and Pygame
 Zero modes): each is its own package, a member
 of the repo's uv workspace, installed with Nu and found through its
-<code>mu.plugins</code> entry point exactly like a community plugin. <code>plugins/example</code> is
-the template for writing one. See <a href="../plugins/">plugins</a> and
-<a href="../packaging/">packaging</a>.</p>
+<code>mu.plugins</code> entry point exactly like a community plugin.
+<code>plugins/microbit</code> (BBC micro:bit) is a workspace member too, but opt-in for
+now. <code>plugins/example</code> is the template for writing one. See
+<a href="../plugins/">plugins</a> and <a href="../packaging/">packaging</a>.</p>
 <p>All classes, methods and functions have documentation <em>written for humans</em>.
 These are extracted into the <a href="../api/">api</a>.</p>
 <p><a href="../tests/">tests</a> is in the <code>tests</code> directory (and each bundled plugin's in
 <code>plugins/&lt;name&gt;/tests</code>) and filenames for tests relate
-directly to the file they test in the Mu code base. The module / directory
-structure mirrors the organisation of the Mu code base. We use PyTest's assert
+directly to the file they test in the code base. The module / directory
+structure mirrors the organisation of the code base. We use PyTest's assert
 based unit testing. All tests have a comment describing their intent.</p>
 <p>The documentation you're reading right now (i.e. that written for developers)
 is found in the <code>docs</code> directory. We use <a href="https://www.mkdocs.org/">MkDocs</a> with
 the <a href="https://squidfunk.github.io/mkdocs-material/">Material</a> theme to write our
-docs and publish them with GitHub Pages.
-Other documentation (tutorials, user help and so on) is on <a href="../website/">website</a>.</p>
+docs and publish them with GitHub Pages. The same site holds the pages for
+learners and teachers (what <strong>Help</strong> opens); see
+<a href="../docs-site/">the documentation site</a>.</p>
 <p>The <code>utils</code> directory contains various scripts used to scrape and / or build
-the API documentation used by Mu's autocomplete and call tip functionality.</p>
+the API data used by the autocomplete and call tip functionality, and
+<code>utils/recover_renamed_translations.py</code> (see <a href="../translations/">translations</a>).</p>
 <p>The other assets in the root directory of the project are mainly for
 documentation (such as our Code of Conduct), configuration (for testing) or
 packaging for various platforms (see <a href="../packaging/">packaging</a>).</p>
 <p>If you want to make changes please read <a href="../contributing/">contributing</a>.</p>
+<h2 id="how-nu-starts">How Nu starts<a class="headerlink" href="#how-nu-starts" title="Permanent link">&para;</a></h2>
+<p><code>mu.app.run</code> (reached through <code>python -m mu</code>, <code>run.py</code>, the <code>nu-editor</code>
+command or an installer's launcher):</p>
+<ol>
+<li>Sets up logging and the crash handler, and makes sure only one Nu is
+   running.</li>
+<li>Loads the settings (<code>settings.init()</code>), and creates the <code>QApplication</code>.</li>
+<li>Shows the splash screen while a <code>StartupWorker</code> thread checks the
+   learner's environment, creating or repairing it if needed
+   (<code>venv.ensure_and_create</code>); its progress is the text on the splash screen.</li>
+<li>Creates the <code>Window</code> (the view) and the <code>Editor</code> (the logic), handing it
+   the window.</li>
+<li><code>setup_modes</code> registers the core's two modes through a plugin <code>Host</code>,
+   then loads every installed or dropped-in plugin that's switched on
+   (<code>mu.plugin.loader.load_plugins</code>), and installs the plugin error handler.</li>
+<li>Connects the status bar, restores the last session (open files, mode,
+   theme, window; or asks for a mode on the very first start) and opens any
+   files named on the command line.</li>
+<li>Runs Qt's event loop until Nu quits, when the settings are saved.</li>
+</ol>
 
 
 

@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://kovirlabs.github.io/nu/website/">
+        <link rel="canonical" href="https://kovirlabs.github.io/nu/docs-site/">
       
       
         <link rel="prev" href="../release/">
@@ -27,7 +27,7 @@
     
     
       
-        <title>Website - Nu developer documentation</title>
+        <title>The documentation site - Nu developer documentation</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#developing-mus-website" class="md-skip">
+        <a href="#the-documentation-site" class="md-skip">
           Skip to content
         </a>
       
@@ -115,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Website
+              The documentation site
             
           </span>
         </div>
@@ -1183,7 +1183,7 @@
   <span class="md-ellipsis">
     
   
-    Website
+    The documentation site
   
 
     
@@ -1201,7 +1201,7 @@
   <span class="md-ellipsis">
     
   
-    Website
+    The documentation site
   
 
     
@@ -1227,10 +1227,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#developer-setup" class="md-nav__link">
+  <a href="#how-its-built" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Developer Setup
+        How it's built
       
     </span>
   </a>
@@ -1238,10 +1238,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#internationalisation-of-the-website" class="md-nav__link">
+  <a href="#how-its-published" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Internationalisation of the Website
+        How it's published
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#writing-for-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing for it
       
     </span>
   </a>
@@ -1490,10 +1501,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#developer-setup" class="md-nav__link">
+  <a href="#how-its-built" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Developer Setup
+        How it's built
       
     </span>
   </a>
@@ -1501,10 +1512,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#internationalisation-of-the-website" class="md-nav__link">
+  <a href="#how-its-published" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Internationalisation of the Website
+        How it's published
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#writing-for-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing for it
       
     </span>
   </a>
@@ -1531,141 +1553,67 @@
   
 
 
-<h1 id="developing-mus-website">Developing Mu's Website<a class="headerlink" href="#developing-mus-website" title="Permanent link">&para;</a></h1>
-<p>The purpose of Mu's main website <a href="https://codewith.mu">https://codewith.mu/</a>
-is to provide four things:</p>
+<h1 id="the-documentation-site">The documentation site<a class="headerlink" href="#the-documentation-site" title="Permanent link">&para;</a></h1>
+<p>Nu has no website of its own beyond these pages. They're published at
+<a href="https://kovirlabs.github.io/nu/">kovirlabs.github.io/nu</a> with GitHub Pages,
+and serve both kinds of reader:</p>
 <ul>
-<li>Instructions for getting Mu.</li>
-<li>Learning oriented tutorials to show users how to get started with Mu.</li>
-<li>Goal oriented "how-to" guides that show how to solve a specific problems or
-  achieve particular tasks.</li>
-<li>Links to other community-related resources such as the developer
-  documentation you're reading right now, and online community discussions.</li>
+<li><strong>Learners and teachers:</strong> <a href="../help/">Using Nu</a> (what Nu's <strong>Help</strong> button
+  opens), <a href="../environment/">Your Python environment</a>, <a href="../microbit/">The BBC
+  micro:bit</a> and the managing part of <a href="../plugins/#managing-plugins">Plugins</a>.</li>
+<li><strong>Developers:</strong> everything else, from <a href="../setup/">developer setup</a> to the
+  generated <a href="../api/">API reference</a>.</li>
 </ul>
-<p>The site itself is hosted for free on
-<a href="https://pages.github.com/">GitHub Pages</a> as a <a href="https://jekyllrb.com/">Jekyll created static
-site</a>. The source code is found in the
-<a href="https://github.com/mu-editor/mu-editor.github.io">mu-editor.github.io</a>
-repository. As soon as a new change lands in the master branch of the site's
-repository, GitHub automatically rebuilds the site and deploys it. This means
-everything is simple and automated.</p>
-<p>We expect everyone participating in the development of the website to act in
-accordance with the PSF's <a href="../code_of_conduct/">code_of_conduct</a>.</p>
-<h2 id="developer-setup">Developer Setup<a class="headerlink" href="#developer-setup" title="Permanent link">&para;</a></h2>
-<ol>
-<li>Follow the instructions for your operating system to install the
-   <a href="https://jekyllrb.com/docs/installation/">Jekyll static site generator</a>.</li>
-<li>Get the source code from GitHub:</li>
-</ol>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git clone https://github.com/mu-editor/mu-editor.github.io.git
-</code></pre></div>
-<ol>
-<li>From within the root directory of the website's source code, use Jekyll to
-   build and serve the site locally:</li>
-</ol>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>jekyll serve
-</code></pre></div>
-<ol>
-<li>Point your browser to <a href="http://127.0.0.1:4000">http://127.0.0.1:4000</a> to
-   see the locally running version.</li>
-</ol>
-<p>As you make changes to the website's source, Jekyll will automatically update
-the locally running version so you'll immediately see your updates.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>If the instructions above don't work, and since Jekyll isn't supported for
-all environments, a <a href="https://www.vagrantup.com/">Vagrant</a> image can be
-used for instead. Assuming you have Vagrant installed:</p>
-<div class="highlight"><pre><span></span><code>git clone https://github.com/lcreid/rails-5-jade.git
-cd rails-5-jade
-vagrant up
-vagrant ssh
-git clone https://github.com/mu-editor/mu-editor.github.io.git
-cd mu-editor.github.io
-bundle install
-jekyll serve --host 0.0.0.0 --force_polling
-</code></pre></div>
-<p>You may need to restart your VM to ensure the port forwarding works
-properly.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Mu had a separate website, codewith.mu, with tutorials and how-to guides,
+built with Jekyll from its own repository. Nu doesn't: what learners need
+from Nu lives here, next to the code it describes, so it changes in the
+same pull request as the feature.</p>
 </div>
-<p>The source code is arranged as a typical Jekyll website except it's not a blog,
-so there are no articles in the <code>_posts</code> directory.</p>
-<p>Since we need our website to be easily translatable all the content will be in
-a directory named after the ISO language code of the translation. For example,
-all the original English content is in the <code>en</code> directory in the root of the
-repository. All images should be in the <code>img</code> directory. If an image is for
-a specific translation of the website, it should be in a subdirectory of
-<code>img</code> which is named after the ISO language code (for example, as there is
-for <code>img/en</code>).</p>
-<p><img alt="" src="../awesome.gif" /></p>
-<p>We use GIF based screen captures throughout the site (such as on the front
-page). The dimensions for such captures of Mu are 1140x660 pixels and must not
-include the window title bar (provided by the operating system). So far, we
-have found the <a href="https://github.com/phw/peek">peek</a> utility on Linux an
-excellent choice for making such GIF based screen captures.</p>
-<p>When adding such animated screen grabs please ensure the <code>img</code> element has
-the following classes (for the sake of visual consistency):
-<code>img-responsive center-block img-rounded movie</code>.</p>
-<h2 id="internationalisation-of-the-website">Internationalisation of the Website<a class="headerlink" href="#internationalisation-of-the-website" title="Permanent link">&para;</a></h2>
-<p>There are two ways to contribute to the translation of Mu's website:</p>
+<h2 id="how-its-built">How it's built<a class="headerlink" href="#how-its-built" title="Permanent link">&para;</a></h2>
+<p>The pages are Markdown files in <code>docs/</code>, built with
+<a href="https://www.mkdocs.org/">MkDocs</a> and the
+<a href="https://squidfunk.github.io/mkdocs-material/">Material</a> theme. <code>mkdocs.yml</code>
+at the repository root holds the site settings and the navigation (<code>nav:</code>):
+a page that isn't listed there is still built, but nobody will find it.</p>
+<p>The <a href="../api/">API reference</a> is generated from the docstrings in <code>mu/</code> and in
+the bundled plugins, by <a href="https://mkdocstrings.github.io/">mkdocstrings</a>. Each
+<code>module.name</code> line in <code>api.md</code> becomes that module's documentation;
+<code>mkdocs.yml</code> tells it where to import the plugins from
+(<code>plugins/circuitpython</code>, <code>plugins/pygamezero</code>, <code>plugins/microbit</code>).</p>
+<p>The tools come with the <code>docs</code> extra (part of <code>dev</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv sync --extra dev
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>make docs           # build into site/ (python -m mkdocs build)
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>make docs-serve     # preview at http://127.0.0.1:8000, rebuilding as you edit
+</code></pre></div>
+<p>Before you open a pull request that touches the docs, build them strictly,
+so a broken link or anchor fails the build instead of only warning:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv run --no-sync mkdocs build --strict
+</code></pre></div>
+<h2 id="how-its-published">How it's published<a class="headerlink" href="#how-its-published" title="Permanent link">&para;</a></h2>
+<p><code>.github/workflows/docs.yml</code> runs on every push to <code>master</code> that changes
+<code>docs/</code>, <code>mkdocs.yml</code>, <code>mu/</code> or <code>plugins/</code> (the API reference comes from the
+code), and can be run by hand. It installs Nu, its three workspace plugins
+and the <code>docs</code> extra, then runs <code>mkdocs gh-deploy --force</code>, which builds the
+site and pushes it to the <code>gh-pages</code> branch. GitHub Pages serves that branch.
+Pull requests don't publish anything.</p>
+<h2 id="writing-for-it">Writing for it<a class="headerlink" href="#writing-for-it" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Add / update existing content for your target language.</li>
-<li>Start a completely new translation for your target language.</li>
+<li><strong>Match the reader.</strong> Pages for learners and teachers are plain and short,
+  and say what to click. Developer pages are precise: name the module, the
+  setting, the command.</li>
+<li><strong>Check against the code.</strong> Don't describe what Nu used to do, or what it
+  might do. If you're not sure something still exists, look.</li>
+<li><strong>Nu or Mu?</strong> Write "Nu" for this app. Write "Mu" where you mean the
+  original editor, its history or its authors; that credit stays.</li>
+<li><strong>Links:</strong> link between pages with relative Markdown links
+  (<code>[plugins](plugins.md#managing-plugins)</code>), so <code>--strict</code> checks them.
+  Nu's own code links to two pages, <code>help/</code> and <code>plugins/</code>
+  (<code>HELP_URL</code> and <code>PLUGINS_HELP_URL</code> in <code>mu/logic.py</code>): don't rename those.</li>
+<li><strong>Images</strong> go in <code>docs/</code> next to the pages. If an image isn't ours, say
+  where it came from in <a href="../copyright/">Copyright &amp; image credits</a>.</li>
 </ul>
-<p>When adding content to an existing translation of the website please remember
-that files can be either HTML or Markdown. At the top of each file is a YAML
-based header that must contain three entries: <code>layout</code> which must always
-be <code>default</code>, <code>title</code> which should be the title of the page you're creating
-and <code>i18n</code> which much be the ISO language code for your translation (this is
-used so the correctly translated version of the site's menu is displayed).</p>
-<p>For example, the YAML header for the <code>index.html</code> site in the <code>en</code>
-sub-directory looks like this:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>---
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>layout: default
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>title: Code With Mu
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>i18n: en
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>---
-</code></pre></div>
-<p>The workflow for creating a new translation of the website is:</p>
-<ol>
-<li>Create a new directory named after the
-   <a href="https://en.wikipedia.org/wiki/ISO_639-1">ISO language code</a> for the new
-   translation. For example, if we were creating a new French translation of
-   the site, we'd create a <code>fr</code> directory in the root of the repository.</li>
-<li>Ensure there's a version of the <code>index.html</code> file found in the root of the
-   repository, translated into the target language in the new directory you
-   created in step 1. Also ensure you copy the structure of the main sections
-   of the website found in the <code>en</code> version of the site.</li>
-<li>In the <code>_includes</code> directory found in the root of the repository, you must
-   add the new language as a list item in the <code>lang_list.html</code> template.
-   Ensure that the href for the link points to the new directory, and the
-   name of the translation is in the target language. For example,
-   this is how an entry for French would look (note the use of the French word
-   for "French"):</li>
-</ol>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>&lt;li&gt;&lt;a href="/fr/"&gt;Français&lt;/a&gt;&lt;/li&gt;
-</code></pre></div>
-<ol>
-<li>In the same <code>_includes</code> directory, create a copy of the <code>nav_en.html</code>
-   but with the <code>en</code> section of the name replaced with the ISO code for the
-   new target language. For example, if we were to do this for a French
-   translation, our new file would be called <code>nav_fr.html</code>. This file defines
-   how the site's navigation bar should look. Make sure you translate the
-   English version into your target language and remember to update the href
-   values to use the new directory created in step 1.</li>
-<li>Remember that the YAML headers for your new translation should have an
-   <code>i18n</code> value with the expected ISO language code for the new target
-   language. For example, if we were writing a new page for the French
-   translation, the <code>i18n</code> entry would have the value <code>fr</code>.</li>
-</ol>
-<p>Assuming you followed all the steps above, you should see your new language in
-the "language" dropdown in the site navigation. Clicking on it should take you
-to the <code>index.html</code> page in the new directory you created for the target
-language, and the site navigation should reflect the newly translated
-navigation template.</p>
-<p>From this point on, it's just a case of adding content to the newly translated
-version of the site in much the same way as it is done in the "default"
-<code>en</code> directory.</p>
 
 
 

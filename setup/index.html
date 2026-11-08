@@ -557,10 +557,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#setting-up-with-a-plain-virtualenv" class="md-nav__link">
+  <a href="#setting-up-without-uv" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Setting up with a plain virtualenv
+        Setting up without uv
       
     </span>
   </a>
@@ -1280,14 +1280,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../website/" class="md-nav__link">
+      <a href="../docs-site/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Website
+    The documentation site
   
 
     
@@ -1545,10 +1545,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#setting-up-with-a-plain-virtualenv" class="md-nav__link">
+  <a href="#setting-up-without-uv" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Setting up with a plain virtualenv
+        Setting up without uv
       
     </span>
   </a>
@@ -1633,6 +1633,7 @@ project (editable) with its runtime dependencies, including the bundled
 plugins in <code>plugins/</code> (the repo is a uv workspace; see <a href="../packaging/">packaging</a>):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv sync                 # runtime deps only
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>uv sync --extra dev     # + tests, docs, packaging, i18n and lint tooling
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>uv sync --all-extras    # + everything, including the opt-in micro:bit plugin
 </code></pre></div>
 <p>Run things through the environment with <code>uv run</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv run python run.py    # launch Nu
@@ -1646,24 +1647,26 @@ backend); <code>setup.py</code>/<code>setup.cfg</code> were retired. The <code>[
 the <code>[tests]</code>, <code>[docs]</code>, <code>[package]</code>, <code>[i18n]</code> and <code>[lint]</code> extras. <code>[utils]</code>
 (scrapers under <code>utils/</code>) and <code>[all]</code> are defined separately.</p>
 </div>
-<h2 id="setting-up-with-a-plain-virtualenv">Setting up with a plain virtualenv<a class="headerlink" href="#setting-up-with-a-plain-virtualenv" title="Permanent link">&para;</a></h2>
-<p>If you prefer not to use uv, any Python 3.11+ virtual environment works:</p>
+<h2 id="setting-up-without-uv">Setting up without uv<a class="headerlink" href="#setting-up-without-uv" title="Permanent link">&para;</a></h2>
+<p>If you prefer not to use uv, any Python 3.11+ virtual environment (made with
+the standard <code>venv</code> module) works:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python3 -m venv .venv
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>source .venv/bin/activate          # Windows: .\.venv\Scripts\activate
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>pip install -e ./plugins/circuitpython -e ./plugins/pygamezero -e ".[dev]"
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>pip install -e ./plugins/microbit   # optional: the opt-in micro:bit plugin
 </code></pre></div>
 <p>pip doesn't know about the uv workspace, so the bundled plugins (which
 <code>nu-editor</code> depends on) are given as paths.</p>
 <h2 id="running-the-tests">Running the tests<a class="headerlink" href="#running-the-tests" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>uv run pytest
 </code></pre></div>
-<p>Qt tests need a platform plugin. To run headlessly (no display) set
-<code>QT_QPA_PLATFORM=offscreen</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly -q
+<p>To run them without a display (over SSH, in a container) use Qt's <code>offscreen</code>
+platform:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -q --basetemp=$HOME/.cache/nu-pytest/bt
 </code></pre></div>
-<p>Note that <code>--random-order</code> is enabled by default (see <code>pyproject.toml</code>), so add
-<code>-p no:randomly</code> or <code>--random-order-seed=...</code> when you need a reproducible order
-while debugging.</p>
+<p>The tests never touch your real Nu settings or <code>mu_code</code> folder. See
+<a href="../tests/">tests</a> for what each part of that command does, the random test
+order, coverage and how to write a test.</p>
 <h2 id="linting-and-formatting">Linting and formatting<a class="headerlink" href="#linting-and-formatting" title="Permanent link">&para;</a></h2>
 <p>Nu uses <a href="https://docs.astral.sh/ruff/">ruff</a> for both linting and formatting
 (config in <code>pyproject.toml</code> <code>[tool.ruff]</code>, wrapping at 88 columns):</p>
@@ -1679,18 +1682,20 @@ on its own lists the available targets. The most useful are:</p>
 <a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>make lint      - lint with ruff.
 <a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>make format    - check formatting; `make tidy` reformats in place.
 <a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>make check     - format + lint + coverage (the pre-commit gate).
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>make dist      - build an sdist and wheel.
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>make docs      - build the documentation with MkDocs.
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>make dist      - build an sdist and wheel (runs make check first).
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>make docs      - build the documentation with MkDocs (make docs-serve to preview).
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>make translate_status - how complete each translation is (see translations).
 </code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>On Windows there is a <code>make.cmd</code> file that works in a similar way to the
-<code>make</code> command on Unix-like operating systems.</p>
+<code>make</code> command on Unix-like operating systems (it calls <code>make.py</code>, as the
+<code>Makefile</code> does).</p>
 </div>
 <h2 id="before-submitting">Before submitting<a class="headerlink" href="#before-submitting" title="Permanent link">&para;</a></h2>
 <p>Before contributing code please make sure you've read
 <a href="../contributing/">contributing</a> and follow its checklist. We expect everyone
-participating in the development of Nu to act in accordance with the PSF's
+participating in the development of Nu to act in accordance with the
 <a href="../code_of_conduct/">Code of Conduct</a>.</p>
 
 

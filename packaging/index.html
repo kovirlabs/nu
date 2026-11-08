@@ -1303,14 +1303,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../website/" class="md-nav__link">
+      <a href="../docs-site/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Website
+    The documentation site
   
 
     
@@ -1784,7 +1784,7 @@ for your OS from the run. Pushing a <code>v*</code> tag also builds all three an
 publishes a GitHub Release with the installers attached (a tag with a
 pre-release segment such as <code>v2.0.0rc1</code> publishes as a pre-release). See
 <a href="../release/">Release process</a>.</p>
-<p>Locally (inside a pip-enabled virtualenv with the <code>package</code> extra,
+<p>Locally (inside a virtual environment that has pip, with the <code>package</code> extra:
 <code>uv sync --extra package</code>, or with pip <code>pip install -e ./plugins/circuitpython -e ./plugins/pygamezero -e ".[package]"</code>):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$ make win64     # 64-bit Windows MSI
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>$ make macos     # macOS .app/.dmg (ad-hoc signed)

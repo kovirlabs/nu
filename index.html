@@ -1243,14 +1243,14 @@
   
   
     <li class="md-nav__item">
-      <a href="website/" class="md-nav__link">
+      <a href="docs-site/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Website
+    The documentation site
   
 
     
@@ -1553,19 +1553,13 @@
 <p>Nu is a maintained, modernized continuation of the
 <a href="https://github.com/mu-editor/mu">Mu editor</a> — a simple Python code editor for
 beginner programmers.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><strong>This documentation is for developers</strong> who want to work on Nu itself, not
-for end users (who want <a href="help/">Using Nu</a> and
-<a href="environment/">Your Python environment</a>). Some of it is inherited from
-upstream Mu and still describes the pre-fork toolchain (PyQt5, <code>setup.py</code>,
-Sphinx/ReadTheDocs, the web mode). Nu has since moved to <strong>PyQt6</strong>,
-<strong>Python 3.11+</strong>, <strong>uv</strong> and <strong>ruff</strong>. For the current, authoritative state
-of the project see
-<a href="https://github.com/kovirlabs/nu/blob/master/README.md"><code>README.md</code></a>,
-<code>CLAUDE.md</code> and <code>TODO.md</code> in the repository root. These pages are being
-modernized incrementally.</p>
-</div>
+<p>Most of these pages are for <strong>developers</strong> who want to work on Nu itself.
+Learners and teachers want <a href="help/">Using Nu</a> (what Nu's <strong>Help</strong> button
+opens), <a href="environment/">Your Python environment</a> and
+<a href="microbit/">The BBC micro:bit</a>.</p>
+<p>Nu runs on <strong>PyQt6</strong> and <strong>Python 3.11+</strong>, is developed with <strong>uv</strong> and
+<strong>ruff</strong>, and is packaged with <strong>Briefcase</strong>. Where a page describes Mu's
+history or design, it says so; everything else describes Nu as it is now.</p>
 <h2 id="what-nu-is-made-of">What Nu is made of<a class="headerlink" href="#what-nu-is-made-of" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>The core:</strong> the editor, the Run pane, the REPL and plotter, the learner's
@@ -1593,6 +1587,10 @@ modernized incrementally.</p>
 <li>Curious how the debugger works? See <a href="debugger/">debugger / runner</a>.</li>
 <li>Adding tests or translations? See <a href="tests/">tests</a> and
   <a href="translations/">translations</a>.</li>
+<li>Cutting a release? See <a href="packaging/">packaging</a> and the
+  <a href="release/">release process</a>.</li>
+<li>Wondering why something is the way it is? See the
+  <a href="design/">design decisions</a>.</li>
 </ul>
 <h2 id="how-the-docs-are-built">How the docs are built<a class="headerlink" href="#how-the-docs-are-built" title="Permanent link">&para;</a></h2>
 <p>These docs are written in Markdown and built with
@@ -1600,7 +1598,10 @@ modernized incrementally.</p>
 <a href="https://squidfunk.github.io/mkdocs-material/">Material</a> theme. The
 <a href="api/">API reference</a> is generated from the source docstrings with
 <a href="https://mkdocstrings.github.io/">mkdocstrings</a>. Build locally with
-<code>make docs</code> (or live-preview with <code>make docs-serve</code>).</p>
+<code>make docs</code> (or live-preview with <code>make docs-serve</code>); see
+<a href="docs-site/">the documentation site</a> for how it's published.</p>
+<p>Found a problem, in Nu or in these pages? Please tell us at
+<a href="https://github.com/kovirlabs/nu/issues">github.com/kovirlabs/nu/issues</a>.</p>
 
 
 

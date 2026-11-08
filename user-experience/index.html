@@ -851,6 +851,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#where-nu-departs-showing-whats-under-the-hood" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where Nu departs: showing what's under the hood
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#resources-for-ux" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1247,14 +1258,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../website/" class="md-nav__link">
+      <a href="../docs-site/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Website
+    The documentation site
   
 
     
@@ -1523,6 +1534,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#where-nu-departs-showing-whats-under-the-hood" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where Nu departs: showing what's under the hood
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#resources-for-ux" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1553,7 +1575,15 @@
   
 
 
-<h1 id="user-experience">User Experience<a class="headerlink" href="#user-experience" title="Permanent link">&para;</a></h1>
+<h1 id="user-experience">User experience<a class="headerlink" href="#user-experience" title="Permanent link">&para;</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Mu's principles, kept by Nu</p>
+<p>This page was written for Mu by its creator, Nicholas H. Tollervey: the
+"I" below is him, and the history is Mu's. Nu keeps these principles as
+its own, so where the page says what Mu should be, it means Nu too. The
+one place Nu deliberately goes further is described in
+<a href="#where-nu-departs-showing-whats-under-the-hood">Where Nu departs</a>.</p>
+</div>
 <p>We care deeply about all our users - we want using Mu to be a positive
 experience. In particular we focus on our primary users:</p>
 <ul>
@@ -1774,6 +1804,35 @@ Mu generally follow a pattern:</p>
 <li>We create the simplest possible solution and ask for feedback.</li>
 <li>Iterate!</li>
 </ul>
+<h2 id="where-nu-departs-showing-whats-under-the-hood">Where Nu departs: showing what's under the hood<a class="headerlink" href="#where-nu-departs-showing-whats-under-the-hood" title="Permanent link">&para;</a></h2>
+<p>Mu kept things simple partly by hiding them. Its Python environment, the
+folder of packages learners' programs ran with, was something learners
+weren't meant to notice. Nu keeps the simple surface but makes two things
+<strong>visible</strong>, on purpose:</p>
+<ul>
+<li><strong>The learner's Python environment.</strong> The status bar names it
+  (<code>Environment: mu_venv · Python 3.11</code>); a click shows where it is, the
+  commands to use it from a terminal, and <strong>What Nu Ran</strong>: every command Nu
+  ran for the learner, exactly as they'd type it. A program can list the
+  packages it needs in a standard <code># /// script</code> block. See
+  <a href="../environment/">Your Python environment</a>.</li>
+<li><strong>Plugins.</strong> Every mode except Python 3 and the Debugger is a plugin, and
+  the <strong>Plugins</strong> tab shows them all: where each came from, whether it's on,
+  and, if one failed, why, in plain words. See
+  <a href="../plugins/#managing-plugins">Managing plugins</a>.</li>
+</ul>
+<p>Why, when simplicity is the point? Because of "the real thing" (see
+<a href="../first-steps/#user-experience-research">first steps</a>): environments,
+packages and plugins <em>are</em> how Python is used, and a learner who outgrows Nu
+should find that what they saw in Nu was the real thing, not a trick that
+stops working outside it. And when something goes wrong, the teacher helping
+can see what happened instead of guessing.</p>
+<p>What keeps it within the principles above is <strong>progressive disclosure</strong>. A
+beginner never has to look: they press <strong>Run</strong> and their program runs, with
+nothing to set up. The environment is one line in the status bar, the
+commands are behind a click, and more than one environment sits in a
+collapsed <strong>Advanced</strong> section. The details are there for the learner who is
+ready for them, and out of the way of the one who isn't.</p>
 <h2 id="resources-for-ux">Resources for UX<a class="headerlink" href="#resources-for-ux" title="Permanent link">&para;</a></h2>
 <p>In addition to providing answers about UX, Ann very kindly pointed me to
 various resources on the web that helped me to understand the challenges and

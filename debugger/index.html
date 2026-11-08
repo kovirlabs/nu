@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#python-runnerdebugger" class="md-skip">
+        <a href="#python-runner-debugger" class="md-skip">
           Skip to content
         </a>
       
@@ -824,6 +824,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#how-a-debug-session-starts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How a debug session starts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#debug-client" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1264,14 +1275,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../website/" class="md-nav__link">
+      <a href="../docs-site/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Website
+    The documentation site
   
 
     
@@ -1541,6 +1552,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#how-a-debug-session-starts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How a debug session starts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#debug-client" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1587,56 +1609,67 @@
   
 
 
-<h1 id="python-runnerdebugger">Python Runner/Debugger<a class="headerlink" href="#python-runnerdebugger" title="Permanent link">&para;</a></h1>
-<p>An obvious requirement for a Python editor is to run your Python code. For
-standard Python, Mu does this in two ways:</p>
+<h1 id="python-runner-debugger">Python runner / debugger<a class="headerlink" href="#python-runner-debugger" title="Permanent link">&para;</a></h1>
+<p>An obvious requirement for a Python editor is to run your Python code. In the
+Python 3 mode, Nu does this in two ways:</p>
 <ul>
-<li>With the Python runner (press the "Run" button).</li>
-<li>With the graphical debugger (click the "Debug" button).</li>
+<li>With the Python runner (the <strong>Run</strong> button).</li>
+<li>With the graphical debugger (the <strong>Debug</strong> button).</li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>For MicroPython based modes, the code is run on the attached embedded
-device and not directly by Mu. For example, saving your code on an
-Adafruit board restarts the device and Circuit Python evaluates your
-code.</p>
+<p>In the board modes (CircuitPython, micro:bit) the code runs on the
+attached device, not on the computer. Saving <code>code.py</code> to a
+CircuitPython board restarts it with the new code; micro:bit's <strong>Flash</strong>
+copies it over. Pygame Zero's <strong>Play</strong> uses the same runner as <strong>Run</strong>,
+with Pygame Zero's game runner as the program.</p>
 </div>
-<p>Both the Python runner and graphical debugger were created with the financial
-support of the Raspberry Pi Foundation.</p>
-<p>If you are creating a new standard Python mode for Mu, you should <em>at least</em>
-make available the Python runner (please see <a href="../modes/">modes</a> for more information
-about how to do this).</p>
-<p>Both methods of running Python code essentially work in the same way: they
-fire up a new child process and connect its stdin, stdout, stderr to the 
-<code>PythonProcessPane</code> found in the <code>mu.interface.panes</code> namespace so you're
-able to interact with it in a terminal like environment.</p>
-<p>However, the Python runner starts immediately whereas the debugger has to
-set up a bunch of debug-related scaffolding, which makes it start slower. This
-is especially noticeable on the less powerful Raspberry Pi machine. Basically,
-if you just want to run your script, use the Python runner.</p>
+<p>Both the Python runner and graphical debugger were created for Mu with the
+financial support of the Raspberry Pi Foundation.</p>
+<p>Both work in the same way: they start a new child process with the
+<strong>learner's</strong> Python (the environment described in
+<a href="../environment/">Your Python environment</a>, never Nu's own) and connect its
+stdin, stdout and stderr to the <code>PythonProcessPane</code> in <code>mu.interface.panes</code>,
+so you can interact with it in a terminal-like pane.</p>
+<p>The runner starts straight away, whereas the debugger has to set up its
+scaffolding first, so it is slower to start (most noticeably on a Raspberry
+Pi). If you just want to run your script, use the runner.</p>
 <h2 id="python-runner">Python Runner<a class="headerlink" href="#python-runner" title="Permanent link">&para;</a></h2>
-<p>The essentials of the Python runner are in the afore mentioned
-<code>PythonProcessPane</code> class. The <code>start_process</code> method is used to create the
-new child process. The resulting process becomes a <code>process</code> attribute on the
-instance of the <code>PythonProcessPane</code>.</p>
-<p>You have some control over how the child process behaves.</p>
+<p>Modes don't create the pane themselves: they call
+<code>Window.add_python3_runner</code> (in <code>mu.interface.main</code>, or <code>Host.run_program</code>
+from a <a href="../plugins/">plugin</a>), which adds the pane and calls its
+<code>start_process</code> method. The new <code>QProcess</code> becomes the pane's <code>process</code>
+attribute. You control it with:</p>
 <ul>
-<li>You should supply the <code>script_name</code> to run.</li>
-<li>You must also provide a <code>working_directory</code> within which the script will
-  run (this is usually the user's <code>mu_code</code> directory).</li>
-<li>The <code>interactive</code> flag (which defaults to <code>True</code>) will mean the user
-  will drop into a simple Python REPL when the script completes. The default
-  is at the request of the Raspberry Pi Foundation who explain that it is
-  often handy for beginner developers to run their script and then explore the
-  resulting context interactively.</li>
-<li>If the <code>debugger</code> flag is set to <code>True</code> (the default is <code>False</code>) then
-  the debug runner (see below) is started in a child process for the referenced
-  script. This overrides the <code>interactive</code> flag to being <code>False</code>.</li>
-<li>Any <code>command_args</code> for the referenced script should be a list of strings.
-  The default is no <code>command_args</code> (i.e. None).</li>
+<li><code>interpreter</code>: the Python to run, normally <code>venv.interpreter</code> (the
+  learner's environment).</li>
+<li><code>script_name</code>: the script to run.</li>
+<li><code>working_directory</code>: where it runs (the Python 3 mode uses the script's
+  own folder).</li>
+<li><code>interactive</code>: when <code>True</code>, Python is started with <code>-i</code>, so the learner
+  drops into a simple Python prompt when the script ends, to explore what it
+  left behind (at the request of the Raspberry Pi Foundation). The Python 3
+  mode's <strong>Run</strong> turns it on.</li>
+<li><code>debugger</code>: when <code>True</code>, the debug runner (see below) is started instead,
+  and <code>interactive</code> is ignored.</li>
+<li><code>command_args</code>: a list of strings passed to the script.</li>
+<li><code>envars</code>: environment variables the learner set on the Environment tab.
+  The pane also <em>activates</em> the learner's environment for the child
+  (<code>VIRTUAL_ENV</code>, and its <code>bin</code>/<code>Scripts</code> folder first on <code>PATH</code>), sets
+  <code>PYTHONUNBUFFERED</code> and <code>PYTHONIOENCODING=utf-8</code>, and drops any
+  <code>PYTHONPATH</code>.</li>
+<li><code>python_args</code>: arguments for the program being started, before the
+  script. <strong>Run</strong> uses this for a script with a
+  <a href="../environment/#programs-that-list-the-packages-they-need">PEP 723</a>
+  <code># /// script</code> block: the "interpreter" is then <code>uv</code>, with
+  <code>run --python &lt;the learner's Python&gt; --script</code> as its arguments, and
+  <code>interactive</code> is off (<code>uv run --script</code> can't pass <code>-i</code>).</li>
+<li><code>echo</code>: a line shown first in the pane, such as the <code>uv run ...</code> command,
+  so the learner sees what's really running.</li>
 </ul>
-<p>Handlers are configured to handle various events, such as when the process
-finishes or when a user type a character.</p>
+<p>The pane then handles the process's events: output arriving (read in chunks,
+so a chatty program doesn't freeze Nu), the learner typing, and the process
+finishing (it prints <code>FINISHED</code> with the exit code).</p>
 <p>The <code>PythonProcessPane</code> includes basic command history and input editing
 features. It'll also respond to CTRL-C and CTRL-D. Copy and paste can be
 accessed via a context menu.</p>
@@ -1646,42 +1679,75 @@ observe their code while it is running and allows you to use breakpoints, step
 over and into code as well as use a simple object inspector to view the status
 of objects in scope.</p>
 <p><img alt="" src="../mu-debugger.png" /></p>
-<p>When a user clicks the "Debug" button Mu transitions to "debug" mode which
-exposes the functionality of the debugger client which, in turn, communicates
-with the debug runner process which is actually driving the user's script.</p>
+<p>When the learner clicks <strong>Debug</strong>, Nu switches to the debugger mode and saves
+the script, whose buttons drive the debugger client,
+which in turn talks to the debug runner process that actually runs the
+learner's script.</p>
 <p>The debugger is designed to be as simple as possible in order to introduce
 beginner programmers to the basic concepts of a debugger in the easiest way. It
 does <strong>NOT</strong> strive to be extensive or particularly powerful. Rather, its aim
 is to encourage beginner programmers to explore their code while it is running.</p>
-<p>In this sense if conforms to the Mu outlook of providing the first steps for a
-beginner programmer with a view to them quickly graduating to a "proper"
+<p>In this sense it follows Mu's outlook, which Nu keeps: provide the first
+steps for a beginner programmer, with a view to them graduating to a "proper"
 development environment once they've found their feet.</p>
 <p>Most of the debugger's functionality can be found in the <code>mu.debugger</code>
 namespace. Coordination is done in the <code>mu.modes.debugger.DebugMode</code> class.</p>
+<h3 id="how-a-debug-session-starts">How a debug session starts<a class="headerlink" href="#how-a-debug-session-starts" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Debug</strong> in the Python 3 mode (<code>PythonMode.debug</code> in
+   <code>mu/modes/python3.py</code>) switches to the debugger mode and calls
+   <code>DebugMode.start</code> (<code>mu/modes/debugger.py</code>).</li>
+<li><code>DebugMode.start</code> saves the script, then calls <code>add_python3_runner</code> with
+   <code>debugger=True</code>, the learner's interpreter and the script's folder.</li>
+<li>With <code>debugger=True</code>, <code>PythonProcessPane.start_process</code> runs
+   <code>mu/mu_debug.py &lt;script&gt; &lt;args&gt;</code> with the learner's Python. The learner's
+   environment doesn't contain Nu (by design), so for this one process
+   <code>PYTHONPATH</code> points at the folder that contains the <code>mu</code> package.</li>
+<li><code>mu_debug.py</code> calls <code>mu.debugger.runner.run</code>, which listens on
+   <code>localhost</code> port <code>DEBUGGER_PORT</code> (31415, in <code>mu/debugger/config.py</code>) and
+   runs the script under a <code>mu.debugger.runner.Debugger</code>.</li>
+<li>Meanwhile <code>DebugMode.start</code> creates a <code>mu.debugger.client.Debugger</code> for
+   the same host and port and starts it, which connects to the runner (see
+   below), and shows the variables inspector.</li>
+<li>The debugger mode's buttons call methods on the client (<code>do_run</code>,
+   <code>do_next</code>, <code>do_step</code>, <code>do_return</code> for <strong>Continue</strong>, <strong>Step Over</strong>, <strong>Step
+   In</strong> and <strong>Step Out</strong>), which send <code>continue</code>, <code>next</code>, <code>step</code> and <code>return</code>
+   to the runner over the socket.</li>
+</ol>
 <h3 id="debug-client">Debug Client<a class="headerlink" href="#debug-client" title="Permanent link">&para;</a></h3>
-<p>The debug client exists within the Mu process. It spins up an instance of
-the <code>mu.debugger.client.CommandBufferHandler</code> class in a separate thread to
-handle inter-process communication in a non-blocking manner, so the UI thread
-is never blocked.</p>
-<p>The <code>mu.debugger.client.Debugger</code> class is used to react to incoming events
-from, and as an API for Mu to issue commands to the debug runner. It uses a
-reference to a <code>view</code> object to update the user interface as events are
-detected.</p>
+<p>The debug client lives in Nu's process. <code>Debugger.start</code> moves a
+<code>mu.debugger.client.CommandBufferHandler</code> onto its own <code>QThread</code> (the
+"listener thread"), so the UI thread never blocks on the socket. The handler
+tries to connect to the runner for up to 10 seconds (the runner may be slow
+to start), then turns what arrives into complete messages and emits them as
+signals.</p>
+<p>The <code>mu.debugger.client.Debugger</code> class reacts to those events, and is the
+API for Nu to issue commands to the runner. It updates the user interface
+through a reference to a <code>view</code> object (the debugger mode).</p>
+<p>When the session is over (the script finished, the connection failed, or
+<strong>Stop</strong> was clicked) the handler quits the listener thread, and
+<code>DebugMode.stop</code> waits for it (up to 2 seconds) after stopping the runner.
+Without that, the thread was still in its event loop when Nu quit, and Qt
+aborted Nu as it destroyed it ("QThread: Destroyed while thread is still
+running"), a bug Nu inherited from Mu and fixed in 2.0.0.</p>
 <h3 id="debug-runner">Debug Runner<a class="headerlink" href="#debug-runner" title="Permanent link">&para;</a></h3>
-<p>The debug runner exists on a new child process and makes use of Python's
-<a href="https://docs.python.org/3/library/bdb.html">bdb debugger framework</a>. It
-spins up a new thread to run the <code>command_buffer</code> function that listens for
-incoming commands.</p>
-<p>The most interesting aspects of the runner are found in the
-<code>mu.debugger.runner.Debugger</code> class which inherits from the <code>bdb.Bdb</code> class
-found in Python's standard library. It responds to commands from the client
-and sends messages when various events occur during the debugging process.
-These messages are picked up by the debug client and reflected in Mu's UI.</p>
-<p>The <code>mu.debugger.runner.run</code> function is the entry point for the debug
-runner and, as specified in Mu's <code>setup.py</code>, is accessed via the <code>mu-debug</code>
-command. This command expects at least one argument: the name of the script
-to be debugged. Any further arguments are passed on to the script to be
-debugged.</p>
+<p>The debug runner runs in the child process and uses Python's
+<a href="https://docs.python.org/3/library/bdb.html">bdb debugger framework</a>.</p>
+<p>The most interesting part is the <code>mu.debugger.runner.Debugger</code> class, which
+inherits from <code>bdb.Bdb</code>. It responds to commands from the client and sends
+messages when things happen during the debugging session (a breakpoint is
+hit, a line is reached, the script ends). The client picks these up and Nu's
+UI reflects them.</p>
+<p>Commands from the client are read by the <code>command_buffer</code> function on a
+separate thread and queued for <code>Debugger.interact</code>, which runs whenever the
+debugged script stops. The script stops before its first line, and the first
+time <code>interact</code> runs there is no client yet: the resulting error takes it to
+the branch that waits for the client to connect, starts the
+<code>command_buffer</code> thread and sends a <code>bootstrap</code> message with the current
+breakpoints. A later connection problem takes the same path.</p>
+<p><code>mu.debugger.runner.run(hostname, port, filename, args)</code> is the runner's
+entry point, called by <code>mu/mu_debug.py</code> with the script's path as its first
+command-line argument; any further arguments are passed on to the script.</p>
 
 
 

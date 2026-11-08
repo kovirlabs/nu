@@ -16,7 +16,7 @@
         <link rel="prev" href="../packaging/">
       
       
-        <link rel="next" href="../website/">
+        <link rel="next" href="../docs-site/">
       
       
         
@@ -1199,10 +1199,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#user-activity-checks" class="md-nav__link">
+  <a href="#what-ci-does" class="md-nav__link">
     <span class="md-ellipsis">
       
-        User Activity Checks
+        What CI does
       
     </span>
   </a>
@@ -1210,10 +1210,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pre-packaging-checklist" class="md-nav__link">
+  <a href="#version-numbers" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pre-Packaging Checklist
+        Version numbers
       
     </span>
   </a>
@@ -1221,10 +1221,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#packaging-processes" class="md-nav__link">
+  <a href="#before-the-release" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Packaging Processes
+        Before the release
       
     </span>
   </a>
@@ -1232,10 +1232,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pre-release-checklist" class="md-nav__link">
+  <a href="#check-it-as-a-learner-would" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pre-Release Checklist
+        Check it as a learner would
       
     </span>
   </a>
@@ -1243,10 +1243,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#release-process_1" class="md-nav__link">
+  <a href="#cutting-the-release" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Release Process
+        Cutting the release
       
     </span>
   </a>
@@ -1254,10 +1254,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#post-release-tasks" class="md-nav__link">
+  <a href="#after-the-release" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Post-Release Tasks
+        After the release
       
     </span>
   </a>
@@ -1280,14 +1280,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../website/" class="md-nav__link">
+      <a href="../docs-site/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Website
+    The documentation site
   
 
     
@@ -1534,10 +1534,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#user-activity-checks" class="md-nav__link">
+  <a href="#what-ci-does" class="md-nav__link">
     <span class="md-ellipsis">
       
-        User Activity Checks
+        What CI does
       
     </span>
   </a>
@@ -1545,10 +1545,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pre-packaging-checklist" class="md-nav__link">
+  <a href="#version-numbers" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pre-Packaging Checklist
+        Version numbers
       
     </span>
   </a>
@@ -1556,10 +1556,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#packaging-processes" class="md-nav__link">
+  <a href="#before-the-release" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Packaging Processes
+        Before the release
       
     </span>
   </a>
@@ -1567,10 +1567,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pre-release-checklist" class="md-nav__link">
+  <a href="#check-it-as-a-learner-would" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pre-Release Checklist
+        Check it as a learner would
       
     </span>
   </a>
@@ -1578,10 +1578,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#release-process_1" class="md-nav__link">
+  <a href="#cutting-the-release" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Release Process
+        Cutting the release
       
     </span>
   </a>
@@ -1589,10 +1589,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#post-release-tasks" class="md-nav__link">
+  <a href="#after-the-release" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Post-Release Tasks
+        After the release
       
     </span>
   </a>
@@ -1619,185 +1619,139 @@
   
 
 
-<h1 id="release-process">Release Process<a class="headerlink" href="#release-process" title="Permanent link">&para;</a></h1>
-<p>Our continuous integration setup (GitHub Actions) provides the following
-automation:</p>
+<h1 id="release-process">Release process<a class="headerlink" href="#release-process" title="Permanent link">&para;</a></h1>
+<p>This is the checklist for cutting a release of Nu. CI builds and publishes
+the installers, but it doesn't make a release on its own: the checks, the
+version numbers and the order of publishing are up to whoever cuts it.</p>
+<h2 id="what-ci-does">What CI does<a class="headerlink" href="#what-ci-does" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>test.yml</code> runs the unit test suite on Windows, macOS and Linux for each push
-  and pull request (Python 3.11 and 3.14 everywhere, plus 3.12 and 3.13 on
+<li><code>test.yml</code> runs the tests on Windows, macOS and Linux for every push and
+  pull request (Python 3.11 and 3.14 everywhere, plus 3.12 and 3.13 on
   Linux).</li>
-<li>CodeQL code-scanning on pushes to <code>master</code>.</li>
-<li><code>build.yml</code> builds the native installers with Briefcase (Windows <code>.msi</code>,
-  macOS zipped <code>.app</code>, Linux <code>.AppImage</code>) on a manual run or on a <code>v*</code> tag.
-  A tag also publishes a GitHub Release with the installers attached.</li>
+<li>CodeQL scans the code, through GitHub's <em>default setup</em> (configured in the
+  repository's settings, not in a workflow file).</li>
+<li><code>docs.yml</code> publishes these docs on every push to <code>master</code> (see
+  <a href="../docs-site/">the documentation site</a>).</li>
+<li><code>build.yml</code> builds the installers with Briefcase (Windows <code>.msi</code>, macOS
+  zipped <code>.app</code>, Linux <code>.AppImage</code>) when run by hand or when a <code>v*</code> tag is
+  pushed. A tag also publishes a GitHub Release with the installers attached.
+  See <a href="../packaging/">packaging</a>.</li>
 </ul>
-<p>However, such automation does not make a release. What follows is a check-list
-of steps needed to cut a release.</p>
-<h2 id="user-activity-checks">User Activity Checks<a class="headerlink" href="#user-activity-checks" title="Permanent link">&para;</a></h2>
-<p>To ensure nothing is broken from the user's point of view the following key
-user activities should be completed on Windows, OSX and Linux (to ensure the
-cross platform nature of Mu is consistent):</p>
-<ul>
-<li>Start Mu from a clean state (delete your Mu configuration file, and mu_code
-  directory). <em>Outcome: Mu should ask for an initial mode and a fresh
-  mu_code directory is created. Upon restart, Mu doesn't repeat this process.</em></li>
-<li>Click the "Mode" button, select a new mode. <em>Outcome: the mode selection
-  dialog should appear and you'll find yourself in a new mode.</em></li>
-<li>Click the "New" button. <em>Outcome: a new blank tab will appear.</em></li>
-<li>Click the "Load" button. <em>Outcome: the operating system's file selector
-  dialog should appear. The selected file should open in a new tab.</em></li>
-<li>With a new tab, click the "Save" button. <em>Outcome: the operating system's
-  file naming dialog should appear, and the tab will be updated with the newly
-  named filename.</em></li>
-<li>While in Python mode, plug in an Adafruit board. <em>Outcome: Mu should
-  suggest switching to Adafruit mode.</em></li>
-<li>In Adafruit mode, load, edit and save a file on the device. <em>Outcome: upon
-  saving the file, the device will reboot and run your code.</em></li>
-<li>In Adafruit mode, click the "Serial" button. <em>Outcome: a serial connection
-  to the attached device is shown in a pane at the bottom of Mu's window.
-  Pressing Ctrl-C should drop you to the CircuitPython REPL.</em></li>
-<li>In Adafruit mode, use some code <a href="https://github.com/adafruit/Adafruit_Learning_System_Guides/blob/master/Sensor_Plotting_With_Mu_CircuitPython/light.py">like this</a>
-  on the Adafruit device (in the case of this example, a Circuit Playground
-  Express) to emit tuple based data. Click the "Plotter" button
-  while the code is running. <em>Outcome: the plotter should display the output
-  as a graph.</em></li>
-<li>While in Python mode, plug in a micro:bit board. <em>Outcome: Mu should
-  suggest switching to micro:bit mode.</em></li>
-<li>In micro:bit mode (from now on, assuming you have a micro:bit device
-  connected), while the current tab is completely empty, click the
-  "Flash" button. <em>Outcome: Mu should do a complete fresh flash of "vanilla"
-  MicroPython.</em></li>
-<li>In micro:bit mode, write some simple working code and click the "Flash"
-  button. <em>Outcome: since MicroPython is already flashed on the device, only
-  the file will be copied over and the device will soft-reboot.</em></li>
-<li>In micro:bit mode, click on the "Files" button. <em>Outcome: the files pane
-  will appear and contain a true reflection of the current state of the file
-  system on the device and in your mu_code directory.</em></li>
-<li>In micro:bit mode, while the "Files" pane is active, copy to/from the device,
-  delete a file on the device and open files listed on your computer by
-  right-clicking them. <em>Outcome: the file pane state should update and no 
-  error message appear.</em></li>
-<li>In micro:bit mode, click on the "REPL" button. <em>Outcome: you should see and
-  be able to interact with the REPL of MicroPython running on the connected
-  device.</em></li>
-<li>In micro:bit mode, use some code to emit tuple based data. Click on the
-  "Plotter" button while the code is running. <em>Outcome: the plotter should
-  display the output as a graph.</em></li>
-<li>In PyGameZero mode, with an empty file, click the "Play" button. <em>Outcome:
-  a blank Pygame window will appear.</em></li>
-<li>In PyGameZero mode, with correctly working code, click the "Play" button.
-  <em>Outcome: the game runs.</em></li>
-<li>In PyGameZero mode, click each of the "Images", "Fonts", "Sounds" and "Music"
-  buttons. <em>Outcome: the operating system's file manager should open in the
-  correct directory for each of these types of game asset.</em></li>
-<li>In Python mode, enter a simple script and click "Run". <em>Outcome: the script
-  should run with input/output being handled by a pane at the bottom of the
-  Mu window.</em></li>
-<li>In Python mode, add a new breakpoint to your code, click "Debug". <em>Outcome:
-  the visual debugger should start and stop at your breakpoint.</em></li>
-<li>In Python mode, with no breakpoints present, click "Debug". <em>Outcome: the
-  visual debugger will start and stop at the first valid line of code.</em></li>
-<li>While the visual debugger is active, add and remove breakpoints. <em>Outcome:
-  the UI will update (red dots will appear etc) and the debugger will respect
-  such changes (stopping at new breakpoint, ignoring removed breakpoints).</em></li>
-<li>While in the visual debugger click the "Stop", "Continue", "Step Over", "Step
-  In", "Step Out" buttons. <em>Outcome: the conventional behaviour for each button
-  should happen. "Stop" will stop the script. "Continue" will run to the next
-  break or end of script. "Step Over" will move to the next valid line of
-  code. "Step In" will move into the called function. "Step Out" will move out
-  of the current function. As all this happens, the input/output pane and
-  object inspector should update as the code progresses.</em></li>
-<li>In Python mode, click on the "REPL" button. <em>Outcome: an iPython based REPL
-  should appear in a new pane at the bottom of Mu's window. Clicking the
-  button again toggles the REPL off.</em></li>
-<li>In Python mode, use some code to emit tuple based data. Click on the
-  "Plotter" button while the code is running. <em>Outcome: the plotter should
-  display the output as a graph.</em></li>
-<li>Click "Zoom-In". <em>Outcome: the font size should increase.</em></li>
-<li>Click "Zoom-out". <em>Outcome: the font size should decrease.</em></li>
-<li>Click "Theme" several times. <em>Outcome: the theme/look should toggle.</em></li>
-<li>With incorrect code in the current tab, click "Check". <em>Outcome: problems
-  like syntax errors or undefined names should be highlighted with
-  annotations on the correct line. If appropriate, they will be underlined.</em></li>
-<li>Click the "Help" button. <em>Outcome: the operating system's default browser
-  should open at the help page for the current version of Mu.</em></li>
-<li>With unsaved code in the current tab, click "Quit". <em>Outcome: Mu should warn
-  you may lose unsaved work and prompt you to confirm.</em></li>
-<li>With all work saved, click "Quit". <em>Outcome: Mu should quit.</em></li>
-<li>Click on the "cog" icon in the bottom right of Mu's Window. <em>Outcome: the
-  "admin" dialog should open with the "logs" tab in focus.</em></li>
-<li>In the editor panel, type CTRL-K while code is selected. <em>Outcome: the
-  selected code should toggle between commented and uncommented.</em></li>
-<li>Type CTRL-F. <em>Outcome: the find/replace dialog should appear.</em></li>
-</ul>
-<h2 id="pre-packaging-checklist">Pre-Packaging Checklist<a class="headerlink" href="#pre-packaging-checklist" title="Permanent link">&para;</a></h2>
-<ul>
-<li>All autogenerated API information used by Mu for auto-completion and call 
-  tips should be regenerated.</li>
-<li>The developer documentation should be checked, re-read and regenerated
-  locally to ensure everything is presented correctly.</li>
-<li>The CHANGELOG.rst file should be updated to reflect the differences since the
-  last officially packaged release.</li>
-<li>If this is a major release make sure the resources for the old version of
-  Mu on the <a href="https://codewith.mu/">project website</a> are archived under the
-  correctly versioned URL scheme.</li>
-<li>Make sure the current resources in the source for the project website
-  reference the new version of Mu.</li>
-</ul>
-<h2 id="packaging-processes">Packaging Processes<a class="headerlink" href="#packaging-processes" title="Permanent link">&para;</a></h2>
-<p>Installers are built by CI, not by hand (see <a href="../packaging/">Packaging</a>):</p>
+<h2 id="version-numbers">Version numbers<a class="headerlink" href="#version-numbers" title="Permanent link">&para;</a></h2>
+<p>Nu's versions are plain <a href="https://peps.python.org/pep-0440/">PEP 440</a> numbers:
+<code>2.0.0</code>, or <code>2.0.0b3</code>, <code>2.0.0rc1</code> for a pre-release. The tag is the version
+with a <code>v</code> in front (<code>v2.0.0</code>). A tag with a pre-release segment publishes a
+GitHub <em>pre-release</em>; a plain <code>vX.Y.Z</code> publishes a full release.</p>
+<p>The version lives in <strong>two</strong> places, and both must change together:</p>
 <ol>
-<li>Bump the version in <strong>both</strong> <code>mu/__init__.py</code> (the canonical source) and
-   <code>[tool.briefcase] version</code> in <code>pyproject.toml</code> (Briefcase needs a literal).</li>
-<li>Commit, then push a tag <code>vX.Y.Z</code> (or <code>vX.Y.ZrcN</code> / <code>vX.Y.ZbN</code> for a
-   pre-release). <code>build.yml</code> builds all three installers and publishes a GitHub
-   Release; any pre-release segment in the tag publishes it as a pre-release.</li>
-<li>Download each installer from the release and check it on real hardware:
-   install, launch, and in each mode run a script, use the REPL, run a Pygame
-   Zero game, step through the debugger, and install a package from the UI.
-   Check at least current Windows 11, current macOS (Apple Silicon) and a
-   current Ubuntu LTS.</li>
+<li><code>__version__</code> in <code>mu/__init__.py</code>: the canonical one, read by hatchling
+   for the wheel and sdist, and shown in Nu's log.</li>
+<li><code>version</code> under <code>[tool.briefcase]</code> in <code>pyproject.toml</code>: Briefcase reads
+   only this literal, and it <strong>names the installer files</strong>. Bump only the
+   first and the installers come out labelled with the old version.</li>
 </ol>
-<p>The installers are currently <strong>unsigned</strong> (macOS is ad-hoc signed), so users
-see a SmartScreen / Gatekeeper warning. Wiring Authenticode and Apple
-notarization secrets into <code>build.yml</code> is tracked in <code>TODO.md</code> (Phase 4d).</p>
-<p>For native Python packaging, ensure Nu is installable via <code>pip install .</code> run
-in the root of the source repository in a virtualenv (<code>make dist</code> builds the
-sdist and wheel).</p>
-<h2 id="pre-release-checklist">Pre-Release Checklist<a class="headerlink" href="#pre-release-checklist" title="Permanent link">&para;</a></h2>
+<p>The bundled plugins (<code>plugins/pygamezero</code>, <code>plugins/circuitpython</code>) have
+versions of their own, in their own <code>pyproject.toml</code>. Bump a plugin's version
+when the plugin changes, independently of Nu's.</p>
+<h2 id="before-the-release">Before the release<a class="headerlink" href="#before-the-release" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Create an announcement blog post for <a href="https://madewith.mu/">MadeWithMu</a>.</li>
-<li>Tweet an announcement for the timing of the upcoming release.</li>
-<li>Compose (but do not publish) a tweet to announce Mu's release.</li>
-<li>Ensure the source code for the developer docs, the project website and
-  MadeWithMu is all ready to be published.</li>
-<li>Prepare a press release and circulation list.</li>
-<li>Check other possible channels for announcements, community websites etc.</li>
+<li><strong>Translations.</strong> If user-facing strings changed since the last release,
+  bring every catalogue up to date (<code>make translate_begin LANG=xx_XX</code> then
+  <code>make translate_done LANG=xx_XX</code> for each locale, as in
+  <a href="../translations/#notes-for-developers">translations</a>), commit the <code>.po</code> and
+  <code>.mo</code> files, and check <code>make translate_status</code>. Give translators time
+  before the release if you can.</li>
+<li><strong>Autocomplete data.</strong> If a mode's API changed (a new Pygame Zero or
+  CircuitPython version, say), regenerate its API stubs with the scripts in
+  <code>utils/</code> (see <a href="../modes/">modes</a>).</li>
+<li><strong>Changelog.</strong> Make sure <code>CHANGES.md</code> describes what changed since the last
+  release, for learners and teachers as well as developers, and give the
+  section its version and date.</li>
+<li><strong>Docs.</strong> Re-read the pages for learners (<a href="../help/">Using Nu</a>,
+  <a href="../environment/">Your Python environment</a>, <a href="../microbit/">The BBC micro:bit</a>)
+  against what you're releasing, and build the site with
+  <code>uv run --no-sync mkdocs build --strict</code>.</li>
+<li><strong>Green.</strong> <code>make check</code> passes locally and CI is green on <code>master</code>.</li>
 </ul>
-<h2 id="release-process_1">Release Process<a class="headerlink" href="#release-process_1" title="Permanent link">&para;</a></h2>
+<h2 id="check-it-as-a-learner-would">Check it as a learner would<a class="headerlink" href="#check-it-as-a-learner-would" title="Permanent link">&para;</a></h2>
+<p>Do these on Windows, macOS and Linux, from a clean state: delete Nu's data
+folder (see <a href="../environment/#where-it-is">Your Python environment</a>) and the
+<code>mu_code</code> folder first. Running from source with throwaway folders
+(<code>MU_DATA_DIR=... MU_HOME_DIR=... uv run python -m mu</code>) is fine for a first
+pass; the installers get the same checks after they're built (below).</p>
 <ul>
-<li>Build the developer documentation on ReadTheDocs. Make a note of the link to
-  the latest release in the resulting page on the CHANGELOG.</li>
-<li>Create a new release on GitHub and attach the signed 32bit and 64bit Windows
-  installers and OSX dmg. Reference the changelog from step 1 in the release
-  notes.</li>
-<li>Update the download page on the project website to the URLs for the
-  installers added to the release in step 2. Update the live version of the
-  website.</li>
-<li>Push the latest version to PyPI (<code>make publish-test</code> then
-  <code>make publish-live</code>).</li>
-<li>Publish the blog post announcement to MadeWithMu.</li>
-<li>Tweet with link to the announcement blog post and changelog.</li>
-<li>Mention release in Gitter, Adafruit's CircuitPython Discord.</li>
-<li>Send out press release / news item to circulation list / friends.</li>
-<li>Hit other possible announcement channels.</li>
+<li><strong>First start:</strong> Nu asks for a mode, makes <code>mu_code</code> and the learner's
+  environment (offline too, from an installer), and doesn't ask again on the
+  next start.</li>
+<li><strong>Files:</strong> <strong>New</strong>, <strong>Load</strong> and <strong>Save</strong> behave; a file with a name is
+  autosaved.</li>
+<li><strong>Python 3:</strong> <strong>Run</strong> a script that uses <code>input()</code>; <strong>Run</strong> a script with a
+  <code># /// script</code> block and a dependency (the <code>uv run</code> command is the first
+  line of the output); the <strong>REPL</strong> opens and toggles off; the <strong>Plotter</strong>
+  graphs printed tuples.</li>
+<li><strong>Debugger:</strong> with and without breakpoints; add and remove breakpoints
+  while paused; <strong>Stop</strong>, <strong>Continue</strong>, <strong>Step Over</strong>, <strong>Step In</strong>, <strong>Step
+  Out</strong> each do what they say, and the variables inspector updates. Quit Nu
+  afterwards: it exits cleanly.</li>
+<li><strong>Environment:</strong> the status bar shows the environment; clicking it opens
+  the <strong>Environment</strong> tab; adding and removing a package works and shows the
+  command; <strong>What Nu Ran</strong> lists the commands; making a second environment
+  under <strong>Advanced</strong> works.</li>
+<li><strong>Plugins:</strong> the <strong>Plugins</strong> tab lists Pygame Zero and CircuitPython as on;
+  switching one off and restarting removes its mode; switching it back on
+  restores it.</li>
+<li><strong>Pygame Zero:</strong> <strong>Play</strong> runs an empty file (a blank window) and a working
+  game; <strong>Images</strong>, <strong>Fonts</strong>, <strong>Sounds</strong> and <strong>Music</strong> open the right
+  folders.</li>
+<li><strong>CircuitPython</strong> (with a board): Nu offers to switch mode when the board
+  is plugged in; saving <code>code.py</code> runs it; <strong>Serial</strong> shows the board, and
+  Ctrl+C there gives the REPL; the <strong>Plotter</strong> graphs tuples.</li>
+<li><strong>micro:bit</strong> (opt-in, from source with <code>uv sync --extra microbit</code>, with a
+  board): the checklist in <code>plugins/microbit/README.md</code>.</li>
+<li><strong>Everywhere:</strong> <strong>Zoom-in</strong>/<strong>Zoom-out</strong>, <strong>Theme</strong> cycles the looks,
+  <strong>Check</strong> marks problems, <strong>Tidy</strong> reformats, <strong>Help</strong> opens
+  <a href="../help/">Using Nu</a>, Ctrl+K toggles comments, Ctrl+F finds; <strong>Quit</strong> with
+  unsaved work asks first; the cog opens the admin dialog on <strong>Current Log</strong>.</li>
 </ul>
-<h2 id="post-release-tasks">Post-Release Tasks<a class="headerlink" href="#post-release-tasks" title="Permanent link">&para;</a></h2>
+<h2 id="cutting-the-release">Cutting the release<a class="headerlink" href="#cutting-the-release" title="Permanent link">&para;</a></h2>
+<p><strong>Publish the bundled plugins to PyPI first.</strong> <code>nu-editor</code>'s wheel says
+<code>Requires-Dist: nu-circuitpython&gt;=…</code> and <code>nu-pygamezero&gt;=…</code>, so if a release
+needs a new plugin version, that version must be on PyPI before <code>nu-editor</code>
+is, or <code>pip install nu-editor</code> can't resolve (see
+<a href="../packaging/#bundled-plugins-the-uv-workspace">packaging</a>):</p>
+<ol>
+<li>For each bundled plugin that changed: bump its version, build it
+   (<code>uv build plugins/circuitpython</code>, <code>uv build plugins/pygamezero</code>) and
+   upload it to PyPI. The two don't depend on each other, so either can go
+   first. (<code>nu-microbit</code> stays unpublished until it's promoted; see
+   <a href="../packaging/#opt-in-workspace-plugins-microbit">packaging</a>.)</li>
+<li>Bump Nu's version in <strong>both</strong> places (above), finish <code>CHANGES.md</code>, and
+   commit.</li>
+<li>Push an annotated tag: <code>git tag -a v2.0.0 -m "Nu 2.0.0"</code> then
+   <code>git push origin v2.0.0</code>. <code>build.yml</code> builds the three installers and
+   publishes the GitHub Release with them attached.</li>
+<li>Download each installer from the release and run the learner checks above
+   on real machines: at least current Windows 11, current macOS (Apple
+   Silicon) and a current Ubuntu LTS.</li>
+<li>Build <code>nu-editor</code> (<code>make dist</code>, which runs <code>make check</code> first, or
+   <code>uv build</code>) and upload the wheel and sdist to PyPI. Check that
+   <code>pip install nu-editor</code> in a fresh virtual environment installs Nu and its
+   plugins and starts.</li>
+</ol>
+<p>If the release went out wrong (say, the installers carry the old version):
+delete the GitHub Release (<code>gh release delete vX.Y.Z --yes</code>) and the tag
+(locally and on GitHub), fix it, and tag again. <code>build.yml</code>'s <code>gh release
+create</code> fails if a release for that tag still exists.</p>
+<p>The installers are currently <strong>unsigned</strong> (macOS is ad-hoc signed), so
+learners see a SmartScreen or Gatekeeper warning; say so in the release
+notes. Signing is tracked in <code>TODO.md</code> (Phase 4d).</p>
+<h2 id="after-the-release">After the release<a class="headerlink" href="#after-the-release" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Monitor Gitter chat channel for problems.</li>
-<li>Clean up fixed issues in GitHub.</li>
-<li>Update Roadmap.rst with reference to the next release.</li>
-<li>Send out thanks / gifts where appropriate.</li>
+<li>Announce it where Nu's users are, with a link to the release and
+  <code>CHANGES.md</code>.</li>
+<li>Start a new "unreleased" section at the top of <code>CHANGES.md</code>.</li>
+<li>Close the issues the release fixed, and answer reports about it at
+  <a href="https://github.com/kovirlabs/nu/issues">github.com/kovirlabs/nu/issues</a>.</li>
 </ul>
 
 

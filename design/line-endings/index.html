@@ -1088,6 +1088,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#nu-today" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nu today
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Nu today">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#learners-files-unchanged" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Learners' files: unchanged
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nus-own-repository-lf-everywhere" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nu's own repository: LF everywhere
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1275,14 +1314,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../website/" class="md-nav__link">
+      <a href="../../docs-site/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Website
+    The documentation site
   
 
     
@@ -1589,6 +1628,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#nu-today" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nu today
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Nu today">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#learners-files-unchanged" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Learners' files: unchanged
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nus-own-repository-lf-everywhere" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nu's own repository: LF everywhere
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1657,6 +1735,28 @@ file could presumably be stored on the tab object.</p>
 <li>https://github.com/mu-editor/mu/pull/371</li>
 <li>https://github.com/mu-editor/mu/issues/380</li>
 </ul>
+<h2 id="nu-today">Nu today<a class="headerlink" href="#nu-today" title="Permanent link">&para;</a></h2>
+<h3 id="learners-files-unchanged">Learners' files: unchanged<a class="headerlink" href="#learners-files-unchanged" title="Permanent link">&para;</a></h3>
+<p>The editor still does what this decision says. <code>read_and_decode</code> in
+<code>mu/logic.py</code> calls <code>sniff_newline_convention</code>, which picks the most common
+line ending in the file (a tie goes to the platform's), converts the text to
+<code>\n</code> for the editor, and stores the convention on the tab; <code>save_and_encode</code>
+writes it back out with that convention. A new tab uses <code>\n</code>, so a new file
+is saved with LF endings on every platform (not with the platform's ending,
+as the decision above has it). Saving also strips trailing
+spaces from each line.</p>
+<h3 id="nus-own-repository-lf-everywhere">Nu's own repository: LF everywhere<a class="headerlink" href="#nus-own-repository-lf-everywhere" title="Permanent link">&para;</a></h3>
+<p>A separate decision, about the source code rather than learners' files: every
+text file in the repository is stored and checked out with LF line endings,
+on every platform. <code>.gitattributes</code> says so (<code>* text=auto eol=lf</code>) and marks
+the binary types (images, fonts, <code>.mo</code> catalogues, wheels...) as <code>binary</code>,
+so git never touches their bytes. Python, Qt and git all cope with LF on
+Windows, and one convention means no whole-file diffs when a file is edited
+on another system. The files that had CRLF endings were normalised to LF when
+the rule was added (Nu commits 42c4bcf and 72d97d3).</p>
+<p>If your editor shows a file as modified straight after checkout on Windows,
+check that it isn't converting line endings itself; <code>git add --renormalize .</code>
+puts things right.</p>
 
 
 

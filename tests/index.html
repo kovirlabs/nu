@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#mus-test-suite" class="md-skip">
+        <a href="#nus-test-suite" class="md-skip">
           Skip to content
         </a>
       
@@ -857,10 +857,71 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#where-the-tests-are" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where the tests are
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#running-the-tests" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Running the Tests
+        Running the tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Running the tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#headless-the-way-ci-does-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Headless, the way CI does it
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-single-test-and-a-reproducible-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A single test, and a reproducible order
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#your-real-nu-data-is-safe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Your real Nu data is safe
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coverage
       
     </span>
   </a>
@@ -871,7 +932,7 @@
   <a href="#writing-a-new-test" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Writing a New Test
+        Writing a new test
       
     </span>
   </a>
@@ -1236,14 +1297,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../website/" class="md-nav__link">
+      <a href="../docs-site/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Website
+    The documentation site
   
 
     
@@ -1490,10 +1551,71 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#where-the-tests-are" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where the tests are
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#running-the-tests" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Running the Tests
+        Running the tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Running the tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#headless-the-way-ci-does-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Headless, the way CI does it
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-single-test-and-a-reproducible-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A single test, and a reproducible order
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#your-real-nu-data-is-safe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Your real Nu data is safe
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coverage
       
     </span>
   </a>
@@ -1504,7 +1626,7 @@
   <a href="#writing-a-new-test" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Writing a New Test
+        Writing a new test
       
     </span>
   </a>
@@ -1531,69 +1653,120 @@
   
 
 
-<h1 id="mus-test-suite">Mu's Test Suite<a class="headerlink" href="#mus-test-suite" title="Permanent link">&para;</a></h1>
-<p>We have tests so we can make changes with confidence.</p>
-<p>We use several different sorts of test:</p>
+<h1 id="nus-test-suite">Nu's test suite<a class="headerlink" href="#nus-test-suite" title="Permanent link">&para;</a></h1>
+<p>We have tests so we can make changes with confidence. We use:</p>
 <ul>
-<li><a href="https://github.com/PyCQA/pyflakes">PyFlakes</a> for checking for errors in
-  our code.</li>
-<li><a href="http://pycodestyle.pycqa.org/en/latest/intro.html">pycodestyle</a> for
-  making sure our coding style conforms with most of the conventions of
-  <a href="https://www.python.org/dev/peps/pep-0008/">PEP8</a>.</li>
-<li><a href="https://pytest.readthedocs.io/en/latest/">PyTest</a> as a framework for
-  writing our unit tests.</li>
-<li><a href="https://coverage.readthedocs.io/">Coverage</a> for checking
-  the coverage of our unit tests.</li>
+<li><a href="https://docs.pytest.org/">pytest</a> for the unit tests, with
+  <a href="https://pypi.org/project/pytest-random-order/">pytest-random-order</a> so
+  tests can't quietly depend on running in a particular order.</li>
+<li><a href="https://coverage.readthedocs.io/">Coverage</a> (through <code>pytest-cov</code>) to see
+  which lines the tests exercise.</li>
+<li><a href="https://docs.astral.sh/ruff/">ruff</a> to lint and check the formatting (it
+  replaced Mu's PyFlakes, pycodestyle and black). See <a href="../setup/#linting-and-formatting">setup</a>.</li>
 </ul>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>We currently have 100% test coverage.</p>
-<p>It means <strong>every line of code in Mu has been exercised by at least one
-unit test</strong>. We would like to keep it this way!</p>
-<p>We can't claim that Mu is bug-free, but we can claim that we've expressed
-an opinion about how every line of code should behave. Furthermore, our
-opinion of how such code behaves may <strong>NOT</strong> be accurate or even
-desirable. ;-)</p>
-</div>
-<p>In addition, we regularly make use of the excellent
-<a href="https://lgtm.com/projects/g/mu-editor/mu/">LGTM</a> online code quality service
-written, in part, by friend-of-Mu,
-<a href="https://sites.google.com/site/makingcpythonfast/">Dr.Mark Shannon</a>.</p>
-<h2 id="running-the-tests">Running the Tests<a class="headerlink" href="#running-the-tests" title="Permanent link">&para;</a></h2>
-<p>Running the tests couldn't be simpler: just use the <code>make</code> command:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$ make check
+<p>All of them come with the <code>dev</code> extra: <code>uv sync --extra dev</code>.</p>
+<h2 id="where-the-tests-are">Where the tests are<a class="headerlink" href="#where-the-tests-are" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Nu's core:</strong> <code>tests/</code>, mirroring the source tree. The tests for
+  <code>mu/logic.py</code> are in <code>tests/test_logic.py</code>, those for <code>mu/modes/base.py</code> in
+  <code>tests/modes/test_base.py</code>, and so on.</li>
+<li><strong>Bundled plugins:</strong> each plugin keeps its own tests in
+  <code>plugins/&lt;name&gt;/tests</code> (<code>plugins/pygamezero/tests</code>,
+  <code>plugins/circuitpython/tests</code>, <code>plugins/microbit/tests</code>). <code>pyproject.toml</code>
+  lists both places as <code>testpaths</code>, and puts each plugin's source on
+  <code>sys.path</code>, so a plain <code>pytest</code> runs them all against this checkout.
+  The micro:bit plugin is opt-in: without <code>uv sync --extra microbit</code> (or
+  <code>--all-extras</code>) the tests that need its installed entry point are skipped.</li>
+</ul>
+<p>The settings live in <code>pyproject.toml</code> under <code>[tool.pytest.ini_options]</code>, and
+shared fixtures in <code>conftest.py</code> at the repository root.</p>
+<h2 id="running-the-tests">Running the tests<a class="headerlink" href="#running-the-tests" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv run pytest
 </code></pre></div>
-<p>This will run <strong>ALL</strong> the tests of each type.</p>
-<p>To run specific types of test please try: <code>make pyflakes</code>,
-<code>make pycodestyle</code>, <code>make test</code> or <code>make coverage</code>.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The test suite will only work if you have installed all the requirements
-for developing Mu.</p>
-<p>Please see <a href="../setup/">setup</a> for more information on how to achieve this.</p>
-</div>
-<h2 id="writing-a-new-test">Writing a New Test<a class="headerlink" href="#writing-a-new-test" title="Permanent link">&para;</a></h2>
-<p>All the unit tests are in the <code>tests</code> subdirectory in the root of Mu's
-repository. The tests are organised to mirror the code structure of the
-application itself. For example, the tests for the <code>mu.modes.base</code>
-namespace are in the <code>tests.modes.test_base.py</code> file.</p>
-<p>As mentioned above, we use PyTest as a framework for writing our unit tests.
-Please refer to their
-<a href="https://pytest.readthedocs.io/en/latest/">extensive documentation</a> for more
-details.</p>
-<p>In terms of our expectation for writing a test, we expect it to look something
-like the following:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>def test_MyClass_function_name_extra_info():
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    """
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    This is a description of the INTENTION of the test. For
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    example, we may want to know why this test is important,
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    any special context information and even a reference to a
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    bug report if required.
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    """
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    assert True  # As per PyTest conventions, use simple asserts.
+<p>or <code>make test</code> (verbose), or <code>make check</code>, the gate to pass before you open a
+pull request: it checks formatting, lints, and runs the tests with coverage.</p>
+<h3 id="headless-the-way-ci-does-it">Headless, the way CI does it<a class="headerlink" href="#headless-the-way-ci-does-it" title="Permanent link">&para;</a></h3>
+<p>Qt needs a display. Without one (over SSH, in a container, in CI) use Qt's
+<code>offscreen</code> platform:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -q --basetemp=$HOME/.cache/nu-pytest/bt
 </code></pre></div>
-<p>We also expect your test code to pass PyFlakes and PEP checks. If in doubt,
-don't hesitate to get in touch and ask.</p>
+<ul>
+<li><code>QT_QPA_PLATFORM=offscreen</code> draws windows in memory instead of on a screen.
+  On a minimal Linux without Mesa, Qt still wants <code>libEGL.so.1</code>: install your
+  distribution's <code>libegl1</code>, or put the library on <code>LD_LIBRARY_PATH</code>.</li>
+<li><code>LANG=en_GB.utf8</code> gives the locale-sensitive tests the language they
+  expect.</li>
+<li><code>--no-sync</code> stops <code>uv run</code> re-syncing the environment first (run <code>uv sync</code>
+  yourself when the dependencies change).</li>
+<li><code>-q</code> is optional: one line of dots instead of a line per test.</li>
+<li><code>--basetemp=...</code> puts pytest's own temporary folders (<code>tmp_path</code>) under a
+  folder you choose (pytest empties it at the start of each run). You need it
+  where <code>/tmp</code> is mounted <code>noexec</code>: one test makes a real environment in its
+  <code>tmp_path</code> and runs its Python.</li>
+</ul>
+<p>The whole suite takes under a minute.</p>
+<h3 id="a-single-test-and-a-reproducible-order">A single test, and a reproducible order<a class="headerlink" href="#a-single-test-and-a-reproducible-order" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv run pytest tests/test_logic.py::test_editor_init
+</code></pre></div>
+<p>Tests run in a random order by default (<code>addopts = "--random-order"</code>, from
+<a href="https://pypi.org/project/pytest-random-order/">pytest-random-order</a>). Each
+run prints its seed at the top (<code>Using --random-order-seed=...</code>): when a
+failure only happens in one order, repeat it with <code>--random-order-seed=&lt;seed&gt;</code>.
+To run in file order instead, add <code>--random-order-bucket=none</code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code>-p no:randomly</code>, which you may see in older instructions, switches off a
+<em>different</em> plugin (pytest-randomly) that Nu doesn't use, so it doesn't
+stop the shuffling.</p>
+</div>
+<h3 id="your-real-nu-data-is-safe">Your real Nu data is safe<a class="headerlink" href="#your-real-nu-data-is-safe" title="Permanent link">&para;</a></h3>
+<p>Before anything imports <code>mu</code>, <code>conftest.py</code> points the whole test session at
+a new temporary folder (removed when the run ends):</p>
+<ul>
+<li><code>MU_DATA_DIR</code>: Nu's data folder (settings, session, <code>venv.json</code>, the
+  learner's environments, the plugins folder) moves there, so no test reads
+  or writes your real ones, even through objects created when a module is
+  imported, such as <code>mu.virtual_environment.venv</code>.</li>
+<li><code>MU_HOME_DIR</code>: the home folder, so the default workspace (<code>mu_code</code>) is a
+  throwaway one too.</li>
+<li><code>IPYTHONDIR</code>: the REPL tests start a real IPython.</li>
+</ul>
+<p>A test checks that none of these point at the real folders. The same two
+variables give you a throwaway profile when you run Nu by hand:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>MU_DATA_DIR=/tmp/nu-data MU_HOME_DIR=/tmp/nu-home uv run python -m mu
+</code></pre></div>
+<h2 id="coverage">Coverage<a class="headerlink" href="#coverage" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>make coverage
+</code></pre></div>
+<p>runs the tests with a line-by-line report for <code>mu/</code> (<code>--cov=mu</code>); add
+<code>--cov=nu_pygamezero --cov=nu_circuitpython --cov=nu_microbit</code> to a <code>pytest</code>
+run to include the plugins. Mu kept 100% coverage, and Nu is close to it
+(99% of <code>mu/</code>). <strong>New code should come with tests that cover every line of
+it</strong>, and a change shouldn't lower the total. Coverage only shows that a line
+ran, not that it's right: it means we've written down how we expect every line
+to behave.</p>
+<h2 id="writing-a-new-test">Writing a new test<a class="headerlink" href="#writing-a-new-test" title="Permanent link">&para;</a></h2>
+<p>Put it in the file that mirrors the code it tests, and write it like this:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_MyClass_function_name_extra_info</span><span class="p">():</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="sd">"""</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="sd">    The INTENTION of the test: why it matters, any special context, and a</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="sd">    link to the issue if there is one.</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="sd">    """</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="k">assert</span> <span class="kc">True</span>  <span class="c1"># Plain asserts, as is the pytest way.</span>
+</code></pre></div>
+<ul>
+<li>Test the non-GUI logic (<code>mu/logic.py</code>, <code>mu/virtual_environment.py</code>, ...)
+  by giving it a mock <code>view</code>; that separation is what makes it testable.</li>
+<li>Mock what you don't own: subprocesses, <code>uv</code>, the network, serial ports,
+  devices. No test may need the internet or hardware.</li>
+<li>A plugin's mode is tested through a mock <code>mu.plugin.Host</code>; the bundled
+  plugins' tests show how.</li>
+<li>Qt threads: wait for a <code>QThread</code> to finish before a test lets it go, or Qt
+  aborts the run when it's destroyed while still running.</li>
+<li>Run <code>ruff check</code> and <code>ruff format</code> on your tests too.</li>
+</ul>
+<p>If in doubt, ask in the pull request. A draft with partial tests is welcome;
+we'll help finish them.</p>
 
 
 

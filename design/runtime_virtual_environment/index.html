@@ -1116,6 +1116,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#nu-today" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nu today
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1275,14 +1286,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../website/" class="md-nav__link">
+      <a href="../../docs-site/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Website
+    The documentation site
   
 
     
@@ -1589,6 +1600,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#nu-today" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nu today
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1668,6 +1690,45 @@ itself.</p>
 <ul>
 <li>https://github.com/mu-editor/mu/issues/1061</li>
 <li>https://github.com/mu-editor/mu/issues/1070</li>
+</ul>
+<h2 id="nu-today">Nu today<a class="headerlink" href="#nu-today" title="Permanent link">&para;</a></h2>
+<p>The decision stands: learners' programs run in an environment of their own,
+never in Nu's. What changed is how it's made, and that the learner can see it.
+The learner-facing description is <a href="../../environment/">Your Python environment</a>;
+this is the developer's summary.</p>
+<ul>
+<li><strong>Made and managed with <a href="https://docs.astral.sh/uv/">uv</a></strong>, not <code>venv</code> and
+  <code>pip</code>. <code>mu/virtual_environment.py</code> has the <code>VirtualEnvironment</code> class (the
+  module-level <code>venv</code> singleton) and <code>Uv</code>, the one place uv is run. The
+  environment is made with <code>uv venv --python &lt;Python&gt; --seed &lt;folder&gt;</code>, and
+  packages are added and removed with <code>uv pip install</code> / <code>uv pip uninstall
+  --python &lt;the environment's Python&gt;</code>.</li>
+<li><strong>Where:</strong> in Nu's data folder (<code>mu.config.DATA_DIR</code>), as
+  <code>mu_venv-&lt;Python version&gt;-&lt;date and time&gt;</code> (e.g.
+  <code>mu_venv-311-20261108-030353</code>). Extra, named environments the learner makes
+  are in <code>DATA_DIR/envs/&lt;name&gt;</code>. <code>venv.json</code> records which one is in use (see
+  <a href="../settings-and-sessions/#nu-today">settings and sessions</a>).</li>
+<li><strong>What goes in it:</strong> the <em>baseline packages</em> from
+  <code>mu.wheels.baseline_packages()</code>: the core's own (<code>ipykernel</code>, for the
+  REPL) plus each installed plugin's <code>learner-env</code> extra (Pygame Zero's
+  <code>pgzero</code> and <code>pygame</code>). The modes are now <a href="../../plugins/">plugins</a>, so a
+  plugin declares what it needs, as this page's last paragraph foresaw.</li>
+<li><strong>Offline:</strong> the installers carry a Python (unpacked on first start by
+  <code>ensure_bundled_python</code>) and a wheelhouse of the baseline packages, so the
+  environment can be made with no internet; see
+  <a href="../../packaging/#what-ships-inside-the-app">packaging</a>.</li>
+<li><strong>Visible:</strong> every uv command goes through <code>Uv</code>, which records it in
+  <code>mu.command_log</code> (shown as <strong>What Nu Ran</strong>). The status bar shows the
+  environment, and the Environment tab shows where it is and the commands to
+  use it from a terminal.</li>
+<li><strong>Programs that list their packages:</strong> a script with a
+  <a href="https://peps.python.org/pep-0723/">PEP 723</a> <code># /// script</code> block is run
+  with <code>uv run --python &lt;the environment's Python&gt; --script</code>, which adds what
+  the block lists (<code>mu.script_metadata</code> finds the block).</li>
+<li>Running a program still activates the environment for the child process
+  (<code>VirtualEnvironment.activation_vars</code>), and the debugger is the one place
+  that still sets <code>PYTHONPATH</code>, so its runner can import Nu (see
+  <a href="../../debugger/#how-a-debug-session-starts">debugger</a>).</li>
 </ul>
 
 

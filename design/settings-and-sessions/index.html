@@ -1249,6 +1249,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#nu-today" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nu today
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Nu today">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-three-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The three files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#saving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1380,14 +1419,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../website/" class="md-nav__link">
+      <a href="../../docs-site/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Website
+    The documentation site
   
 
     
@@ -1799,6 +1838,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#nu-today" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nu today
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Nu today">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-three-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The three files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#saving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2034,6 +2112,122 @@ and will be written out to file.</p>
 <li>https://github.com/mu-editor/mu/issues/1184</li>
 <li>https://github.com/mu-editor/mu/issues/1203</li>
 </ul>
+<h2 id="nu-today">Nu today<a class="headerlink" href="#nu-today" title="Permanent link">&para;</a></h2>
+<p>The design is unchanged (<code>mu/settings.py</code>: <code>SettingsBase</code> with <code>DEFAULTS</code>,
+<code>load</code>, <code>save</code>, <code>reset</code>, <code>readonly</code>, JSON), and the open questions above are
+still open. What's worth knowing now:</p>
+<h3 id="the-three-files">The three files<a class="headerlink" href="#the-three-files" title="Permanent link">&para;</a></h3>
+<p>All three live in Nu's data folder, <code>mu.config.DATA_DIR</code> (on Linux
+<code>~/.local/share/mu</code>; see <a href="../../environment/#where-it-is">Your Python environment</a>
+for the others), unless a file of the same name sits next to the app, which
+then wins (<code>default_file_locations</code>). Setting the <strong><code>MU_DATA_DIR</code></strong>
+environment variable moves the data folder; the test suite uses it so it
+never touches real settings, and it's a quick throwaway profile
+(<code>MU_HOME_DIR</code> does the same for the home folder, where <code>mu_code</code> goes).</p>
+<p><strong><code>settings.json</code></strong> (<code>settings.settings</code>, a <code>UserSettings</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>What</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>workspace</code></td>
+<td>The learner's code folder (default <code>~/mu_code</code>).</td>
+</tr>
+<tr>
+<td><code>disabled_plugins</code></td>
+<td>Ids of the plugins the learner switched off on the Plugins tab.</td>
+</tr>
+<tr>
+<td><code>plugins_switched_off_after_errors</code></td>
+<td>Ids of plugins Nu switched off, with the learner's OK, because they kept having errors; the Plugins tab says why.</td>
+</tr>
+<tr>
+<td><code>plugins</code></td>
+<td>Each plugin's own settings, under its namespace (<code>settings["plugins"][namespace]</code>), read and written through <code>mu.plugin.PluginSettings</code>.</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>session.json</code></strong> (<code>settings.session</code>, a <code>SessionSettings</code>), written when Nu
+quits, read when it starts:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>What</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mode</code></td>
+<td>The mode Nu was in.</td>
+</tr>
+<tr>
+<td><code>paths</code></td>
+<td>The files that were open.</td>
+</tr>
+<tr>
+<td><code>theme</code></td>
+<td>Day, night or contrast.</td>
+</tr>
+<tr>
+<td><code>zoom_level</code></td>
+<td>The editor's zoom.</td>
+</tr>
+<tr>
+<td><code>window</code></td>
+<td>Position and size (<code>x</code>, <code>y</code>, <code>w</code>, <code>h</code>); restored only if it's on a connected screen.</td>
+</tr>
+<tr>
+<td><code>envars</code></td>
+<td>The environment variables set on the Environment tab.</td>
+</tr>
+<tr>
+<td><code>locale</code></td>
+<td>The language chosen on the Select Language tab.</td>
+</tr>
+</tbody>
+</table>
+<p>(<code>venv_path</code>, from older sessions, is still honoured when it's there.)</p>
+<p><strong><code>venv.json</code></strong> (<code>VirtualEnvironment.settings</code>, a
+<code>VirtualEnvironmentSettings</code>), about the learner's environment (see
+<a href="../runtime_virtual_environment/#nu-today">runtime virtual environment</a>):</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>What</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dirpath</code></td>
+<td>The folder of the environment Nu uses (from the next start, if the learner chose another one under <strong>Advanced</strong>).</td>
+</tr>
+<tr>
+<td><code>default_dirpath</code></td>
+<td>The folder of the default environment Nu made by itself, remembered even while a named one is in use. Older files lack it; Nu then picks the newest <code>mu_venv-*</code> folder.</td>
+</tr>
+<tr>
+<td><code>baseline_packages</code></td>
+<td>The packages installed when the environment was made, so the Packages tab shows only the ones the learner added.</td>
+</tr>
+<tr>
+<td><code>mu_version</code></td>
+<td>The Nu version that made the environment; a different version makes Nu re-create it, keeping the learner's packages.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="saving">Saving<a class="headerlink" href="#saving" title="Permanent link">&para;</a></h3>
+<p>Autosave is on for all three: each registers <code>save</code> with <code>atexit</code> when it's
+loaded, so it's written when Nu exits, even after an unhandled exception.
+Switching a plugin on or off (<code>mu.plugin.loader.set_plugin_enabled</code>) also
+saves <code>settings.json</code> straight away, so it survives a crash. Only values that
+were loaded from the file or set during the session are written; a default
+that nobody touched isn't.</p>
 
 
 

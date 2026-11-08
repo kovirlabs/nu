@@ -1177,14 +1177,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../website/" class="md-nav__link">
+      <a href="../docs-site/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Website
+    The documentation site
   
 
     
@@ -1443,12 +1443,25 @@
 
 
 <h1 id="contributing">Contributing<a class="headerlink" href="#contributing" title="Permanent link">&para;</a></h1>
-<p>The contribution guide and checklist live in
+<p>The full contribution guide lives in
 <a href="https://github.com/kovirlabs/nu/blob/master/CONTRIBUTING.md"><code>CONTRIBUTING.md</code></a>
-at the repository root.</p>
-<p>In short: contributions are welcome from anyone. Read the
-<a href="../setup/">developer setup</a>, keep the test suite green, and act in accordance
-with the <a href="../code_of_conduct/">Code of Conduct</a>.</p>
+at the repository root. In short:</p>
+<ul>
+<li>Contributions are welcome from anyone. Act in accordance with the
+  <a href="../code_of_conduct/">Code of Conduct</a>.</li>
+<li>Start with the <a href="../setup/">developer setup</a> (<code>uv sync --extra dev</code>) and,
+  if you're new, the <a href="../first-steps/">first steps</a>.</li>
+<li>Open an issue or a pull request at
+  <a href="https://github.com/kovirlabs/nu">github.com/kovirlabs/nu</a>.</li>
+<li>Before you submit: <code>make check</code> passes (ruff formatting and lint, and the
+  <a href="../tests/">tests</a> with coverage), new code has tests that cover it, and
+  docs you changed build with <code>uv run --no-sync mkdocs build --strict</code>.</li>
+<li>Write comments, docstrings and docs in plain English (British spelling).
+  Every class, method and function has a docstring written for humans; they
+  become the <a href="../api/">API reference</a>.</li>
+<li>If your change involves a non-obvious technical decision, record it in the
+  <a href="../design/">design decisions</a>.</li>
+</ul>
 
 
 
