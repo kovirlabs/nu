@@ -101,7 +101,7 @@ jobs:
       # Briefcase installs them into the app from `requires`).
       - name: Build offline baseline wheels and Python
         run: |
-          python -m pip install --no-deps ./plugins/pygamezero
+          python -m pip install --no-deps ./plugins/circuitpython ./plugins/pygamezero
           python -m mu.wheels --package
 
       - name: Briefcase create
