@@ -9,7 +9,7 @@ from unittest import mock
 import pytest
 from PyQt6.QtWidgets import QMessageBox
 
-from mu import settings
+from mu import resources, settings
 from mu.app import setup_modes
 from mu.plugin import PLUGIN_API_VERSION, Host, ModePlugin, Plugin, PluginSettings
 from mu.modes.base import BaseMode
@@ -276,3 +276,74 @@ def test_setup_modes_adds_plugin_modes():
         modes = setup_modes(mock.MagicMock(), mock.MagicMock())
     assert list(modes)[-1] == "alpha"
     assert modes["alpha"].host.plugin_records == ["record"]
+
+
+@pytest.fixture
+def image_dir(tmp_path):
+    """A folder with one plugin image; never left registered after a test."""
+    directory = tmp_path / "images"
+    directory.mkdir()
+    (directory / "rocket.png").write_bytes(b"")
+    yield directory
+    resources.unregister_image_dir(directory)
+
+
+def test_register_images(host, image_dir):
+    """
+    Images a plugin registers are found by name until the plugin unloads.
+    """
+
+    class Pictured(Plugin):
+        name = "Pictured"
+        api_version = PLUGIN_API_VERSION
+
+        def register(self, host):
+            host.register_images(image_dir)
+
+    plugin = Pictured()
+    assert host.load_plugin(plugin)
+    assert resources.plugin_image_dirs() == [str(image_dir)]
+    assert resources.image_path("rocket") == str(image_dir / "rocket")
+    host.unload_plugin(plugin)
+    assert resources.plugin_image_dirs() == []
+
+
+def test_register_images_clash_skips_the_plugin(host, tmp_path, caplog):
+    """
+    A plugin whose images clash with the core's fails to register, so it is
+    logged and skipped with its modes rolled back, and its images aren't
+    left behind.
+    """
+    good = tmp_path / "good"
+    good.mkdir()
+    (good / "rocket.png").write_bytes(b"")
+    clashing = tmp_path / "clashing"
+    clashing.mkdir()
+    (clashing / "run.png").write_bytes(b"")
+
+    class Clashing(ModePlugin):
+        name = "Clashing"
+        api_version = PLUGIN_API_VERSION
+        mode = AlphaMode
+
+        def register(self, host):
+            super().register(host)
+            host.register_images(good)
+            host.register_images(clashing)
+
+    with caplog.at_level(logging.ERROR):
+        assert host.load_plugin(Clashing()) is False
+    assert "'run'" in caplog.text
+    assert host.modes == {}
+    assert resources.plugin_image_dirs() == []
+
+
+def test_register_images_from_the_core_are_kept(host, image_dir):
+    """
+    Images registered outside a plugin's register() belong to the core and
+    aren't removed when a plugin unloads.
+    """
+    host.register_images(image_dir)
+    host.load_plugin(AlphaPlugin())
+    host.unload_plugin(host.plugins[0])
+    assert resources.plugin_image_dirs() == [str(image_dir)]

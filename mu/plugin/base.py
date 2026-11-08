@@ -94,15 +94,20 @@ class ModePlugin(Plugin):
     A plugin whose only job is to contribute modes.
 
     Set `mode` to a single Mode subclass, or `modes` to several, and they are
-    registered for you.
+    registered for you. Set `images` to the folder holding their icons and
+    it's registered first (see `Host.register_images`).
     """
 
     #: A single Mode subclass to register.
     mode = None
     #: Several Mode subclasses to register (after `mode`, if both are set).
     modes = ()
+    #: A folder (str or os.PathLike) of images the modes use, or None.
+    images = None
 
     def register(self, host):
+        if self.images is not None:
+            host.register_images(self.images)
         mode_classes = ([self.mode] if self.mode else []) + list(self.modes)
         for mode_class in mode_classes:
             host.register_mode(mode_class)

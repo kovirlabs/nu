@@ -4,9 +4,15 @@ Tests for the resources sub-module.
 """
 
 import os
-import mu.resources
+import re
+import shutil
 from unittest import mock
+
+import pytest
+from PyQt6.QtCore import QDir, QSize
 from PyQt6.QtGui import QIcon, QPixmap, QMovie
+
+import mu.resources
 
 
 def test_path():
@@ -88,3 +94,133 @@ def test_all_images_load_without_qt_warnings(qtapp):
     finally:
         qInstallMessageHandler(previous)
     assert warnings == []
+
+
+@pytest.fixture
+def plugin_images(tmp_path):
+    """
+    A folder of plugin images ("rocket.png", "rocket.svg" and "badge.png"),
+    unregistered again after the test.
+    """
+    core_png = mu.resources.path("python", ext=".png")
+    directory = tmp_path / "images"
+    directory.mkdir()
+    for name in ("rocket.png", "badge.png"):
+        shutil.copy(core_png, directory / name)
+    shutil.copy(mu.resources.path("run", ext=".svg"), directory / "rocket.svg")
+    yield directory
+    mu.resources.unregister_image_dir(directory)
+
+
+def test_image_path_prefers_the_core_images():
+    """
+    Core images are found in the core's images folder, with or without an
+    extension (Qt works out the format of an extensionless path).
+    """
+    core = mu.resources.resource_filename("images")
+    assert mu.resources.image_path("run", ".svg") == os.path.join(core, "run.svg")
+    assert mu.resources.image_path("python") == os.path.join(core, "python")
+    assert mu.resources.image_path("language.svg") == os.path.join(core, "language.svg")
+
+
+def test_image_path_unknown_image_is_a_core_path():
+    """
+    An image nobody has resolves to where the core would keep it, as before,
+    so Qt reports it missing in the usual way.
+    """
+    core = mu.resources.resource_filename("images")
+    assert mu.resources.image_path("no-such-image", ".svg") == os.path.join(
+        core, "no-such-image.svg"
+    )
+
+
+def test_register_image_dir_adds_plugin_images(plugin_images):
+    """
+    Once a plugin's folder is registered, its images load by name, through
+    every loader and through the "images:" search path the theme CSS uses.
+    """
+    core = mu.resources.resource_filename("images")
+    assert mu.resources.image_path("rocket") == os.path.join(core, "rocket")
+    mu.resources.register_image_dir(plugin_images)
+    expected = os.path.join(str(plugin_images), "rocket")
+    assert mu.resources.image_path("rocket") == expected
+    assert mu.resources.image_path("rocket", ".svg") == expected + ".svg"
+    assert not mu.resources.load_icon("rocket").isNull()
+    assert not mu.resources.load_icon("badge").isNull()
+    assert not mu.resources.load_pixmap("badge").isNull()
+    assert not mu.resources.load_pixmap("badge", size=QSize(16, 16)).isNull()
+    assert str(plugin_images) in QDir.searchPaths("images")
+    assert not QPixmap("images:badge.png").isNull()
+
+
+def test_register_image_dir_accepts_paths_and_strings(plugin_images):
+    """
+    A str or os.PathLike works, and registering the same folder twice is
+    harmless.
+    """
+    mu.resources.register_image_dir(str(plugin_images))
+    mu.resources.register_image_dir(plugin_images)
+    assert mu.resources.plugin_image_dirs() == [str(plugin_images)]
+
+
+def test_register_image_dir_refuses_a_missing_folder(tmp_path):
+    with pytest.raises(ValueError, match="not a folder"):
+        mu.resources.register_image_dir(tmp_path / "nope")
+
+
+def test_register_image_dir_refuses_a_clash_with_the_core(tmp_path):
+    """
+    A plugin can't ship an image with the same name as a core one (whatever
+    the extension): the name would be ambiguous, so registering fails loudly
+    and nothing is added.
+    """
+    directory = tmp_path / "images"
+    directory.mkdir()
+    (directory / "run.png").write_bytes(b"")
+    (directory / "fine.png").write_bytes(b"")
+    with pytest.raises(ValueError, match="'run'"):
+        mu.resources.register_image_dir(directory)
+    assert mu.resources.plugin_image_dirs() == []
+    assert str(directory) not in QDir.searchPaths("images")
+
+
+def test_register_image_dir_refuses_a_clash_with_another_plugin(
+    plugin_images, tmp_path
+):
+    mu.resources.register_image_dir(plugin_images)
+    other = tmp_path / "other"
+    other.mkdir()
+    (other / "badge.svg").write_bytes(b"")
+    with pytest.raises(ValueError, match="'badge'.*" + re.escape(str(plugin_images))):
+        mu.resources.register_image_dir(other)
+    assert mu.resources.plugin_image_dirs() == [str(plugin_images)]
+
+
+def test_register_image_dir_ignores_hidden_files(tmp_path):
+    """
+    Dot files (e.g. macOS's .DS_Store) aren't images and can't clash.
+    """
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    for directory in (first, second):
+        directory.mkdir()
+        (directory / ".DS_Store").write_bytes(b"")
+    try:
+        mu.resources.register_image_dir(first)
+        mu.resources.register_image_dir(second)
+    finally:
+        mu.resources.unregister_image_dir(first)
+        mu.resources.unregister_image_dir(second)
+
+
+def test_unregister_image_dir(plugin_images):
+    """
+    Unregistering removes the folder from every lookup; unregistering one
+    that isn't registered does nothing.
+    """
+    mu.resources.register_image_dir(plugin_images)
+    mu.resources.unregister_image_dir(plugin_images)
+    mu.resources.unregister_image_dir(plugin_images)
+    assert mu.resources.plugin_image_dirs() == []
+    assert str(plugin_images) not in QDir.searchPaths("images")
+    assert QDir.searchPaths("images") == [mu.resources.resource_filename("images")]

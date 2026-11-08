@@ -106,4 +106,25 @@ def test_mode_plugin_registers_its_modes():
 def test_mode_plugin_with_nothing_registers_nothing():
     host = mock.MagicMock()
     ModePlugin().register(host)
-    host.register_mode.assert_not_called()
+    assert host.mock_calls == []
+
+
+def test_mode_plugin_registers_its_images_first():
+    """
+    A ModePlugin with `images` registers that folder before its modes, so
+    the modes' icons are there when the mode picker and toolbar ask for them.
+    """
+
+    class One(BaseMode):
+        short_name = "one"
+
+    class Pictured(ModePlugin):
+        images = "/somewhere/images"
+        mode = One
+
+    host = mock.MagicMock()
+    Pictured().register(host)
+    assert host.mock_calls == [
+        mock.call.register_images("/somewhere/images"),
+        mock.call.register_mode(One),
+    ]

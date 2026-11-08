@@ -21,7 +21,7 @@ import logging
 
 from PyQt6.QtWidgets import QMessageBox
 
-from .. import settings
+from .. import resources, settings
 from ..modes.base import BaseMode
 from .base import PLUGIN_API_VERSION, check_compatible
 from .errors import PluginErrorHandler
@@ -79,6 +79,7 @@ class Host:
         self._view = view
         self._modes = {}  # short_name -> mode instance
         self._owners = {}  # short_name -> owning plugin (None for the core)
+        self._image_dirs = []  # (owning plugin or None, folder) pairs
         self._plugins = []
         self._loading = None  # the plugin whose register() is running
         #: What happened to each discovered plugin (mu.plugin.loader.PluginRecord),
@@ -119,6 +120,7 @@ class Host:
         except Exception:
             logger.exception("Plugin %s failed to register; skipping it", name)
             self._remove_modes_of(plugin)
+            self._remove_images_of(plugin)
             return False
         finally:
             self._loading = None
@@ -137,6 +139,7 @@ class Host:
         except Exception:
             logger.exception("Plugin %s failed to unregister", name)
         self._remove_modes_of(plugin)
+        self._remove_images_of(plugin)
         if plugin in self._plugins:
             self._plugins.remove(plugin)
         logger.info("Unloaded plugin %s", name)
@@ -156,6 +159,12 @@ class Host:
                     mode.stop()
                 except Exception:
                     logger.exception("Mode %s failed to stop", short_name)
+
+    def _remove_images_of(self, plugin):
+        for owner, directory in list(self._image_dirs):
+            if owner is plugin:
+                resources.unregister_image_dir(directory)
+                self._image_dirs.remove((owner, directory))
 
     # --- registration (call from Plugin.register) ---
 
@@ -181,6 +190,20 @@ class Host:
         self._modes[short_name] = mode
         self._owners[short_name] = self._loading
         return mode
+
+    def register_images(self, directory):
+        """
+        Make the images in `directory` (a str or os.PathLike) available by
+        name, after Nu's own: a mode's `icon`, an action's `name` and
+        `update_action(icon=...)` then find `name.svg` / `name.png` there.
+
+        Every image name must be new. If one matches an image Nu or another
+        plugin already has, this raises ValueError naming it, so the plugin
+        fails to register and is skipped. The images are removed again when
+        the plugin unloads.
+        """
+        resources.register_image_dir(directory)
+        self._image_dirs.append((self._loading, directory))
 
     # --- talking to the learner ---
 
