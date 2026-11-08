@@ -887,12 +887,6 @@ class Editor(QObject):
         old_window = old_session.get("window", {})
         self._view.size_window(**old_window)
 
-        #
-        # Doesn't seem to do anything useful
-        #
-        # ~ if old_session is None:
-        # ~ self._view.set_theme(self.theme)
-
         # handle os passed file last,
         # so it will not be focused over by another tab
         if paths and len(paths) > 0:
@@ -1412,7 +1406,6 @@ class Editor(QObject):
                 settings,
                 "\n".join(packages),
                 mode,
-                self.connected_devices,
                 environment=environment,
                 focus=focus,
                 plugins=plugins,
@@ -1524,12 +1517,10 @@ class Editor(QObject):
         Given the name of a mode, will make the necessary changes to put the
         editor into the new mode.
         """
-        # Remove the old mode's REPL / filesystem / plotter if required.
+        # Remove the old mode's REPL / plotter if required.
         old_mode = self.modes[self.mode]
         if hasattr(old_mode, "remove_repl"):
             old_mode.remove_repl()
-        if hasattr(old_mode, "remove_fs"):
-            old_mode.remove_fs()
         if hasattr(old_mode, "remove_plotter"):
             if old_mode.plotter:
                 old_mode.remove_plotter()

@@ -1358,7 +1358,6 @@ class AdminDialog(QDialog):
         settings,
         packages,
         mode,
-        device_list,
         environment=None,
         focus=None,
         plugins=None,

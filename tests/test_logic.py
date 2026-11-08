@@ -2482,7 +2482,6 @@ def test_change_mode():
     ed.change_mode("python")
     # Check the old mode is closed properly.
     old_mode.remove_repl.assert_called_once_with()
-    old_mode.remove_fs.assert_called_once_with()
     old_mode.remove_plotter.assert_called_once_with()
     # Check the new mode is set up correctly.
     assert ed.mode == "python"

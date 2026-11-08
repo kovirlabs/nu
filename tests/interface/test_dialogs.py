@@ -160,10 +160,8 @@ def test_AdminDialog_setup_python_mode():
     mode.short_name = "a-mode-that-runs-code"
     mode.name = "Python 3"
     mode.uses_user_environment = True
-    modes = mock.MagicMock()
-    device_list = mu.logic.DeviceList(modes)
     ad = mu.interface.dialogs.AdminDialog(mock_window)
-    ad.setup(log, settings, packages, mode, device_list)
+    ad.setup(log, settings, packages, mode)
     assert ad.log_widget.log_text_area.toPlainText() == log
     s = ad.settings()
     assert s["packages"] == packages
@@ -188,7 +186,6 @@ def test_AdminDialog_focus_environment():
         {"envars": "", "locale": ""},
         "",
         _python_mode(),
-        None,
         focus="environment",
     )
     assert ad.tabs.currentWidget() is ad.environment_tab
@@ -208,7 +205,7 @@ def test_AdminDialog_focus_environment_in_other_modes():
     mode.uses_user_environment = False
     parent = QWidget()
     ad = mu.interface.dialogs.AdminDialog(parent)
-    ad.setup("log", {"locale": ""}, "", mode, None, focus="environment")
+    ad.setup("log", {"locale": ""}, "", mode, focus="environment")
     assert ad.tabs.currentWidget() is ad.log_widget
 
 
@@ -227,7 +224,6 @@ def test_AdminDialog_commands_tab_in_other_modes():
         {"locale": ""},
         "",
         mode,
-        None,
         environment={"commands": "$ mpremote connect COM3 fs cp a.py :main.py"},
     )
     assert ad.environment_tab is None
@@ -261,10 +257,8 @@ def test_AdminDialog_setup():
     mode.short_name = "python"
     mode.name = "Debugger"
     mode.uses_user_environment = False
-    modes = mock.MagicMock()
-    device_list = mu.logic.DeviceList(modes)
     ad = mu.interface.dialogs.AdminDialog(mock_window)
-    ad.setup(log, settings, packages, mode, device_list)
+    ad.setup(log, settings, packages, mode)
     assert ad.log_widget.log_text_area.toPlainText() == log
     s = ad.settings()
     assert s == settings
@@ -765,7 +759,7 @@ def test_AdminDialog_environment_tab():
     parent = QWidget()
     ad = mu.interface.dialogs.AdminDialog(parent)
     settings = {"envars": "A=b", "locale": ""}
-    ad.setup("log", settings, "cowsay", _python_mode(), None, environment=ENVIRONMENT)
+    ad.setup("log", settings, "cowsay", _python_mode(), environment=ENVIRONMENT)
     titles = [ad.tabs.tabText(i) for i in range(ad.tabs.count())]
     assert titles == ["Current Log", "Environment", "Select Language"]
     assert ad.environment_tab.fields["path"].text() == ENVIRONMENT["path"]
@@ -1134,7 +1128,6 @@ def test_AdminDialog_plugins_tab():
         {"envars": "", "locale": ""},
         "",
         _python_mode(),
-        None,
         plugins=PLUGINS,
         open_directory=opener,
     )
@@ -1149,7 +1142,7 @@ def test_AdminDialog_focus_plugins():
     mode.uses_user_environment = False
     parent = QWidget()
     ad = mu.interface.dialogs.AdminDialog(parent)
-    ad.setup("log", {"locale": ""}, "", mode, None, focus="plugins", plugins=PLUGINS)
+    ad.setup("log", {"locale": ""}, "", mode, focus="plugins", plugins=PLUGINS)
     assert ad.tabs.currentWidget() is ad.plugins_tab
     assert "plugins" in ad.settings()
 
@@ -1426,7 +1419,7 @@ def test_AdminDialog_reports_the_chosen_environment():
     ad = mu.interface.dialogs.AdminDialog(parent)
     settings = {"envars": "", "locale": ""}
     environment = dict(ENVIRONMENT, environments=[DEFAULT_ENV, PROJECT_ENV])
-    ad.setup("log", settings, "", _python_mode(), None, environment=environment)
+    ad.setup("log", settings, "", _python_mode(), environment=environment)
     section = ad.environment_tab.environments_section
     assert "environment" not in ad.settings()
     section.tree.setCurrentItem(section.tree.topLevelItem(1))
@@ -1445,7 +1438,6 @@ def test_EnvironmentsWidget_expanding_makes_room():
         {"envars": "", "locale": ""},
         "",
         _python_mode(),
-        None,
         environment=environment,
     )
     ad.resize(760, 300)
