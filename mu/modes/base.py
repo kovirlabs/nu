@@ -174,6 +174,9 @@ class BaseMode(QObject):
     has_debugger = False
     save_timeout = 5  #: Number of seconds to wait before saving work.
     builtins = None  #: Symbols to assume as builtins when checking code style.
+    #: Modules whose ``import *`` Check should expand, each mapped to the
+    #: names it brings in, so it can still spot undefined names.
+    star_imports = {}
     file_extensions = []
     module_names = MODULE_NAMES
     code_template = _("# Write your code here :-)")

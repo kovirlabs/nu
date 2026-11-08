@@ -499,3 +499,20 @@ def test_flash_with_no_microbit_end_to_end(mm, host):
         **{"microbit-flash": True, "repl": True, "plotter": True}
     )
     assert mode_module.FLASH_BUTTON == "microbit-flash"
+
+
+def test_check_understands_from_microbit_import_star():
+    """
+    With the mode's star_imports, Check reads "from microbit import *" as
+    naming the micro:bit's things: no noise about the star import, and a
+    real undefined name is still caught.
+    """
+    import mu.logic
+    from nu_microbit.mode import MicrobitMode
+
+    code = "from microbit import *\ndisplay.scroll('hi')\nsleep(10)\nprint(oops)\n"
+    result = mu.logic.check_flake(
+        "main.py", code, star_imports=MicrobitMode.star_imports
+    )
+    messages = [log["message"] for logs in result.values() for log in logs]
+    assert messages == ["undefined name 'oops'"]

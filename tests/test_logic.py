@@ -475,20 +475,29 @@ def test_check_flake():
 
 def test_check_flake_needing_expansion():
     """
-    Ensure the check_flake method calls PyFlakes with the expected code
-    reporter.
+    A mode's star import is checked as if it named what it brings in: the
+    names the code doesn't use aren't reported, its undefined names are.
     """
-    mock_r = mock.MagicMock()
-    msg = "'microbit.foo' imported but unused"
-    mock_r.log = [{"line_no": 2, "column": 0, "message": msg}]
-    with (
-        mock.patch("mu.logic.MuFlakeCodeReporter", return_value=mock_r),
-        mock.patch("mu.logic.check", return_value=None) as mock_check,
-    ):
-        code = "from microbit import *"
-        result = mu.logic.check_flake("foo.py", code)
-        assert result == {}
-        mock_check.assert_called_once_with(mu.logic.EXPANDED_IMPORT, "foo.py", mock_r)
+    code = "from robot import *\nwheels.turn(1)\nprint(oops)\n"
+    result = mu.logic.check_flake(
+        "foo.py", code, star_imports={"robot": ["wheels", "eyes", "horn"]}
+    )
+    messages = [log["message"] for logs in result.values() for log in logs]
+    assert messages == ["undefined name 'oops'"]
+    assert list(result) == [2]  # (Line numbers count from 0.)
+
+
+def test_check_flake_star_import_not_expanded():
+    """
+    Another module's star import is left alone (pyflakes reports it as
+    usual), and a mode without star imports changes nothing.
+    """
+    code = "from os.path import *\nprint(join)\n"
+    plain = mu.logic.check_flake("foo.py", code)
+    assert mu.logic.check_flake("foo.py", code, star_imports={"robot": ["x"]}) == (
+        plain
+    )
+    assert any("import *" in log["message"] for log in plain[0])
 
 
 def test_check_flake_with_builtins():
