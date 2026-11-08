@@ -1362,7 +1362,8 @@ class StatusBar(QStatusBar):
 
         # Mode selector.
         self.mode_label = QLabel()
-        self.mode_label.setToolTip(_("Nu's current mode of behaviour."))
+        self.mode_label.setToolTip(_("Nu's current mode. Click to change it."))
+        self.mode_label.setCursor(Qt.CursorShape.PointingHandCursor)
         self.addPermanentWidget(self.mode_label)
         self.set_mode(mode)
 
@@ -1387,13 +1388,14 @@ class StatusBar(QStatusBar):
         self.logs_label.shortcut.activated.connect(handler)
         self.logs_label.mousePressEvent = handler
 
-    def connect_mode(self, handler, shortcut):
+    def connect_mode(self, handler, shortcut=None):
         """
-        Connect the mouse press event and keyboard shortcut for the mode widget
-        to the referenced handler function.
+        Connect the mouse press event (and keyboard shortcut, if given) for
+        the mode widget to the referenced handler function.
         """
-        self.mode_label.shortcut = QShortcut(QKeySequence(shortcut), self.parent())
-        self.mode_label.shortcut.activated.connect(handler)
+        if shortcut:
+            self.mode_label.shortcut = QShortcut(QKeySequence(shortcut), self.parent())
+            self.mode_label.shortcut.activated.connect(handler)
         self.mode_label.mousePressEvent = handler
 
     def connect_environment(self, handler):

@@ -2380,6 +2380,19 @@ def test_StatusBar_connect_mode():
     mock_shortcut().activated.connect.assert_called_once_with(handler)
 
 
+def test_StatusBar_connect_mode_click_only():
+    """Without a shortcut, just a click on the mode's name calls the handler."""
+    sb = mu.interface.main.StatusBar()
+
+    def handler():
+        pass
+
+    with mock.patch("mu.interface.main.QShortcut") as mock_shortcut:
+        sb.connect_mode(handler)
+    assert sb.mode_label.mousePressEvent == handler
+    mock_shortcut.assert_not_called()
+
+
 def test_StatusBar_set_message():
     """
     Ensure the default pause for displaying a message in the status bar is

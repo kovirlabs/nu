@@ -808,6 +808,9 @@ class Editor(QObject):
         status_bar.connect_logs(self.show_admin, "Ctrl+Shift+D")
         # Clicking the environment indicator shows the environment.
         status_bar.connect_environment(self.show_environment)
+        # Clicking the mode's name changes mode, like the Mode button (whose
+        # Ctrl+Shift+M it doesn't repeat: two shortcuts would clash).
+        status_bar.connect_mode(self.select_mode)
         # Show connection messages in status_bar
         self.connected_devices.device_connected.connect(status_bar.device_connected)
         # Connect to device list

@@ -873,6 +873,7 @@ def test_editor_connect_to_status_bar():
         assert sb.device_selector.device_changed.connect.call_count == 3
         # Clicking the environment indicator shows the environment.
         sb.connect_environment.assert_called_once_with(e.show_environment)
+        sb.connect_mode.assert_called_once_with(e.select_mode)
 
 
 def test_editor_restore_session_missing_files():

@@ -1984,3 +1984,30 @@ def test_PackageDialog_reject_without_a_job():
     with mock.patch.object(QDialog, "reject") as reject:
         pd.reject()
     reject.assert_called_once_with()
+
+
+def test_ModeSelector_python_first():
+    """
+    Python 3 comes first (where most learners start), then the other modes
+    by name, whatever order they were registered in.
+    """
+
+    def mode(key, name):
+        item = mock.MagicMock(icon=key, is_debugger=False, description="")
+        item.name = name  # (name= would name the mock itself)
+        return item
+
+    modes = {
+        "zebra": mode("zebra", "Zebra"),
+        "microbit": mode("microbit", "BBC micro:bit"),
+        "python": mode("python", "Python 3"),
+        "circuitpython": mode("circuitpython", "CircuitPython"),
+    }
+    ms = mu.interface.dialogs.ModeSelector()
+    from PyQt6.QtGui import QIcon
+
+    with mock.patch("mu.interface.dialogs.load_icon", return_value=QIcon()):
+        ms.setup(modes, "zebra")
+    names = [ms.mode_list.item(i).name for i in range(ms.mode_list.count())]
+    assert names == ["Python 3", "BBC micro:bit", "CircuitPython", "Zebra"]
+    assert ms.mode_list.currentItem().name == "Zebra"
