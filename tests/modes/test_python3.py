@@ -636,3 +636,165 @@ def test_python_on_kernel_stop():
     view.button_bar.slots["repl"].setEnabled.assert_called_once_with(True)
     editor.show_status_message.assert_called_once_with("REPL stopped.")
     assert pm.kernel_runner is None
+
+
+#
+# PEP 723: a file with a `# /// script` block runs with `uv run` (Phase 4b)
+#
+COWSAY = '# /// script\n# dependencies = ["cowsay"]\n# ///\nimport cowsay\n'
+
+
+def _uv_record():
+    from mu.command_log import CommandLog
+
+    return CommandLog().start(
+        ["/opt/uv", "run", "--python", "/env/bin/python", "--script", "/foo/cow.py"],
+        cwd="/foo",
+    )
+
+
+def _pep723_mode(text=COWSAY):
+    editor = mock.MagicMock()
+    editor.envars = {"NAME": "value"}
+    view = mock.MagicMock()
+    view.current_tab.path = "/foo/cow.py"
+    view.current_tab.isModified.return_value = False
+    view.current_tab.text.return_value = text
+    return PythonMode(editor, view), editor, view
+
+
+def test_python_run_script_with_inline_metadata():
+    """Run uses `uv run --python <env> --script <file>`, so the inline
+    dependencies resolve, and the pane's first line is that command."""
+    pm, editor, view = _pep723_mode()
+    record = _uv_record()
+    with (
+        mock.patch.object(venv, "script_command", return_value=record) as command,
+        mock.patch("mu.command_log.sys.platform", "linux"),
+    ):
+        pm.run_script()
+    command.assert_called_once_with("/foo/cow.py", "/foo")
+    view.add_python3_runner.assert_called_once_with(
+        interpreter="/opt/uv",
+        script_name="/foo/cow.py",
+        working_directory="/foo",
+        interactive=False,
+        envars=editor.envars,
+        python_args=["run", "--python", "/env/bin/python", "--script"],
+        echo="$ uv run --python /env/bin/python --script /foo/cow.py",
+    )
+    runner = view.add_python3_runner.return_value
+    assert pm.runner is runner
+    runner.process.finished.connect.assert_called_once()
+    runner.process.waitForStarted.assert_called_once_with()
+
+
+def test_python_run_script_with_malformed_inline_metadata():
+    """A broken block still runs via uv, whose error explains it."""
+    pm, editor, view = _pep723_mode("# /// script\n# dependencies = [\nprint(1)\n")
+    with mock.patch.object(venv, "script_command", return_value=_uv_record()):
+        pm.run_script()
+    assert view.add_python3_runner.call_args.kwargs["interpreter"] == "/opt/uv"
+
+
+def test_python_run_script_with_inline_metadata_but_no_uv():
+    """Without uv, explain (in beginner terms) instead of running."""
+    from mu.virtual_environment import UvNotFound
+
+    pm, editor, view = _pep723_mode()
+    with mock.patch.object(venv, "script_command", side_effect=UvNotFound()):
+        pm.run_script()
+    view.add_python3_runner.assert_not_called()
+    assert pm.runner is None
+    message, information = view.show_message.call_args[0]
+    assert "uv" in message
+    assert "# /// script" in information
+
+
+def test_python_run_toggle_without_uv_leaves_run_button():
+    from mu.virtual_environment import UvNotFound
+
+    pm, editor, view = _pep723_mode()
+    pm.set_buttons = mock.MagicMock()
+    with mock.patch.object(venv, "script_command", side_effect=UvNotFound()):
+        pm.run_toggle(None)
+    pm.set_buttons.assert_not_called()
+
+
+def _finished(pm, runner, record, code=0, normal=True):
+    from PyQt6.QtCore import QProcess
+
+    status = QProcess.ExitStatus.NormalExit if normal else QProcess.ExitStatus.CrashExit
+    pm.on_uv_run_finished(runner, record, code, status)
+
+
+def test_on_uv_run_finished_records_exit_code():
+    pm, editor, view = _pep723_mode()
+    runner = mock.MagicMock(reading_stdout=False)
+    runner.toPlainText.return_value = "$ uv run\nmoo\n"
+    pm.runner = runner
+    record = _uv_record()
+    _finished(pm, runner, record, code=0)
+    assert record.finished and record.exit_code == 0
+    runner.insert_hint.assert_not_called()
+
+
+def test_on_uv_run_finished_stopped_has_no_exit_code():
+    pm, editor, view = _pep723_mode()
+    runner = mock.MagicMock(reading_stdout=False)
+    runner.toPlainText.return_value = ""
+    pm.runner = runner
+    record = _uv_record()
+    _finished(pm, runner, record, code=15, normal=False)
+    assert record.finished and record.exit_code is None
+
+
+def test_on_uv_run_finished_adds_hint_for_uv_errors():
+    pm, editor, view = _pep723_mode()
+    runner = mock.MagicMock(reading_stdout=False)
+    runner.toPlainText.return_value = (
+        "$ uv run\nerror: Request failed after 3 retries\n  cause: Failed to fetch"
+    )
+    pm.runner = runner
+    _finished(pm, runner, _uv_record(), code=2)
+    (hint,), _ = runner.insert_hint.call_args
+    assert hint.startswith("Hint: ") and "internet" in hint
+
+
+def test_on_uv_run_finished_waits_for_the_last_output():
+    """The pane may still be reading the end of the output when the process
+    finishes; the hint waits for it."""
+    pm, editor, view = _pep723_mode()
+    runner = mock.MagicMock(reading_stdout=True)
+    runner.toPlainText.return_value = "error: TOML parse error at line 1"
+    pm.runner = runner
+    with mock.patch("mu.modes.python3.QTimer") as timer:
+        _finished(pm, runner, _uv_record(), code=2)
+        runner.insert_hint.assert_not_called()
+        delay, retry = timer.singleShot.call_args[0]
+        runner.reading_stdout = False
+        retry()
+    runner.insert_hint.assert_called_once()
+
+
+def test_on_uv_run_finished_gives_up_waiting():
+    pm, editor, view = _pep723_mode()
+    runner = mock.MagicMock(reading_stdout=True)
+    runner.toPlainText.return_value = "error: TOML parse error"
+    pm.runner = runner
+    with mock.patch("mu.modes.python3.QTimer") as timer:
+        pm.show_uv_hint(runner, attempts=0)
+    timer.singleShot.assert_not_called()
+    runner.insert_hint.assert_called_once()
+
+
+def test_on_uv_run_finished_after_stop():
+    """If the learner stopped the program (its pane is gone), no hint."""
+    pm, editor, view = _pep723_mode()
+    runner = mock.MagicMock(reading_stdout=False)
+    runner.toPlainText.return_value = "error: TOML parse error"
+    pm.runner = None
+    record = _uv_record()
+    _finished(pm, runner, record, code=2)
+    assert record.finished
+    runner.insert_hint.assert_not_called()

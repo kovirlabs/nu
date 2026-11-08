@@ -1382,6 +1382,15 @@ class VirtualEnvironment(object):
         """
         return Uv(venv_path=self.interpreter)
 
+    def script_command(self, script, cwd):
+        """
+        Record, and return the :class:`~mu.command_log.CommandRecord` of, the
+        ``uv run --python <this env> --script <script>`` command the Run
+        button uses for a program with inline (PEP 723) dependencies; the Run
+        pane launches it. Raise :class:`UvNotFound` if there's no uv.
+        """
+        return self._uv().script_command(script, cwd=cwd)
+
     def install_user_packages(self, packages, slots=Process.Slots()):
         """
         Install user defined packages. Return the command's

@@ -1137,6 +1137,20 @@ def test_Window_add_python3_runner():
     )
 
 
+def test_Window_add_python3_runner_echo():
+    """The command to show as the pane's first line reaches the pane."""
+    w = mu.interface.main.Window()
+    w.connect_zoom = mock.MagicMock()
+    w.addDockWidget = mock.MagicMock()
+    mock_pane = mock.MagicMock()
+    with (
+        mock.patch("mu.interface.main.PythonProcessPane", return_value=mock_pane),
+        mock.patch("mu.interface.main.QDockWidget"),
+    ):
+        w.add_python3_runner("/opt/uv", "cow.py", ".", echo="$ uv run cow.py")
+    assert mock_pane.start_process.call_args.kwargs == {"echo": "$ uv run cow.py"}
+
+
 def test_Window_add_debug_inspector():
     """
     Ensure a debug inspector (to display local variables) is displayed

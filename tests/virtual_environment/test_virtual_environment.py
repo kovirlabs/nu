@@ -1319,3 +1319,22 @@ def test_describe_windows(venv):
     assert facts["install"].endswith(" cowsay")
     assert facts["uv"] is None
     assert facts["python_version"] is None
+
+
+def test_script_command(venv):
+    """The Run button's `uv run` targets the learner's environment."""
+    with mock.patch.object(mu.virtual_environment, "Uv") as MockUv:
+        record = venv.script_command("/w/cow.py", "/w")
+    MockUv.assert_called_once_with(venv_path=venv.interpreter)
+    MockUv.return_value.script_command.assert_called_once_with("/w/cow.py", cwd="/w")
+    assert record is MockUv.return_value.script_command.return_value
+
+
+def test_run_subprocess_includes_stderr(venv):
+    """run_subprocess reports what the process wrote to stderr too."""
+    ok, output = venv.run_subprocess(
+        sys.executable, "-c", "import sys; print('out'); sys.stderr.write('err')"
+    )
+    assert ok is True
+    assert output.startswith("out")
+    assert "STDERR: err" in output

@@ -660,6 +660,7 @@ class Window(QMainWindow):
         command_args=None,
         envars=None,
         python_args=None,
+        echo=None,
     ):
         """
         Display console output for the interpreter with the referenced
@@ -684,6 +685,9 @@ class Window(QMainWindow):
 
         If python_args is given, these will be passed as arguments to the
         Python runtime used to launch the child process.
+
+        If echo is given, it's shown as the pane's first line (the real
+        command being run, e.g. a `uv run`).
         """
         self.process_runner = PythonProcessPane(self)
         self.runner = QDockWidget(
@@ -723,6 +727,7 @@ class Window(QMainWindow):
             command_args,
             envars,
             python_args,
+            echo=echo,
         )
         self.process_runner.setFocus()
         self.process_runner.on_append_text.connect(self.on_stdout_write)

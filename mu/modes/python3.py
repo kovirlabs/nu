@@ -24,10 +24,16 @@ from mu.modes.base import BaseMode
 from mu.modes.api import PYTHON3_APIS, SHARED_APIS, PI_APIS
 from mu.resources import load_icon
 from mu.interface.panes import CHARTS
-from ..virtual_environment import venv
+from ..script_metadata import (
+    ScriptMetadataError,
+    read_script_metadata,
+    uv_run_hint,
+    wants_uv_run,
+)
+from ..virtual_environment import UvNotFound, venv
 from qtconsole.manager import QtKernelManager
 from qtconsole.client import QtKernelClient
-from PyQt6.QtCore import QObject, QThread, pyqtSignal
+from PyQt6.QtCore import QObject, QProcess, QThread, QTimer, pyqtSignal
 
 
 logger = logging.getLogger(__name__)
@@ -225,28 +231,108 @@ class PythonMode(BaseMode):
                 self.editor.save_tab_to_file(tab)
             envars = self.editor.envars
             cwd = os.path.dirname(tab.path)
-            logger.info(
-                "About to run script: %s",
-                dict(
+            if wants_uv_run(tab.text()):
+                # Inline (PEP 723) dependencies: let uv fetch them.
+                self.runner = self.run_with_uv(tab.path, cwd, envars)
+                if not self.runner:
+                    return
+            else:
+                logger.info(
+                    "About to run script: %s",
+                    dict(
+                        interpreter=venv.interpreter,
+                        script_name=tab.path,
+                        working_directory=cwd,
+                        interactive=True,
+                        envars=envars,
+                    ),
+                )
+                self.runner = self.view.add_python3_runner(
                     interpreter=venv.interpreter,
                     script_name=tab.path,
                     working_directory=cwd,
                     interactive=True,
                     envars=envars,
-                ),
-            )
-            self.runner = self.view.add_python3_runner(
-                interpreter=venv.interpreter,
-                script_name=tab.path,
-                working_directory=cwd,
-                interactive=True,
-                envars=envars,
-            )
+                )
             self.runner.process.waitForStarted()
             if self.kernel_runner:
                 self.set_buttons(plotter=False)
             elif self.plotter:
                 self.set_buttons(repl=False)
+
+    def run_with_uv(self, path, cwd, envars):
+        """
+        Run the program at `path`, which has a `# /// script` block (PEP 723
+        inline dependencies), with ``uv run --python <the learner's env>
+        --script <path>``: uv fetches the listed packages into a cached
+        environment of their own (built from the environment's Python) and
+        runs the program there. The command is in the command log and is the
+        Run pane's first line. Return the pane, or None if it couldn't start
+        (no uv: the learner is told why).
+
+        Unlike an ordinary Run, there's no ``>>>`` prompt when the program
+        ends: `uv run --script` can't pass Python's ``-i``.
+        """
+        try:
+            record = venv.script_command(path, cwd)
+        except UvNotFound:
+            logger.exception("No uv to run a script with inline metadata.")
+            self.view.show_message(
+                _("Nu can't find uv, so it can't run this program."),
+                _(
+                    "This program starts with a “# /// script” block listing "
+                    "the packages it needs, and Nu uses uv to fetch them. "
+                    "Reinstalling Nu should bring uv back. Or remove the "
+                    "block to run the program with your environment's "
+                    "packages."
+                ),
+            )
+            return None
+        try:
+            metadata = read_script_metadata(self.view.current_tab.text())
+        except ScriptMetadataError as exc:
+            metadata = str(exc)
+        logger.info("Inline script metadata: %s", metadata)
+        # record.argv is [uv, run, --python, <env python>, --script, <path>]:
+        # the pane runs uv with everything but the path, then the path.
+        runner = self.view.add_python3_runner(
+            interpreter=record.program,
+            script_name=path,
+            working_directory=cwd,
+            interactive=False,
+            envars=envars,
+            python_args=record.argv[1:-1],
+            echo="$ " + record.display(),
+        )
+        runner.process.finished.connect(
+            lambda code, status: self.on_uv_run_finished(runner, record, code, status)
+        )
+        return runner
+
+    def on_uv_run_finished(self, runner, record, exit_code, exit_status):
+        """
+        A `uv run` ended: note its exit code in the command log (None if it
+        was stopped or crashed), and explain any uv error to the learner.
+        """
+        if exit_status != QProcess.ExitStatus.NormalExit:
+            exit_code = None
+        record.finish(exit_code)
+        self.show_uv_hint(runner)
+
+    def show_uv_hint(self, runner, attempts=50):
+        """
+        Put a one-line hint above uv's error in `runner`'s pane, if uv
+        printed one we can explain. The pane may still be reading the last
+        of the output, so wait for it (up to `attempts` short waits).
+        """
+        if runner is not self.runner:
+            return  # Stopped: its pane is gone.
+        if runner.reading_stdout and attempts > 0:
+            QTimer.singleShot(20, lambda: self.show_uv_hint(runner, attempts - 1))
+            return
+        hint = uv_run_hint(runner.toPlainText())
+        if hint:
+            runner.insert_hint(hint)
 
     def stop_script(self):
         """
