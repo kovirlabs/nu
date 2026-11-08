@@ -451,7 +451,7 @@ To add one: create `plugins/<name>/` (from the template), add
 `"./plugins/<name>"` to `[tool.briefcase.app.mu].requires`, its source folder
 to `pythonpath` in `[tool.pytest.ini_options]`, its package to
 `_TRANSLATE_PLUGIN_PACKAGES` in `make.py`, and its path to the pip installs in
-`.github/workflows/test.yml`, `docs.yml`, `codeql.yml` and `build.yml`, and
+`.github/workflows/test.yml`, `docs.yml` and `build.yml`, and
 to mkdocstrings' `paths` in `mkdocs.yml`. Then `uv lock`.
 
 If a bundled plugin's mode used to be built in, keep its `short_name`: saved
