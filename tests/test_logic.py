@@ -3745,3 +3745,53 @@ def test_show_admin_environment_refused():
         "Nu can't switch to the environment “env”.", "Nu can't use it: No pip."
     )
     ed.show_status_message.assert_not_called()
+
+
+def _quit_editor(running, program_done=False, answer=QMessageBox.StandardButton.Ok):
+    view = mock.MagicMock()
+    view.modified = False
+    view.process_runner.running = running
+    view.process_runner.program_done = program_done
+    view.show_confirmation = mock.MagicMock(return_value=answer)
+    view.widgets = []
+    return mu.logic.Editor(view), view
+
+
+def test_quit_program_running_cancelled():
+    """
+    Quitting while the learner's program is still running asks first, and
+    cancelling leaves everything as it is.
+    """
+    ed, view = _quit_editor(True, answer=QMessageBox.StandardButton.Cancel)
+    ed.modes = {"python": mock.MagicMock()}
+    ed.mode = "python"
+    event = mock.MagicMock()
+    with mock.patch("PyQt6.QtCore.QCoreApplication.exit") as exit_app:
+        ed.quit(event)
+    assert "still running" in view.show_confirmation.call_args[0][0]
+    event.ignore.assert_called_once_with()
+    exit_app.assert_not_called()
+
+
+def test_quit_program_running_ok(mocked_session):
+    ed, view = _quit_editor(True)
+    ed.modes = {"python": mock.MagicMock()}
+    ed.mode = "python"
+    with mock.patch("PyQt6.QtCore.QCoreApplication.exit") as exit_app:
+        ed.quit()
+    view.show_confirmation.assert_called_once()
+    exit_app.assert_called_once_with(0)
+
+
+def test_quit_program_finished_no_question(mocked_session):
+    """
+    A program that has finished (Python's just waiting at >>>) or nothing
+    running at all: no question.
+    """
+    for running, done in ((True, True), (False, False)):
+        ed, view = _quit_editor(running, program_done=done)
+        ed.modes = {"python": mock.MagicMock()}
+        ed.mode = "python"
+        with mock.patch("PyQt6.QtCore.QCoreApplication.exit"):
+            ed.quit()
+        view.show_confirmation.assert_not_called()

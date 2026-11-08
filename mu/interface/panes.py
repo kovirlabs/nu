@@ -546,6 +546,9 @@ class PythonProcessPane(QTextEdit):
         self.stdout_buffer = b""  # contains non-decoded bytes from stdout.
         self.reading_stdout = False  # flag showing if already reading stdout.
         self.is_interactive = False  # flag if the process is interactive mode.
+        # In interactive mode: whether the learner's script has finished and
+        # Python is waiting at its >>> prompt.
+        self.program_done = False
         # (exit code, status) of a process that ended while its output was
         # still being read; see finished.
         self.pending_finish = None
@@ -588,6 +591,7 @@ class PythonProcessPane(QTextEdit):
         first line, so the learner sees the real command being run.
         """
         self.is_interactive = interactive
+        self.program_done = False
         if echo:
             self.append((echo + "\n").encode("utf-8"))
             self.set_start_of_current_line()
@@ -596,7 +600,7 @@ class PythonProcessPane(QTextEdit):
         envars = {name: v for (name, v) in envars.items() if name != "PYTHONPATH"}
         self.script = ""
         if script_name:
-            self.script = os.path.abspath(os.path.normcase(script_name))
+            self.script = os.path.abspath(script_name)
         logger.info("Running script: {}".format(self.script))
         logger.info("Using interpreter: {}".format(interpreter))
         if interactive:
@@ -962,6 +966,8 @@ class PythonProcessPane(QTextEdit):
         if data:
             data = self.stdout_buffer + data
             try:
+                data.decode("utf-8")  # Wait for the rest of a split character.
+                data = self.mark_program_done(data)
                 self.append(data)
                 self.on_append_text.emit(data)
                 self.set_start_of_current_line()
@@ -975,6 +981,27 @@ class PythonProcessPane(QTextEdit):
                 code, status = self.pending_finish
                 self.pending_finish = None
                 self.finished(code, status)
+
+    def mark_program_done(self, data):
+        """
+        In interactive mode, the first >>> prompt means the learner's script
+        has finished and Python is waiting for them: say so above it, as
+        otherwise it looks like the program is still running. Returns the
+        data still to show.
+        """
+        if self.is_interactive and not self.program_done and data.endswith(b">>> "):
+            self.program_done = True
+            self.append(data[:-4])
+            notice = _(
+                "--- Your program has finished. Type Python at the >>> "
+                "prompt to look at its variables, or click Stop. ---"
+            )
+            text = self.toPlainText()
+            if text and not text.endswith("\n"):
+                notice = "\n" + notice
+            self.append((notice + "\n").encode("utf-8"))
+            return b">>> "  # The prompt itself is shown as usual.
+        return data
 
     def write_to_stdin(self, data):
         """

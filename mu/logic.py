@@ -1279,16 +1279,35 @@ class Editor(QObject):
         logger.info("Showing help at %r.", HELP_URL)
         webbrowser.open_new(HELP_URL)
 
+    def program_running(self):
+        """
+        True if the learner's program is still running in the output pane
+        (not just waiting at the >>> prompt after it finished).
+        """
+        runner = getattr(self._view, "process_runner", None)
+        return (
+            getattr(runner, "running", False) is True
+            and getattr(runner, "program_done", False) is not True
+        )
+
     def quit(self, *args, **kwargs):
         """
         Exit the application.
         """
+        questions = []
         if self._view.modified:
             # Alert the user to handle unsaved work.
-            msg = _(
-                "There is un-saved work, exiting the application will"
-                " cause you to lose it."
+            questions.append(
+                _(
+                    "There is un-saved work, exiting the application will"
+                    " cause you to lose it."
+                )
             )
+        if self.program_running():
+            questions.append(
+                _("Your program is still running. Quitting Nu will stop it.")
+            )
+        for msg in questions:
             result = self._view.show_confirmation(msg)
             if result == QMessageBox.StandardButton.Cancel:
                 if args and hasattr(args[0], "ignore"):

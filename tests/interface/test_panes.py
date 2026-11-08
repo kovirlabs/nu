@@ -1108,7 +1108,7 @@ def test_PythonProcessPane_start_process():
     interpreter = sys.executable
     working_directory = "workspace"
     script_filename = "script.py"
-    script_filepath = os.path.abspath(os.path.normcase(script_filename))
+    script_filepath = os.path.abspath(script_filename)
     with mock.patch("mu.interface.panes.QProcess", mock_process_class):
         ppp = mu.interface.panes.PythonProcessPane()
         ppp.start_process(interpreter, script_filename, working_directory)
@@ -1134,7 +1134,7 @@ def test_PythonProcessPane_start_process_command_args():
     mock_process_class.ProcessChannelMode.MergedChannels = mock_merge_chans
     runner = sys.executable
     script_filename = "script.py"
-    script_filepath = os.path.abspath(os.path.normcase(script_filename))
+    script_filepath = os.path.abspath(script_filename)
     with mock.patch("mu.interface.panes.QProcess", mock_process_class):
         ppp = mu.interface.panes.PythonProcessPane()
         args = ["foo", "bar"]
@@ -1154,7 +1154,7 @@ def test_PythonProcessPane_start_process_debugger():
     mock_process_class.ProcessChannelMode.MergedChannels = mock_merge_chans
     interpreter = sys.executable
     script_filename = "script.py"
-    script_filepath = os.path.abspath(os.path.normcase(script_filename))
+    script_filepath = os.path.abspath(script_filename)
     working_directory = "workspace"
     with mock.patch("mu.interface.panes.QProcess", mock_process_class):
         ppp = mu.interface.panes.PythonProcessPane()
@@ -1184,7 +1184,7 @@ def test_PythonProcessPane_start_process_not_interactive():
     mock_process_class.ProcessChannelMode.MergedChannels = mock_merge_chans
     interpreter = sys.executable
     script_filename = "script.py"
-    script_filepath = os.path.abspath(os.path.normcase(script_filename))
+    script_filepath = os.path.abspath(script_filename)
     with mock.patch("mu.interface.panes.QProcess", mock_process_class):
         ppp = mu.interface.panes.PythonProcessPane()
         args = ["foo", "bar"]
@@ -1288,7 +1288,7 @@ def test_PythonProcessPane_start_process_custom_runner():
             command_args=args,
             runner="foo",
         )
-    expected_script = os.path.abspath(os.path.normcase("script.py"))
+    expected_script = os.path.abspath("script.py")
     expected_args = [expected_script, "foo", "bar"]
     ppp.process.start.assert_called_once_with("foo", expected_args)
 
@@ -1312,7 +1312,7 @@ def test_PythonProcessPane_start_process_custom_python_args():
             interactive=False,
             python_args=py_args,
         )
-    expected_script = os.path.abspath(os.path.normcase("script.py"))
+    expected_script = os.path.abspath("script.py")
     expected_args = ["-m", "pgzero", expected_script]
     runner = sys.executable
     ppp.process.start.assert_called_once_with(runner, expected_args)
@@ -2618,7 +2618,7 @@ def test_PythonProcessPane_start_process_echo():
     assert ppp.toPlainText() == "$ uv run --script script.py\n"
     # The learner's typing starts after it.
     assert ppp.start_of_current_line == len(ppp.toPlainText())
-    script = os.path.abspath(os.path.normcase("script.py"))
+    script = os.path.abspath("script.py")
     ppp.process.start.assert_called_once_with("/opt/uv", ["run", "--script", script])
 
 
@@ -2664,3 +2664,53 @@ def test_PythonProcessPane_insert_hint_without_uv_message():
     ppp.setPlainText("$ uv run\nsomething went wrong")
     ppp.insert_hint("Hint: x")
     assert ppp.toPlainText() == "$ uv run\nsomething went wrong\nHint: x"
+
+
+def test_PythonProcessPane_mark_program_done():
+    """
+    In interactive mode, the first >>> prompt (the script has finished) gets
+    a notice above it; later prompts don't.
+    """
+    ppp = mu.interface.panes.PythonProcessPane()
+    ppp.is_interactive = True
+    ppp.append(b"hi")
+    assert ppp.mark_program_done(b"there\n>>> ") == b">>> "
+    assert ppp.program_done is True
+    text = ppp.toPlainText()
+    assert text.startswith("hithere\n--- Your program has finished.")
+    assert text.endswith("or click Stop. ---\n")
+    # The learner's own >>> prompts afterwards are left alone.
+    assert ppp.mark_program_done(b"1\n>>> ") == b"1\n>>> "
+
+
+def test_PythonProcessPane_mark_program_done_starts_line():
+    """The notice goes on a line of its own."""
+    ppp = mu.interface.panes.PythonProcessPane()
+    ppp.is_interactive = True
+    ppp.append(b"no newline")
+    ppp.mark_program_done(b">>> ")
+    assert "no newline\n--- Your program has finished." in ppp.toPlainText()
+
+
+def test_PythonProcessPane_mark_program_done_not_interactive():
+    """Without the >>> prompt (e.g. Pygame Zero) nothing is added."""
+    ppp = mu.interface.panes.PythonProcessPane()
+    ppp.is_interactive = False
+    assert ppp.mark_program_done(b">>> ") == b">>> "
+    assert ppp.program_done is False
+    assert ppp.toPlainText() == ""
+
+
+def test_PythonProcessPane_read_from_stdout_program_done():
+    """The prompt read from the process is shown after the notice."""
+    ppp = mu.interface.panes.PythonProcessPane()
+    ppp.is_interactive = True
+    ppp.process = mock.MagicMock()
+    ppp.process.read.return_value = b"done\n>>> "
+    ppp.on_append_text = mock.MagicMock()
+    with mock.patch("mu.interface.panes.QTimer"):
+        ppp.read_from_stdout()
+    text = ppp.toPlainText()
+    assert text.startswith("done\n--- Your program has finished.")
+    assert text.endswith("---\n>>> ")
+    ppp.on_append_text.emit.assert_called_once_with(b">>> ")
