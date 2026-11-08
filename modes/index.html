@@ -1947,9 +1947,10 @@ which may be of value for you to change are:</p>
   environment's variables and third-party packages.</li>
 </ul>
 <p>A mode may also override <code>ensure_workspace_assets(workspace_dir)</code>, which Nu
-calls for every mode at startup to put what it needs into the workspace (Pygame
-Zero creates its <code>images</code>, <code>fonts</code>, <code>sounds</code> and <code>music</code> folders with the
-tutorials' demo files). It must leave anything already there alone.</p>
+calls the first time the mode is used in a session (including the mode Nu
+starts in) to put what it needs into the workspace (Pygame Zero creates its
+<code>images</code>, <code>fonts</code>, <code>sounds</code> and <code>music</code> folders with the tutorials' demo files).
+It must leave anything already there alone.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>When creating strings that will be seen by users please remember to use

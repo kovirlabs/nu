@@ -2631,7 +2631,7 @@ Set the class attributes and override the methods you need:</p>
 </tr>
 <tr>
 <td><code>ensure_workspace_assets(workspace_dir)</code></td>
-<td>Called for every mode each time Nu starts, once the workspace exists. Put what the mode needs there (Pygame Zero makes its <code>images</code>, <code>fonts</code>, <code>sounds</code> and <code>music</code> folders and copies in demo files). Leave anything already there alone. Errors are reported like any other plugin error and don't stop Nu starting.</td>
+<td>Called the first time the mode is used each time Nu runs (including the mode Nu starts in), once the workspace exists; a mode the learner doesn't use leaves the workspace alone. Put what the mode needs there (Pygame Zero makes its <code>images</code>, <code>fonts</code>, <code>sounds</code> and <code>music</code> folders and copies in demo files). Leave anything already there alone. Errors are reported like any other plugin error and don't stop Nu starting.</td>
 </tr>
 </tbody>
 </table>
