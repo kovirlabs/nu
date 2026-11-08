@@ -22,7 +22,7 @@ import logging
 import os
 import webbrowser
 
-from PyQt6.QtCore import QSize, QTimer, Qt
+from PyQt6.QtCore import QObject, QSize, QThread, QTimer, Qt, pyqtSignal
 from PyQt6.QtGui import QTextCursor, QTextOption
 from PyQt6.QtWidgets import (
     QApplication,
@@ -44,11 +44,14 @@ from PyQt6.QtWidgets import (
     QTreeWidget,
     QTreeWidgetItem,
     QAbstractItemView,
+    QInputDialog,
+    QMessageBox,
+    QToolButton,
 )
 from mu.resources import load_icon
 from .themes import Font
 from ..command_log import CommandLog
-from ..virtual_environment import venv
+from ..virtual_environment import VirtualEnvironmentError, activate_command, venv
 
 logger = logging.getLogger(__name__)
 
@@ -355,6 +358,277 @@ class EnvironmentWidget(QWidget):
         )
         self.sections.addTab(self.commands_widget, _("What Nu Ran"))
         widget_layout.addWidget(self.sections, stretch=1)
+        self.environments_section = None
+        if "environments" in environment:
+            self.environments_section = EnvironmentsWidget(self)
+            self.environments_section.setup(environment["environments"])
+            widget_layout.addWidget(self.environments_section)
+
+
+class EnvironmentsWidget(QWidget):
+    """
+    The Environment tab's "Advanced: more environments" section, collapsed
+    until opened: the learner's environments (the default one and any named
+    ones), which one Nu uses, and buttons to use another from the next start
+    or make a new one.
+    """
+
+    def setup(self, environments):
+        """
+        `environments` are the dicts from
+        `VirtualEnvironment.list_environments`.
+        """
+        self.environments = list(environments or [])
+        # The folder of the environment the learner chose with "Use this
+        # one", for the admin dialog's settings; None if they didn't.
+        self.chosen = None
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
+        self.toggle = QToolButton()
+        self.toggle.setText(_("Advanced: more environments"))
+        self.toggle.setCheckable(True)
+        self.toggle.setAutoRaise(True)
+        self.toggle.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.toggle.setArrowType(Qt.ArrowType.RightArrow)
+        self.toggle.toggled.connect(self.expand)
+        layout.addWidget(self.toggle)
+        self.body = QWidget()
+        body_layout = QVBoxLayout()
+        body_layout.setContentsMargins(0, 0, 0, 0)
+        self.body.setLayout(body_layout)
+        intro = QLabel(
+            _(
+                "An environment is a separate set of packages for a project. "
+                "Nu uses one at a time; if you choose another, Nu uses it "
+                "from when you restart Nu."
+            )
+        )
+        intro.setWordWrap(True)
+        body_layout.addWidget(intro)
+        self.tree = QTreeWidget()
+        self.tree.setHeaderLabels([_("Name"), _("Python"), _("Status")])
+        self.tree.setRootIsDecorated(False)
+        self.tree.setUniformRowHeights(True)
+        self.tree.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.tree.setMinimumHeight(110)
+        self.tree.currentItemChanged.connect(self._update_buttons)
+        body_layout.addWidget(self.tree)
+        # What to type to do the same in a terminal.
+        self.command_label = QLabel()
+        self.command_label.setWordWrap(True)
+        self.command_label.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        body_layout.addWidget(self.command_label)
+        buttons = QHBoxLayout()
+        self.use_button = QPushButton(_("Use this one"))
+        self.use_button.clicked.connect(self.use_selected)
+        buttons.addWidget(self.use_button)
+        self.new_button = QPushButton(_("New environment…"))
+        self.new_button.clicked.connect(self.new_environment)
+        buttons.addWidget(self.new_button)
+        buttons.addStretch()
+        body_layout.addLayout(buttons)
+        layout.addWidget(self.body)
+        self.body.setVisible(False)
+        self.fill()
+
+    def expand(self, expanded):
+        """Show or hide the section's contents."""
+        self.toggle.setArrowType(
+            Qt.ArrowType.DownArrow if expanded else Qt.ArrowType.RightArrow
+        )
+        self.body.setVisible(expanded)
+        if expanded:
+            # Make room for it rather than squeezing the facts above.
+            window = self.window()
+            if window is not self and window.layout() is not None:
+                window.layout().activate()
+                needed = window.minimumSizeHint().height()
+                if window.height() < needed:
+                    window.resize(window.width(), needed)
+
+    def _is_next(self, environment):
+        """Whether Nu will use `environment` from the next start."""
+        if self.chosen:
+            return environment["path"] == self.chosen
+        return environment["next_start"]
+
+    def _status(self, environment):
+        """What the Status column says: what's true now and after a restart."""
+        is_next = self._is_next(environment)
+        if environment["in_use"]:
+            return _("In use") if is_next else _("In use until you restart Nu")
+        return _("From the next start") if is_next else ""
+
+    def fill(self, select=None):
+        """
+        List the environments, selecting the one at `select` (a folder), or
+        else the one in use.
+        """
+        self.tree.clear()
+        current = None
+        for environment in self.environments:
+            name = environment["name"]
+            if environment["default"]:
+                name = _("{} (default)").format(name)
+            item = QTreeWidgetItem(
+                [
+                    name,
+                    environment["python_version"] or "?",
+                    self._status(environment),
+                ]
+            )
+            item.setData(0, Qt.ItemDataRole.UserRole, environment)
+            item.setToolTip(0, environment["path"])
+            self.tree.addTopLevelItem(item)
+            if select:
+                if environment["path"] == select:
+                    current = item
+            elif environment["in_use"]:
+                current = item
+        for column in range(self.tree.columnCount()):
+            self.tree.resizeColumnToContents(column)
+        if current is not None:
+            self.tree.setCurrentItem(current)
+        self._update_buttons()
+
+    def _selected(self):
+        """The environment selected in the list, or None."""
+        item = self.tree.currentItem()
+        return item.data(0, Qt.ItemDataRole.UserRole) if item else None
+
+    def _update_buttons(self, *args):
+        """ "Use this one" is for an environment Nu won't already use next."""
+        environment = self._selected()
+        self.use_button.setEnabled(
+            environment is not None and not self._is_next(environment)
+        )
+        if environment is None:
+            self.command_label.setText("")
+            return
+        self.command_label.setText(
+            _("To use “{name}” in a terminal: {command}").format(
+                name=environment["name"], command=activate_command(environment["path"])
+            )
+        )
+
+    def use_selected(self):
+        """
+        Use the selected environment from the next start (once the learner
+        clicks OK; see `AdminDialog.settings`).
+        """
+        environment = self._selected()
+        if environment is None:
+            return
+        self.chosen = environment["path"]
+        self.fill(select=self.chosen)
+
+    def new_environment(self):
+        """
+        Ask for a name, then make the environment (showing what Nu runs) and
+        add it to the list.
+        """
+        title = _("New Environment")
+        name, ok = QInputDialog.getText(
+            self,
+            title,
+            _(
+                "Name of the new environment (letters, digits, - and _), "
+                "e.g. project-a:"
+            ),
+        )
+        if not ok:
+            return
+        name = name.strip()
+        problem = venv.environment_name_problem(name)
+        if problem:
+            QMessageBox.warning(self, title, problem)
+            return
+        dialog = CreateEnvironmentDialog(self)
+        dialog.setup(name)
+        dialog.exec()
+        if dialog.path:
+            self.environments = venv.list_environments()
+            self.fill(select=dialog.path)
+
+
+class CreateEnvironmentWorker(QObject):
+    """Makes a named environment, on a thread of its own (it takes a while)."""
+
+    progress = pyqtSignal(str)
+    # The new environment's folder and "", or "" and why it failed.
+    finished = pyqtSignal(str, str)
+
+    def __init__(self, name):
+        super().__init__()
+        self.name = name
+
+    def run(self):
+        try:
+            path = venv.create_environment(self.name, progress=self.progress.emit)
+        except VirtualEnvironmentError as exc:
+            self.finished.emit("", exc.message)
+        else:
+            self.finished.emit(path, "")
+
+
+class CreateEnvironmentDialog(QDialog):
+    """
+    Shows a new environment being made: the commands Nu runs (first the
+    ``uv venv`` one) and each step, then whether it worked.
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.path = None
+        self.done = False
+
+    def setup(self, name):
+        self.setMinimumSize(600, 400)
+        self.setWindowTitle(_("New Environment"))
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+        self.text_area = QPlainTextEdit()
+        self.text_area.setReadOnly(True)
+        self.text_area.setWordWrapMode(
+            QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere
+        )
+        self.text_area.setFont(code_font())
+        layout.addWidget(self.text_area)
+        self.button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
+        self.button_box.accepted.connect(self.accept)
+        layout.addWidget(self.button_box)
+        self.text_area.appendPlainText(
+            _("Making the environment “{}”. This can take a minute…").format(name)
+        )
+        self.thread = QThread(self)
+        self.worker = CreateEnvironmentWorker(name)
+        self.worker.moveToThread(self.thread)
+        self.thread.started.connect(self.worker.run)
+        self.worker.progress.connect(self.text_area.appendPlainText)
+        self.worker.finished.connect(self.finish)
+        self.thread.start()
+
+    def finish(self, path, problem):
+        """Say how it went and let the learner close the dialog."""
+        self.thread.quit()
+        self.thread.wait()
+        self.done = True
+        self.text_area.appendPlainText("")
+        if path:
+            self.path = path
+            self.text_area.appendPlainText(_("FINISHED"))
+        else:
+            self.text_area.appendPlainText(problem)
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
+
+    def reject(self):
+        """Don't close (Escape, the window's close button) until it's done."""
+        if self.done:
+            super().reject()
 
 
 class PluginsWidget(QWidget):
@@ -790,6 +1064,9 @@ class AdminDialog(QDialog):
         settings["locale"] = self.locale_widget.get_locale()
         if self.plugins_tab:
             settings["plugins"] = self.plugins_tab.enabled_plugins()
+        section = self.environment_tab and self.environment_tab.environments_section
+        if section and section.chosen:
+            settings["environment"] = section.chosen
         return settings
 
 

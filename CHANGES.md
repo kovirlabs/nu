@@ -42,6 +42,11 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   you'd type it, with whether it worked. It's on the Environment tab, or a
   tab of its own in modes without that environment (boards). When you add or
   remove packages, the progress window shows the real command too.
+* **More than one environment (advanced).** A collapsed **Advanced: more
+  environments** section on the Environment tab lists your environments and
+  lets you make a new one (a separate set of packages for a project, made the
+  same way as the first, showing the `uv venv` command as it runs) and choose
+  which one Nu uses from the next start. Beginners never need to open it.
 * **Programs can list the packages they need.** If a program starts with a
   `# /// script` block ([PEP 723](https://peps.python.org/pep-0723/)) such as
   `# dependencies = ["cowsay"]`, **Run** runs it with `uv run`, which fetches

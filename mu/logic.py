@@ -1360,6 +1360,8 @@ class Editor(QObject):
             # The environment's facts and the commands Nu ran (listing the
             # packages just above being the latest), for the Environment tab.
             environment = venv.describe()
+            # Every environment, for the tab's (collapsed) Advanced section.
+            environment["environments"] = venv.list_environments()
         else:
             # A board's mode has no Environment tab, so don't ask uv for the
             # packages: just show what Nu ran.
@@ -1399,6 +1401,10 @@ class Editor(QObject):
                 self.user_locale = new_settings["locale"]
             if "plugins" in new_settings:
                 self.switch_plugins(plugins["plugins"], new_settings["plugins"])
+            if new_settings.get("environment"):
+                self.switch_environment(
+                    environment.get("environments", []), new_settings["environment"]
+                )
             # Ensure mode UI is updated given settings.
             self.modes[self.mode].ensure_state()
         else:
@@ -1426,6 +1432,29 @@ class Editor(QObject):
             self.show_status_message(
                 _("Plugin changes take effect when you restart Nu."), 10
             )
+
+    def switch_environment(self, environments, path):
+        """
+        Use the environment at `path` (chosen on the Environment tab) from
+        the next start, unless it's already the one for the next start.
+        `environments` are what the tab showed (from
+        `VirtualEnvironment.list_environments`). Say what happens, or why
+        Nu can't use it.
+        """
+        chosen = [env for env in environments if env["path"] == path]
+        if chosen and chosen[0]["next_start"]:
+            return
+        name = chosen[0]["name"] if chosen else os.path.basename(path)
+        problem = venv.switch_environment(path)
+        if problem:
+            self._view.show_message(
+                _("Nu can't switch to the environment “{}”.").format(name), problem
+            )
+            return
+        self.show_status_message(
+            _("Nu will use the environment “{}” when you restart it.").format(name),
+            10,
+        )
 
     def sync_package_state(self, old_packages, new_packages):
         """

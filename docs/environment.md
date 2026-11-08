@@ -159,6 +159,56 @@ If your terminal says `uv` isn't found, either
 type the full path shown as **Nu's uv** on the Environment tab instead of
 `uv` (Nu's installers come with their own copy, which isn't on your `PATH`).
 
+## More than one environment (advanced)
+
+Most people only ever need the one environment Nu makes. But if you work on
+more than one project, you might want a **separate set of packages for each
+project**, so that what you add for one doesn't affect the others. That's what
+extra environments are for.
+
+At the bottom of the Environment tab, click **Advanced: more environments**
+(it's closed until you open it). It lists your environments: their name, their
+Python, and which one Nu uses. The one Nu made for you is marked
+**(default)**.
+
+- **New environment…** asks for a name (letters, digits, `-` and `_`, e.g.
+  `project-a`) and makes the environment the same way Nu made the first one,
+  with the same Python and the packages Nu needs. It shows each command as it
+  runs, starting with `uv venv`, and takes a minute or so. The commands are in
+  **What Nu Ran** too.
+- **Use this one** chooses the selected environment. Click **OK**, and Nu uses
+  it **from when you restart Nu** (the status bar says so); until then it
+  keeps the one it has. After the restart the status bar shows the new name
+  (`Environment: project-a · Python 3.11`), and the Packages tab lists that
+  environment's packages. To go back, choose the default one the same way.
+
+Nu keeps the extra environments in a folder called `envs` next to the default
+one, one folder each, named after the environment:
+
+| System | Where they are |
+|---|---|
+| Windows | `%LOCALAPPDATA%\python\mu\envs\<name>` |
+| macOS | `~/Library/Application Support/mu/envs/<name>` |
+| Linux | `~/.local/share/mu/envs/<name>` |
+
+Making one is the same as typing this in a terminal (on Linux; the Advanced
+section shows the real command, and Nu then adds the packages it needs):
+
+```bash
+uv venv --python 3.11 --seed ~/.local/share/mu/envs/project-a
+uv pip install --python ~/.local/share/mu/envs/project-a/bin/python ipykernel
+```
+
+An environment you make yourself in the `envs` folder shows up in the list
+too. Nu only switches to it if it can use it: it needs the same Python version
+as Nu and the packages Nu needs to run your programs (the REPL's `ipykernel`,
+and Pygame Zero's packages); if not, Nu tells you what's missing and keeps the
+environment it has. Using one from a terminal works as above: the Advanced
+section shows the command to activate the selected one.
+
+Nu can't delete an environment yet. To remove one, switch to another, restart
+Nu, then delete its folder.
+
 ## Troubleshooting
 
 When `uv run` goes wrong, Nu puts a line starting with `Hint:` just above

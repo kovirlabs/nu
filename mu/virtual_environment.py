@@ -86,6 +86,101 @@ def is_within(path, folder):
         return False
 
 
+#: A named environment's name: a plain folder name (see
+#: `VirtualEnvironment.environment_name_problem`).
+ENVIRONMENT_NAME_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+ENVIRONMENT_NAME_MAX_LENGTH = 40
+#: Names Windows keeps for devices: they can't be folder names there.
+WINDOWS_RESERVED_NAMES = {"con", "prn", "aux", "nul"} | {
+    "%s%d" % (device, n) for device in ("com", "lpt") for n in range(1, 10)
+}
+
+
+def same_path(path, other):
+    """Whether two paths name the same file or folder (as written)."""
+    return os.path.normcase(os.path.abspath(path)) == os.path.normcase(
+        os.path.abspath(other)
+    )
+
+
+def is_named_environment(path):
+    """
+    Whether `path` is one of the learner's named environments: a folder
+    directly in ``config.ENVS_DIR`` (the default one lives elsewhere).
+    """
+    return same_path(os.path.dirname(os.path.abspath(path)), config.ENVS_DIR)
+
+
+def environment_interpreter(path, windows=None):
+    """Where the Python of the environment at `path` is (or would be)."""
+    if windows is None:
+        windows = sys.platform == "win32"
+    if windows:
+        return os.path.join(path, "scripts", "python.exe")
+    return os.path.join(path, "bin", "python")
+
+
+def directory_is_venv(path, interpreter=None):
+    """
+    Whether the folder at `path` looks like a Python environment.
+
+    There appears to be no canonical way to tell. Often the presence of a
+    pyvenv.cfg file is enough, but this isn't always there. Specifically, on
+    debian it's not when created by virtualenv. So we fall back to finding an
+    executable python command where we expect (`interpreter`).
+
+    On windows os.access X_OK is close to meaningless, but it will succeed
+    for executable files (and everything else). On Posix it does distinguish
+    executable files.
+    """
+    if os.path.isfile(os.path.join(path, "pyvenv.cfg")):
+        return True
+    if interpreter is None:
+        interpreter = environment_interpreter(path)
+    return os.access(interpreter, os.X_OK)
+
+
+def pyvenv_version(path):
+    """
+    The Python version (e.g. ``"3.11.15"``) of the environment at `path` as
+    recorded in its ``pyvenv.cfg`` (``version_info`` from uv, ``version``
+    from the standard library's venv), or None if unknown.
+    """
+    try:
+        with open(os.path.join(path, "pyvenv.cfg"), encoding="utf-8") as cfg:
+            lines = cfg.read().splitlines()
+    except OSError:
+        return None
+    for line in lines:
+        key, _sep, value = line.partition("=")
+        if key.strip() in ("version_info", "version") and value.strip():
+            return value.strip()
+    return None
+
+
+def activate_command(path, windows=None):
+    """
+    The command to activate the environment at `path` in a terminal, quoted
+    for this OS (or Windows', if `windows`): running ``Scripts\\activate``
+    works in both cmd and PowerShell; elsewhere it's ``source bin/activate``.
+    """
+    if windows is None:
+        windows = sys.platform == "win32"
+    if windows:
+        return quote_command([os.path.join(path, "scripts", "activate")], windows)
+    return quote_command(["source", os.path.join(path, "bin", "activate")], windows)
+
+
+def environment_display_name(folder):
+    """
+    A short, stable name for the environment in `folder` (a folder name):
+    without the Python version and creation timestamp that
+    `VirtualEnvironment._generate_dirpath` adds (``mu_venv-311-20261108-030353``
+    → ``mu_venv``), so it doesn't change when Nu re-creates the env.
+    """
+    return re.sub(r"-\d+-\d{8}-\d{6}$", "", folder)
+
+
 def compact(text):
     """Remove double line spaces and anything else which might help"""
     compacted = "\n".join(line for line in text.splitlines() if line.strip())
@@ -709,15 +804,25 @@ class VirtualEnvironment(object):
 
     Slots = Process.Slots
 
-    def __init__(self, dirpath=None):
+    def __init__(self, dirpath=None, persist=True):
+        """
+        The environment at `dirpath`, or else the one venv.json names, or
+        else a new default one. With `persist` False (an environment Nu is
+        making or checking, not the one it uses) venv.json is neither read
+        nor written.
+        """
         self.process = Process()
+        # Called with a line of text for the learner at each step of making
+        # the environment (see `create_environment`), if set.
+        self.progress = None
         # The uv process installing/removing user packages (see
         # install_user_packages), referenced so it isn't destroyed mid-run.
         self.user_package_process = None
         self._is_windows = sys.platform == "win32"
         self._bin_extension = ".exe" if self._is_windows else ""
         self.settings = settings.VirtualEnvironmentSettings()
-        self.settings.init()
+        if persist:
+            self.settings.init()
         dirpath_to_use = (
             dirpath or self.settings.get("dirpath") or self._generate_dirpath()
         )
@@ -792,6 +897,10 @@ class VirtualEnvironment(object):
         self.reset_pip()
         logger.debug("Virtual environment set up %s at %s", self.name, self.path)
         self.settings["dirpath"] = self.path
+        if not is_named_environment(self.path):
+            # Remembered so the learner can come back to it after using a
+            # named environment.
+            self.settings["default_dirpath"] = self.path
 
     @property
     def display_name(self):
@@ -801,7 +910,7 @@ class VirtualEnvironment(object):
         `_generate_dirpath` adds (``mu_venv-311-20261108-030353`` →
         ``mu_venv``), so it doesn't change when Nu re-creates the env.
         """
-        return re.sub(r"-\d+-\d{8}-\d{6}$", "", self.name)
+        return environment_display_name(self.name)
 
     def python_version(self):
         """
@@ -810,16 +919,7 @@ class VirtualEnvironment(object):
         standard library's venv), or None if unknown. Reads a file rather
         than running the interpreter, so it's cheap enough for the UI.
         """
-        try:
-            with open(os.path.join(self.path, "pyvenv.cfg"), encoding="utf-8") as cfg:
-                lines = cfg.read().splitlines()
-        except OSError:
-            return None
-        for line in lines:
-            key, _sep, value = line.partition("=")
-            if key.strip() in ("version_info", "version") and value.strip():
-                return value.strip()
-        return None
+        return pyvenv_version(self.path)
 
     def describe(self):
         """
@@ -835,12 +935,7 @@ class VirtualEnvironment(object):
             uv_path = find_uv()
         except UvNotFound:
             uv_path = None
-        activate_script = os.path.join(self._bin_directory, "activate")
-        if self._is_windows:
-            # Running Scripts\activate works in both cmd and PowerShell.
-            activate = quote_command([activate_script])
-        else:
-            activate = quote_command(["source", activate_script])
+        activate = activate_command(self.path, self._is_windows)
         python = ["--python", self.interpreter]
         return {
             "name": self.display_name,
@@ -900,25 +995,190 @@ class VirtualEnvironment(object):
 
     def _directory_is_venv(self):
         """
-        Determine whether a directory appears to be an existing venv
-
-        There appears to be no canonical way to achieve this. Often the
-        presence of a pyvenv.cfg file is enough, but this isn't always there.
-        Specifically, on debian it's not when created by virtualenv. So we
-        fall back to finding an executable python command where we expect
+        Determine whether a directory appears to be an existing venv (see
+        `directory_is_venv`).
         """
-        if os.path.isfile(os.path.join(self.path, "pyvenv.cfg")):
-            return True
+        return directory_is_venv(self.path, self.interpreter)
 
-        #
-        # On windows os.access X_OK is close to meaningless, but it will
-        # succeed for executable files (and everything else). On Posix it
-        # does distinguish executable files
-        #
-        if os.access(self.interpreter, os.X_OK):
-            return True
+    def _report(self, text):
+        """Tell the learner `text` while making an environment, if asked."""
+        if self.progress:
+            self.progress(text)
 
-        return False
+    def _replacement_dirpath(self):
+        """
+        Where to make a replacement for this environment once it's been moved
+        out of the way (see `recreate` and `ensure_and_create`): a named
+        environment is rebuilt in its own folder, so it keeps its name; the
+        default one gets a new, timestamped folder.
+        """
+        if is_named_environment(self.path):
+            return self.path
+        return self._generate_dirpath()
+
+    def default_dirpath(self):
+        """
+        The folder of the default environment (the one Nu makes by itself),
+        even while a named one is in use; None if there's none yet.
+        """
+        path = self.settings.get("default_dirpath")
+        if path:
+            return path
+        if not is_named_environment(self.path):
+            return self.path
+        # venv.json predates the key: the newest default-style folder.
+        folders = [
+            folder
+            for folder in glob.glob(glob.escape(config.VENV_DIR) + "-*")
+            if os.path.isdir(folder) and "." not in os.path.basename(folder)
+        ]
+        return max(folders) if folders else None
+
+    def named_environment_paths(self):
+        """
+        The folders of the learner's named environments: every folder in
+        ``config.ENVS_DIR`` with a valid name that looks like a Python
+        environment (so one made there by hand with ``uv venv`` counts, and
+        a moved-aside ``name.FAILED`` doesn't), by name.
+        """
+        try:
+            entries = os.listdir(config.ENVS_DIR)
+        except OSError:
+            return []
+        paths = []
+        for entry in sorted(entries, key=str.casefold):
+            path = os.path.join(config.ENVS_DIR, entry)
+            if (
+                ENVIRONMENT_NAME_RE.match(entry)
+                and os.path.isdir(path)
+                and directory_is_venv(path, environment_interpreter(path))
+            ):
+                paths.append(path)
+        return paths
+
+    def list_environments(self):
+        """
+        Every environment the learner can choose between, as GUI-free dicts:
+        the default one first, then the named ones. Each has its ``name``,
+        ``path``, ``python_version`` (from ``pyvenv.cfg``), whether it's the
+        ``default``, whether it's ``in_use`` (this session's) and whether
+        it's the one for the ``next_start`` (venv.json's ``dirpath``).
+        """
+        next_start = self.settings.get("dirpath") or self.path
+        candidates = [(path, False) for path in self.named_environment_paths()]
+        default = self.default_dirpath()
+        if default:
+            candidates.insert(0, (default, True))
+        environments = []
+        for path, is_default in candidates:
+            environments.append(
+                {
+                    "name": environment_display_name(os.path.basename(path)),
+                    "path": path,
+                    "python_version": pyvenv_version(path),
+                    "default": is_default,
+                    "in_use": same_path(path, self.path),
+                    "next_start": same_path(path, next_start),
+                }
+            )
+        return environments
+
+    def environment_name_problem(self, name):
+        """
+        What's wrong with `name` for a new named environment, in plain words,
+        or None if it's fine: a plain folder name (letters, digits, ``-`` and
+        ``_``) that isn't empty, too long or a Windows device name, and isn't
+        taken, ignoring case (on every system, so the environments still work
+        when copied to one that ignores case).
+        """
+        if not name:
+            return _("Please give the environment a name.")
+        if not ENVIRONMENT_NAME_RE.match(name):
+            return _(
+                "Please use only letters, digits, - and _ in the name, e.g. project-a."
+            )
+        if len(name) > ENVIRONMENT_NAME_MAX_LENGTH:
+            return _("Please use a shorter name ({} characters at most).").format(
+                ENVIRONMENT_NAME_MAX_LENGTH
+            )
+        if name.casefold() in WINDOWS_RESERVED_NAMES:
+            return _("“{}” can't be a folder's name on Windows.").format(name)
+        taken = {env["name"].casefold() for env in self.list_environments()}
+        try:
+            taken |= {entry.casefold() for entry in os.listdir(config.ENVS_DIR)}
+        except OSError:
+            pass
+        if name.casefold() in taken:
+            return _("There's already an environment called “{}”.").format(name)
+        return None
+
+    def create_environment(self, name, progress=None):
+        """
+        Make a new named environment, `name`, in ``config.ENVS_DIR`` the same
+        way Nu makes the default one (see `create`): the same Python, pip,
+        the baseline packages (Nu's and the plugins') and the REPL's kernel,
+        then check it as Nu does at start. `progress` is called with a line
+        for the learner at each step (first the ``uv venv`` command). Doesn't
+        switch to it. Return its folder.
+
+        Raise VirtualEnvironmentCreateError, with a plain message, if the
+        name won't do or making it fails; then the half-made folder is
+        removed (it has nothing of the learner's in it yet).
+        """
+        problem = self.environment_name_problem(name)
+        if problem:
+            raise VirtualEnvironmentCreateError(problem)
+        path = os.path.join(config.ENVS_DIR, name)
+        logger.info("Creating the environment %s at %s", name, path)
+        try:
+            os.makedirs(config.ENVS_DIR, exist_ok=True)
+            environment = VirtualEnvironment(path, persist=False)
+            environment.progress = progress
+            environment.create()
+            environment.ensure()
+        except Exception as exc:
+            logger.exception("Unable to create the environment at %s", path)
+            if os.path.isdir(path):
+                shutil.rmtree(path, ignore_errors=True)
+                logger.info("Removed the half-made environment at %s", path)
+            reason = getattr(exc, "message", None) or str(exc)
+            raise VirtualEnvironmentCreateError(
+                _("Nu couldn't make the environment “{name}”.\n{reason}").format(
+                    name=name, reason=reason
+                )
+            ) from exc
+        logger.info("Created the environment %s at %s", name, path)
+        return path
+
+    def check_environment(self, path):
+        """
+        Whether Nu can use the environment at `path`, by the checks it makes
+        at start (see `ensure`: its Python, the same version as Nu's, pip and
+        the packages Nu needs): None if so, otherwise why not, in plain words.
+        """
+        if not os.path.isdir(path) or not directory_is_venv(path):
+            return _("“{}” isn't a Python environment.").format(path)
+        try:
+            VirtualEnvironment(path, persist=False).ensure()
+        except VirtualEnvironmentError as exc:
+            return _("Nu can't use it: {}").format(exc.message)
+        return None
+
+    def switch_environment(self, path):
+        """
+        Use the environment at `path` from the next start (as with plugins,
+        the running Nu keeps the one it has): check it (see
+        `check_environment`) and save it as venv.json's ``dirpath``. Return
+        None if that worked, otherwise why not, in plain words.
+        """
+        problem = self.check_environment(path)
+        if problem:
+            logger.warning("Not switching to %s: %s", path, problem)
+            return problem
+        logger.info("Using the environment at %s from the next start", path)
+        self.settings["dirpath"] = path
+        self.settings.save()
+        return None
 
     def quarantine_venv(self, reason="FAILED"):
         """Rename an existing virtual environment folder out of the way to make
@@ -928,6 +1188,9 @@ class VirtualEnvironment(object):
         will not be used and will simply be a little distracting
         """
         error_dirpath = self.path + "." + reason
+        if os.path.exists(error_dirpath):
+            # Moved aside before (a named environment keeps its folder).
+            error_dirpath += time.strftime("-%Y%m%d-%H%M%S")
         try:
             os.rename(self.path, error_dirpath)
         except OSError:
@@ -958,7 +1221,7 @@ class VirtualEnvironment(object):
         # Create a new venv which will then become the current one.
         # Install the (possibly updated) baseline packages
         #
-        self.relocate(self._generate_dirpath())
+        self.relocate(self._replacement_dirpath())
         self.create()
 
         #
@@ -1038,7 +1301,7 @@ class VirtualEnvironment(object):
                 logger.error(exc.message)
                 self.quarantine_venv()
                 if n < n_tries:
-                    self.relocate(self._generate_dirpath())
+                    self.relocate(self._replacement_dirpath())
                     try_to_create = True
                     if isinstance(exc, VirtualEnvironmentTimeoutError):
                         self.pip.timeout = exc.timeout * 2
@@ -1185,8 +1448,10 @@ class VirtualEnvironment(object):
         before re-raising the error.
         """
         self.create_venv()
+        self._report(_("Adding Nu's packages…"))
         self.install_baseline_packages()
         self.register_baseline_packages()
+        self._report(_("Setting up the REPL for it…"))
         self.install_jupyter_kernel()
         self.settings["mu_version"] = mu_version
 
@@ -1255,6 +1520,9 @@ class VirtualEnvironment(object):
             return []
         current = os.path.basename(archive)[: -len(".tar.gz")]
         in_use = self._pyvenv_paths()
+        # Named environments made by Nu are based on a bundled Python too.
+        for path in self.named_environment_paths():
+            in_use += self._pyvenv_paths(path)
         removed = []
         for name in sorted(os.listdir(root)):
             path = os.path.join(root, name)
@@ -1272,13 +1540,15 @@ class VirtualEnvironment(object):
             removed.append(path)
         return removed
 
-    def _pyvenv_paths(self):
+    def _pyvenv_paths(self, path=None):
         """
-        The values in the environment's ``pyvenv.cfg`` (``home``, and any
-        other paths a tool wrote there), or an empty list if it can't be read.
+        The values in the ``pyvenv.cfg`` of the environment (this one, or the
+        one at `path`): ``home``, and any other paths a tool wrote there; an
+        empty list if it can't be read.
         """
+        path = path or self.path
         try:
-            with open(os.path.join(self.path, "pyvenv.cfg"), encoding="utf-8") as cfg:
+            with open(os.path.join(path, "pyvenv.cfg"), encoding="utf-8") as cfg:
                 lines = cfg.read().splitlines()
         except OSError:
             return []
@@ -1323,6 +1593,8 @@ class VirtualEnvironment(object):
                 seed_args += ["--no-index", "--find-links", wheels.PYTHON_DIRPATH]
         else:
             python = "%d.%d" % sys.version_info[:2]
+        command = ["uv", "venv", "--python", python, *seed_args, self.path]
+        self._report("$ " + quote_command(command))
         ok, output = Uv(uv_executable).run_subprocess(
             "venv",
             "--python",
@@ -1330,6 +1602,8 @@ class VirtualEnvironment(object):
             *seed_args,
             self.path,
         )
+        if output.strip():
+            self._report(output.strip())
         if ok:
             logger.info(
                 "Created virtual environment for Python %s at %s",
@@ -1403,6 +1677,7 @@ class VirtualEnvironment(object):
                 logger.info(
                     "About to install from wheel: {}".format(os.path.basename(wheel))
                 )
+                self._report(_("Installing {}").format(os.path.basename(wheel)))
                 self.pip.install(wheel, deps=False, index=False)
 
     def install_baseline_packages(self):

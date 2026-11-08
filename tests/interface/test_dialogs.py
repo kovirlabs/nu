@@ -1182,3 +1182,272 @@ def test_PluginsWidget_switched_off_after_errors_this_session():
     # Ticking it again keeps it on: no warning any more.
     item.setCheckState(widget.ON, Qt.CheckState.Checked)
     assert "kept having errors" not in widget.summary.text()
+
+
+#
+# The Environment tab's Advanced section (Phase 4b part 2): more than one
+# environment, hidden until opened.
+#
+DEFAULT_ENV = {
+    "name": "mu_venv",
+    "path": "/data/mu/mu_venv-311-20261108-030353",
+    "python_version": "3.11.15",
+    "default": True,
+    "in_use": True,
+    "next_start": True,
+}
+PROJECT_ENV = {
+    "name": "project-a",
+    "path": "/data/mu/envs/project-a",
+    "python_version": None,
+    "default": False,
+    "in_use": False,
+    "next_start": False,
+}
+
+
+@pytest.fixture
+def environments_widget():
+    parent = QWidget()
+    widget = mu.interface.dialogs.EnvironmentsWidget(parent)
+    widget.setup([dict(DEFAULT_ENV), dict(PROJECT_ENV)])
+    yield widget
+    parent.deleteLater()
+
+
+def _rows(widget):
+    return [
+        [widget.tree.topLevelItem(i).text(c) for c in range(3)]
+        for i in range(widget.tree.topLevelItemCount())
+    ]
+
+
+def test_EnvironmentsWidget_collapsed_by_default(environments_widget):
+    widget = environments_widget
+    assert widget.toggle.text() == "Advanced: more environments"
+    assert not widget.toggle.isChecked()
+    assert widget.body.isHidden()
+    assert widget.toggle.arrowType() == Qt.ArrowType.RightArrow
+    widget.toggle.click()
+    assert not widget.body.isHidden()
+    assert widget.toggle.arrowType() == Qt.ArrowType.DownArrow
+    widget.toggle.click()
+    assert widget.body.isHidden()
+
+
+def test_EnvironmentsWidget_lists_them(environments_widget):
+    widget = environments_widget
+    assert _rows(widget) == [
+        ["mu_venv (default)", "3.11.15", "In use"],
+        ["project-a", "?", ""],
+    ]
+    assert widget.tree.topLevelItem(1).toolTip(0) == PROJECT_ENV["path"]
+    # The one in use is selected, and already the one for the next start.
+    assert widget.tree.currentItem() is widget.tree.topLevelItem(0)
+    assert not widget.use_button.isEnabled()
+    assert "To use “mu_venv” in a terminal: " in widget.command_label.text()
+
+
+def test_EnvironmentsWidget_use_this_one(environments_widget):
+    """Choosing another says what changes at the restart, and the admin
+    dialog reports it."""
+    widget = environments_widget
+    widget.tree.setCurrentItem(widget.tree.topLevelItem(1))
+    assert widget.use_button.isEnabled()
+    assert widget.command_label.text().startswith("To use “project-a” in a terminal:")
+    assert PROJECT_ENV["path"] in widget.command_label.text()
+    widget.use_button.click()
+    assert widget.chosen == PROJECT_ENV["path"]
+    assert _rows(widget) == [
+        ["mu_venv (default)", "3.11.15", "In use until you restart Nu"],
+        ["project-a", "?", "From the next start"],
+    ]
+    assert widget.tree.currentItem() is widget.tree.topLevelItem(1)
+    assert not widget.use_button.isEnabled()
+
+
+def test_EnvironmentsWidget_nothing_selected():
+    widget = mu.interface.dialogs.EnvironmentsWidget()
+    widget.setup([])
+    assert not widget.use_button.isEnabled()
+    assert widget.command_label.text() == ""
+    widget.use_selected()
+    assert widget.chosen is None
+
+
+def test_EnvironmentsWidget_new_environment_cancelled(environments_widget):
+    with (
+        mock.patch.object(
+            mu.interface.dialogs.QInputDialog, "getText", return_value=("x", False)
+        ),
+        mock.patch.object(mu.interface.dialogs, "CreateEnvironmentDialog") as dialog,
+    ):
+        environments_widget.new_button.click()
+    dialog.assert_not_called()
+
+
+def test_EnvironmentsWidget_new_environment_bad_name(environments_widget):
+    """A name that won't do: the learner's told why, nothing is made."""
+    with (
+        mock.patch.object(
+            mu.interface.dialogs.QInputDialog,
+            "getText",
+            return_value=(" my project ", True),
+        ),
+        mock.patch.object(
+            mu.interface.dialogs.venv,
+            "environment_name_problem",
+            return_value="Please use only letters…",
+        ) as problem,
+        mock.patch.object(mu.interface.dialogs.QMessageBox, "warning") as warning,
+        mock.patch.object(mu.interface.dialogs, "CreateEnvironmentDialog") as dialog,
+    ):
+        environments_widget.new_environment()
+    problem.assert_called_once_with("my project")
+    assert warning.call_args.args[1:] == ("New Environment", "Please use only letters…")
+    dialog.assert_not_called()
+
+
+@pytest.mark.parametrize("made", [True, False])
+def test_EnvironmentsWidget_new_environment(environments_widget, made):
+    """Made: the list is refreshed with it selected. Failed: unchanged."""
+    widget = environments_widget
+    new_env = dict(PROJECT_ENV, name="project-b", path="/data/mu/envs/project-b")
+    dialog = mock.MagicMock()
+    dialog.return_value.path = new_env["path"] if made else None
+    with (
+        mock.patch.object(
+            mu.interface.dialogs.QInputDialog,
+            "getText",
+            return_value=("project-b", True),
+        ),
+        mock.patch.object(
+            mu.interface.dialogs.venv, "environment_name_problem", return_value=None
+        ),
+        mock.patch.object(
+            mu.interface.dialogs.venv,
+            "list_environments",
+            return_value=[DEFAULT_ENV, PROJECT_ENV, new_env],
+        ),
+        mock.patch.object(mu.interface.dialogs, "CreateEnvironmentDialog", dialog),
+    ):
+        widget.new_environment()
+    dialog.return_value.setup.assert_called_once_with("project-b")
+    dialog.return_value.exec.assert_called_once_with()
+    if made:
+        assert _rows(widget)[2] == ["project-b", "?", ""]
+        assert widget.tree.currentItem() is widget.tree.topLevelItem(2)
+    else:
+        assert len(_rows(widget)) == 2
+
+
+@pytest.mark.parametrize(
+    "result, signal",
+    [
+        ("/data/mu/envs/project-a", ("/data/mu/envs/project-a", "")),
+        (
+            virtual_environment.VirtualEnvironmentCreateError("Nu couldn't…"),
+            ("", "Nu couldn't…"),
+        ),
+    ],
+)
+def test_CreateEnvironmentWorker(result, signal):
+    worker = mu.interface.dialogs.CreateEnvironmentWorker("project-a")
+    finished, progress = [], []
+    worker.finished.connect(lambda *args: finished.append(args))
+    worker.progress.connect(progress.append)
+
+    def create(name, progress=None):
+        progress("$ uv venv …")
+        if isinstance(result, Exception):
+            raise result
+        return result
+
+    with mock.patch.object(
+        mu.interface.dialogs.venv, "create_environment", side_effect=create
+    ):
+        worker.run()
+    assert progress == ["$ uv venv …"]
+    assert finished == [signal]
+
+
+@pytest.mark.parametrize(
+    "path, problem, last_line",
+    [
+        ("/data/mu/envs/project-a", "", "FINISHED"),
+        ("", "Nu couldn't make the environment “project-a”.", "Nu couldn't"),
+    ],
+)
+def test_CreateEnvironmentDialog(path, problem, last_line):
+    """The command and each step show as they happen; OK once it's done,
+    and the dialog can't be closed before."""
+    QThread = mu.interface.dialogs.QThread
+    with mock.patch.object(QThread, "start") as start:
+        dialog = mu.interface.dialogs.CreateEnvironmentDialog()
+        dialog.setup("project-a")
+    start.assert_called_once_with()
+    ok = dialog.button_box.button(QDialogButtonBox.StandardButton.Ok)
+    assert not ok.isEnabled()
+    assert "Making the environment “project-a”" in dialog.text_area.toPlainText()
+    dialog.worker.progress.emit("$ uv venv --python 3.11 --seed /envs/project-a")
+    assert dialog.text_area.toPlainText().splitlines()[-1].startswith("$ uv venv")
+    with (
+        mock.patch.object(QDialog, "reject") as reject,
+        mock.patch.object(QThread, "quit") as quit,
+    ):
+        dialog.reject()
+        reject.assert_not_called()
+        dialog.worker.finished.emit(path, problem)
+        dialog.reject()
+        reject.assert_called_once_with()
+    quit.assert_called_once_with()
+    assert ok.isEnabled()
+    assert dialog.path == (path or None)
+    assert dialog.text_area.toPlainText().splitlines()[-1].startswith(last_line)
+
+
+def test_EnvironmentWidget_has_the_advanced_section():
+    parent = QWidget()
+    widget = mu.interface.dialogs.EnvironmentWidget(parent)
+    widget.setup(dict(ENVIRONMENT, environments=[DEFAULT_ENV]), "", "")
+    section = widget.environments_section
+    assert section.environments == [DEFAULT_ENV]
+    assert section.body.isHidden()
+
+
+def test_EnvironmentWidget_without_environments(environment_widget):
+    assert environment_widget.environments_section is None
+
+
+def test_AdminDialog_reports_the_chosen_environment():
+    parent = QWidget()
+    ad = mu.interface.dialogs.AdminDialog(parent)
+    settings = {"envars": "", "locale": ""}
+    environment = dict(ENVIRONMENT, environments=[DEFAULT_ENV, PROJECT_ENV])
+    ad.setup("log", settings, "", _python_mode(), None, environment=environment)
+    section = ad.environment_tab.environments_section
+    assert "environment" not in ad.settings()
+    section.tree.setCurrentItem(section.tree.topLevelItem(1))
+    section.use_selected()
+    assert ad.settings()["environment"] == PROJECT_ENV["path"]
+
+
+def test_EnvironmentsWidget_expanding_makes_room():
+    """Opened inside the admin dialog, the dialog grows to fit it rather
+    than squeezing the environment's facts."""
+    parent = QWidget()
+    ad = mu.interface.dialogs.AdminDialog(parent)
+    environment = dict(ENVIRONMENT, environments=[DEFAULT_ENV, PROJECT_ENV])
+    ad.setup(
+        "log",
+        {"envars": "", "locale": ""},
+        "",
+        _python_mode(),
+        None,
+        environment=environment,
+    )
+    ad.resize(760, 300)
+    section = ad.environment_tab.environments_section
+    section.toggle.click()
+    assert ad.height() >= ad.minimumSizeHint().height()
+    assert ad.height() > 300

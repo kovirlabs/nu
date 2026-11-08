@@ -12,8 +12,8 @@ smaller codebase (less to port, lower risk). Keep the test suite green at every
 step — it's what makes the bigger changes safe.
 
 Baseline test suite (Python 3.8 + PyQt5, pre-changes): **1120 passed, 20 skipped**.
-Current baseline (Python 3.11–3.14 + PyQt6): **1572 passed, 20 skipped** (after the
-post-Phase 5/6 hardening; 1545 after Phase 6a/6b, 1267 after Phase 4b part 1, 929 after
+Current baseline (Python 3.11–3.14 + PyQt6): **1638 passed, 20 skipped** (after Phase 4b
+part 2; 1572 after the post-Phase 5/6 hardening; 1545 after Phase 6a/6b, 1267 after Phase 4b part 1, 929 after
 Phase 4a's packaging work). Run headless with:
 ```
 QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly -q
@@ -155,8 +155,8 @@ imported), and every test file also passes on its own and in `--random-order`.
 
 ## Phase 4 — uv-driven environments + Briefcase installers
 
-Status: 4a, 4c, 4d (pending the maintainer's Windows/macOS install check) and 4e done; 4b
-part 1 done, part 2 (multi-env) not started; signing deferred.
+Status: 4a, 4b, 4c, 4d (pending the maintainer's Windows/macOS install check) and 4e done
+(4b's environment deletion deferred); signing deferred.
 
 A deliberate departure from Mu's "hide everything" ethos: make the Python environment a
 **real, visible, scriptable** thing (good pedagogy), which also dissolves the packaging
@@ -193,7 +193,8 @@ feel; offline-first via bundled assets; **Briefcase** for native installers.
   Pygame Zero Play with the venv activated, the REPL, packages added and removed. A real
   display on Windows/macOS is part of the maintainer's installer check (4d).
 
-**4b. Env UX (progressive disclosure):** part 1 ✅ (2026-11, `feature/env-ux-transparency`)
+**4b. Env UX (progressive disclosure):** part 1 ✅ (2026-11, `feature/env-ux-transparency`),
+part 2 ✅ (2026-11, `feature/env-advanced-multi`)
 - [x] "Environment: <name>" indicator + package list scoped to the active env. The status
   bar reads `Environment: mu_venv · Python 3.11` in modes with `uses_user_environment`
   (hidden in CircuitPython/the debugger); the name is the env folder without its
@@ -214,8 +215,26 @@ feel; offline-first via bundled assets; **Briefcase** for native installers.
   (standard `uv run` semantics), and there's no `>>>` afterwards (`--script` can't take
   `-i`). Plain files run exactly as before. **Not yet** for the debugger and Pygame Zero's
   Play (they'd need `uv run … python -m pgzero` / the debug runner via `--with-requirements`).
-- [ ] Advanced multi-env create/switch, hidden by default — **4b part 2** (not started):
-  the indicator and Environment tab are where it would surface.
+- [x] **Advanced multi-env create/switch, hidden by default** (4b part 2): a collapsed
+  "Advanced: more environments" section at the bottom of the Environment tab lists the
+  environments (name, Python, In use / From the next start), with **Use this one** and
+  **New environment…**. Registry (GUI-free, `mu/virtual_environment.py`): the default env
+  (its folder remembered as venv.json `default_dirpath`) + the named ones found by scanning
+  `DATA_DIR/envs/` (so one made there by hand with `uv venv` shows up); names are plain
+  folder names (letters/digits/`-`/`_`, ≤ 40, no Windows device names), unique ignoring
+  case. `create_environment` uses the default's own path (`create()`: bundled/system
+  Python, `--seed`, offline pip wheel, the baseline wheelhouse incl. plugins'
+  `learner-env`, the kernel) on a worker thread, showing `$ uv venv …` then each step;
+  a failure removes the half-made folder. `switch_environment` runs the start-up checks
+  (`ensure`) on the target and sets venv.json `dirpath`: it takes effect at the next start
+  (status-bar message after OK), where `ensure_and_create` finds the env healthy and
+  repairs nothing (tested). A named env Nu rebuilds (upgrade / failed check) keeps its
+  folder; a bundled Python a named env uses isn't removed. Verified in the real app under
+  Xvfb: create, use, restart, add a package, switch back, the package isn't there.
+  - [ ] **Not done:** deleting an environment (by hand for now: switch away, restart,
+    delete the folder; documented). `mu_version`/`baseline_packages` in venv.json are still
+    global, not per environment: a named env made by an older Nu isn't rebuilt on upgrade
+    until it's the one in use when the version changes.
 
 **4c. Bundle assets for offline:**
 - [x] Vendor a pinned `uv` binary per platform — achieved via the PyPI **`uv` wheel** in
