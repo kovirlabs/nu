@@ -497,9 +497,12 @@ def test_load_plugins_skips_everything_that_goes_wrong(host, caplog):
         "",
         loader.DUPLICATE,
     ]
-    # The traceback of a failed import is kept for the Plugins tab.
+    # The traceback of a failed import is kept for the Plugins tab, from
+    # the plugin's own code on.
     assert records[1].detail.startswith("Traceback (most recent call last):")
     assert "ImportError: no module named nope" in records[1].detail
+    assert loader.__file__ not in records[1].detail
+    assert "in broken_import" in records[1].detail
     assert list(host.modes) == ["good"]
     assert "Plugin off (off 1.0) is switched off" in caplog.text
     assert "Skipping plugin broken" in caplog.text
@@ -661,3 +664,31 @@ def test_describe_defaults(host):
         )
     assert row["modes"] == []
     assert row["enabled"] is True
+
+
+def test_load_plugins_traceback_starts_in_the_plugin(host, tmp_path, unique):
+    """
+    A drop-in that fails to import: the traceback shown starts in its own
+    file, without Nu's loader or importlib's frames.
+    """
+    name = unique()
+    (tmp_path / (name + ".py")).write_text("import os\n\nnot_defined_anywhere\n")
+    (record,) = loader.load_plugins(
+        host, loader.dropin_sources(str(tmp_path)), settings.UserSettings()
+    )
+    lines = record.detail.splitlines()
+    assert lines[0] == "Traceback (most recent call last):"
+    assert lines[1] == '  File "{}", line 3, in <module>'.format(
+        tmp_path / (name + ".py")
+    )
+    assert lines[-1] == "NameError: name 'not_defined_anywhere' is not defined"
+
+
+def test_plugin_traceback_keeps_everything_if_its_all_nus():
+    """An error raised by the loader itself keeps its whole traceback."""
+    try:
+        loader._dropin_plugin_object(mock.MagicMock(spec=[], __name__="empty"))
+    except loader.PluginLoadError as ex:
+        text = loader._plugin_traceback(ex)
+    assert loader.__file__ in text
+    assert "PluginLoadError" in text

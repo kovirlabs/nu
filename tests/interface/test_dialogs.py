@@ -993,7 +993,8 @@ def test_PluginsWidget_details_of_a_loaded_plugin(plugins_widget):
     assert "Adds Pygame Zero mode, for making games." in summary
     assert "nu-pygamezero 0.1.0" in summary
     assert "pygamezero" in summary
-    assert w.details.isHidden()
+    assert "From: Bundled with Nu (nu-pygamezero 0.1.0)" in summary
+    assert w.details_box.isHidden()
 
 
 def test_PluginsWidget_details_of_a_plugin_that_failed(plugins_widget):
@@ -1006,10 +1007,10 @@ def test_PluginsWidget_details_of_a_plugin_that_failed(plugins_widget):
     item = w.tree.topLevelItem(3)
     w.tree.setCurrentItem(item)
     assert "It has an error in its code, so Nu couldn't start it." in (w.summary.text())
-    assert not w.details.isHidden()
+    assert not w.details_box.isHidden()
     details = w.details.toPlainText()
-    assert details.startswith("it failed to import: NameError")
-    assert "Traceback (most recent call last)" in details
+    assert details.startswith("Traceback (most recent call last)")
+    assert details.endswith("NameError: x")
     tooltip = item.toolTip(C.STATUS)
     assert tooltip.startswith("It has an error in its code")
     assert "NameError" in tooltip
@@ -1115,3 +1116,19 @@ def test_AdminDialog_focus_plugins():
     ad.setup("log", {"locale": ""}, "", mode, None, focus="plugins", plugins=PLUGINS)
     assert ad.tabs.currentWidget() is ad.plugins_tab
     assert "plugins" in ad.settings()
+
+
+def test_PluginsWidget_columns_have_room(plugins_widget):
+    """Each column fits its widest entry, with a gap before the next."""
+    w = plugins_widget
+    C = mu.interface.dialogs.PluginsWidget
+    widest = max(
+        w.tree.fontMetrics().horizontalAdvance(text) for text in cells(w, C.STATUS)
+    )
+    assert w.tree.columnWidth(C.STATUS) >= widest + C.COLUMN_GAP
+
+
+def test_PluginsWidget_rows_fit_a_checkbox(plugins_widget):
+    """The themes draw 16px checkboxes with a border: rows leave room."""
+    tree = plugins_widget.tree
+    assert tree.sizeHintForRow(0) >= 24

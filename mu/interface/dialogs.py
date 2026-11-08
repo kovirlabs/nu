@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import html
 import logging
 import os
 import webbrowser
@@ -42,7 +43,6 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QTreeWidget,
     QTreeWidgetItem,
-    QHeaderView,
     QAbstractItemView,
 )
 from mu.resources import load_icon
@@ -427,14 +427,14 @@ class PluginsWidget(QWidget):
         self.tree.setRootIsDecorated(False)
         self.tree.setUniformRowHeights(True)
         self.tree.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        header = self.tree.header()
-        header.setStretchLastSection(False)
-        for column in (self.ON, self.NAME, self.FROM, self.MODES):
-            header.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(self.STATUS, QHeaderView.ResizeMode.Stretch)
+        self.tree.header().setStretchLastSection(True)  # the modes
         self.items = []
+        # Rows with room for the themes' checkboxes (16px and a border). The
+        # hint goes on the last column, which stretches, so its width is moot.
+        row_height = max(24, self.tree.fontMetrics().height() + 8)
         for row in self.rows:
             item = QTreeWidgetItem()
+            item.setSizeHint(self.MODES, QSize(0, row_height))
             item.setData(self.ON, Qt.ItemDataRole.UserRole, row)
             if row["can_switch"]:
                 item.setCheckState(
@@ -457,27 +457,31 @@ class PluginsWidget(QWidget):
             self._show_status(item)
             self.tree.addTopLevelItem(item)
             self.items.append(item)
+        self._fit_columns()
         self.tree.itemChanged.connect(self._item_changed)
         self.tree.currentItemChanged.connect(self._show_details)
-        widget_layout.addWidget(self.tree, stretch=2)
+        self.tree.setMinimumHeight(120)
+        widget_layout.addWidget(self.tree, stretch=1)
         # About the selected plugin: a plain summary, then (when there are
         # any) the technical details for whoever can fix it.
         self.summary = QLabel()
         self.summary.setWordWrap(True)
-        self.summary.setTextFormat(Qt.TextFormat.PlainText)
+        self.summary.setTextFormat(Qt.TextFormat.RichText)
         self.summary.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByMouse
         )
         widget_layout.addWidget(self.summary)
+        self.details_box = QWidget()
         self.details = QPlainTextEdit()
         self.details.setReadOnly(True)
-        self.details.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+        self.details.setWordWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
         self.details.setFont(code_font())
         self.details_copy = CopyButton(self.details)
-        details_row = QHBoxLayout()
+        details_row = QHBoxLayout(self.details_box)
+        details_row.setContentsMargins(0, 0, 0, 0)
         details_row.addWidget(self.details, stretch=1)
         details_row.addWidget(self.details_copy, alignment=Qt.AlignmentFlag.AlignTop)
-        widget_layout.addLayout(details_row, stretch=1)
+        widget_layout.addWidget(self.details_box, stretch=1)
         # Buttons and the trust note.
         buttons = QHBoxLayout()
         self.open_folder_button = QPushButton(_("Open plugins folder"))
@@ -538,39 +542,41 @@ class PluginsWidget(QWidget):
                 self.STATUS, "{}\n\n{}".format(self._problem(row), row["reason"])
             )
 
+    #: Room between the columns, in pixels.
+    COLUMN_GAP = 16
+
+    def _fit_columns(self):
+        """Size the columns to their contents, with a gap between them."""
+        for column in (self.ON, self.NAME, self.FROM, self.STATUS):
+            self.tree.resizeColumnToContents(column)
+            width = self.tree.columnWidth(column) + self.COLUMN_GAP
+            self.tree.setColumnWidth(column, width)
+
     def _item_changed(self, item, column):
         if column == self.ON:
             self._show_status(item)
+            self._fit_columns()  # the status may be longer now
             if item is self.tree.currentItem():
                 self._show_details(item)
 
     def _show_details(self, item, previous=None):
         """Describe the selected plugin under the list."""
         if item is None:
-            self.summary.setText(_("Nu didn't find any plugins."))
-            self.details.hide()
-            self.details_copy.hide()
+            self.summary.setText(
+                html.escape(_("Nu didn't find any plugins."), quote=False)
+            )
+            self.details_box.hide()
             return
         row = self._row(item)
-        lines = [row["name"]]
+        title = "<b>{}</b>".format(html.escape(row["name"]))
         if row["description"]:
-            lines[0] += " \u2014 " + row["description"]
-        lines.append(
-            _("From: {kind} ({origin})").format(
-                kind=self.KINDS.get(row["kind"], row["kind"]).lower(),
-                origin=row["origin"],
-            )
-        )
-        lines.append(_("Id: {id}").format(id=row["id"]))
-        if row["modes"]:
-            lines.append(_("Modes: {modes}").format(modes=", ".join(row["modes"])))
-        lines.append(_("Status: {status}").format(status=self._status(item)))
+            title += " \u2014 " + html.escape(row["description"])
+        lines = [_("Status: {status}").format(status=self._status(item))]
         details = ""
         if row["status"] == "skipped":
             lines.append(self._problem(row))
-            details = "\n\n".join(
-                part for part in (row["reason"], row["detail"]) if part
-            )
+            # The traceback ends with the reason; without one, the reason.
+            details = row["detail"] or row["reason"]
         elif row["status"] == "disabled" and row["switched_off_after_errors"]:
             lines.append(
                 _(
@@ -581,10 +587,19 @@ class PluginsWidget(QWidget):
             )
         elif row["status"] == "disabled":
             lines.append(_("It's switched off, so Nu didn't load it."))
-        self.summary.setText("\n".join(lines))
+        lines.append(
+            _("From: {kind} ({origin})").format(
+                kind=self.KINDS.get(row["kind"], row["kind"]), origin=row["origin"]
+            )
+        )
+        lines.append(_("Id: {id}").format(id=row["id"]))
+        if row["modes"]:
+            lines.append(_("Modes: {modes}").format(modes=", ".join(row["modes"])))
+        self.summary.setText(
+            "<br>".join([title] + [html.escape(line, quote=False) for line in lines])
+        )
         self.details.setPlainText(details)
-        self.details.setVisible(bool(details))
-        self.details_copy.setVisible(bool(details))
+        self.details_box.setVisible(bool(details))
 
     def enabled_plugins(self):
         """Whether each plugin should load at the next start: {id: bool}."""
@@ -603,8 +618,11 @@ class PluginsWidget(QWidget):
         except OSError as ex:
             logger.exception("Can't make the plugins folder %s", self.folder)
             self.summary.setText(
-                _("Couldn't open the plugins folder {folder}: {error}").format(
-                    folder=self.folder, error=ex
+                html.escape(
+                    _("Couldn't open the plugins folder {folder}: {error}").format(
+                        folder=self.folder, error=ex
+                    ),
+                    quote=False,
                 )
             )
             return

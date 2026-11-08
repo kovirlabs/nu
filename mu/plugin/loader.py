@@ -349,7 +349,7 @@ def load_plugins(host, sources=None, store=None):
             record.reason = "it failed to import: {}".format(
                 "".join(traceback.format_exception_only(ex)).strip()
             )
-            record.detail = traceback.format_exc()
+            record.detail = _plugin_traceback(ex)
             logger.exception("Skipping plugin %s (%s)", source.id, source.origin)
             continue
         if plugin.name == Plugin.name:
@@ -369,6 +369,35 @@ def load_plugins(host, sources=None, store=None):
             record.problem = REGISTER_FAILED
             record.reason = "it failed to register (see the log)"
     return records
+
+
+#: Where importlib's own code is, to leave it out of a plugin's traceback.
+_IMPORTLIB_DIR = os.path.dirname(importlib.util.__file__) + os.sep
+
+
+def _is_loading_frame(frame):
+    """Is `frame` Nu's loader or Python's import machinery, not a plugin?"""
+    return (
+        frame.filename == __file__
+        or frame.filename.startswith("<frozen importlib")
+        or frame.filename.startswith(_IMPORTLIB_DIR)
+    )
+
+
+def _plugin_traceback(ex):
+    """
+    The traceback of a plugin that failed to import, starting at the
+    plugin's own code: the frames of Nu's loader and importlib above it say
+    nothing to the plugin's author. If the error is in those frames, the
+    whole traceback is kept.
+    """
+    exception = traceback.TracebackException.from_exception(ex)
+    frames = list(exception.stack)
+    while frames and _is_loading_frame(frames[0]):
+        frames.pop(0)
+    if frames:
+        exception.stack = traceback.StackSummary.from_list(frames)
+    return "".join(exception.format())
 
 
 def describe(records, store=None, modes_of=None):
