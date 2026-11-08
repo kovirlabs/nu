@@ -257,7 +257,7 @@ def test_setup_modes_registers_builtins_through_a_host():
     """
     with mock.patch("mu.app.load_plugins", return_value=[]):
         modes = setup_modes(mock.MagicMock(), mock.MagicMock())
-    assert list(modes) == ["python", "circuitpython", "debugger", "pygamezero"]
+    assert list(modes) == ["python", "circuitpython", "debugger"]
     hosts = {mode.host for mode in modes.values()}
     assert len(hosts) == 1
     assert isinstance(hosts.pop(), Host)
