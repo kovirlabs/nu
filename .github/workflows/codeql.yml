@@ -15,7 +15,9 @@ jobs:
   analyze:
     timeout-minutes: 20
     name: Analyze
-    runs-on: ubuntu-20.04
+    # ubuntu-20.04 runners are retired: jobs pinned to them queue until
+    # GitHub cancels them, so the scheduled scans never ran.
+    runs-on: ubuntu-latest
     permissions:
       actions: read
       contents: read
@@ -24,6 +26,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # The runner's own Python is externally managed (PEP 668), so pip
+      # can't install into it; use a setup-python one, as the other
+      # workflows do. Qt is only installed, never imported, so no system
+      # libraries are needed.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
       - name: Install dependencies to help the code scanner
         run: pip install ./plugins/circuitpython ./plugins/pygamezero ".[dev]"
@@ -39,4 +50,4 @@ jobs:
           setup-python-dependencies: false
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
