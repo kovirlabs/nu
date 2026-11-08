@@ -73,11 +73,16 @@ first.
 
 ## Adding Python packages
 
-Your programs run in their own Python environment, separate from Nu. To use a
-package such as `requests`, click the **cog** in the bottom-right corner, open
-**Third Party Packages**, put the package's name on its own line, and click
-**OK**. The cog also has Nu's log, environment variables, and the language
-setting.
+Your programs run in their own Python environment, separate from Nu; the
+status bar shows which (`Environment: mu_venv · Python 3.11`). To use a
+package such as `requests`, click that, open **Packages** on the
+**Environment** tab, put the package's name on its own line, and click
+**OK**. Nu shows you the real `uv` command it runs. A program can also list
+the packages it needs in a `# /// script` block, and **Run** fetches them. See
+[Your Python environment](environment.md).
+
+The **cog** in the bottom-right corner opens the same window, which also has
+Nu's log and the language setting.
 
 ## Plugins
 

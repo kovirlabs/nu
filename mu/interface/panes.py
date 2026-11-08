@@ -546,6 +546,9 @@ class PythonProcessPane(QTextEdit):
         self.stdout_buffer = b""  # contains non-decoded bytes from stdout.
         self.reading_stdout = False  # flag showing if already reading stdout.
         self.is_interactive = False  # flag if the process is interactive mode.
+        # (exit code, status) of a process that ended while its output was
+        # still being read; see finished.
+        self.pending_finish = None
 
     def start_process(
         self,
@@ -557,6 +560,7 @@ class PythonProcessPane(QTextEdit):
         command_args=None,
         envars=None,
         python_args=None,
+        echo=None,
     ):
         """
         Start the child Python process.
@@ -579,8 +583,14 @@ class PythonProcessPane(QTextEdit):
 
         If python_args is given, these are passed as arguments to the Python
         interpreter used to launch the child process.
+
+        If echo is given (e.g. "$ uv run ... hello.py"), it's shown as the
+        first line, so the learner sees the real command being run.
         """
         self.is_interactive = interactive
+        if echo:
+            self.append((echo + "\n").encode("utf-8"))
+            self.set_start_of_current_line()
         if not envars:  # Envars must be a dict if not passed a value.
             envars = {}
         envars = {name: v for (name, v) in envars.items() if name != "PYTHONPATH"}
@@ -673,6 +683,11 @@ class PythonProcessPane(QTextEdit):
         """
         Handle when the child process finishes.
         """
+        if self.reading_stdout:
+            # The last of its output is still being read (in chunks, see
+            # read_from_stdout): say FINISHED after it, not in the middle.
+            self.pending_finish = (code, status)
+            return
         self.running = False
         cursor = self.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End)
@@ -873,6 +888,22 @@ class PythonProcessPane(QTextEdit):
         elif not self.isReadOnly() and msg:
             self.insert(msg)
 
+    def insert_hint(self, hint):
+        """
+        Insert a one-line `hint` (e.g. explaining uv's error to a beginner)
+        on the line above the first line of output from uv starting with
+        "error:" or "warning:"; at the end if there isn't one.
+        """
+        text = self.toPlainText()
+        match = re.search(r"(?m)^(error|warning): ", text)
+        cursor = self.textCursor()
+        if match:
+            cursor.setPosition(match.start())
+            cursor.insertText(hint + "\n")
+        else:
+            cursor.movePosition(QTextCursor.MoveOperation.End)
+            cursor.insertText("\n" + hint)
+
     def set_start_of_current_line(self):
         """
         Set the flag to indicate the start of the current line (used before
@@ -940,6 +971,10 @@ class PythonProcessPane(QTextEdit):
             QTimer.singleShot(2, self.read_from_stdout)
         else:
             self.reading_stdout = False
+            if self.pending_finish:
+                code, status = self.pending_finish
+                self.pending_finish = None
+                self.finished(code, status)
 
     def write_to_stdin(self, data):
         """

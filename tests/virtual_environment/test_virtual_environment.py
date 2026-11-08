@@ -31,6 +31,7 @@ import zipfile
 import pytest
 
 import mu
+import mu.command_log
 import mu.settings
 import mu.virtual_environment
 import mu.wheels
@@ -110,6 +111,8 @@ def patched():
         mock.patch.object(
             VE, "run_subprocess", return_value=(True, "")
         ) as run_subprocess,
+        # `uv venv` goes through the Uv wrapper (so it's in the command log).
+        mock.patch.object(UV, "run_subprocess", return_value=(True, "")),
     ):
         yield subprocess_run, run_python, run_subprocess
 
@@ -265,7 +268,7 @@ def test_create_virtual_environment_name_obj(patched, venv_dirpath):
 
 def test_create_virtual_environment_failure(venv):
     output = uuid.uuid1().hex
-    with mock.patch.object(venv, "run_subprocess", return_value=(False, output)):
+    with mock.patch.object(UV, "run_subprocess", return_value=(False, output)):
         try:
             venv.create()
         except Exception as exc:
@@ -275,10 +278,10 @@ def test_create_virtual_environment_failure(venv):
 
 
 def _uv_venv_args(run_subprocess):
-    """The argv `create_venv` passed to `run_subprocess` (minus the uv path)."""
+    """The uv arguments `create_venv` passed to `Uv.run_subprocess`."""
     args, _ = run_subprocess.call_args
-    assert args[1] == "venv"
-    return list(args[1:])
+    assert args[0] == "venv"
+    return list(args)
 
 
 def test_create_venv_pins_python_version_without_bundled_python(venv):
@@ -287,7 +290,7 @@ def test_create_venv_pins_python_version_without_bundled_python(venv):
     with (
         mock.patch.object(venv, "ensure_bundled_python", return_value=None),
         mock.patch.object(mu.virtual_environment, "find_uv", return_value="/x/uv"),
-        mock.patch.object(venv, "run_subprocess", return_value=(True, "")) as run,
+        mock.patch.object(UV, "run_subprocess", return_value=(True, "")) as run,
     ):
         venv.create_venv()
     version = "%d.%d" % sys.version_info[:2]
@@ -304,7 +307,7 @@ def test_create_venv_uses_bundled_python_offline(venv, tmp_path):
         ),
         mock.patch.object(mu.wheels, "PYTHON_DIRPATH", str(tmp_path)),
         mock.patch.object(mu.virtual_environment, "find_uv", return_value="/x/uv"),
-        mock.patch.object(venv, "run_subprocess", return_value=(True, "")) as run,
+        mock.patch.object(UV, "run_subprocess", return_value=(True, "")) as run,
     ):
         venv.create_venv()
     assert _uv_venv_args(run) == [
@@ -327,7 +330,7 @@ def test_create_venv_bundled_python_without_pip_wheel(venv, tmp_path):
         ),
         mock.patch.object(mu.wheels, "PYTHON_DIRPATH", str(tmp_path)),
         mock.patch.object(mu.virtual_environment, "find_uv", return_value="/x/uv"),
-        mock.patch.object(venv, "run_subprocess", return_value=(True, "")) as run,
+        mock.patch.object(UV, "run_subprocess", return_value=(True, "")) as run,
     ):
         venv.create_venv()
     assert _uv_venv_args(run) == [
@@ -570,6 +573,19 @@ def test_install_user_packages(venv):
         args, kwargs = MockUv.return_value.install.call_args
         assert args[0] == packages
         assert kwargs.get("upgrade") is True
+
+
+@pytest.mark.parametrize(
+    "method, uv_method",
+    [("install_user_packages", "install"), ("remove_user_packages", "uninstall")],
+)
+def test_user_package_commands_return_their_record(venv, method, uv_method):
+    """The package dialog shows the learner the real command, so these return
+    its entry in the command log."""
+    with mock.patch.object(mu.virtual_environment, "Uv") as MockUv:
+        record = getattr(venv, method)(["cowsay"])
+    process = getattr(MockUv.return_value, uv_method).return_value
+    assert record is process.command_record
 
 
 @pytest.mark.parametrize("method", ["install_user_packages", "remove_user_packages"])
@@ -835,8 +851,12 @@ def test_uv_run_connects_supplied_slots(uv_process):
     process = UV(uv_executable="/x/uv").run("pip", "list", slots=slots)
     assert process is uv_process
     uv_process.started.connect.assert_called_once_with(started)
-    uv_process.output.connect.assert_called_once_with(output)
-    uv_process.finished.connect.assert_called_once_with(finished)
+    # The command log's recorder is connected first (see test_uv.py), then
+    # the caller's slots.
+    uv_process.output.connect.assert_called_with(output)
+    assert uv_process.output.connect.call_count == 2
+    uv_process.finished.connect.assert_called_with(finished)
+    assert uv_process.finished.connect.call_count == 2
     (executable, args), _ = uv_process.run.call_args
     assert executable == "/x/uv"
     assert args == ["pip", "list"]
@@ -1209,3 +1229,112 @@ def test_subprocess_run_invalid_utf8(venv):
         _, output = venv.run_subprocess("")
 
     assert output == expected_output
+
+
+#
+# What the learner sees about their environment (Phase 4b)
+#
+@pytest.mark.parametrize(
+    "folder, name",
+    [
+        ("mu_venv-311-20261108-030353", "mu_venv"),
+        ("mu_venv-314-20260101-000000", "mu_venv"),
+        ("my-env", "my-env"),
+        ("mu_venv-311", "mu_venv-311"),
+    ],
+)
+def test_display_name_drops_version_and_timestamp(venv, tmp_path, folder, name):
+    """The status bar shows a short, stable name: re-creating the env (a new
+    timestamped folder) doesn't change it."""
+    venv.relocate(str(tmp_path / folder))
+    assert venv.display_name == name
+
+
+@pytest.mark.parametrize(
+    "cfg, version",
+    [
+        # Written by `uv venv`.
+        ("home = /x\nimplementation = CPython\nversion_info = 3.11.15\n", "3.11.15"),
+        # Written by the standard library's venv.
+        ("home = /x\nversion = 3.12.1\n", "3.12.1"),
+        ("home = /x\n", None),
+    ],
+)
+def test_python_version_from_pyvenv_cfg(venv, tmp_path, cfg, version):
+    venv.relocate(str(tmp_path / "env"))
+    os.makedirs(venv.path)
+    with open(os.path.join(venv.path, "pyvenv.cfg"), "w") as f:
+        f.write(cfg)
+    assert venv.python_version() == version
+
+
+def test_python_version_without_pyvenv_cfg(venv, tmp_path):
+    venv.relocate(str(tmp_path / "missing"))
+    assert venv.python_version() is None
+
+
+def test_describe_posix(venv, tmp_path):
+    """The facts the Environment tab shows: where the env is, which Python,
+    and the exact commands to use it from a terminal."""
+    venv._is_windows = False
+    venv._bin_extension = ""
+    venv.relocate(str(tmp_path / "mu venv-311-20261108-030353"))
+    with (
+        mock.patch.object(venv, "python_version", return_value="3.11.15"),
+        mock.patch.object(mu.virtual_environment, "find_uv", return_value="/opt/uv"),
+        mock.patch.object(mu.command_log.sys, "platform", "linux"),
+    ):
+        facts = venv.describe()
+    bin_dir = os.path.join(venv.path, "bin")
+    python = os.path.join(bin_dir, "python")
+    assert facts == {
+        "name": "mu venv",
+        "path": venv.path,
+        "interpreter": python,
+        "python_version": "3.11.15",
+        "activate": "source '%s'" % os.path.join(bin_dir, "activate"),
+        "install": "uv pip install --python '%s' cowsay" % python,
+        "run": "uv run --python '%s' hello.py" % python,
+        "uv": "/opt/uv",
+    }
+
+
+def test_describe_windows(venv):
+    """On Windows the activate script is run directly (cmd or PowerShell)."""
+    venv._is_windows = True
+    venv._bin_extension = ".exe"
+    venv.relocate(r"C:\Users\kid\AppData\Local\python\mu\mu_venv-311-20261108-030353")
+    with (
+        mock.patch.object(venv, "python_version", return_value=None),
+        mock.patch.object(
+            mu.virtual_environment,
+            "find_uv",
+            side_effect=mu.virtual_environment.UvNotFound(),
+        ),
+        mock.patch.object(mu.command_log.sys, "platform", "win32"),
+    ):
+        facts = venv.describe()
+    assert facts["activate"] == os.path.join(venv._bin_directory, "activate")
+    assert facts["install"].startswith("uv pip install --python ")
+    assert facts["install"].endswith(" cowsay")
+    assert facts["uv"] is None
+    assert facts["python_version"] is None
+
+
+def test_script_command(venv):
+    """The Run button's `uv run` targets the learner's environment."""
+    with mock.patch.object(mu.virtual_environment, "Uv") as MockUv:
+        record = venv.script_command("/w/cow.py", "/w")
+    MockUv.assert_called_once_with(venv_path=venv.interpreter)
+    MockUv.return_value.script_command.assert_called_once_with("/w/cow.py", cwd="/w")
+    assert record is MockUv.return_value.script_command.return_value
+
+
+def test_run_subprocess_includes_stderr(venv):
+    """run_subprocess reports what the process wrote to stderr too."""
+    ok, output = venv.run_subprocess(
+        sys.executable, "-c", "import sys; print('out'); sys.stderr.write('err')"
+    )
+    assert ok is True
+    assert output.startswith("out")
+    assert "STDERR: err" in output

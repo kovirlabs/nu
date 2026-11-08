@@ -660,6 +660,7 @@ class Window(QMainWindow):
         command_args=None,
         envars=None,
         python_args=None,
+        echo=None,
     ):
         """
         Display console output for the interpreter with the referenced
@@ -684,6 +685,9 @@ class Window(QMainWindow):
 
         If python_args is given, these will be passed as arguments to the
         Python runtime used to launch the child process.
+
+        If echo is given, it's shown as the pane's first line (the real
+        command being run, e.g. a `uv run`).
         """
         self.process_runner = PythonProcessPane(self)
         self.runner = QDockWidget(
@@ -723,6 +727,7 @@ class Window(QMainWindow):
             command_args,
             envars,
             python_args,
+            echo=echo,
         )
         self.process_runner.setFocus()
         self.process_runner.on_append_text.connect(self.on_stdout_write)
@@ -911,14 +916,34 @@ class Window(QMainWindow):
 
         timer.start(500)
 
-    def show_admin(self, log, settings, packages, mode, device_list):
+    def show_admin(
+        self,
+        log,
+        settings,
+        packages,
+        mode,
+        device_list,
+        environment=None,
+        focus=None,
+    ):
         """
         Display the administrative dialog with referenced content of the log
-        and settings. Return a dictionary of the settings that may have been
-        changed by the admin dialog.
+        and settings, and (for modes that use it) the facts about the
+        learner's Python `environment` (see `VirtualEnvironment.describe`,
+        plus the rendered command log under "commands"). Open on the tab
+        named by `focus` (e.g. "environment") if given. Return a dictionary
+        of the settings that may have been changed by the admin dialog.
         """
         admin_box = AdminDialog(self)
-        admin_box.setup(log, settings, packages, mode, device_list)
+        admin_box.setup(
+            log,
+            settings,
+            packages,
+            mode,
+            device_list,
+            environment=environment,
+            focus=focus,
+        )
         result = admin_box.exec()
         if result:
             return admin_box.settings()
@@ -1288,6 +1313,14 @@ class StatusBar(QStatusBar):
         self.mode = mode
         self.msg_duration = 5
 
+        # The learner's Python environment (shown only in modes that use it,
+        # see set_environment); click it to see and manage the environment.
+        self.env_label = QLabel()
+        self.env_label.setObjectName("EnvironmentLabel")
+        self.env_label.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.env_label.setHidden(True)
+        self.addPermanentWidget(self.env_label)
+
         # Mode selector.
         self.mode_label = QLabel()
         self.mode_label.setToolTip(_("Nu's current mode of behaviour."))
@@ -1323,6 +1356,39 @@ class StatusBar(QStatusBar):
         self.mode_label.shortcut = QShortcut(QKeySequence(shortcut), self.parent())
         self.mode_label.shortcut.activated.connect(handler)
         self.mode_label.mousePressEvent = handler
+
+    def connect_environment(self, handler):
+        """
+        Connect a click on the environment indicator to the referenced
+        handler function.
+        """
+        self.env_label.mousePressEvent = handler
+
+    def set_environment(self, name, version, path):
+        """
+        Show the environment indicator: "Environment: <name> · Python X.Y".
+        `version` is the full Python version (or None if unknown) and `path`
+        the environment's folder, shown in the tooltip.
+        """
+        text = _("Environment: {name}").format(name=name)
+        if version:
+            short_version = ".".join(version.split(".")[:2])
+            text += " · " + _("Python {version}").format(version=short_version)
+        self.env_label.setText(text)
+        self.env_label.setToolTip(
+            _(
+                "Your programs run with this Python environment:\n{path}\n\n"
+                "Click to see it, and to add or remove packages."
+            ).format(path=path)
+        )
+        self.env_label.setHidden(False)
+
+    def hide_environment(self):
+        """
+        Hide the environment indicator (for modes that don't use the
+        learner's Python environment, e.g. CircuitPython).
+        """
+        self.env_label.setHidden(True)
 
     def set_message(self, message, pause=5000):
         """

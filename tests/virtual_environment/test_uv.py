@@ -14,6 +14,7 @@ from unittest import mock
 import pytest
 
 import mu.virtual_environment
+from mu.command_log import CommandLog
 
 VE = mu.virtual_environment
 Uv = VE.Uv
@@ -247,3 +248,198 @@ def test_uv_uninstall_builds_command():
         uv.uninstall(["requests"])
     args, _ = run.call_args
     assert args[1] == ["pip", "uninstall", "requests"]
+
+
+#
+# Every uv command is recorded in the command log (Phase 4b)
+#
+@pytest.fixture
+def log():
+    """A fresh command log in place of the app-wide one."""
+    fresh = CommandLog()
+    with mock.patch.object(VE, "command_log", fresh):
+        yield fresh
+
+
+def _fake_qprocess(exit_code=0, normal=True):
+    qprocess = mock.Mock()
+    qprocess.exitCode.return_value = exit_code
+    qprocess.exitStatus.return_value = (
+        VE.QProcess.ExitStatus.NormalExit
+        if normal
+        else VE.QProcess.ExitStatus.CrashExit
+    )
+    return qprocess
+
+
+def test_uv_run_blocking_records_the_command(log):
+    uv = Uv(uv_executable="/opt/uv", venv_path="/env/bin/python")
+
+    def fake_run_blocking(self, command, args, wait_for_s=30.0, **envvars):
+        self.process = _fake_qprocess(0)
+        return "Using CPython 3.11.15\nCreating virtual environment at: /env"
+
+    with mock.patch.object(VE.Process, "run_blocking", fake_run_blocking):
+        uv.create_venv("/env", python="3.11")
+    (record,) = log.records()
+    assert record.argv == ["/opt/uv", "venv", "--python", "3.11", "/env"]
+    assert record.finished and record.exit_code == 0
+    assert record.output_tail() == [
+        "Using CPython 3.11.15",
+        "Creating virtual environment at: /env",
+    ]
+
+
+def test_uv_run_blocking_records_a_failure_and_reraises(log):
+    uv = Uv(uv_executable="/opt/uv")
+
+    def fake_run_blocking(self, command, args, wait_for_s=30.0, **envvars):
+        self.process = _fake_qprocess(2)
+        raise VE.VirtualEnvironmentError("Process finished but with error code 2")
+
+    with mock.patch.object(VE.Process, "run_blocking", fake_run_blocking):
+        with pytest.raises(VE.VirtualEnvironmentError):
+            uv.version()
+    (record,) = log.records()
+    assert record.exit_code == 2
+    assert record.output_tail() == ["Process finished but with error code 2"]
+
+
+def test_uv_run_blocking_failure_before_start(log):
+    """No QProcess at all (it never started): the exit code is unknown."""
+    uv = Uv(uv_executable="/opt/uv")
+    with mock.patch.object(
+        VE.Process, "run_blocking", side_effect=VE.VirtualEnvironmentError("boom")
+    ):
+        with pytest.raises(VE.VirtualEnvironmentError):
+            uv.version()
+    (record,) = log.records()
+    assert record.finished and record.exit_code is None
+
+
+def test_uv_run_records_async_command(log):
+    """`uv pip install` (async) is recorded, its streamed output kept, and
+    finished with the exit code when the process ends."""
+    uv = Uv(uv_executable="/opt/uv", venv_path="/env/bin/python")
+    qprocess = _fake_qprocess(0)
+
+    def fake_run(self, command, args, **envvars):
+        self.process = qprocess
+
+    with mock.patch.object(VE.Process, "run", fake_run):
+        process = uv.install(["cowsay"], upgrade=True)
+    record = process.command_record
+    assert log.records() == [record]
+    assert record.display(windows=False) == (
+        "uv pip install --upgrade --python /env/bin/python cowsay"
+    )
+    assert not record.finished
+    process.output.emit("Resolved 1 package\nInstalled 1 package")
+    process.finished.emit()
+    assert record.finished and record.exit_code == 0
+    assert record.output_tail() == ["Resolved 1 package", "Installed 1 package"]
+
+
+def test_uv_run_record_finishes_before_the_callers_finished_slot(log):
+    """The record is complete by the time the caller's `finished` slot runs
+    (the package dialog starts the next command from it)."""
+    uv = Uv(uv_executable="/opt/uv")
+    seen = []
+
+    def fake_run(self, command, args, **envvars):
+        self.process = _fake_qprocess(1)
+
+    def finished():
+        seen.append(log.records()[0].exit_code)
+
+    with mock.patch.object(VE.Process, "run", fake_run):
+        process = uv.uninstall("cowsay", slots=VE.Process.Slots(finished=finished))
+    process.finished.emit()
+    assert seen == [1]
+
+
+def test_uv_run_crashed_process_has_no_exit_code(log):
+    uv = Uv(uv_executable="/opt/uv")
+
+    def fake_run(self, command, args, **envvars):
+        self.process = _fake_qprocess(9, normal=False)
+
+    with mock.patch.object(VE.Process, "run", fake_run):
+        process = uv.uninstall("cowsay")
+    process.finished.emit()
+    assert process.command_record.finished
+    assert process.command_record.exit_code is None
+
+
+def test_uv_run_subprocess_records_and_returns_output(log):
+    """run_subprocess (plain subprocess, safe off the Qt thread) is how the
+    environment is first created; it's recorded too."""
+    uv = Uv(uv_executable="/opt/uv")
+    completed = mock.Mock(returncode=0, stdout=b"Creating venv", stderr=b"done")
+    with mock.patch.object(VE.subprocess, "run", return_value=completed) as run:
+        ok, output = uv.run_subprocess("venv", "--python", "3.11", "/env")
+    assert ok is True
+    assert "Creating venv" in output and "done" in output
+    args, kwargs = run.call_args
+    assert args[0] == ["/opt/uv", "venv", "--python", "3.11", "/env"]
+    (record,) = log.records()
+    assert record.exit_code == 0
+    assert record.output_tail()[0] == "Creating venv"
+
+
+def test_uv_run_subprocess_failure(log):
+    uv = Uv(uv_executable="/opt/uv")
+    completed = mock.Mock(returncode=2, stdout=b"", stderr=b"error: no")
+    with mock.patch.object(VE.subprocess, "run", return_value=completed):
+        ok, output = uv.run_subprocess("venv", "/env")
+    assert ok is False
+    assert "error: no" in output
+    assert log.records()[0].exit_code == 2
+
+
+def test_uv_run_subprocess_cannot_start(log):
+    """If uv can't even start (e.g. deleted since it was found), say so
+    rather than crash."""
+    uv = Uv(uv_executable="/opt/uv")
+    with mock.patch.object(VE.subprocess, "run", side_effect=OSError("gone")):
+        ok, output = uv.run_subprocess("venv", "/env")
+    assert ok is False
+    assert "gone" in output
+    record = log.records()[0]
+    assert record.finished and record.exit_code is None
+
+
+def test_uv_script_command(log):
+    """script_command records `uv run --python <venv> --script <file>` for the
+    Run pane to launch; the caller finishes it."""
+    uv = Uv(uv_executable="/opt/uv", venv_path="/env/bin/python")
+    record = uv.script_command("/work/hello.py", cwd="/work")
+    assert record.argv == [
+        "/opt/uv",
+        "run",
+        "--python",
+        "/env/bin/python",
+        "--script",
+        "/work/hello.py",
+    ]
+    assert record.cwd == "/work"
+    assert record.note == "Its output is in the Run pane."
+    assert not record.finished
+    assert log.records() == [record]
+
+
+def test_uv_list_packages_record_skips_the_json(log):
+    """`uv pip list --format=json` is shown in the log, but not its JSON (Nu
+    reads that); a note says what it's for."""
+    uv = Uv(uv_executable="/opt/uv", venv_path="/env/bin/python")
+
+    def fake_run_blocking(self, command, args, wait_for_s=30.0, **envvars):
+        self.process = _fake_qprocess(0)
+        return '[{"name": "pgzero", "version": "1.2.1"}]'
+
+    with mock.patch.object(VE.Process, "run_blocking", fake_run_blocking):
+        uv.list_packages()
+    (record,) = log.records()
+    assert record.output_tail() == []
+    assert record.note == "Nu reads this list to show your packages."
+    assert record.exit_code == 0

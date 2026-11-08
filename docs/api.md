@@ -137,6 +137,19 @@ The Pygame Zero / pygame mode, as a bundled plugin (`plugins/pygamezero`).
 
 ::: nu_pygamezero.mode
 
+## `mu.command_log`
+
+The log of the uv commands Nu runs in the learner's Python environment, shown
+as "What Nu ran" (see [Your Python environment](environment.md)).
+
+::: mu.command_log
+
+## `mu.script_metadata`
+
+Finds PEP 723 `# /// script` blocks, so Run can use `uv run` for them.
+
+::: mu.script_metadata
+
 ## `mu.resources`
 
 Contains utility functions for working with binary assets used by Mu (mainly

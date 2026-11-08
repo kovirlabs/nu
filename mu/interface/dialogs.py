@@ -19,11 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
 
-from PyQt6.QtCore import QSize, QTimer
+from PyQt6.QtCore import QSize, QTimer, Qt
+from PyQt6.QtGui import QTextCursor, QTextOption
 from PyQt6.QtWidgets import (
     QApplication,
     QPushButton,
     QVBoxLayout,
+    QHBoxLayout,
+    QGridLayout,
     QListWidget,
     QLabel,
     QListWidgetItem,
@@ -37,6 +40,8 @@ from PyQt6.QtWidgets import (
     QComboBox,
 )
 from mu.resources import load_icon
+from .themes import Font
+from ..command_log import CommandLog
 from ..virtual_environment import venv
 
 logger = logging.getLogger(__name__)
@@ -194,6 +199,159 @@ class PackagesWidget(QWidget):
         widget_layout.addWidget(self.text_area)
 
 
+def code_font():
+    """Nu's code font (as in the editor), at the size of the dialog text."""
+    font = Font().load()
+    size = QApplication.font().pointSize()
+    if size > 0:
+        font.setPointSize(size)
+    return font
+
+
+class CopyButton(QPushButton):
+    """
+    A "Copy" button that puts `text()` of its source on the clipboard and
+    says "Copied".
+    """
+
+    def __init__(self, source, parent=None):
+        super().__init__(_("Copy"), parent)
+        self.source = source
+        self.setToolTip(_("Copy to the clipboard"))
+        self.clicked.connect(self.copy)
+
+    def copy(self):
+        """Copy the source's text."""
+        source = self.source
+        text = source.toPlainText() if hasattr(source, "toPlainText") else source.text()
+        QApplication.clipboard().setText(text)
+        self.setText(_("Copied"))
+
+
+class CommandLogWidget(QWidget):
+    """
+    "What Nu ran": the uv commands Nu has run in the learner's environment
+    (see `mu.command_log`), as they'd type them, newest last.
+    """
+
+    def setup(self, commands, uv_path=None):
+        widget_layout = QVBoxLayout()
+        self.setLayout(widget_layout)
+        label = QLabel(
+            _(
+                "These are the commands Nu has run in your environment since "
+                "it started, newest last. You can type them in a terminal "
+                "yourself."
+            )
+        )
+        label.setWordWrap(True)
+        top_row = QHBoxLayout()
+        top_row.addWidget(label, stretch=1)
+        widget_layout.addLayout(top_row)
+        self.text_area = QPlainTextEdit()
+        self.text_area.setReadOnly(True)
+        # Wrap, so the end of a long command (the package, the file) shows.
+        self.text_area.setWordWrapMode(
+            QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere
+        )
+        self.text_area.setFont(code_font())
+        self.text_area.setPlainText(commands or CommandLog().render())
+        if uv_path:
+            self.text_area.setToolTip(
+                _("“uv” is Nu's copy of uv, at:\n{}").format(uv_path)
+            )
+        # Newest last: show the end.
+        self.text_area.moveCursor(QTextCursor.MoveOperation.End)
+        widget_layout.addWidget(self.text_area)
+        self.copy_button = CopyButton(self.text_area)
+        top_row.addWidget(self.copy_button)
+
+    def showEvent(self, event):
+        """Scroll to the newest command once there's room to show it."""
+        super().showEvent(event)
+        self.text_area.moveCursor(QTextCursor.MoveOperation.End)
+        self.text_area.ensureCursorVisible()
+
+
+class EnvironmentWidget(QWidget):
+    """
+    The learner's Python environment, made visible: where it is, which
+    Python it has, and how to use it from a terminal, then its packages,
+    environment variables and the uv commands Nu ran in it.
+    """
+
+    def setup(self, environment, envars, packages):
+        """
+        `environment` is the dict from `VirtualEnvironment.describe()` plus
+        the rendered command log under "commands" (or None), `envars` and
+        `packages` the text for their editors.
+        """
+        environment = environment or {}
+        self.fields = {}
+        self.copy_buttons = {}
+        widget_layout = QVBoxLayout()
+        self.setLayout(widget_layout)
+        if environment:
+            intro = QLabel(
+                _(
+                    "Nu runs your programs with this Python environment: a "
+                    "folder with its own Python and the packages you add. "
+                    "It's an ordinary Python environment, so you can use it "
+                    "from a terminal too."
+                )
+            )
+            intro.setWordWrap(True)
+            widget_layout.addWidget(intro)
+            grid = QGridLayout()
+            grid.setColumnStretch(1, 1)
+            grid.setVerticalSpacing(2)
+            name = environment.get("name", "")
+            if environment.get("python_version"):
+                name = _("{name} (Python {version})").format(
+                    name=name, version=environment["python_version"]
+                )
+            rows = [
+                ("name", _("Name"), name),
+                ("path", _("Folder"), environment.get("path")),
+                ("interpreter", _("Python"), environment.get("interpreter")),
+                ("activate", _("Activate it"), environment.get("activate")),
+                ("install", _("Add a package"), environment.get("install")),
+                ("run", _("Run a program"), environment.get("run")),
+                ("uv", _("Nu's uv"), environment.get("uv") or _("(not found)")),
+            ]
+            for row, (key, title, value) in enumerate(rows):
+                grid.addWidget(QLabel(title), row, 0)
+                # Selectable text that wraps between a command's arguments,
+                # so a long path never hides the end of a command.
+                field = QLabel(value or "")
+                field.setWordWrap(True)
+                field.setTextInteractionFlags(
+                    Qt.TextInteractionFlag.TextSelectableByMouse
+                )
+                if key == "name":
+                    field.setStyleSheet("font-weight: bold;")
+                else:
+                    field.setFont(code_font())
+                    self.copy_buttons[key] = CopyButton(field)
+                    grid.addWidget(self.copy_buttons[key], row, 2)
+                grid.addWidget(field, row, 1)
+                self.fields[key] = field
+            widget_layout.addLayout(grid)
+        self.sections = QTabWidget()
+        self.package_widget = PackagesWidget(self)
+        self.package_widget.setup(packages)
+        self.sections.addTab(self.package_widget, _("Packages"))
+        self.envar_widget = EnvironmentVariablesWidget(self)
+        self.envar_widget.setup(envars)
+        self.sections.addTab(self.envar_widget, _("Environment variables"))
+        self.commands_widget = CommandLogWidget(self)
+        self.commands_widget.setup(
+            environment.get("commands"), uv_path=environment.get("uv")
+        )
+        self.sections.addTab(self.commands_widget, _("What Nu ran"))
+        widget_layout.addWidget(self.sections, stretch=1)
+
+
 class LocaleWidget(QWidget):
     """
     Used for manually setting the locale (and thus the language) used by Mu.
@@ -255,8 +413,17 @@ class AdminDialog(QDialog):
         super().__init__(parent)
         self.package_widget = None
         self.envar_widget = None
+        self.environment_tab = None
 
-    def setup(self, log, settings, packages, mode, device_list):
+    def setup(
+        self, log, settings, packages, mode, device_list, environment=None, focus=None
+    ):
+        """
+        Build the tabs. `environment` holds the facts about the learner's
+        Python environment (see `EnvironmentWidget.setup`); `focus` names the
+        tab to open on ("environment" for that environment), otherwise the
+        log is shown.
+        """
         self.setMinimumSize(600, 400)
         self.setWindowTitle(_("Nu Administration"))
         widget_layout = QVBoxLayout()
@@ -274,12 +441,15 @@ class AdminDialog(QDialog):
         self.log_widget.setup(log)
         self.tabs.addTab(self.log_widget, _("Current Log"))
         if mode.uses_user_environment:
-            self.envar_widget = EnvironmentVariablesWidget(self)
-            self.envar_widget.setup(settings.get("envars", ""))
-            self.tabs.addTab(self.envar_widget, _("Python3 Environment"))
-            self.package_widget = PackagesWidget(self)
-            self.package_widget.setup(packages)
-            self.tabs.addTab(self.package_widget, _("Third Party Packages"))
+            self.environment_tab = EnvironmentWidget(self)
+            self.environment_tab.setup(
+                environment, settings.get("envars", ""), packages
+            )
+            self.tabs.addTab(self.environment_tab, _("Environment"))
+            self.envar_widget = self.environment_tab.envar_widget
+            self.package_widget = self.environment_tab.package_widget
+            # Room for the environment's facts above its editors.
+            self.setMinimumSize(760, 620)
         # Configure local.
         self.locale_widget = LocaleWidget(self)
         self.locale_widget.setup(settings.get("locale"))
@@ -287,6 +457,9 @@ class AdminDialog(QDialog):
             self.locale_widget, load_icon("language.svg"), _("Select Language")
         )
         self.log_widget.log_text_area.setFocus()
+        if focus == "environment" and self.environment_tab:
+            self.tabs.setCurrentWidget(self.environment_tab)
+            self.environment_tab.sections.setFocus()
 
     def settings(self):
         """
@@ -386,10 +559,13 @@ class PackageDialog(QDialog):
         self.setWindowTitle(_("Third Party Package Status"))
         widget_layout = QVBoxLayout()
         self.setLayout(widget_layout)
-        # Text area for pip output.
+        # Text area for the commands and their output, wrapped so the end
+        # of a long command (the packages) shows.
         self.text_area = QPlainTextEdit()
         self.text_area.setReadOnly(True)
-        self.text_area.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+        self.text_area.setWordWrapMode(
+            QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere
+        )
         widget_layout.addWidget(self.text_area)
         # Buttons.
         self.button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
@@ -436,13 +612,18 @@ class PackageDialog(QDialog):
             pip_fn = venv.install_user_packages
         else:
             raise RuntimeError("Invalid pip command: %s %s" % (command, packages))
-        pip_fn(
+        record = pip_fn(
             packages,
             slots=venv.Slots(
                 output=self.text_area.appendPlainText,
                 finished=self.next_pip_command,
             ),
         )
+        # Show the learner the real command before its output streams in
+        # (the process starts on the next turn of the event loop).
+        if self.text_area.toPlainText():
+            self.text_area.appendPlainText("")
+        self.text_area.appendPlainText("$ " + record.display())
 
 
 class CrashDialog(QDialog):

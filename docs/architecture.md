@@ -24,6 +24,16 @@ The code is found in the `mu` directory and organised in the following way:
 * Interacting with the UI layer is done via the `Window` class in the `interface.main` module. Mu specific UI code used by the `Window` class found in the other modules in the namespace.
 * Internationalization (I18n) related assets are found under `locale`. Learn how this works via [translations](translations.md).
 * Modes are found under the `modes` namespace. They all inherit from a `BaseMode` class and there's a tutorial for [modes](modes.md). The core's modes are Python 3 and the Debugger; every other mode comes from a plugin.
+* The learner's Python environment (where Python 3 and Pygame Zero programs
+  run) is managed in `virtual_environment.py`: `VirtualEnvironment` (the `venv`
+  singleton) and the `Uv` wrapper around [uv](https://docs.astral.sh/uv/).
+  Every uv command goes through `Uv`, which records it in the GUI-free
+  `command_log.py` (shown to the learner as "What Nu ran", and logged at
+  INFO). `script_metadata.py` finds [PEP 723](https://peps.python.org/pep-0723/)
+  `# /// script` blocks: the Python 3 mode's **Run** uses
+  `uv run --python <env python> --script <file>` for a file with one. The
+  status bar's environment indicator and the admin dialog's Environment tab
+  show it all; see [Your Python environment](environment.md).
 * The plugin host is the `plugin` namespace: the public, versioned `mu.plugin` API, plugin discovery (`plugin.loader`) and error isolation (`plugin.errors`). See [plugins](plugins.md).
 * Graphical assets, fonts and CSS descriptions for the themes are all found under `resources`.
 

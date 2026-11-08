@@ -1397,6 +1397,29 @@ def test_PythonProcessPane_finished_shows_numeric_status():
     assert ppp.toPlainText().endswith("exit code: 1 status: 1")
 
 
+def test_PythonProcessPane_finished_waits_for_the_last_output():
+    """
+    If the process ends while its last output is still being read (a fast
+    program, or `uv run`, which exits as soon as the program does), FINISHED
+    goes after all the output, not in the middle of it.
+    """
+    ppp = mu.interface.panes.PythonProcessPane()
+    ppp.process = mock.MagicMock()
+    ppp.process.read.side_effect = [b"the last line\n", b""]
+    ppp.reading_stdout = True
+    ppp.finished(0, 0)
+    assert "FINISHED" not in ppp.toPlainText()
+    with mock.patch("mu.interface.panes.QTimer") as timer:
+        ppp.read_from_stdout()  # Reads the last chunk...
+        timer.singleShot.assert_called_once_with(2, ppp.read_from_stdout)
+        ppp.read_from_stdout()  # ...then finds no more.
+    assert ppp.reading_stdout is False
+    assert ppp.toPlainText() == (
+        "the last line\n\n\n---------- FINISHED ----------\nexit code: 0 status: 0"
+    )
+    assert ppp.pending_finish is None
+
+
 def test_PythonProcessPane_context_menu():
     """
     Ensure the context menu for the REPL is configured correctly for non-OSX
@@ -2576,3 +2599,68 @@ def test_PlotterPane_set_theme():
     pp.chart.setTheme.assert_called_once_with(
         mu.interface.panes.QChart.ChartTheme.ChartThemeHighContrast
     )
+
+
+def test_PythonProcessPane_start_process_echo():
+    """The pane can start with the real command it runs (a `uv run`, so the
+    learner sees it), before any of the program's output."""
+    mock_process_class = mock.MagicMock()
+    with mock.patch("mu.interface.panes.QProcess", mock_process_class):
+        ppp = mu.interface.panes.PythonProcessPane()
+        ppp.start_process(
+            "/opt/uv",
+            "script.py",
+            "workspace",
+            interactive=False,
+            python_args=["run", "--script"],
+            echo="$ uv run --script script.py",
+        )
+    assert ppp.toPlainText() == "$ uv run --script script.py\n"
+    # The learner's typing starts after it.
+    assert ppp.start_of_current_line == len(ppp.toPlainText())
+    script = os.path.abspath(os.path.normcase("script.py"))
+    ppp.process.start.assert_called_once_with("/opt/uv", ["run", "--script", script])
+
+
+def test_PythonProcessPane_start_process_no_echo():
+    """Without an echo (an ordinary Run) the pane starts empty, as before."""
+    with mock.patch("mu.interface.panes.QProcess", mock.MagicMock()):
+        ppp = mu.interface.panes.PythonProcessPane()
+        ppp.start_process(sys.executable, "script.py", "workspace")
+    assert ppp.toPlainText() == ""
+
+
+def test_PythonProcessPane_insert_hint_above_uv_error():
+    """A hint about uv's error goes on the line above it."""
+    ppp = mu.interface.panes.PythonProcessPane()
+    ppp.setPlainText(
+        "$ uv run --script cow.py\n"
+        "error: Request failed after 3 retries\n"
+        "  cause: tcp connect error\n"
+        "\n---------- FINISHED ----------\nexit code: 2 status: 0"
+    )
+    ppp.insert_hint("Hint: are you online?")
+    assert ppp.toPlainText() == (
+        "$ uv run --script cow.py\n"
+        "Hint: are you online?\n"
+        "error: Request failed after 3 retries\n"
+        "  cause: tcp connect error\n"
+        "\n---------- FINISHED ----------\nexit code: 2 status: 0"
+    )
+
+
+def test_PythonProcessPane_insert_hint_above_uv_warning():
+    ppp = mu.interface.panes.PythonProcessPane()
+    ppp.setPlainText("$ uv run\nwarning: The requested interpreter...\n3.11\n")
+    ppp.insert_hint("Hint: Python version.")
+    assert ppp.toPlainText() == (
+        "$ uv run\nHint: Python version.\nwarning: The requested interpreter...\n3.11\n"
+    )
+
+
+def test_PythonProcessPane_insert_hint_without_uv_message():
+    """No uv error/warning line to put it above: the hint goes at the end."""
+    ppp = mu.interface.panes.PythonProcessPane()
+    ppp.setPlainText("$ uv run\nsomething went wrong")
+    ppp.insert_hint("Hint: x")
+    assert ppp.toPlainText() == "$ uv run\nsomething went wrong\nHint: x"

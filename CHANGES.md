@@ -35,6 +35,23 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   fails is skipped or reported, and Nu keeps running. The plugin API is at
   version 0.3 and may change. See
   [Writing a Nu plugin](https://kovirlabs.github.io/nu/plugins/).
+* **See your Python environment.** In Python 3 and Pygame Zero modes the
+  status bar shows the environment your programs run in
+  (`Environment: mu_venv · Python 3.11`). Click it for the new **Environment**
+  tab: where the environment is, which Python it has, and the exact commands
+  to activate it or use it with uv from a terminal, each with a **Copy**
+  button. The package and environment-variable editors moved there.
+* **What Nu ran.** Every `uv` command Nu runs for you (making the
+  environment, adding, removing and listing packages, running a program) is
+  listed on the Environment tab as you'd type it, with whether it worked. When
+  you add or remove packages, the progress window shows the real command too.
+* **Programs can list the packages they need.** If a program starts with a
+  `# /// script` block ([PEP 723](https://peps.python.org/pep-0723/)) such as
+  `# dependencies = ["cowsay"]`, **Run** runs it with `uv run`, which fetches
+  those packages first. The command is the first line of the output, and if
+  something goes wrong (no internet, a misspelt package) a `Hint:` line says
+  what to try. Programs without the block run as before. See
+  [Your Python environment](https://kovirlabs.github.io/nu/environment/).
 * **Private crash reports.** If Nu crashes it shows the details with a **Copy
   to clipboard** button. Mu used to open codewith.mu with the details in the
   address; Nu never sends anything by itself.

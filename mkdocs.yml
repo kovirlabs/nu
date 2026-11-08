@@ -58,7 +58,9 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Using Nu: help.md
+  - Using Nu:
+      - Using Nu: help.md
+      - Your Python environment: environment.md
   - Getting started:
       - Developer setup: setup.md
       - First steps: first-steps.md
