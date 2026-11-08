@@ -209,7 +209,9 @@ class SettingsBase(object):
                     serialised_settings = {}
                 self.update(serialised_settings)
         except FileNotFoundError:
-            logger.warning("No settings file found at %s; skipping", filepath)
+            # Normal on the first run (nothing saved yet), so not a warning:
+            # one logged before logging is set up would go to stderr.
+            logger.info("No settings file found at %s; skipping", filepath)
         except OSError:
             logger.exception("Unable to read file at %s; skipping", filepath)
 
