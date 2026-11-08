@@ -119,6 +119,24 @@ def test_ButtonBar_set_responsive_mode():
         bb.setStyleSheet.assert_called_with(style)
 
 
+def test_ButtonBar_set_responsive_mode_icons_only_when_labels_do_not_fit():
+    """
+    When the labels don't fit even at the smaller size (long translations),
+    the buttons show icons only, so none is hidden in the overflow menu; with
+    room again the labels come back.
+    """
+    bb = mu.interface.main.ButtonBar(None)
+    for name in ("new", "load", "save", "run", "debug", "help", "quit"):
+        bb.addAction(name, "A rather long translated label", "tooltip")
+    style = bb.toolButtonStyle
+    bb.set_responsive_mode(2000, 800)
+    assert style() == Qt.ToolButtonStyle.ToolButtonTextUnderIcon
+    bb.set_responsive_mode(600, 800)
+    assert style() == Qt.ToolButtonStyle.ToolButtonIconOnly
+    bb.set_responsive_mode(2000, 800)
+    assert style() == Qt.ToolButtonStyle.ToolButtonTextUnderIcon
+
+
 def test_ButtonBar_add_action():
     """
     Check the appropriately referenced QAction is created by a call to

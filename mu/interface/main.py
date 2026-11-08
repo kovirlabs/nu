@@ -169,13 +169,21 @@ class ButtonBar(QToolBar):
 
     def set_responsive_mode(self, width, height):
         """
-        Compact button bar for when window is very small.
+        Compact button bar for when window is very small: smaller icons and
+        text and, if the buttons' labels still don't fit in the `width`
+        (long translations, such as Ukrainian, below about 1024 px), icons
+        only, with the names in their tooltips. Otherwise the last buttons
+        (Help and Quit) would be hidden behind Qt's overflow button, which
+        a beginner is unlikely to spot.
         """
         font_size = min(DEFAULT_FONT_SIZE, width // 80)
         icon_size = min(64, width // 24)
         self.setIconSize(QSize(icon_size, icon_size))
         stylesheet = "QWidget{font-size: " + str(font_size) + "px;}"
         self.setStyleSheet(stylesheet)
+        self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        if self.sizeHint().width() > width:
+            self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
 
     def addAction(self, name, display_name, tool_text):
         """
