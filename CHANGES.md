@@ -43,6 +43,8 @@ Regressions from the move to PyQt6, found by checking Nu against Mu 1.2.2:
 
 * **Check** no longer crashes Nu when it finds a problem in your code; the
   problems are shown under the lines again.
+* **Tidy** works on code that uses newer Python syntax, such as `match`
+  statements, instead of saying the code contains problems.
 
 ### Security
 

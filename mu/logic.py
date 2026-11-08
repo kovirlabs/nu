@@ -1725,16 +1725,16 @@ class Editor(QObject):
         # Only works on Python, so abort.
         if tab.path and not self.has_python_extension(tab.path):
             return
-        from black import format_str, FileMode, TargetVersion
+        from black import format_str, FileMode
 
         try:
             source_code = tab.text()
             logger.info("Tidy code.")
             logger.info(source_code)
-            filemode = FileMode(
-                target_versions={TargetVersion.PY36},
-                line_length=MAX_LINE_LENGTH,
-            )
+            # No target_versions: black infers them from the code, so any
+            # syntax the user's Python accepts can be tidied (pinning an old
+            # target, as Mu did with 3.6, rejects e.g. match statements).
+            filemode = FileMode(line_length=MAX_LINE_LENGTH)
             tidy_code = format_str(source_code, mode=filemode)
             # The following bypasses tab.setText which resets the undo history.
             # Doing it this way means the user can use CTRL-Z to undo the
