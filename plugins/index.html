@@ -390,6 +390,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../microbit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The BBC micro:bit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -928,6 +956,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#what-changed-in-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What changed in 0.5
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#what-changed-in-04" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1027,6 +1066,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#roadmap-the-microbit-files-pane" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Roadmap: the micro:bit Files pane
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#a-minimal-example" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1045,6 +1095,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Bundled plugins">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#in-the-repo-but-opt-in-microbit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        In the repo but opt-in: micro:bit
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1938,6 +2005,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#what-changed-in-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What changed in 0.5
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#what-changed-in-04" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2037,6 +2115,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#roadmap-the-microbit-files-pane" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Roadmap: the micro:bit Files pane
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#a-minimal-example" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2055,6 +2144,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Bundled plugins">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#in-the-repo-but-opt-in-microbit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        In the repo but opt-in: micro:bit
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2094,8 +2200,9 @@
 <p class="admonition-title">Status: working, but early</p>
 <p>Nu loads plugins at startup, both installed packages and files in the
 plugins folder (Phases 5a and 5b in <code>TODO.md</code>), CircuitPython and Pygame
-Zero ship as plugins (5c), and the <strong>Plugins</strong> tab lists them and switches
-them on and off (5e). The API is at version <strong>0.4</strong>, so it can still
+Zero ship as plugins (5c), the <strong>Plugins</strong> tab lists them and switches
+them on and off (5e), and micro:bit is back as an opt-in plugin (Phase 6,
+see <a href="../microbit/">The BBC micro:bit</a>). The API is at version <strong>0.5</strong>, so it can still
 change between releases. In the downloadable installers the plugins
 folder is the only way to add a plugin (see
 <a href="#roadmap-installing-plugins">Roadmap: installing plugins</a>).</p>
@@ -2123,7 +2230,7 @@ writing plugins.</em></p>
 </tr>
 <tr>
 <td><strong>From</strong></td>
-<td><em>Bundled with Nu</em> (it comes with Nu: CircuitPython and Pygame Zero), <em>Installed package</em> (installed into the Python that Nu runs from), or <em>Plugins folder</em> (a file or folder put in Nu's plugins folder). Hover over it for the exact package or file.</td>
+<td><em>Bundled with Nu</em> (it comes with Nu: CircuitPython and Pygame Zero), <em>Installed package</em> (installed into the Python that Nu runs from, e.g. micro:bit while it's opt-in), or <em>Plugins folder</em> (a file or folder put in Nu's plugins folder). Hover over it for the exact package or file.</td>
 </tr>
 <tr>
 <td><strong>Status</strong></td>
@@ -2330,7 +2437,7 @@ release.</p>
 <tbody>
 <tr>
 <td><code>PLUGIN_API_VERSION</code></td>
-<td>The API version this Nu provides, e.g. <code>"0.4"</code>.</td>
+<td>The API version this Nu provides, e.g. <code>"0.5"</code>.</td>
 </tr>
 <tr>
 <td><code>Plugin</code></td>
@@ -2393,7 +2500,7 @@ literal string. When loading it, the host compares that with its own version:</p
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyPlugin</span><span class="p">(</span><span class="n">Plugin</span><span class="p">):</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">"My Plugin"</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">description</span> <span class="o">=</span> <span class="s2">"Adds My mode, for doing my thing."</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">api_version</span> <span class="o">=</span> <span class="s2">"0.4"</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">api_version</span> <span class="o">=</span> <span class="s2">"0.5"</span>
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
 <a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">):</span>
 <a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">        </span><span class="sd">"""Called once when the plugin loads. Do all wiring here, through</span>
@@ -2414,7 +2521,7 @@ already registered are removed. A broken plugin never stops Nu starting.</p>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">MicrobitPlugin</span><span class="p">(</span><span class="n">ModePlugin</span><span class="p">):</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">"micro:bit"</span>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">description</span> <span class="o">=</span> <span class="s2">"Adds micro:bit mode, for the BBC micro:bit."</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">api_version</span> <span class="o">=</span> <span class="s2">"0.4"</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">api_version</span> <span class="o">=</span> <span class="s2">"0.5"</span>
 <a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">mode</span> <span class="o">=</span> <span class="n">MicrobitMode</span>          <span class="c1"># or: modes = (ModeA, ModeB)</span>
 <a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="c1"># Optional: the folder of icons the modes use (see "Icons and images").</span>
 <a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="n">images</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">"images"</span><span class="p">)</span>
@@ -2434,7 +2541,7 @@ Set the class attributes and override the methods you need:</p>
 <a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">        </span><span class="sd">"""Toolbar buttons."""</span>
 <a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>        <span class="k">return</span> <span class="p">[</span>
 <a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>            <span class="p">{</span>
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>                <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"flash"</span><span class="p">,</span>            <span class="c1"># also its icon and button id</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>                <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"microbit-flash"</span><span class="p">,</span>   <span class="c1"># also its icon and button id</span>
 <a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>                <span class="s2">"display_name"</span><span class="p">:</span> <span class="s2">"Flash"</span><span class="p">,</span>
 <a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>                <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Flash your code to the micro:bit."</span><span class="p">,</span>
 <a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>                <span class="s2">"handler"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">flash</span><span class="p">,</span>
@@ -2559,6 +2666,18 @@ tell the learner if there's none). Offer the Plotter only if
 <td><code>True</code> if Nu can show the plotter (the optional Qt Charts package is installed). A property. <em>(0.3)</em></td>
 </tr>
 <tr>
+<td><code>current_device</code></td>
+<td>The board picked in the device selector (a <code>Device</code>), or <code>None</code>. A property; use it instead of <code>self.editor.current_device</code>. <em>(0.5)</em></td>
+</tr>
+<tr>
+<td><code>data_dir(name)</code></td>
+<td>A folder of your plugin's own in Nu's data folder, <code>&lt;data folder&gt;/&lt;name&gt;</code>, made if missing (<code>name</code> is a plain folder name, normally your plugin's id). For downloads and caches, not the learner's work. <em>(0.5)</em></td>
+</tr>
+<tr>
+<td><code>log_command(argv, cwd=None, note=None)</code></td>
+<td>Add a command to <strong>What Nu ran</strong> (and Nu's log), next to uv's: <code>argv</code> as the learner could type it, <code>note</code> for anything they should know (e.g. "Nu did this through mpremote's Python API"). Returns a record: call <code>add_output(text)</code> as output arrives and <code>finish(exit_code, output=None)</code> when done (0 for success). Safe from any thread. <em>(0.5)</em></td>
+</tr>
+<tr>
 <td><code>settings(namespace)</code></td>
 <td>A <code>PluginSettings</code> with <code>get(key, default=None)</code> and <code>set(key, value)</code>. Values are saved with the user's settings under <code>plugins.&lt;namespace&gt;</code> and must be JSON-serialisable.</td>
 </tr>
@@ -2610,13 +2729,20 @@ have no package metadata) to declare any.</p>
 <p>These are planned, and are deliberately left out until a real plugin needs
 them:</p>
 <ul>
-<li><strong>Panes and settings pages</strong>, e.g. micro:bit's file-transfer pane (Phase 6).</li>
+<li><strong>Panes and settings pages</strong>, e.g. micro:bit's file-transfer pane (designed
+  below: <a href="#roadmap-the-microbit-files-pane">Roadmap: the micro:bit Files pane</a>).</li>
 <li><strong>Installing a plugin and its learner-env packages from Nu</strong> (Phase 5d; see
   the <a href="#roadmap-installing-plugins">roadmap</a>).</li>
 <li><strong>Translations for plugins.</strong> Bundled plugins use Nu's own message catalog
   (their strings are extracted with Nu's); a community plugin's strings aren't
   translated yet.</li>
 </ul>
+<h3 id="what-changed-in-05">What changed in 0.5<a class="headerlink" href="#what-changed-in-05" title="Permanent link">&para;</a></h3>
+<p>0.5 adds what the micro:bit plugin needs to stay on the API: <code>Host.log_command</code>
+(so a plugin's equivalent commands show in <strong>What Nu ran</strong>, as uv's do),
+<code>Host.current_device</code> (the selected board, without <code>self.editor</code>) and
+<code>Host.data_dir</code> (a folder for downloads such as firmware). Nothing was removed,
+but a 0.4 plugin needs its <code>api_version</code> changed to <code>"0.5"</code>.</p>
 <h3 id="what-changed-in-04">What changed in 0.4<a class="headerlink" href="#what-changed-in-04" title="Permanent link">&para;</a></h3>
 <p>0.4 adds <code>Plugin.description</code>, the sentence the Plugins tab shows under your
 plugin's name. Nothing was removed, but a 0.3 plugin needs its <code>api_version</code>
@@ -2660,7 +2786,10 @@ until it is).</p>
   tab shows it as <em>Couldn't load</em>, saying it was written for a different
   version of Nu, with the exact versions in its details.</li>
 <li>The API is bumped deliberately, with a short compatibility-shim window. It
-  stays at 0.x until the micro:bit plugin (Phase 6) has proven it.</li>
+  stays at 0.x until the micro:bit plugin (Phase 6) has proven it: 0.5 is
+  what micro:bit needed to be built on the API alone, and it should reach 1.0
+  once the plugin has passed its hardware checks and the Files pane (below)
+  has settled the API for panes.</li>
 </ul>
 <h2 id="trust-safety">Trust &amp; safety<a class="headerlink" href="#trust-safety" title="Permanent link">&para;</a></h2>
 <p>Plugins are <strong>arbitrary in-process Python</strong> — there is no sandbox. The trust
@@ -2758,6 +2887,35 @@ file):</p>
   same id: the installed one wins today. Is that still right when the learner
   installed one themselves?</li>
 </ul>
+<h2 id="roadmap-the-microbit-files-pane">Roadmap: the micro:bit Files pane<a class="headerlink" href="#roadmap-the-microbit-files-pane" title="Permanent link">&para;</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Design only</p>
+<p>Phase 6b. Not built yet: micro:bit mode has Flash, REPL and Plotter.</p>
+</div>
+<p>Upstream Mu's micro:bit mode had a <strong>Files</strong> pane: the files on the board on
+one side, the learner's <code>microbit</code> folder on the other, drag between them.
+Nu removed the old <code>FileSystemPane</code> (and the frozen <code>microfs</code> behind it) in
+Phase 1. It comes back as <strong>plugin-owned UI</strong> driven by mpremote:</p>
+<ul>
+<li><strong>API (0.6):</strong> a plugin needs to put a widget in the window.
+  <code>Host.add_pane(widget, title, area="bottom")</code> docks it (as the REPL and
+  plotter are docked) and returns a handle; <code>Host.remove_pane(handle)</code> takes
+  it away, and the core removes a plugin's panes when it unloads or its mode
+  is deactivated. The widget is the plugin's own Qt code (PyQt6 is Nu's
+  dependency, so a plugin may import it); the core owns where it goes and
+  its theme.</li>
+<li><strong>Talking to the board:</strong> the same worker pattern as Flash: one job at a
+  time on a <code>QThread</code>, through <code>mpremote.transport_serial.SerialTransport</code>:
+  <code>fs_listdir</code> to list, <code>fs_readfile</code> / <code>fs_writefile</code> to copy each way,
+  <code>fs_rmfile</code> to delete, each logged under <strong>What Nu ran</strong> as
+  <code>mpremote connect &lt;port&gt; fs ls</code> / <code>fs cp :a.py a.py</code> / <code>fs cp a.py :a.py</code> /
+  <code>fs rm :a.py</code>.</li>
+<li><strong>One serial port:</strong> the pane, the REPL and Flash all need it, so the pane
+  is closed while the REPL is open and vice versa (as in Mu), and Flash
+  refreshes it afterwards.</li>
+<li><strong>Tests:</strong> a fake transport with an in-memory file system, as the flash
+  tests fake the board.</li>
+</ul>
 <h2 id="a-minimal-example">A minimal example<a class="headerlink" href="#a-minimal-example" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>my-nu-plugin/
 <a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>├── pyproject.toml          # deps + [project.entry-points."mu.plugins"]
@@ -2778,6 +2936,9 @@ tab and stores a setting. To start a plugin from it:</p>
 <li>Install it into the environment Nu runs from (<code>uv pip install -e
    path/to/plugin</code> in a checkout) and restart Nu.</li>
 </ol>
+<p><code>plugins/microbit/</code> is the one for a board that also flashes firmware: a
+GUI-free state machine run on a <code>QThread</code>, a pinned-and-fetched download,
+and commands echoed with <code>Host.log_command</code>.</p>
 <p><code>plugins/pygamezero/</code> is the worked example of a full mode: buttons that
 toggle, running the learner's program, workspace assets, autocomplete stubs
 and tests. <code>plugins/circuitpython/</code> is the one for a board: a
@@ -2808,6 +2969,16 @@ to <code>pythonpath</code> in <code>[tool.pytest.ini_options]</code>, its packag
 <code>_TRANSLATE_PLUGIN_PACKAGES</code> in <code>make.py</code>, and its path to the pip installs in
 <code>.github/workflows/test.yml</code>, <code>docs.yml</code> and <code>build.yml</code>, and
 to mkdocstrings' <code>paths</code> in <code>mkdocs.yml</code>. Then <code>uv lock</code>.</p>
+<h3 id="in-the-repo-but-opt-in-microbit">In the repo but opt-in: micro:bit<a class="headerlink" href="#in-the-repo-but-opt-in-microbit" title="Permanent link">&para;</a></h3>
+<p><code>plugins/microbit/</code> (<code>nu-microbit</code>) is a workspace member like the bundled
+plugins, with its tests run in CI, but it is <strong>not</strong> one of <code>nu-editor</code>'s
+dependencies or in Briefcase's <code>requires</code>, and not in
+<code>loader.BUNDLED_DISTRIBUTIONS</code>, so the Plugins tab shows it as an <em>Installed
+package</em>. It's installed by <code>nu-editor</code>'s <code>microbit</code> extra (<code>uv sync
+--all-extras</code> in a checkout). Until a plugin has been tried on real hardware,
+it stays opt-in like this; its README has the checklist. Promoting it (Phase
+6c) is the steps above: add it to the dependencies and <code>requires</code>, to
+<code>BUNDLED_DISTRIBUTIONS</code> and to <code>build.yml</code>'s installs, and drop the extra.</p>
 <p>If a bundled plugin's mode used to be built in, keep its <code>short_name</code>: saved
 sessions and the <code>mode</code> setting refer to it. (If the plugin is switched off or
 missing, Nu asks the learner to pick a mode at startup, as it does for any

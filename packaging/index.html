@@ -390,6 +390,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../microbit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The BBC micro:bit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1155,6 +1183,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#opt-in-workspace-plugins-microbit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opt-in workspace plugins: micro:bit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#what-the-learners-environment-gets-from-plugins" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1530,6 +1569,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#opt-in-workspace-plugins-microbit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opt-in workspace plugins: micro:bit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#what-the-learners-environment-gets-from-plugins" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1689,6 +1739,34 @@ template and nothing depends on it.</p>
   (<code>uv build plugins/circuitpython</code>, then upload as usual); bump its own
   version when it changes, independently of Nu's.</li>
 </ul>
+<h3 id="opt-in-workspace-plugins-microbit">Opt-in workspace plugins: micro:bit<a class="headerlink" href="#opt-in-workspace-plugins-microbit" title="Permanent link">&para;</a></h3>
+<p><strong><code>nu-microbit</code></strong> (<code>plugins/microbit</code>, Phase 6) is a workspace member too, but
+<strong>not</strong> a dependency of <code>nu-editor</code> yet: it hasn't been validated on real
+micro:bits. Instead:</p>
+<ul>
+<li><code>nu-editor</code> has an optional extra, <code>microbit = ["nu-microbit&gt;=0.1"]</code>, and
+  <code>[tool.uv.sources]</code> resolves <code>nu-microbit</code> from the workspace, so
+  <code>uv sync --all-extras</code> (or <code>--extra microbit</code>) installs it editable in a
+  checkout. A plain <code>uv sync</code> doesn't, and its tests that need the installed
+  entry point skip.</li>
+<li>CI installs it anyway (<code>./plugins/microbit</code> in <code>test.yml</code>'s and <code>docs.yml</code>'s
+  pip lines), so its tests and API docs run on every push.</li>
+<li>It is <strong>not</strong> in Briefcase's <code>requires</code> or <code>build.yml</code>'s installs, so the
+  installers don't ship it, and the built <code>nu-editor</code> wheel lists it only as
+  <code>Requires-Dist: nu-microbit&gt;=0.1; extra == "microbit"</code>.</li>
+<li>Its own dependency is <code>mpremote</code>. The MicroPython firmware is <strong>not</strong> in the
+  package: it's pinned (URL + SHA-256) and downloaded on first use into
+  <code>DATA_DIR/microbit/firmware/</code>.</li>
+</ul>
+<p><strong>Promotion (Phase 6c), after the maintainer's hardware pass</strong> (the checklist
+in <code>plugins/microbit/README.md</code>): move <code>nu-microbit&gt;=0.1</code> from the extra to the
+dependencies, add <code>"./plugins/microbit"</code> to Briefcase's <code>requires</code>, add it to
+<code>loader.BUNDLED_DISTRIBUTIONS</code> and to <code>build.yml</code>'s plugin installs, and
+publish it to PyPI before that Nu release. To make Flash work offline from a
+fresh install, the installer build can also put the two pinned <code>.hex</code> files in
+<code>nu_microbit/firmware/</code> (the plugin checks there, after the data folder, and
+verifies them like a download); fetch them in <code>build.yml</code> with their SHA-256s
+from <code>nu_microbit/firmware.py</code>, never commit them.</p>
 <h3 id="what-the-learners-environment-gets-from-plugins">What the learner's environment gets from plugins<a class="headerlink" href="#what-the-learners-environment-gets-from-plugins" title="Permanent link">&para;</a></h3>
 <p>A plugin lists the packages its modes need <em>in the learner's environment</em>
 (where their programs run, not where Nu runs) as an extra called
