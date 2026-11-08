@@ -302,8 +302,9 @@ part 2 ✅ (2026-11, `feature/env-advanced-multi`)
 
 ## Phase 5 — Plugin architecture (shell the core; modes become plugins)
 
-Status: 5a, 5b and 5c done (API 0.5); 5e's Plugins tab done; installing and removing
-plugins from it (5d + 5e) designed in `docs/plugins.md`, not built.
+Status: 5a, 5b, 5c, 5d and 5e done (API 0.5): learners add, update and remove plugins
+from the Plugins tab, into a plugin environment of their own (`docs/plugins.md` →
+"Adding a plugin").
 
 **Long-term direction.** Shrink Nu to a lean **core** — editor, REPL, plotter, the
 uv-managed environment, and a **plugin host** — and push capability out into **plugins**.
@@ -388,10 +389,9 @@ drop-in dir covers them.
 - NOTE: errors in a plugin's **threads** went to `threading.excepthook` (stderr only, no
   log entry, no dialog). → Fixed in 5e: `app.thread_excepthook` (chained) routes them
   through `PluginErrorHandler`, marshalled to the GUI thread.
-- NOTE (open, 5d): in **installers** Nu runs from Briefcase's bundled env, which users
-  can't install into, so entry-point discovery only sees bundled plugins there; the
-  drop-in folder is the only user route until 5d puts a plugin env on `sys.path`
-  (designed in 5d below).
+- NOTE (5d): in **installers** Nu runs from Briefcase's bundled env, which users
+  can't install into, so entry-point discovery only saw bundled plugins there. → Fixed
+  in 5d: a plugin env goes on `sys.path` before discovery.
 
 **5c. Convert the specialized modes to bundled plugins (proof of the API):** ✅ DONE
 - [x] Scaffold a `plugins/` **uv workspace** (`[tool.uv.workspace]`): each bundled plugin is
@@ -435,42 +435,52 @@ drop-in dir covers them.
     plugin's (`pyserial` stays in core: `MicroPythonMode` uses it). No `learner-env` extra:
     CircuitPython code runs on the board. It had no settings of its own.
 
-**5d. Plugin dependencies via uv (ties into Phase 4):**
-- [ ] A plugin declares its PyPI runtime deps; installing the plugin **uv-installs** the
-  package + deps into the user env (or a dedicated plugin env). "Add a plugin" reuses the
-  Phase 4b uv buttons and echoes the real command.
-  **Design (written in 5e, not built; full text in `docs/plugins.md` → "Roadmap:
-  installing plugins"):**
-  - A dedicated **plugin env** at `DATA_DIR/plugin-env`, made on the first install with
-    `uv venv --python <Nu's own interpreter>` (same version + ABI as the process that
-    imports plugins), separate from the learner env (plugin code runs in Nu's process; a
-    learner's package changes must never break Nu). `plugin-env.json` records its Python
-    and the plugins the learner added, so it can be rebuilt.
-  - At startup, **before `discover()`**, its `site-packages` goes on `sys.path` via
-    `site.addsitedir`, *after* Nu's own entries (Nu's PyQt6 always wins); entry points
-    then find its plugins as ordinary installed packages (kind "package").
-  - **Add a plugin…** on the Plugins tab: package name → PyPI summary/author + trust note
-    + the exact command → `uv pip install --python <plugin env> <pkg>` through `Uv`, so it
-    is in "What Nu Ran" and streams into the package progress window. **Add from a file…**
-    (`.whl`) for offline. Takes effect at the next start, like switching.
-  - The new package's `learner-env` extra is read from its metadata and installed into
-    the learner env right away (same command log); `wheels.baseline_packages()` already
-    covers rebuilds once the plugin env is on `sys.path`.
-  - **Remove** (plugin-env plugins only): `uv pip uninstall --python <plugin env> <pkg>`.
-  - Open: keeping a second PyQt6/QScintilla out of the plugin env (constraints from
-    Nu's exact versions + `--no-deps` for Nu's own packages, or a `.pth` exposing Nu's
-    packages so uv sees them installed; prototype both); rebuild on a Nu upgrade that
-    changes Python, plus an Update button for API bumps; offline (ship vetted wheels?);
-    uninstall leaves deps (rebuild from the recorded list instead?); typosquatting;
-    same id installed + dropped in (installed wins today).
-- [ ] Offline-first: bundled plugins' wheels ship in the installer wheelhouse (`mu/wheels`).
+**5d. Plugin dependencies via uv (ties into Phase 4):** ✅ DONE
+- [x] A plugin declares its PyPI runtime deps; installing the plugin **uv-installs** the
+  package + deps into a **dedicated plugin env**, and its `learner-env` extra into the
+  learner env. Built as designed in 5e (`mu/plugin/plugin_env.py`, GUI-free):
+  - **Plugin env** `DATA_DIR/plugin-env`, made on the first install with `uv venv
+    --python <Nu's own interpreter>` (`sys.executable`; for an app launcher that isn't
+    Python, the interpreter in `sys.base_prefix`, else its X.Y). `plugin-env.json` next
+    to it records its Python X.Y and what the learner added (requirement as typed, or the
+    wheel path).
+  - `app.setup_modes` calls `plugin_env.add_to_sys_path()` **before** `load_plugins`:
+    `site.addsitedir` (appends, so Nu's PyQt6 always wins). Its entry points are a new
+    `PluginRecord.kind` **"added"** ("Added by you"), with the record's `distribution`;
+    `BUNDLED_DISTRIBUTIONS` unchanged.
+  - **Add a plugin…** (PEP 508 name only: no URL/path/option/marker reaches argv) →
+    PyPI JSON fetched on a `QThread` (summary, author, homepage, latest version) + trust
+    note + exact commands → `uv pip install --python <plugin env> --excludes
+    <nu-provides.txt> <req>`. **Add from a file…** for a `.whl` (offline). All through
+    `Uv` (What Nu Ran + log), streamed into `PackageDialog` (`setup_job`), effective at
+    the next start. **Update** (`--upgrade`, name installs only) and **Remove** (`uv pip
+    uninstall`) for "added" plugins only. Core-only `Host` methods; no API bump.
+  - Open questions, decided by the maintainer's lead: **no second PyQt6** — every
+    install passes `--excludes` listing every distribution Nu's process sees (outside the
+    plugin env, plus `nu-editor`/`mu-editor`; needs uv ≥ 0.9.8, now the floor), then the
+    plugin's own `Requires-Dist` on those is checked against Nu's versions (`packaging`,
+    markers evaluated) and it's uninstalled with a plain reason if unsatisfied; **not a
+    plugin** (no `mu.plugins` entry point) → uninstalled; **Nu moved to a new Python** →
+    the env stays off `sys.path` (logged) and the tab offers **Reinstall my plugins**
+    (fresh env + the recorded list; a vanished wheel is reported, not fatal);
+    **uninstall leaves deps** — accepted for v1 (inert unless they declare
+    `mu.plugins`), documented; **offline** = Add from a file; **same id installed +
+    dropped in** — unchanged (installed wins).
+  - Verified end to end (Xvfb, the real window): add the example plugin's wheel →
+    restart → Example mode, "Added by you" → Remove → restart → gone; the plugin env
+    never got PyQt6. Also by script: a plugin depending on PyQt6 + `nu-editor` (both
+    excluded) with a `learner-env` extra (installed into the learner env), one needing
+    `PyQt6>=99` and one without an entry point (both removed again), add by name from
+    real PyPI, and Reinstall after a faked Python change.
+- [x] Offline-first: bundled plugins' wheels ship in the installer wheelhouse (`mu/wheels`).
   Minimal version done in 5c part 1: `wheels.baseline_packages()` adds every installed
   plugin's `learner-env` requirements (read from metadata, so it works for switched-off
   plugins and in the bare build Python), and `build.yml` installs the bundled plugins
-  (`--no-deps`) before `python -m mu.wheels --package`. Left for 5d: installing a plugin's
-  learner-env packages into an **existing** environment when the plugin is added (today
-  they're installed only when the env is created/recreated, e.g. on a Nu upgrade); only the
-  core's packages are verified by `ensure_key_modules`; drop-in plugins can't declare any.
+  (`--no-deps`) before `python -m mu.wheels --package`. 5d added installing a plugin's
+  learner-env packages into the **existing** environment when the plugin is added. Still
+  open: only the core's packages are verified by `ensure_key_modules`; drop-in plugins
+  can't declare any; no vetted community wheels in the installers (offline = Add from a
+  file).
 
 **5e. Plugin management UX:**
 - [x] A **"Plugins"** admin tab: every discovered plugin (bundled first, then installed
@@ -492,8 +502,8 @@ drop-in dir covers them.
 - [x] Found while building it: user settings were **never saved** (`UserSettings.autosave`
   was off and nothing called `save()`), so `disabled_plugins` and `PluginSettings` didn't
   persist. Now autosaved on exit, and `set_plugin_enabled` saves at once.
-- [ ] Install / remove from the tab — surfacing the real uv command (transparency, as in
-  4b). Designed under 5d; not built.
+- [x] Install / update / remove from the tab — surfacing the real uv command
+  (transparency, as in 4b), before running it and in What Nu Ran. Built in 5d.
 - NOTE (future): no **live** unload/load. `Host.unload_plugin` exists, but the mode picker,
   the session's current mode, and running panes/REPLs/timers a plugin owns make live
   removal risky; changes apply at the next start.

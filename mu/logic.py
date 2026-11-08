@@ -1364,6 +1364,9 @@ class Editor(QObject):
                 "plugins": self.plugin_host.describe_plugins(),
                 "folder": self.plugin_host.plugins_folder,
                 "help_url": PLUGINS_HELP_URL,
+                # Adding, updating and removing plugins goes through the Host.
+                "manager": self.plugin_host,
+                "environment": self.plugin_host.plugin_environment_state(),
             }
         with open(LOG_FILE, "r", encoding="utf8") as logfile:
             new_settings = self._view.show_admin(

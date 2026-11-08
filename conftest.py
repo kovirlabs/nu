@@ -95,6 +95,17 @@ def temp_plugins_dir(tmp_path, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def temp_plugin_env(tmp_path, monkeypatch):
+    """Each test gets its own (missing) plugin environment, so none touches
+    another's, or puts one on sys.path"""
+    from mu.plugin import plugin_env
+
+    environment = plugin_env.PluginEnvironment(str(tmp_path / "plugin-data"))
+    monkeypatch.setattr(plugin_env, "plugin_env", environment)
+    return environment
+
+
+@pytest.fixture(autouse=True)
 def no_plugin_error_handler(monkeypatch):
     """Don't let one test's plugin error handler leak into another"""
     from mu.plugin import errors

@@ -1,6 +1,6 @@
 # Release History
 
-## 2.0.0 (unreleased)
+## 2.0.0
 
 The first stable release of **Nu**, a maintained continuation of the
 [Mu editor](https://github.com/mu-editor/mu) by Nicholas H. Tollervey and the Mu
@@ -27,6 +27,8 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
 
 * **Native installers** built with Briefcase: Windows `.msi`, macOS `.app`
   (Apple Silicon) and Linux `.AppImage`, published with each GitHub release.
+  On Windows, a new installer replaces the installed Nu (including a 2.0.0
+  beta) instead of installing alongside it.
 * **Works offline from first launch.** The installers carry a Python for your
   programs' environment, so the first start needs no internet.
 * **See your Python environment.** In Python 3 and Pygame Zero modes the
@@ -69,6 +71,20 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   `pygamezero`), read from its package without loading it. **Open plugins
   folder** takes you to where you add your own. See
   [Managing plugins](https://kovirlabs.github.io/nu/plugins/#managing-plugins).
+* **Add plugins from inside Nu**, in the installers too. On the Plugins tab,
+  **Add a plugin…** takes a package name, shows what PyPI says about it
+  (summary, author, web page, latest version), the trust note and the exact
+  `uv` command, and installs it when you agree; **Add from a file…** does
+  the same from a `.whl` file, without the internet. Plugins you add go into
+  a plugin environment of their own in Nu's data folder (never a second copy
+  of PyQt6 or anything else Nu has), show as *Added by you*, and can be
+  **Updated** or **Removed**. Packages a plugin needs for your programs (its
+  `learner-env` extra) go into your Python environment straight away. Nu
+  refuses, and removes again, a package that isn't a Nu plugin or needs a
+  version of something Nu has that Nu doesn't have. Every command is in
+  **What Nu Ran**, and changes take effect when you restart Nu. If a new Nu
+  moves to a new Python, the tab offers **Reinstall my plugins**. See
+  [Adding a plugin](https://kovirlabs.github.io/nu/plugins/#adding-a-plugin).
 * **BBC micro:bit mode is back, opt-in (it needs testing on real
   micro:bits first).** It's a plugin (`nu-microbit`) built on maintained
   tools only. **Flash** puts the current tab on the micro:bit as `main.py`
@@ -177,7 +193,9 @@ And older problems, found while checking the whole app:
   that's new in Nu, still appears in English, and the Ukrainian translation
   needs a review for the new name. To help, see
   [Translating Nu](https://kovirlabs.github.io/nu/translations/).
-* In the installers, plugins can only be added through the plugins folder.
+* Removing a plugin you added leaves behind the packages it needed (they do
+  nothing unless they're plugins themselves), and the packages it added to
+  your Python environment, since your programs may use them.
 * The **plugin API** (version 0.5) may still change; plugins say which
   version they were written for, and Nu skips ones it can't run.
 

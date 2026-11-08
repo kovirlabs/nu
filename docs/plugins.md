@@ -6,10 +6,10 @@
     plugins folder (Phases 5a and 5b in `TODO.md`), CircuitPython and Pygame
     Zero ship as plugins (5c), the **Plugins** tab lists them and switches
     them on and off (5e), and micro:bit is back as an opt-in plugin (Phase 6,
-    see [The BBC micro:bit](microbit.md)). The API is at version **0.5**, so it can still
-    change between releases. In the downloadable installers the plugins
-    folder is the only way to add a plugin (see
-    [Roadmap: installing plugins](#roadmap-installing-plugins)).
+    see [The BBC micro:bit](microbit.md)). Learners add plugins from PyPI or
+    a wheel file on the Plugins tab, installers included (5d, see
+    [Adding a plugin](#adding-a-plugin)). The API is at version **0.5**, so
+    it can still change between releases.
 
 ## Managing plugins
 
@@ -23,8 +23,8 @@ Click the **cog** in the bottom-right corner of Nu's window and choose the
 |---|---|
 | **On** | Tick to switch the plugin on, untick to switch it off. |
 | **Plugin** | Its name. Hover over it to see what it adds. |
-| **From** | *Bundled with Nu* (it comes with Nu: CircuitPython and Pygame Zero), *Installed package* (installed into the Python that Nu runs from, e.g. micro:bit while it's opt-in), or *Plugins folder* (a file or folder put in Nu's plugins folder). Hover over it for the exact package or file. |
-| **Status** | *On*, *Off*, *Couldn't load*, or *Switched off after errors; see the log*. |
+| **From** | *Bundled with Nu* (it comes with Nu: CircuitPython and Pygame Zero), *Installed package* (installed into the Python that Nu runs from, e.g. micro:bit while it's opt-in), *Added by you* (added with **Add a plugin…** or **Add from a file…**), or *Plugins folder* (a file or folder put in Nu's plugins folder). Hover over it for the exact package or file. |
+| **Status** | *On*, *Off*, *Couldn't load*, *Switched off after errors; see the log*, or *Removed; gone when you restart Nu*. |
 | **Modes** | The modes it adds to the mode picker. |
 
 Click a plugin to see more about it under the list. If it couldn't load,
@@ -38,9 +38,10 @@ CircuitPython and Pygame Zero out of the mode picker. Changes take effect the
 **next time you start Nu**; until then the plugin keeps working, and the tab
 says *On until you restart Nu*. A switched-off plugin isn't loaded at all.
 
-**Adding a plugin.** Click **Open plugins folder**, put the plugin's `.py`
-file (or its folder) there, and restart Nu. Installing plugins from inside Nu
-is planned (see the [roadmap](#roadmap-installing-plugins)).
+**Adding a plugin.** Click **Add a plugin…** and type its package name, or
+**Add from a file…** for a `.whl` file; see [Adding a plugin](#adding-a-plugin)
+below. A plugin that's a single `.py` file (or a folder) goes in the plugins
+folder instead: click **Open plugins folder**, put it there, and restart Nu.
 
 **When a plugin keeps failing**, Nu tells you each time and carries on. After
 three errors it offers to switch the plugin off; if you agree, the Plugins tab
@@ -52,6 +53,79 @@ with the same access to your computer as Nu itself: it can read and change
 your files, like any program you install. Nu can't check what a plugin does.
 
 **How to write a plugin** on the tab opens this page.
+
+### Adding a plugin
+
+**From PyPI.** Click **Add a plugin…** and type the name of the plugin's
+package, for example `nu-microbit` (the plugin's web page says what it is).
+Nu asks PyPI about it and shows what the package says about itself: its
+summary, author, web page and latest version. Check it's the one you meant:
+anyone can put a package on PyPI, and names can look alike. Under that are
+the trust note and the exact commands Nu will run, such as
+
+```bash
+uv venv --python <Nu's own Python> <Nu's data folder>/plugin-env
+uv pip install --python <Nu's data folder>/plugin-env/bin/python --excludes <Nu's data folder>/plugin-env/nu-provides.txt nu-microbit
+```
+
+Click **Add it**: the commands run in a progress window, their output
+streaming in, and they're listed under **What Nu Ran** afterwards. The plugin
+loads the **next time you start Nu**; until then the tab lists it under
+*When you restart Nu*.
+
+Only a package name is accepted (`nu-microbit`, or with a version such as
+`nu-microbit>=0.2`): not a web address, a file path or an option for uv.
+
+**From a file (no internet).** A teacher can download a plugin's wheel (a
+`.whl` file) once and share it. **Add from a file…** asks for the file, shows
+its name and version, and installs it the same way. A newer file of a plugin
+you added replaces it.
+
+**What Nu checks.** After installing, Nu reads the new package's details
+(without running it) and removes it again, saying why, if
+
+- it isn't a Nu plugin (it doesn't declare a `mu.plugins` entry point), or
+- it needs a version of a package Nu already has (PyQt6, say) that isn't the
+  one Nu has.
+
+A package Nu already has (a bundled plugin, or PyQt6) can't be added, and one
+you've already added is updated with **Update** instead.
+
+**Packages for your programs.** If the plugin lists packages your programs
+need (its [`learner-env` extra](#packages-for-the-learners-environment)), Nu
+installs them into your Python environment straight away, with
+`uv pip install --python <your environment's Python> …`, also shown in the
+window and under **What Nu Ran**. If there's no environment yet, they're added
+when Nu makes it.
+
+**Updating and removing.** Pick a plugin you added and click **Update** to get
+its latest version from PyPI (`uv pip install --upgrade …`; one added from a
+file is updated by adding a newer file), or **Remove** to uninstall it (`uv
+pip uninstall …`, after asking). Both take effect at the next start. Bundled
+plugins, installed packages and plugins-folder plugins have neither button:
+switch them off, or delete the file.
+
+**After a Nu upgrade.** Plugins you added are built for the Python Nu runs
+on. If a new Nu moves to a new Python (3.11 to 3.12, say), they're not loaded
+(the log says why), and the Plugins tab says so, with a **Reinstall my
+plugins** button: it makes the plugin environment again with Nu's new Python
+and adds every plugin you'd added. One added from a file that's no longer
+there is reported, and you can add it again.
+
+**Limits, for now:**
+
+- Removing a plugin leaves the packages it needed in the plugin environment.
+  They're harmless (only a package with a `mu.plugins` entry point is loaded)
+  and **Reinstall my plugins** starts the environment afresh. The packages it
+  added to your Python environment stay too, since your programs may use them.
+- Installing by name needs the internet; the installers don't carry any
+  plugins besides the bundled ones. **Add from a file…** works offline.
+- There's no list of recommended plugins to choose from, and no checking
+  beyond the above: you choose which plugins to trust.
+- If a plugin you added and one in the plugins folder have the same id, the
+  one you added wins (as installed packages always do).
+- A plugin in the plugins folder can't list packages for your programs (it
+  has no package details); package it to do that.
 
 !!! note "For teachers: where the choice is kept"
 
@@ -98,7 +172,8 @@ Nu looks for plugins once, at startup, in two places. Changes take effect the
 next time Nu starts.
 
 1. **Installed packages.** Any package installed in the environment Nu runs
-   from that declares a `mu.plugins` entry point (see
+   from, or added by the learner into the plugin environment (see below), that
+   declares a `mu.plugins` entry point (see
    [The entry point](#the-entry-point)). Its id is the entry point's name.
 2. **The plugins folder**, for local plugins that aren't packaged:
 
@@ -122,10 +197,26 @@ installed one, the folder plugin is skipped.
 !!! note "Installers and installed packages"
 
     In the Windows, macOS and Linux installers, Nu runs from its own bundled
-    environment, which you can't install packages into. Until Phase 5d adds
-    plugin installs, use the plugins folder there. Installed packages are
-    picked up in a development checkout (`uv pip install -e path/to/plugin`)
-    or a `pip install nu-editor`.
+    environment, which can't be installed into (it's read-only, and changing
+    it would break the app's signature and its upgrades). So plugins the
+    learner adds (see [Adding a plugin](#adding-a-plugin)) go into a **plugin
+    environment** of their own, `plugin-env` in Nu's data folder, made with
+    Nu's own Python so their compiled code matches the process that imports
+    them. At startup, before plugins are discovered, its `site-packages` goes
+    on `sys.path` with `site.addsitedir` (so `.pth` files work), *after*
+    Nu's own entries, so Nu's packages (PyQt6 above all) always win. It's
+    left off, with the reason in the log, if it was made with another Python.
+
+    `plugin-env.json`, next to it, records that Python and what the learner
+    added (the name as typed, or the wheel file), so **Reinstall my plugins**
+    can make it again. Every install passes uv `--excludes` with a list of
+    every package Nu's own process has (`plugin-env/nu-provides.txt`), so the
+    plugin environment never gets a second PyQt6, QScintilla or `nu-editor`;
+    afterwards Nu checks the plugin's own requirements on those packages
+    against the versions Nu has.
+
+    In a development checkout (`uv pip install -e path/to/plugin`) or a
+    `pip install nu-editor`, installing into Nu's environment works too.
 
 ### When a plugin is skipped
 
@@ -370,8 +461,11 @@ tell the learner if there's none). Offer the Plotter only if
 
 The core uses `load_plugin`, `unload_plugin`, `modes`, `plugins`,
 `plugin_records`, `describe_plugins`, `set_plugin_enabled` and
-`plugins_folder` (the last four for the Plugins tab); plugins shouldn't need
-them.
+`plugins_folder`, and for adding plugins `plugin_env_status`,
+`plugin_environment_state`, `check_plugin_name`, `check_plugin_file`,
+`look_up_plugin`, `add_plugin`, `update_plugin`, `remove_plugin` and
+`reinstall_plugins` (all but the first four for the Plugins tab); plugins
+shouldn't need them, and they're not part of the versioned API.
 
 ### Icons and images
 
@@ -407,9 +501,10 @@ Nu reads it from your package's metadata, without importing your plugin, so it
 counts even while your plugin is switched off. These packages are installed
 with Nu's own when the learner's environment is built (on first run, and when
 Nu is upgraded), and bundled plugins' wheels ship in the installers so that
-works offline. Not yet (Phase 5d): installing them into an *existing*
-environment when you add a plugin later, and a way for drop-in plugins (which
-have no package metadata) to declare any.
+works offline. When a learner adds your plugin from the Plugins tab, they're
+installed into their existing environment straight away (see
+[Adding a plugin](#adding-a-plugin)). Drop-in plugins (which have no package
+metadata) can't declare any.
 
 ### Not in the API yet
 
@@ -418,8 +513,6 @@ them:
 
 - **Panes and settings pages**, e.g. micro:bit's file-transfer pane (designed
   below: [Roadmap: the micro:bit Files pane](#roadmap-the-microbit-files-pane)).
-- **Installing a plugin and its learner-env packages from Nu** (Phase 5d; see
-  the [roadmap](#roadmap-installing-plugins)).
 - **Translations for plugins.** Bundled plugins use Nu's own message catalog
   (their strings are extracted with Nu's); a community plugin's strings aren't
   translated yet.
@@ -458,8 +551,9 @@ until it is).
 
 - A plugin is a normal Python distribution: its own `pyproject.toml` declaring
   dependencies, the `mu.plugins` entry point and (optionally) the
-  `learner-env` extra. Installing it into the learner's environment from Nu
-  comes in Phase 5d.
+  `learner-env` extra. Learners add it from the Plugins tab (by name from
+  PyPI, or from its wheel file); it shouldn't list `nu-editor` as a
+  dependency (Nu leaves it out anyway).
 - **Bundled** plugins live in this repo under `plugins/<name>/` as members of a
   **uv workspace** (shared lockfile; independently buildable and publishable).
   They are also published to PyPI, so they travel the *exact same* path a
@@ -492,115 +586,10 @@ Plugins are **arbitrary in-process Python** — there is no sandbox. The trust
 model is the same as `pip`: *you chose to install it.* The Plugins tab says so
 in plain words: a plugin runs inside Nu with the same access to your computer
 as Nu itself, so only add plugins you trust, as you'd only install programs
-you trust. When Nu can install plugins (see below), it will show the real `uv`
-command before running it. (A curated/signed index is a possible future, not a
-v1 guarantee.) In-process plugins can't be meaningfully sandboxed without a
+you trust. Before adding a plugin, Nu shows what PyPI says about it (to help
+spot a look-alike name) and the real `uv` commands it will run. (A
+curated/signed index is a possible future, not a v1 guarantee.) In-process plugins can't be meaningfully sandboxed without a
 far larger redesign, which is out of scope.
-
-## Roadmap: installing plugins
-
-!!! note "Design only"
-
-    This is the plan for Phase 5d. None of it is built yet: today a learner
-    adds a plugin by putting it in the plugins folder.
-
-**The constraint.** In the installers, Nu runs from the environment Briefcase
-bundled into the app. It can't be installed into: it's read-only (`Program
-Files`, a signed `.app`, an AppImage's squashfs), and changing it would break
-Nu's signature and its next upgrade. So entry-point discovery only sees the
-bundled plugins there, and a plugin from PyPI needs somewhere else to live.
-
-**1. A plugin environment.** A virtual environment of its own under Nu's data
-folder (`DATA_DIR/plugin-env`, next to the learner's `mu_venv-…`), made the
-first time a plugin is added with
-
-```bash
-uv venv --python <Nu's own Python> <DATA_DIR>/plugin-env
-```
-
-Using Nu's own interpreter (`sys.executable`; in the installers, the Python
-Briefcase bundled) gives it exactly Nu's Python version and ABI, so a plugin's
-compiled extensions match the process that imports them. It's separate from
-the learner's environment on purpose: plugin code runs *inside* Nu, the
-learner's programs run in their own process, and a learner removing a package
-must never break Nu. A small `plugin-env.json` records the Python version and
-the plugins the learner added, so the environment can be rebuilt (see the open
-questions).
-
-**2. On `sys.path` before discovery.** At startup, before `discover()`, Nu
-adds the plugin environment's `site-packages` to `sys.path` with
-`site.addsitedir` (so `.pth` files work), *after* Nu's own entries, so Nu's
-own packages (PyQt6 above all) always win. `importlib.metadata` then finds the
-plugin's `mu.plugins` entry point like any installed package's; the Plugins
-tab shows it as *Installed package*. Nothing else about loading changes:
-disabling, error isolation and the tab work as they do now.
-
-**3. Installing.** The Plugins tab grows an **Add a plugin…** button. It asks
-for a package name (for example `nu-microbit`), shows what PyPI says about it
-(summary, author, homepage) with the trust note, and the exact command it will
-run:
-
-```bash
-uv pip install --python <DATA_DIR>/plugin-env/bin/python nu-microbit
-```
-
-The command goes through the same `Uv` wrapper as the learner's packages, so
-it's in **What Nu Ran** and the log, and its output streams into the same
-progress window. Like switching, an added plugin loads at the next start.
-**Add from a file…** takes a `.whl` the teacher downloaded, which works
-offline.
-
-**4. The plugin's packages for the learner.** A plugin's `learner-env` extra
-(see [Packages for the learner's environment](#packages-for-the-learners-environment))
-is read from the newly installed package's metadata and installed into the
-learner's environment straight away, through the same command log:
-
-```bash
-uv pip install --python <the learner's environment's Python> <its learner-env requirements>
-```
-
-`wheels.baseline_packages()` already includes every installed plugin's extra,
-so a rebuilt learner environment gets them too, once the plugin environment is
-on `sys.path`.
-
-**5. Removing.** A plugin in the plugin environment gets a **Remove** button
-(bundled and plugins-folder plugins don't: switch them off, or delete the
-file):
-
-```bash
-uv pip uninstall --python <DATA_DIR>/plugin-env/bin/python nu-microbit
-```
-
-### Open questions
-
-- **PyQt6 and the other packages Nu already has.** A plugin depends on Nu, and
-  so, through it, on PyQt6. Installing it must not put a second PyQt6 (or a
-  different QScintilla) into the plugin environment: Nu's copy is the one
-  imported, and a mismatched one could only cause confusion. Candidates, to
-  prototype: a `--constraint` file pinning every package Nu has to its exact
-  version (from `importlib.metadata`) together with a `--no-deps` install of
-  the packages Nu provides, or a `.pth` file in the plugin environment that
-  makes Nu's own packages visible so uv treats them as already installed.
-  Plugins should not list `nu-editor` itself as a dependency.
-- **Upgrading Nu.** A new Nu may bring a new Python (3.11 → 3.12): the plugin
-  environment then has to be rebuilt and its plugins reinstalled, as the
-  learner's environment already is. A new plugin API version skips plugins
-  that haven't caught up, with the reason on the tab; an **Update** button
-  (`uv pip install --upgrade`) would help.
-- **Offline.** Installing by name needs PyPI; a wheel file doesn't. Should
-  the installers carry a small set of vetted plugins' wheels, as they carry
-  the bundled ones?
-- **Uninstalling leaves dependencies behind** (`uv pip uninstall` removes only
-  what it's given). Rebuilding the plugin environment from the recorded list
-  is cheap with uv and may be simpler than tracking dependencies. The
-  learner-env packages a plugin brought stay too, since the learner's own
-  programs may use them.
-- **Trust when installing by name:** typosquatting on PyPI. Showing the
-  package's metadata before confirming helps; a curated list is a possible
-  future.
-- **Same id twice.** An installed plugin and a plugins-folder plugin with the
-  same id: the installed one wins today. Is that still right when the learner
-  installed one themselves?
 
 ## Roadmap: the micro:bit Files pane
 

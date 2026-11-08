@@ -45,6 +45,7 @@ from PyQt6.QtWidgets import (
     QTreeWidgetItem,
     QAbstractItemView,
     QInputDialog,
+    QFileDialog,
     QMessageBox,
     QToolButton,
 )
@@ -645,6 +646,7 @@ class PluginsWidget(QWidget):
     KINDS = {
         "bundled": _("Bundled with Nu"),
         "package": _("Installed package"),
+        "added": _("Added by you"),
         "folder": _("Plugins folder"),
     }
 
@@ -664,9 +666,11 @@ class PluginsWidget(QWidget):
     def setup(self, plugins, open_directory=None):
         """
         `plugins` holds the rows from `Host.describe_plugins` under
-        "plugins", the plugins folder under "folder" and the page about
-        writing plugins under "help_url". `open_directory(path)` shows a
-        folder in the system's file manager.
+        "plugins", the plugins folder under "folder", the page about
+        writing plugins under "help_url" and, to add and remove plugins, the
+        Host under "manager" and its `plugin_environment_state()` under
+        "environment". `open_directory(path)` shows a folder in the system's
+        file manager.
         """
         self.rows = sorted(
             plugins.get("plugins", []),
@@ -679,7 +683,14 @@ class PluginsWidget(QWidget):
         )
         self.folder = plugins.get("folder")
         self.help_url = plugins.get("help_url")
+        self.manager = plugins.get("manager")
+        self.environment = plugins.get("environment") or {}
         self.open_directory = open_directory
+        #: What the learner changed with Add/Update/Remove this time, as
+        #: sentences: it all happens at the next start.
+        self.changes = []
+        #: The packages of the plugins removed this time.
+        self.removed = set()
         widget_layout = QVBoxLayout()
         self.setLayout(widget_layout)
         self.intro = QLabel(
@@ -691,6 +702,31 @@ class PluginsWidget(QWidget):
         )
         self.intro.setWordWrap(True)
         widget_layout.addWidget(self.intro)
+        # After Nu moved to a new Python, the plugins the learner added need
+        # installing again before they load.
+        self.reinstall_box = QWidget()
+        reinstall_row = QHBoxLayout(self.reinstall_box)
+        reinstall_row.setContentsMargins(0, 0, 0, 0)
+        self.reinstall_note = QLabel(
+            _(
+                "Nu has moved to Python {new}, so the plugins you added for "
+                "Python {old} ({names}) are switched off until you install "
+                "them again."
+            ).format(
+                new=self.environment.get("nu_python", ""),
+                old=self.environment.get("python", ""),
+                names=", ".join(self.environment.get("added", [])) or _("none"),
+            )
+        )
+        self.reinstall_note.setWordWrap(True)
+        reinstall_row.addWidget(self.reinstall_note, stretch=1)
+        self.reinstall_button = QPushButton(_("Reinstall my plugins"))
+        self.reinstall_button.clicked.connect(self.reinstall_plugins)
+        reinstall_row.addWidget(
+            self.reinstall_button, alignment=Qt.AlignmentFlag.AlignTop
+        )
+        self.reinstall_box.setVisible(self._python_changed())
+        widget_layout.addWidget(self.reinstall_box)
         # The list.
         self.tree = QTreeWidget()
         self.tree.setColumnCount(5)
@@ -755,6 +791,40 @@ class PluginsWidget(QWidget):
         details_row.addWidget(self.details, stretch=1)
         details_row.addWidget(self.details_copy, alignment=Qt.AlignmentFlag.AlignTop)
         widget_layout.addWidget(self.details_box, stretch=1)
+        # What changes at the next start.
+        self.changes_label = QLabel()
+        self.changes_label.setWordWrap(True)
+        self.changes_label.hide()
+        widget_layout.addWidget(self.changes_label)
+        # Adding, updating and removing plugins.
+        manage = QHBoxLayout()
+        self.add_button = QPushButton(_("Add a plugin…"))
+        self.add_button.setToolTip(_("Install a plugin from PyPI by its name"))
+        self.add_button.clicked.connect(self.add_plugin)
+        manage.addWidget(self.add_button)
+        self.add_file_button = QPushButton(_("Add from a file…"))
+        self.add_file_button.setToolTip(
+            _("Install a plugin from a .whl file (this works without the internet)")
+        )
+        self.add_file_button.clicked.connect(self.add_plugin_file)
+        manage.addWidget(self.add_file_button)
+        self.update_button = QPushButton(_("Update"))
+        self.update_button.setToolTip(
+            _("Get the latest version of a plugin you added from PyPI")
+        )
+        self.update_button.clicked.connect(self.update_plugin)
+        manage.addWidget(self.update_button)
+        self.remove_button = QPushButton(_("Remove"))
+        self.remove_button.setToolTip(_("Remove a plugin you added"))
+        self.remove_button.clicked.connect(self.remove_plugin)
+        manage.addWidget(self.remove_button)
+        manage.addStretch()
+        widget_layout.addLayout(manage)
+        can_add = self.manager is not None and not self._python_changed()
+        self.add_button.setEnabled(can_add)
+        self.add_file_button.setEnabled(can_add)
+        self.update_button.setEnabled(False)
+        self.remove_button.setEnabled(False)
         # Buttons and the trust note.
         buttons = QHBoxLayout()
         self.open_folder_button = QPushButton(_("Open plugins folder"))
@@ -784,12 +854,20 @@ class PluginsWidget(QWidget):
     def _row(self, item):
         return item.data(self.ON, Qt.ItemDataRole.UserRole)
 
+    def _python_changed(self):
+        return self.environment.get("status") == "python-changed"
+
+    def _is_removed(self, row):
+        return bool(row.get("distribution")) and row["distribution"] in self.removed
+
     def _checked(self, item):
         return item.checkState(self.ON) == Qt.CheckState.Checked
 
     def _status(self, item):
         """The status to show: what's true now, and what changes at restart."""
         row = self._row(item)
+        if self._is_removed(row):
+            return _("Removed; gone when you restart Nu")
         on_next_start = self._checked(item) if row["can_switch"] else row["enabled"]
         if row["status"] == "loaded":
             return _("On") if on_next_start else _("On until you restart Nu")
@@ -834,6 +912,7 @@ class PluginsWidget(QWidget):
 
     def _show_details(self, item, previous=None):
         """Describe the selected plugin under the list."""
+        self._update_buttons(item)
         if item is None:
             self.summary.setText(
                 html.escape(_("Nu didn't find any plugins."), quote=False)
@@ -881,6 +960,138 @@ class PluginsWidget(QWidget):
         self.details.setPlainText(details)
         self.details_box.setVisible(bool(details))
 
+    def _update_buttons(self, item):
+        """Offer Update and Remove for a plugin the learner added."""
+        row = self._row(item) if item is not None else {}
+        usable = (
+            self.manager is not None
+            and not self._is_removed(row)
+            and not self._python_changed()
+        )
+        self.update_button.setEnabled(usable and bool(row.get("updatable")))
+        self.remove_button.setEnabled(usable and bool(row.get("removable")))
+
+    def _selected_row(self):
+        item = self.tree.currentItem()
+        return self._row(item) if item is not None else None
+
+    def add_plugin(self):
+        """
+        Ask for a plugin's package name, show what PyPI says about it and
+        what Nu will run, and if the learner agrees, install it.
+        """
+        title = _("Add a Plugin")
+        text, ok = QInputDialog.getText(
+            self,
+            title,
+            _("The name of the plugin's package on PyPI (for example nu-microbit):"),
+        )
+        if not ok:
+            return
+        try:
+            requirement = self.manager.check_plugin_name(text)
+        except ValueError as ex:
+            QMessageBox.warning(self, title, str(ex))
+            return
+        job = self.manager.add_plugin(requirement=requirement)
+        confirm = AddPluginDialog(self)
+        confirm.setup(
+            title,
+            job.preview,
+            name=requirement.name,
+            look_up=self.manager.look_up_plugin,
+        )
+        if confirm.exec():
+            self.run_job(job, title)
+
+    def add_plugin_file(self):
+        """Add a plugin from a wheel file (no internet needed)."""
+        title = _("Add a Plugin from a File")
+        path, _filter = QFileDialog.getOpenFileName(
+            self, title, "", _("Plugin files (*.whl)")
+        )
+        if not path:
+            return
+        try:
+            name, version = self.manager.check_plugin_file(path)
+        except ValueError as ex:
+            QMessageBox.warning(self, title, str(ex))
+            return
+        job = self.manager.add_plugin(wheel=path)
+        confirm = AddPluginDialog(self)
+        confirm.setup(
+            title,
+            job.preview,
+            info={
+                "name": name,
+                "version": version,
+                "summary": "",
+                "author": "",
+                "homepage": "",
+                "file": path,
+            },
+        )
+        if confirm.exec():
+            self.run_job(job, title)
+
+    def update_plugin(self):
+        """Update the selected plugin (one the learner added) from PyPI."""
+        row = self._selected_row()
+        if not (row and row.get("updatable")):
+            return
+        self.run_job(self.manager.update_plugin(row["distribution"]), _("Update"))
+
+    def remove_plugin(self):
+        """Remove the selected plugin (one the learner added)."""
+        row = self._selected_row()
+        if not (row and row.get("removable")):
+            return
+        job = self.manager.remove_plugin(row["distribution"])
+        answer = QMessageBox.question(
+            self,
+            _("Remove a Plugin"),
+            _(
+                "Remove {name}? Nu will run:\n\n{commands}\n\nIt's gone the "
+                "next time you start Nu."
+            ).format(name=row["name"], commands="\n".join(job.preview)),
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        if self.run_job(job, _("Remove a Plugin")):
+            self.removed.add(row["distribution"])
+            item = self.tree.currentItem()
+            self._show_status(item)
+            self._show_details(item)
+
+    def reinstall_plugins(self):
+        """Make the plugin environment again, with the plugins added before."""
+        job = self.manager.reinstall_plugins()
+        self.run_job(job, _("Reinstall my plugins"))
+        if job.changed:
+            self.reinstall_button.setEnabled(False)
+            self.reinstall_note.setText(
+                _("Your plugins are installed again. They load when you restart Nu.")
+            )
+
+    def run_job(self, job, title):
+        """
+        Run a plugin_env.PluginJob in the package progress window, then note
+        what changes at the next start. Return whether it worked.
+        """
+        dialog = PackageDialog(self)
+        dialog.setup_job(job, title)
+        dialog.exec()
+        if job.changed:
+            self.changes += [m for m in job.messages if m.strip()]
+            self.changes_label.setText(
+                "<b>{}</b><br>{}".format(
+                    html.escape(_("When you restart Nu:"), quote=False),
+                    "<br>".join(html.escape(m, quote=False) for m in self.changes),
+                )
+            )
+            self.changes_label.show()
+        return job.succeeded
+
     def enabled_plugins(self):
         """Whether each plugin should load at the next start: {id: bool}."""
         return {
@@ -911,6 +1122,167 @@ class PluginsWidget(QWidget):
     def show_help(self):
         """Open the page about writing plugins in the web browser."""
         webbrowser.open_new(self.help_url)
+
+
+class PluginLookupWorker(QObject):
+    """Asks PyPI about a package, on a thread of its own."""
+
+    # What PyPI said (a dict; empty if it has no such package) and "", or
+    # {} and why Nu couldn't ask.
+    finished = pyqtSignal(dict, str)
+
+    def __init__(self, look_up, name):
+        super().__init__()
+        self.look_up = look_up
+        self.name = name
+
+    def run(self):
+        try:
+            info = self.look_up(self.name)
+        except Exception as ex:  # no internet, PyPI down, ...
+            logger.info("Couldn't look up %s on PyPI: %s", self.name, ex)
+            self.finished.emit({}, str(ex) or ex.__class__.__name__)
+        else:
+            self.finished.emit(info or {}, "")
+
+
+class AddPluginDialog(QDialog):
+    """
+    Before adding a plugin: what it is (from PyPI, or the file's name), the
+    trust note, and exactly what Nu will run. OK installs it.
+    """
+
+    def setup(self, title, commands, name=None, look_up=None, info=None):
+        """
+        `commands` are the lines Nu will run. Either `info` describes the
+        plugin already (a file), or `look_up(name)` asks PyPI about `name`
+        (off the GUI thread); OK is enabled once PyPI knows it.
+        """
+        self.setWindowTitle(title)
+        self.setMinimumSize(560, 360)
+        self.thread = None
+        layout = QVBoxLayout(self)
+        self.about = QLabel()
+        self.about.setWordWrap(True)
+        self.about.setTextFormat(Qt.TextFormat.RichText)
+        self.about.setOpenExternalLinks(True)
+        self.about.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextBrowserInteraction
+        )
+        layout.addWidget(self.about)
+        self.trust_note = QLabel(
+            _(
+                "A plugin is Python code that runs inside Nu, with the same "
+                "access to your computer as Nu itself. Only add plugins you "
+                "trust, just as you'd only install programs you trust."
+            )
+        )
+        self.trust_note.setWordWrap(True)
+        layout.addWidget(self.trust_note)
+        layout.addWidget(QLabel(_("Nu will run:")))
+        self.commands = QPlainTextEdit()
+        self.commands.setReadOnly(True)
+        self.commands.setWordWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
+        self.commands.setFont(code_font())
+        self.commands.setPlainText("\n".join(commands))
+        layout.addWidget(self.commands, stretch=1)
+        layout.addWidget(QLabel(_("The plugin loads the next time you start Nu.")))
+        self.button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        self.ok_button = self.button_box.button(QDialogButtonBox.StandardButton.Ok)
+        self.ok_button.setText(_("Add it"))
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+        layout.addWidget(self.button_box)
+        if info is not None:
+            self.show_info(info, "")
+            return
+        self.name = name
+        self.ok_button.setEnabled(False)
+        self.about.setText(
+            html.escape(_("Asking PyPI about {name}…").format(name=name), quote=False)
+        )
+        self.thread = QThread(self)
+        self.worker = PluginLookupWorker(look_up, name)
+        self.worker.moveToThread(self.thread)
+        self.thread.started.connect(self.worker.run)
+        self.worker.finished.connect(self.show_info)
+        self.thread.start()
+
+    def _stop_thread(self):
+        if self.thread is not None:
+            self.thread.quit()
+            self.thread.wait()
+            self.thread = None
+
+    def show_info(self, info, problem):
+        """Show what PyPI said about the plugin (or why it can't be added)."""
+        self._stop_thread()
+        if problem:
+            self.about.setText(
+                html.escape(
+                    _(
+                        "Nu couldn't ask PyPI about {name}, so it can't add it "
+                        "now. Are you connected to the internet? ({problem})"
+                    ).format(name=self.name, problem=problem),
+                    quote=False,
+                )
+            )
+            self.ok_button.setEnabled(False)
+            return
+        if not info:
+            self.about.setText(
+                html.escape(
+                    _(
+                        "PyPI has no package called {name}. Check the "
+                        "spelling: the name is on the plugin's web page."
+                    ).format(name=self.name),
+                    quote=False,
+                )
+            )
+            self.ok_button.setEnabled(False)
+            return
+        title = "<b>{}</b> {}".format(
+            html.escape(info["name"]), html.escape(info.get("version", ""))
+        )
+        lines = [title]
+        if info.get("summary"):
+            lines.append(html.escape(info["summary"]))
+        if info.get("author"):
+            lines.append(html.escape(_("By: {author}").format(author=info["author"])))
+        homepage = info.get("homepage", "")
+        if homepage.startswith(("https://", "http://")):
+            lines.append(
+                html.escape(_("Web page:"))
+                + ' <a href="{0}">{0}</a>'.format(html.escape(homepage))
+            )
+        if info.get("file"):
+            lines.append(
+                html.escape(_("From the file {file}").format(file=info["file"]))
+            )
+        else:
+            lines.append(
+                html.escape(
+                    _(
+                        "This is what the package says about itself on PyPI. "
+                        "Check it's the plugin you meant: names can look alike."
+                    )
+                )
+            )
+        self.about.setText("<br>".join(lines))
+        self.ok_button.setEnabled(True)
+
+    def done(self, result):
+        """
+        Close, not leaving the lookup's thread running (Qt aborts if a
+        running QThread is destroyed): if PyPI hasn't answered yet, this
+        waits for it, at most the lookup's timeout (10 seconds).
+        """
+        if self.thread is not None:
+            self.worker.finished.disconnect()
+            self._stop_thread()
+        super().done(result)
 
 
 class LocaleWidget(QWidget):
@@ -1143,14 +1515,56 @@ class PackageDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.pip_queue = []
+        self.job = None
 
     def setup(self, to_remove, to_add):
         """
         Create the UI for the dialog.
         """
+        self._build(_("Third Party Package Status"))
+        #
+        # Set up the commands to be issues to pip. Since we'll be popping
+        # from the list (as LIFO) we'll add the installs first so the
+        # removes are the first to happen
+        #
+        if to_add:
+            self.pip_queue.append(("install", to_add))
+        if to_remove:
+            self.pip_queue.append(("remove", to_remove))
+        QTimer.singleShot(2, self.next_pip_command)
+
+    def setup_job(self, job, title):
+        """
+        Show a plugin change (a mu.plugin.plugin_env.PluginJob) happening:
+        the commands Nu runs and their output, then how it went.
+        """
+        self._build(title)
+        self.job = job
+        QTimer.singleShot(
+            2, lambda: job.start(self.text_area.appendPlainText, self.job_finished)
+        )
+
+    def job_finished(self, job):
+        """Say how the plugin change went."""
+        self.text_area.appendPlainText("")
+        if not job.succeeded:
+            self.text_area.appendPlainText(_("Not everything worked: see above."))
+        if job.changed:
+            self.text_area.appendPlainText(
+                _("The changes take effect the next time you start Nu.")
+            )
+        self.finish()
+
+    def reject(self):
+        """While a plugin change runs, don't close (Escape, the close button)."""
+        if self.job is not None and not self.job.done:
+            return
+        super().reject()
+
+    def _build(self, title):
         # Basic layout.
         self.setMinimumSize(600, 400)
-        self.setWindowTitle(_("Third Party Package Status"))
+        self.setWindowTitle(title)
         widget_layout = QVBoxLayout()
         self.setLayout(widget_layout)
         # Text area for the commands and their output, wrapped so the end
@@ -1166,17 +1580,6 @@ class PackageDialog(QDialog):
         self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
         self.button_box.accepted.connect(self.accept)
         widget_layout.addWidget(self.button_box)
-
-        #
-        # Set up the commands to be issues to pip. Since we'll be popping
-        # from the list (as LIFO) we'll add the installs first so the
-        # removes are the first to happen
-        #
-        if to_add:
-            self.pip_queue.append(("install", to_add))
-        if to_remove:
-            self.pip_queue.append(("remove", to_remove))
-        QTimer.singleShot(2, self.next_pip_command)
 
     def next_pip_command(self):
         """

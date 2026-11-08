@@ -819,22 +819,34 @@ def test_editor_setup():
     with (
         mock.patch("os.path.exists", return_value=False),
         mock.patch("os.makedirs", return_value=None) as mkd,
-        mock.patch("shutil.copy") as mock_shutil_copy,
-        mock.patch("shutil.copytree") as mock_shutil_copytree,
     ):
         e.setup(mock_modes)
         assert mkd.call_count == 1
         assert mkd.call_args_list[0][0][0] == "foo"
-        # The core copies nothing into the workspace itself (the removed Web
-        # mode's templates/static folders are gone with it).
-        assert mock_shutil_copy.call_count == 0
-        assert mock_shutil_copytree.call_count == 0
     # Each mode puts what it needs in the workspace (e.g. Pygame Zero's
     # images and sounds folders).
     mock_mode.ensure_workspace_assets.assert_called_once_with("foo")
     other_mode.ensure_workspace_assets.assert_called_once_with("foo")
     assert e.modes == mock_modes
     view.set_usb_checker.assert_called_once_with(1, e.connected_devices.check_usb)
+
+
+def test_editor_setup_new_workspace(tmp_path):
+    """
+    Setting up with a workspace that doesn't exist yet (a learner's very first
+    start) makes it for real, without mocking the file system: nothing Nu
+    copies in may point at a resource that's no longer shipped.
+    """
+    view = mock.MagicMock()
+    e = mu.logic.Editor(view)
+    wd = tmp_path / "mu_code"
+    mock_mode = mock.MagicMock()
+    mock_mode.workspace_dir.return_value = str(wd)
+    e.setup({"python": mock_mode})
+    assert wd.is_dir()
+    assert not (wd / "templates").exists()
+    assert not (wd / "static").exists()
+    mock_mode.ensure_workspace_assets.assert_called_once_with(str(wd))
 
 
 def test_editor_connect_to_status_bar():
@@ -852,8 +864,6 @@ def test_editor_connect_to_status_bar():
     with (
         mock.patch("os.path.exists", return_value=False),
         mock.patch("os.makedirs", return_value=None),
-        mock.patch("shutil.copy"),
-        mock.patch("shutil.copytree"),
     ):
         e.setup(mock_modes)
         sb = mock.MagicMock()
@@ -2330,13 +2340,20 @@ def show_admin(ed):
 
 
 def test_show_admin_passes_the_plugins():
-    """The Plugins tab gets every plugin, the plugins folder and the docs."""
+    """
+    The Plugins tab gets every plugin, the plugins folder, the docs, and the
+    Host to add and remove plugins through, with the plugin environment's
+    state.
+    """
     ed, view = admin_editor({})
+    ed.plugin_host.plugin_environment_state.return_value = {"status": "ready"}
     show_admin(ed)
     assert view.show_admin.call_args.kwargs["plugins"] == {
         "plugins": PLUGIN_ROWS,
         "folder": "/data/mu/plugins",
         "help_url": "https://kovirlabs.github.io/nu/plugins/",
+        "manager": ed.plugin_host,
+        "environment": {"status": "ready"},
     }
 
 

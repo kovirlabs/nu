@@ -104,8 +104,15 @@ them: where each comes from, whether it's on and, if it couldn't start, why.
 Untick one to switch it off, or tick it to switch it back on; changes take
 effect when you restart Nu.
 
-To try a new plugin, click **Open plugins folder** on that tab, put the
-plugin's `.py` file (or folder) there, and restart Nu. The folder is:
+To add a plugin, click **Add a plugin…** on that tab and type the name of
+its package (for example `nu-microbit`), or **Add from a file…** if you have
+its `.whl` file. Nu shows what the plugin says about itself and the commands
+it will run, and adds it when you click **Add it**; it's ready the next time
+you start Nu. A plugin you added can be **Updated** or **Removed** there too.
+See [Adding a plugin](plugins.md#adding-a-plugin).
+
+A plugin that's a single `.py` file (or a folder) goes in the plugins folder:
+click **Open plugins folder**, put it there, and restart Nu. The folder is:
 
 | System | Plugins folder |
 |---|---|

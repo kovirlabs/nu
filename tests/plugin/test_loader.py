@@ -152,6 +152,44 @@ def test_entry_point_sources_bundled_and_summary():
         ep.load.assert_not_called()
 
 
+def test_entry_point_sources_added_by_the_learner(temp_plugin_env):
+    """
+    A plugin package in the plugin environment (added from the Plugins tab)
+    is "added", with its distribution's name, so the tab can offer to
+    update or remove it. A bundled one stays "bundled" wherever it is.
+    """
+    site_packages = temp_plugin_env.site_packages()
+
+    def entry_point(name, dist_name, location):
+        ep = mock.MagicMock()
+        ep.name = name
+        ep.dist.name = dist_name
+        ep.dist.version = "1.0"
+        ep.dist.metadata = {"Name": dist_name}
+        ep.dist.locate_file.return_value = location
+        return ep
+
+    entry_points = [
+        entry_point("cowmode", "Nu_Cowmode", site_packages),
+        entry_point("pygamezero", "nu-pygamezero", site_packages),
+        entry_point("other", "nu-other", "/elsewhere/site-packages"),
+    ]
+    with mock.patch("importlib.metadata.entry_points", return_value=entry_points):
+        sources = loader.entry_point_sources()
+    assert [(s.id, s.kind, s.distribution) for s in sources] == [
+        ("cowmode", "added", "nu-cowmode"),
+        ("pygamezero", "bundled", "nu-pygamezero"),
+        ("other", "package", "nu-other"),
+    ]
+    records = loader.load_plugins(
+        Host(mock.MagicMock(), mock.MagicMock()),
+        sources=sources[:1],
+        store={"disabled_plugins": ["cowmode"]},
+    )
+    assert records[0].distribution == "nu-cowmode"
+    assert loader.describe(records, {})[0]["distribution"] == "nu-cowmode"
+
+
 @pytest.mark.parametrize(
     "dist_name, module, class_name",
     [
@@ -672,6 +710,7 @@ def test_describe(host):
         "description": "Adds Good mode.",
         "kind": "bundled",
         "origin": "nu-good 1.0",
+        "distribution": "",
         "status": LOADED,
         "problem": "",
         "reason": "",
