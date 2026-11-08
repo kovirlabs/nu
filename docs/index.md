@@ -4,17 +4,14 @@ Nu is a maintained, modernized continuation of the
 [Mu editor](https://github.com/mu-editor/mu) — a simple Python code editor for
 beginner programmers.
 
-!!! note
-    **This documentation is for developers** who want to work on Nu itself, not
-    for end users (who want [Using Nu](help.md) and
-    [Your Python environment](environment.md)). Some of it is inherited from
-    upstream Mu and still describes the pre-fork toolchain (PyQt5, `setup.py`,
-    Sphinx/ReadTheDocs, the web mode). Nu has since moved to **PyQt6**,
-    **Python 3.11+**, **uv** and **ruff**. For the current, authoritative state
-    of the project see
-    [`README.md`](https://github.com/kovirlabs/nu/blob/master/README.md),
-    `CLAUDE.md` and `TODO.md` in the repository root. These pages are being
-    modernized incrementally.
+Most of these pages are for **developers** who want to work on Nu itself.
+Learners and teachers want [Using Nu](help.md) (what Nu's **Help** button
+opens), [Your Python environment](environment.md) and
+[The BBC micro:bit](microbit.md).
+
+Nu runs on **PyQt6** and **Python 3.11+**, is developed with **uv** and
+**ruff**, and is packaged with **Briefcase**. Where a page describes Mu's
+history or design, it says so; everything else describes Nu as it is now.
 
 ## What Nu is made of
 
@@ -42,6 +39,10 @@ beginner programmers.
 - Curious how the debugger works? See [debugger / runner](debugger.md).
 - Adding tests or translations? See [tests](tests.md) and
   [translations](translations.md).
+- Cutting a release? See [packaging](packaging.md) and the
+  [release process](release.md).
+- Wondering why something is the way it is? See the
+  [design decisions](design.md).
 
 ## How the docs are built
 
@@ -50,4 +51,8 @@ These docs are written in Markdown and built with
 [Material](https://squidfunk.github.io/mkdocs-material/) theme. The
 [API reference](api.md) is generated from the source docstrings with
 [mkdocstrings](https://mkdocstrings.github.io/). Build locally with
-`make docs` (or live-preview with `make docs-serve`).
+`make docs` (or live-preview with `make docs-serve`); see
+[the documentation site](docs-site.md) for how it's published.
+
+Found a problem, in Nu or in these pages? Please tell us at
+[github.com/kovirlabs/nu/issues](https://github.com/kovirlabs/nu/issues).

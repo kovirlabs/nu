@@ -125,7 +125,8 @@ plugin has a problem, Nu tells you and keeps running. See
   anywhere by itself.
 - **Report a problem or suggest an idea** at
   [github.com/kovirlabs/nu/issues](https://github.com/kovirlabs/nu/issues).
-- **Learn more:** the original Mu's
-  [tutorials](https://codewith.mu/en/tutorials/1.2/) still apply to most of
-  Nu, though Nu no longer has the ESP, Pico or web modes, and its micro:bit
-  mode is new.
+- **Learn more:** the tutorials written for Mu, the editor Nu continues, on
+  Mu's website ([codewith.mu](https://codewith.mu/en/tutorials/1.2/), no
+  longer updated) still apply to most of Nu. Nu no longer has the ESP, Pico
+  or web modes, its micro:bit mode is new, and the Python environment and
+  plugins described above are Nu's own.
