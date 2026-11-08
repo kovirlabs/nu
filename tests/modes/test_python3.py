@@ -6,6 +6,7 @@ Tests for the Python3 mode.
 import sys
 import os
 import asyncio
+import zmq
 from jupyter_client.manager import KernelManager
 from mu.modes.python3 import PythonMode, KernelRunner, MuKernelManager
 from mu.modes.api import PYTHON3_APIS, SHARED_APIS, PI_APIS
@@ -55,9 +56,34 @@ def test_mu_kernel_manager_starts_real_kernel():
             client.wait_for_ready(timeout=60)
         finally:
             client.stop_channels()
+        # The connection is encrypted (ipykernel's kernelspec declares
+        # CurveZMQ support), so the kernel doesn't warn that it isn't.
+        assert km.curve_publickey is not None
     finally:
         km.shutdown_kernel(now=True)
     assert not km.has_kernel
+
+
+def test_mu_kernel_manager_encrypts_the_kernel_connection():
+    """CurveZMQ keys are provisioned for kernels that say they support it."""
+    assert MuKernelManager().transport_encryption == "auto"
+
+
+def test_mu_kernel_manager_without_curve_support_in_pyzmq():
+    """A pyzmq without CurveZMQ: the connection stays as it was."""
+    with mock.patch("mu.modes.python3.zmq.has", return_value=False):
+        assert MuKernelManager().transport_encryption == "disabled"
+
+
+def test_mu_kernel_manager_with_an_older_jupyter_client():
+    """jupyter_client before 8.9 has no transport_encryption: nothing's set."""
+    with (
+        mock.patch.object(MuKernelManager, "class_trait_names", return_value=[]),
+        mock.patch("mu.modes.python3.zmq.has") as has,
+    ):
+        km = MuKernelManager()
+    has.assert_not_called()
+    assert km.transport_encryption == "disabled"
 
 
 def test_kernel_runner_start_kernel():
@@ -798,3 +824,39 @@ def test_on_uv_run_finished_after_stop():
     _finished(pm, runner, record, code=2)
     assert record.finished
     runner.insert_hint.assert_not_called()
+
+
+def test_mu_kernel_manager_client_gets_curve_keys_as_bytes():
+    """
+    jupyter_client 8.9 hands the client the keys as str, which its traits
+    refuse: they're encoded first (as 8.10 does), and the client is created.
+    """
+    km = MuKernelManager()
+    info = {"curve_publickey": "public", "curve_secretkey": "secret", "ip": "x"}
+    with (
+        mock.patch.object(km, "get_connection_info", return_value=info),
+        mock.patch.object(KernelManager, "client") as client,
+    ):
+        km.client(extra=1)
+    client.assert_called_once_with(
+        extra=1, curve_publickey=b"public", curve_secretkey=b"secret"
+    )
+
+
+def test_mu_kernel_manager_client_without_curve_keys():
+    """No encryption (or keys already bytes): nothing extra is passed."""
+    km = MuKernelManager()
+    with (
+        mock.patch.object(km, "get_connection_info", return_value={"ip": "x"}),
+        mock.patch.object(KernelManager, "client") as client,
+    ):
+        km.client()
+    client.assert_called_once_with()
+
+
+def test_mu_kernel_manager_real_client():
+    """The real client() accepts the keys once a kernel has them."""
+    km = MuKernelManager()
+    km.curve_publickey, km.curve_secretkey = zmq.curve_keypair()
+    client = km.client()
+    assert client.curve_publickey == km.curve_publickey

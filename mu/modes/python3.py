@@ -31,6 +31,7 @@ from ..script_metadata import (
     wants_uv_run,
 )
 from ..virtual_environment import UvNotFound, venv
+import zmq
 from qtconsole.manager import QtKernelManager
 from qtconsole.client import QtKernelClient
 from PyQt6.QtCore import QObject, QProcess, QThread, QTimer, pyqtSignal
@@ -40,6 +41,35 @@ logger = logging.getLogger(__name__)
 
 
 class MuKernelManager(QtKernelManager):
+    def __init__(self, **kwargs):
+        """
+        Encrypt the REPL's connection to its kernel where the stack can.
+
+        The kernel listens on localhost over TCP. jupyter_client 8.9+ can
+        give it CurveZMQ keys (``transport_encryption = "auto"``) when its
+        kernelspec says it supports them, as ipykernel 7.4+'s does; without
+        them ipykernel 7.4+ prints "Kernel is running over TCP without
+        encryption" to stderr every time the REPL starts. With an older
+        jupyter_client, a kernel that doesn't declare support, or a pyzmq
+        built without CurveZMQ, the connection stays as it was.
+        """
+        super().__init__(**kwargs)
+        if "transport_encryption" in self.class_trait_names() and zmq.has("curve"):
+            self.transport_encryption = "auto"
+
+    def client(self, **kwargs):
+        """
+        A client for the kernel, given the CurveZMQ keys as bytes.
+
+        jupyter_client 8.9 passes them on as the str it writes to the
+        connection file, which the client's traits refuse (fixed in 8.10).
+        """
+        info = self.get_connection_info(session=True)
+        for key in ("curve_publickey", "curve_secretkey"):
+            if isinstance(info.get(key), str) and key not in kwargs:
+                kwargs[key] = info[key].encode("ascii")
+        return super().client(**kwargs)
+
     async def _async_pre_start_kernel(self, **kw):
         """Prepare the kernel command, making it use the venv's Python.
 
