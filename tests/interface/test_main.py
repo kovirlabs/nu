@@ -1394,7 +1394,7 @@ def test_Window_show_admin():
         result = w.show_admin("log", "envars", "packages", "mode", "devices")
         mock_admin_display.assert_called_once_with(w)
         mock_admin_box.setup.assert_called_once_with(
-            "log", "envars", "packages", "mode", "devices", focus=None
+            "log", "envars", "packages", "mode", "devices", environment=None, focus=None
         )
         mock_admin_box.exec.assert_called_once_with()
         assert result == "this is the expected result"
@@ -1406,9 +1406,17 @@ def test_Window_show_admin_focus():
     mock_admin_display = mock.MagicMock()
     with mock.patch("mu.interface.main.AdminDialog", mock_admin_display):
         w = mu.interface.main.Window()
-        w.show_admin("log", "s", "p", "mode", "devices", focus="environment")
+        w.show_admin(
+            "log",
+            "s",
+            "p",
+            "mode",
+            "devices",
+            environment={"a": 1},
+            focus="environment",
+        )
     mock_admin_display().setup.assert_called_once_with(
-        "log", "s", "p", "mode", "devices", focus="environment"
+        "log", "s", "p", "mode", "devices", environment={"a": 1}, focus="environment"
     )
 
 
@@ -1426,7 +1434,7 @@ def test_Window_show_admin_cancelled():
         result = w.show_admin("log", "envars", "packages", "mode", "devices")
         mock_admin_display.assert_called_once_with(w)
         mock_admin_box.setup.assert_called_once_with(
-            "log", "envars", "packages", "mode", "devices", focus=None
+            "log", "envars", "packages", "mode", "devices", environment=None, focus=None
         )
         mock_admin_box.exec.assert_called_once_with()
         assert result == {}

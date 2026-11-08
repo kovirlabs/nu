@@ -19,6 +19,7 @@ from unittest import mock
 import uuid
 
 import pytest
+import mu.command_log
 import mu.config
 import mu.logic
 import mu.settings
@@ -2201,8 +2202,11 @@ def test_show_admin():
         "locale": "",
     }
     view.show_admin.return_value = new_settings
-    with mock.patch.object(
-        venv, "installed_packages", return_value=([], ["Foo", "bar"])
+    with (
+        mock.patch.object(
+            venv, "installed_packages", return_value=([], ["Foo", "bar"])
+        ),
+        mock.patch.object(venv, "describe", return_value={"name": "env"}),
     ):
         mock_open = mock.mock_open()
         with (
@@ -2230,8 +2234,11 @@ def test_show_admin_no_change():
     new_settings = {}
     view.show_admin.return_value = new_settings
     mock_open = mock.mock_open()
-    with mock.patch.object(
-        venv, "installed_packages", return_value=([], ["Foo", "bar"])
+    with (
+        mock.patch.object(
+            venv, "installed_packages", return_value=([], ["Foo", "bar"])
+        ),
+        mock.patch.object(venv, "describe", return_value={"name": "env"}),
     ):
         with (
             mock.patch("builtins.open", mock_open),
@@ -2239,6 +2246,28 @@ def test_show_admin_no_change():
         ):
             ed.show_admin(None)
             assert ed.sync_package_state.call_count == 0
+
+
+def test_show_admin_passes_the_environment_and_what_nu_ran():
+    """The admin dialog gets the environment's facts and the log of the uv
+    commands Nu ran, and opens on the requested tab."""
+    view = mock.MagicMock()
+    ed = mu.logic.Editor(view)
+    ed.modes = {"python": mock.MagicMock()}
+    view.show_admin.return_value = {}
+    log = mu.command_log.CommandLog()
+    log.start(["/opt/uv", "pip", "install", "cowsay"]).finish(0)
+    with (
+        mock.patch.object(venv, "installed_packages", return_value=([], [])),
+        mock.patch.object(venv, "describe", return_value={"name": "mu_venv"}),
+        mock.patch.object(mu.logic, "command_log", log),
+        mock.patch("builtins.open", mock.mock_open(read_data="the log")),
+    ):
+        ed.show_admin(focus="environment")
+    kwargs = view.show_admin.call_args.kwargs
+    assert kwargs["focus"] == "environment"
+    assert kwargs["environment"]["name"] == "mu_venv"
+    assert "$ uv pip install cowsay" in kwargs["environment"]["commands"]
 
 
 def test_sync_package_state():

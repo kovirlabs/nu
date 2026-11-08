@@ -14,6 +14,7 @@ from unittest import mock
 import pytest
 
 import mu.virtual_environment
+from mu.command_log import CommandLog
 
 VE = mu.virtual_environment
 Uv = VE.Uv
@@ -255,7 +256,7 @@ def test_uv_uninstall_builds_command():
 @pytest.fixture
 def log():
     """A fresh command log in place of the app-wide one."""
-    fresh = VE.CommandLog()
+    fresh = CommandLog()
     with mock.patch.object(VE, "command_log", fresh):
         yield fresh
 

@@ -31,6 +31,7 @@ import zipfile
 import pytest
 
 import mu
+import mu.command_log
 import mu.settings
 import mu.virtual_environment
 import mu.wheels
@@ -572,6 +573,19 @@ def test_install_user_packages(venv):
         args, kwargs = MockUv.return_value.install.call_args
         assert args[0] == packages
         assert kwargs.get("upgrade") is True
+
+
+@pytest.mark.parametrize(
+    "method, uv_method",
+    [("install_user_packages", "install"), ("remove_user_packages", "uninstall")],
+)
+def test_user_package_commands_return_their_record(venv, method, uv_method):
+    """The package dialog shows the learner the real command, so these return
+    its entry in the command log."""
+    with mock.patch.object(mu.virtual_environment, "Uv") as MockUv:
+        record = getattr(venv, method)(["cowsay"])
+    process = getattr(MockUv.return_value, uv_method).return_value
+    assert record is process.command_record
 
 
 @pytest.mark.parametrize("method", ["install_user_packages", "remove_user_packages"])
@@ -1257,3 +1271,51 @@ def test_python_version_from_pyvenv_cfg(venv, tmp_path, cfg, version):
 def test_python_version_without_pyvenv_cfg(venv, tmp_path):
     venv.relocate(str(tmp_path / "missing"))
     assert venv.python_version() is None
+
+
+def test_describe_posix(venv, tmp_path):
+    """The facts the Environment tab shows: where the env is, which Python,
+    and the exact commands to use it from a terminal."""
+    venv._is_windows = False
+    venv._bin_extension = ""
+    venv.relocate(str(tmp_path / "mu venv-311-20261108-030353"))
+    with (
+        mock.patch.object(venv, "python_version", return_value="3.11.15"),
+        mock.patch.object(mu.virtual_environment, "find_uv", return_value="/opt/uv"),
+        mock.patch.object(mu.command_log.sys, "platform", "linux"),
+    ):
+        facts = venv.describe()
+    bin_dir = os.path.join(venv.path, "bin")
+    python = os.path.join(bin_dir, "python")
+    assert facts == {
+        "name": "mu venv",
+        "path": venv.path,
+        "interpreter": python,
+        "python_version": "3.11.15",
+        "activate": "source '%s'" % os.path.join(bin_dir, "activate"),
+        "install": "uv pip install --python '%s' cowsay" % python,
+        "run": "uv run --python '%s' hello.py" % python,
+        "uv": "/opt/uv",
+    }
+
+
+def test_describe_windows(venv):
+    """On Windows the activate script is run directly (cmd or PowerShell)."""
+    venv._is_windows = True
+    venv._bin_extension = ".exe"
+    venv.relocate(r"C:\Users\kid\AppData\Local\python\mu\mu_venv-311-20261108-030353")
+    with (
+        mock.patch.object(venv, "python_version", return_value=None),
+        mock.patch.object(
+            mu.virtual_environment,
+            "find_uv",
+            side_effect=mu.virtual_environment.UvNotFound(),
+        ),
+        mock.patch.object(mu.command_log.sys, "platform", "win32"),
+    ):
+        facts = venv.describe()
+    assert facts["activate"] == os.path.join(venv._bin_directory, "activate")
+    assert facts["install"].startswith("uv pip install --python ")
+    assert facts["install"].endswith(" cowsay")
+    assert facts["uv"] is None
+    assert facts["python_version"] is None

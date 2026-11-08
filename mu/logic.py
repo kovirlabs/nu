@@ -43,6 +43,7 @@ from .debugger.utils import is_breakpoint_line
 from .config import DATA_DIR, VENV_DIR, MAX_LINE_LENGTH
 from . import settings
 from .virtual_environment import venv
+from .command_log import command_log
 
 # The default directory for application logs.
 LOG_DIR = platformdirs.user_log_dir(appname="mu", appauthor="python")
@@ -1351,6 +1352,10 @@ class Editor(QObject):
         }
         baseline_packages, user_packages = venv.installed_packages()
         packages = user_packages
+        # The environment's facts and the uv commands Nu ran in it (listing
+        # the packages just above being the latest), for the Environment tab.
+        environment = venv.describe()
+        environment["commands"] = command_log.render()
         with open(LOG_FILE, "r", encoding="utf8") as logfile:
             new_settings = self._view.show_admin(
                 logfile.read(),
@@ -1358,6 +1363,7 @@ class Editor(QObject):
                 "\n".join(packages),
                 self.modes[self.mode],
                 self.connected_devices,
+                environment=environment,
                 focus=focus,
             )
         if new_settings:

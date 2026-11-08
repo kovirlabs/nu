@@ -911,15 +911,34 @@ class Window(QMainWindow):
 
         timer.start(500)
 
-    def show_admin(self, log, settings, packages, mode, device_list, focus=None):
+    def show_admin(
+        self,
+        log,
+        settings,
+        packages,
+        mode,
+        device_list,
+        environment=None,
+        focus=None,
+    ):
         """
         Display the administrative dialog with referenced content of the log
-        and settings, open on the tab named by `focus` (e.g. "environment")
-        if given. Return a dictionary of the settings that may have been
-        changed by the admin dialog.
+        and settings, and (for modes that use it) the facts about the
+        learner's Python `environment` (see `VirtualEnvironment.describe`,
+        plus the rendered command log under "commands"). Open on the tab
+        named by `focus` (e.g. "environment") if given. Return a dictionary
+        of the settings that may have been changed by the admin dialog.
         """
         admin_box = AdminDialog(self)
-        admin_box.setup(log, settings, packages, mode, device_list, focus=focus)
+        admin_box.setup(
+            log,
+            settings,
+            packages,
+            mode,
+            device_list,
+            environment=environment,
+            focus=focus,
+        )
         result = admin_box.exec()
         if result:
             return admin_box.settings()

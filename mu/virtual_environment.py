@@ -30,7 +30,7 @@ from . import wheels
 from . import settings
 from . import config
 from . import __version__ as mu_version
-from .command_log import CommandLog, command_log  # noqa: F401 (CommandLog: tests)
+from .command_log import command_log, quote_command
 
 wheels_dirpath = os.path.dirname(wheels.__file__)
 
@@ -800,6 +800,38 @@ class VirtualEnvironment(object):
                 return value.strip()
         return None
 
+    def describe(self):
+        """
+        The facts about this environment the learner sees (the admin dialog's
+        Environment tab), as a GUI-free dict: its ``name``, folder (``path``),
+        ``interpreter`` and ``python_version``; the commands to use it from a
+        terminal — ``activate`` it, ``install`` a package into it, ``run`` a
+        program with it (quoted for this OS; uv is shown as ``uv``, as the
+        learner would type it); and the full path of Nu's ``uv`` (None if it
+        can't be found).
+        """
+        try:
+            uv_path = find_uv()
+        except UvNotFound:
+            uv_path = None
+        activate_script = os.path.join(self._bin_directory, "activate")
+        if self._is_windows:
+            # Running Scripts\activate works in both cmd and PowerShell.
+            activate = quote_command([activate_script])
+        else:
+            activate = quote_command(["source", activate_script])
+        python = ["--python", self.interpreter]
+        return {
+            "name": self.display_name,
+            "path": self.path,
+            "interpreter": self.interpreter,
+            "python_version": self.python_version(),
+            "activate": activate,
+            "install": quote_command(["uv", "pip", "install", *python, "cowsay"]),
+            "run": quote_command(["uv", "run", *python, "hello.py"]),
+            "uv": uv_path,
+        }
+
     def activation_vars(self, base_path=None):
         """Environment-variable overrides that "activate" this venv for a
         spawned child process.
@@ -1352,7 +1384,8 @@ class VirtualEnvironment(object):
 
     def install_user_packages(self, packages, slots=Process.Slots()):
         """
-        Install user defined packages.
+        Install user defined packages. Return the command's
+        :class:`~mu.command_log.CommandRecord` (so the UI can show it).
         """
         logger.info("Installing user packages: %s", ", ".join(packages))
         # Keep the process alive: Qt destroys (and kills) a QProcess as soon
@@ -1360,13 +1393,16 @@ class VirtualEnvironment(object):
         self.user_package_process = self._uv().install(
             packages, slots=slots, upgrade=True
         )
+        return self.user_package_process.command_record
 
     def remove_user_packages(self, packages, slots=Process.Slots()):
         """
-        Remove user defined packages.
+        Remove user defined packages. Return the command's
+        :class:`~mu.command_log.CommandRecord` (so the UI can show it).
         """
         logger.info("Removing user packages: %s", ", ".join(packages))
         self.user_package_process = self._uv().uninstall(packages, slots=slots)
+        return self.user_package_process.command_record
 
     def installed_packages(self):
         """

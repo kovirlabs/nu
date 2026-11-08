@@ -6,8 +6,10 @@ Tests for the user interface elements of Mu.
 import os
 
 import pytest
+import mu.command_log
 import mu.i18n
 import mu.interface.dialogs
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QDialog, QWidget, QDialogButtonBox
 from unittest import mock
 from mu import virtual_environment
@@ -613,3 +615,186 @@ def test_CrashDialog_close():
     button_box.button(QDialogButtonBox.StandardButton.Close).click()
     assert dialog.result() == QDialog.DialogCode.Rejected
     assert not dialog.isVisible()
+
+
+#
+# The Environment tab (Phase 4b): the learner's Python environment, made
+# visible.
+#
+ENVIRONMENT = {
+    "name": "mu_venv",
+    "path": "/data/mu/mu_venv-311-20261108-030353",
+    "interpreter": "/data/mu/mu_venv-311-20261108-030353/bin/python",
+    "python_version": "3.11.15",
+    "activate": "source /data/mu/mu_venv-311-20261108-030353/bin/activate",
+    "install": "uv pip install --python /data/mu/…/python cowsay",
+    "run": "uv run --python /data/mu/…/python hello.py",
+    "uv": "/opt/nu/bin/uv",
+    "commands": "$ uv pip list --format=json\n  10:00:00 · finished OK (exit code 0)",
+}
+
+
+@pytest.fixture
+def environment_widget():
+    parent = QWidget()
+    widget = mu.interface.dialogs.EnvironmentWidget(parent)
+    widget.setup(dict(ENVIRONMENT), "NAME=value", "cowsay\nrich")
+    yield widget
+    parent.deleteLater()
+
+
+def test_EnvironmentWidget_facts(environment_widget):
+    """Where the environment is, which Python, and how to use it yourself."""
+    fields = environment_widget.fields
+    assert fields["name"].text() == "mu_venv (Python 3.11.15)"
+    for key in ("path", "interpreter", "activate", "install", "run", "uv"):
+        assert fields[key].text() == ENVIRONMENT[key]
+        # Selectable, and wrapped so a long path never hides the end of a
+        # command.
+        assert fields[key].wordWrap()
+        assert fields[key].textInteractionFlags() & (
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+
+
+def test_EnvironmentWidget_facts_unknown_version_and_uv():
+    parent = QWidget()
+    widget = mu.interface.dialogs.EnvironmentWidget(parent)
+    widget.setup(dict(ENVIRONMENT, python_version=None, uv=None), "", "")
+    assert widget.fields["name"].text() == "mu_venv"
+    assert widget.fields["uv"].text() == "(not found)"
+
+
+def test_EnvironmentWidget_copy_button(environment_widget, qtapp):
+    """Each fact has a Copy button that copies its full text."""
+    button = environment_widget.copy_buttons["activate"]
+    button.click()
+    assert qtapp.clipboard().text() == ENVIRONMENT["activate"]
+    assert button.text() == "Copied"
+
+
+def test_EnvironmentWidget_sections(environment_widget):
+    """The packages and environment-variable editors keep their behaviour, as
+    sections of the Environment tab, beside "What Nu ran"."""
+    sections = environment_widget.sections
+    titles = [sections.tabText(i) for i in range(sections.count())]
+    assert titles == ["Packages", "Environment variables", "What Nu ran"]
+    assert environment_widget.package_widget.text_area.toPlainText() == ("cowsay\nrich")
+    assert environment_widget.envar_widget.text_area.toPlainText() == "NAME=value"
+
+
+def test_EnvironmentWidget_without_facts():
+    """No environment details: the sections still work."""
+    parent = QWidget()
+    widget = mu.interface.dialogs.EnvironmentWidget(parent)
+    widget.setup(None, "A=b", "cowsay")
+    assert widget.fields == {}
+    assert widget.package_widget.text_area.toPlainText() == "cowsay"
+    assert "hasn't run" in widget.commands_widget.text_area.toPlainText()
+
+
+def test_CommandLogWidget(qtapp):
+    """What Nu ran: read-only, monospace, newest last, copyable."""
+    parent = QWidget()
+    widget = mu.interface.dialogs.CommandLogWidget(parent)
+    widget.setup(ENVIRONMENT["commands"], uv_path="/opt/nu/bin/uv")
+    text_area = widget.text_area
+    assert text_area.toPlainText() == ENVIRONMENT["commands"]
+    assert text_area.isReadOnly()
+    assert text_area.font().family() == "Source Code Pro"  # Nu's code font.
+    assert "/opt/nu/bin/uv" in text_area.toolTip()
+    # Long commands wrap rather than hide their end.
+    assert text_area.lineWrapMode() == text_area.LineWrapMode.WidgetWidth
+    # Scrolled to the newest (last) command, also once it's shown.
+    assert text_area.textCursor().atEnd()
+    text_area.moveCursor(text_area.textCursor().MoveOperation.Start)
+    parent.show()
+    assert text_area.textCursor().atEnd()
+    parent.hide()
+    widget.copy_button.click()
+    assert qtapp.clipboard().text() == ENVIRONMENT["commands"]
+
+
+def test_CommandLogWidget_without_uv():
+    parent = QWidget()
+    widget = mu.interface.dialogs.CommandLogWidget(parent)
+    widget.setup("", uv_path=None)
+    assert "hasn't run" in widget.text_area.toPlainText()
+    assert widget.text_area.toolTip() == ""
+
+
+def test_AdminDialog_environment_tab():
+    """In a mode that uses the learner's environment, one Environment tab
+    holds the facts and the package / environment-variable editors."""
+    parent = QWidget()
+    ad = mu.interface.dialogs.AdminDialog(parent)
+    settings = {"envars": "A=b", "locale": ""}
+    ad.setup("log", settings, "cowsay", _python_mode(), None, environment=ENVIRONMENT)
+    titles = [ad.tabs.tabText(i) for i in range(ad.tabs.count())]
+    assert titles == ["Current Log", "Environment", "Select Language"]
+    assert ad.environment_tab.fields["path"].text() == ENVIRONMENT["path"]
+    assert ad.package_widget is ad.environment_tab.package_widget
+    assert ad.envar_widget is ad.environment_tab.envar_widget
+    # Same settings keys as before.
+    assert ad.settings() == {"envars": "A=b", "packages": "cowsay", "locale": ""}
+
+
+#
+# The package dialog shows the real command before its output.
+#
+def _record(argv):
+    from mu.command_log import CommandLog
+
+    return CommandLog().start(argv)
+
+
+def test_PackageDialog_run_pip_shows_the_command():
+    pd = mu.interface.dialogs.PackageDialog()
+    pd.setup(set(), set())  # Nothing queued; just build the UI.
+    record = _record(["/opt/uv", "pip", "install", "--python", "/env/python", "x"])
+    with (
+        mock.patch.object(
+            virtual_environment.venv, "install_user_packages", return_value=record
+        ) as install,
+        mock.patch.object(mu.command_log.sys, "platform", "linux"),
+    ):
+        pd.run_pip("install", {"x"})
+    install.assert_called_once()
+    assert pd.text_area.toPlainText() == ("$ uv pip install --python /env/python x")
+    # Its output and the next command follow.
+    pd.text_area.appendPlainText("Installed 1 package")
+    remove = _record(["/opt/uv", "pip", "uninstall", "y"])
+    with (
+        mock.patch.object(
+            virtual_environment.venv, "remove_user_packages", return_value=remove
+        ),
+        mock.patch.object(mu.command_log.sys, "platform", "linux"),
+    ):
+        pd.run_pip("remove", {"y"})
+    assert pd.text_area.toPlainText() == (
+        "$ uv pip install --python /env/python x\n"
+        "Installed 1 package\n"
+        "\n"
+        "$ uv pip uninstall y"
+    )
+
+
+def test_PackageDialog_run_pip_invalid_command():
+    pd = mu.interface.dialogs.PackageDialog()
+    with pytest.raises(RuntimeError):
+        pd.run_pip("frobnicate", {"x"})
+
+
+def test_PackageDialog_next_pip_command_and_finish():
+    """Commands run one after another (removals first), then FINISHED."""
+    pd = mu.interface.dialogs.PackageDialog()
+    pd.setup(set(), set())
+    pd.pip_queue = [("install", {"a"}), ("remove", {"b"})]
+    pd.run_pip = mock.MagicMock()
+    pd.next_pip_command()
+    pd.run_pip.assert_called_once_with("remove", {"b"})
+    pd.next_pip_command()
+    pd.run_pip.assert_called_with("install", {"a"})
+    pd.next_pip_command()
+    assert pd.text_area.toPlainText().endswith("FINISHED")
+    assert pd.button_box.button(QDialogButtonBox.StandardButton.Ok).isEnabled()
