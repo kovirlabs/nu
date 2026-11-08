@@ -108,7 +108,7 @@ publishes a GitHub Release with the installers attached (a tag with a
 pre-release segment such as `v2.0.0rc1` publishes as a pre-release). See
 [Release process](release.md).
 
-Locally (inside a pip-enabled virtualenv with the `package` extra,
+Locally (inside a virtual environment that has pip, with the `package` extra:
 `uv sync --extra package`, or with pip `pip install -e ./plugins/circuitpython -e ./plugins/pygamezero -e ".[package]"`):
 
 ```

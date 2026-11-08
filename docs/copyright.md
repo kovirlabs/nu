@@ -1,15 +1,17 @@
-# Copyright Information
+# Copyright & image credits
 
-## Mu Copyright
+## Copyright
 
-Mu, its source code and associated assets are copyright Nicholas H.Tollervey
-and others (those who have made significant contributions to Mu can be found in
-this list of [authors](authors.md)).
+Nu is a continuation of Mu. Mu, its source code and associated assets are
+copyright Nicholas H. Tollervey and others; Nu's additions are copyright the
+Nu contributors. Those who have made significant contributions are listed in
+the [authors](authors.md). Nu, like Mu, is free software under the
+[GNU General Public License v3](license.md).
 
-## Notes on Image Copyright Status
+## Images in these docs
 
-All images used in Mu's developer documentation fall under Mu's copyright
-status, except for the following images sourced from third parties:
+All images in this documentation fall under Nu's (and Mu's) copyright status,
+except for the following images sourced from third parties.
 
 ### beautifully_useless.jpg
 
@@ -83,6 +85,35 @@ say of the [use of the Python logo](https://www.python.org/community/logos/)):
     In general, we want the logo to be used as widely as possible to
     indicate use of Python or suitability for Python."
 
+### microbit.png
+
+The photograph of a BBC micro:bit (used on [modes](modes.md)) came with Mu's
+developer documentation.
+
+## Images in the app and the plugins
+
+Nu's own icons (`mu/resources/images`) and the bundled plugins' icons
+(`plugins/<name>/nu_<name>/images`) come from Mu and fall under its copyright
+status, with these notes:
+
+* **Plugin icons.** When a mode moved out of the core into a plugin, its
+  icons moved with it, unchanged: `pygamezero` and the Play, Images, Fonts,
+  Sounds and Music buttons to `plugins/pygamezero`, `circuitpython` and its
+  Serial button to `plugins/circuitpython`. The Pygame Zero example game
+  assets in `plugins/pygamezero/nu_pygamezero/assets` came with Mu's Pygame
+  Zero mode.
+* **micro:bit icons.** `microbit.png` and the Flash button
+  (`microbit-flash.png`, `microbit-flash.svg`) in `plugins/microbit` are Mu's
+  micro:bit mode icons. When Mu's micro:bit mode was removed they stayed
+  behind as unused files in `mu/resources/images`; the micro:bit plugin moved
+  them in (the Flash icon renamed from `flash`), byte-for-byte identical to
+  upstream Mu's, so they carry Mu's copyright and licence, nothing new.
+* **The Python logo** (`python.png`, `python.svg`): see python.png above.
+
+The following images are still in `mu/resources/images` but belong to modes
+Nu removed (ESP, Pico, Pyboard, Lego, Snek and Web). Nothing in Nu shows
+them; while they're in the repository, their credits stay here.
+
 ### lego.png
 
 This is a copped version of the
@@ -100,3 +131,11 @@ is covered by the MIT license.
 
 The [Flask Logo](https://commons.wikimedia.org/wiki/File:Flask_logo.svg) has
 been released to the public domain.
+
+## Mu's design archive
+
+`docs/icon_brief`, `docs/logo_design` and `docs/swag` hold Mu's original
+design material: the brief for Mu's icon set (with screenshots of Mu at the
+time), the logo and splash-screen sources, and the contributors' t-shirt
+avatars. Nu doesn't use them; they're kept as part of Mu's history, under
+Mu's copyright status.

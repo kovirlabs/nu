@@ -1,4 +1,11 @@
-# User Experience
+# User experience
+
+!!! note "Mu's principles, kept by Nu"
+    This page was written for Mu by its creator, Nicholas H. Tollervey: the
+    "I" below is him, and the history is Mu's. Nu keeps these principles as
+    its own, so where the page says what Mu should be, it means Nu too. The
+    one place Nu deliberately goes further is described in
+    [Where Nu departs](#where-nu-departs-showing-whats-under-the-hood).
 
 We care deeply about all our users - we want using Mu to be a positive
 experience. In particular we focus on our primary users:
@@ -244,6 +251,38 @@ Mu generally follow a pattern:
   tangible plan.
 * We create the simplest possible solution and ask for feedback.
 * Iterate!
+
+## Where Nu departs: showing what's under the hood
+
+Mu kept things simple partly by hiding them. Its Python environment, the
+folder of packages learners' programs ran with, was something learners
+weren't meant to notice. Nu keeps the simple surface but makes two things
+**visible**, on purpose:
+
+* **The learner's Python environment.** The status bar names it
+  (`Environment: mu_venv · Python 3.11`); a click shows where it is, the
+  commands to use it from a terminal, and **What Nu Ran**: every command Nu
+  ran for the learner, exactly as they'd type it. A program can list the
+  packages it needs in a standard `# /// script` block. See
+  [Your Python environment](environment.md).
+* **Plugins.** Every mode except Python 3 and the Debugger is a plugin, and
+  the **Plugins** tab shows them all: where each came from, whether it's on,
+  and, if one failed, why, in plain words. See
+  [Managing plugins](plugins.md#managing-plugins).
+
+Why, when simplicity is the point? Because of "the real thing" (see
+[first steps](first-steps.md#user-experience-research)): environments,
+packages and plugins *are* how Python is used, and a learner who outgrows Nu
+should find that what they saw in Nu was the real thing, not a trick that
+stops working outside it. And when something goes wrong, the teacher helping
+can see what happened instead of guessing.
+
+What keeps it within the principles above is **progressive disclosure**. A
+beginner never has to look: they press **Run** and their program runs, with
+nothing to set up. The environment is one line in the status bar, the
+commands are behind a click, and more than one environment sits in a
+collapsed **Advanced** section. The details are there for the learner who is
+ready for them, and out of the way of the one who isn't.
 
 ## Resources for UX
 

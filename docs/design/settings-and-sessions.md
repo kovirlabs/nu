@@ -261,3 +261,63 @@ and will be written out to file.
 
 * https://github.com/mu-editor/mu/issues/1184
 * https://github.com/mu-editor/mu/issues/1203
+
+## Nu today
+
+The design is unchanged (`mu/settings.py`: `SettingsBase` with `DEFAULTS`,
+`load`, `save`, `reset`, `readonly`, JSON), and the open questions above are
+still open. What's worth knowing now:
+
+### The three files
+
+All three live in Nu's data folder, `mu.config.DATA_DIR` (on Linux
+`~/.local/share/mu`; see [Your Python environment](../environment.md#where-it-is)
+for the others), unless a file of the same name sits next to the app, which
+then wins (`default_file_locations`). Setting the **`MU_DATA_DIR`**
+environment variable moves the data folder; the test suite uses it so it
+never touches real settings, and it's a quick throwaway profile
+(`MU_HOME_DIR` does the same for the home folder, where `mu_code` goes).
+
+**`settings.json`** (`settings.settings`, a `UserSettings`):
+
+| Key | What |
+|---|---|
+| `workspace` | The learner's code folder (default `~/mu_code`). |
+| `disabled_plugins` | Ids of the plugins the learner switched off on the Plugins tab. |
+| `plugins_switched_off_after_errors` | Ids of plugins Nu switched off, with the learner's OK, because they kept having errors; the Plugins tab says why. |
+| `plugins` | Each plugin's own settings, under its namespace (`settings["plugins"][namespace]`), read and written through `mu.plugin.PluginSettings`. |
+
+**`session.json`** (`settings.session`, a `SessionSettings`), written when Nu
+quits, read when it starts:
+
+| Key | What |
+|---|---|
+| `mode` | The mode Nu was in. |
+| `paths` | The files that were open. |
+| `theme` | Day, night or contrast. |
+| `zoom_level` | The editor's zoom. |
+| `window` | Position and size (`x`, `y`, `w`, `h`); restored only if it's on a connected screen. |
+| `envars` | The environment variables set on the Environment tab. |
+| `locale` | The language chosen on the Select Language tab. |
+
+(`venv_path`, from older sessions, is still honoured when it's there.)
+
+**`venv.json`** (`VirtualEnvironment.settings`, a
+`VirtualEnvironmentSettings`), about the learner's environment (see
+[runtime virtual environment](runtime_virtual_environment.md#nu-today)):
+
+| Key | What |
+|---|---|
+| `dirpath` | The folder of the environment Nu uses (from the next start, if the learner chose another one under **Advanced**). |
+| `default_dirpath` | The folder of the default environment Nu made by itself, remembered even while a named one is in use. Older files lack it; Nu then picks the newest `mu_venv-*` folder. |
+| `baseline_packages` | The packages installed when the environment was made, so the Packages tab shows only the ones the learner added. |
+| `mu_version` | The Nu version that made the environment; a different version makes Nu re-create it, keeping the learner's packages. |
+
+### Saving
+
+Autosave is on for all three: each registers `save` with `atexit` when it's
+loaded, so it's written when Nu exits, even after an unhandled exception.
+Switching a plugin on or off (`mu.plugin.loader.set_plugin_enabled`) also
+saves `settings.json` straight away, so it survives a crash. Only values that
+were loaded from the file or set during the session are written; a default
+that nobody touched isn't.

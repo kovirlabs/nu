@@ -20,6 +20,7 @@ plugins in `plugins/` (the repo is a uv workspace; see [packaging](packaging.md)
 ```
 uv sync                 # runtime deps only
 uv sync --extra dev     # + tests, docs, packaging, i18n and lint tooling
+uv sync --all-extras    # + everything, including the opt-in micro:bit plugin
 ```
 
 Run things through the environment with `uv run`:
@@ -36,14 +37,16 @@ uv run pytest           # run the test suite
     the `[tests]`, `[docs]`, `[package]`, `[i18n]` and `[lint]` extras. `[utils]`
     (scrapers under `utils/`) and `[all]` are defined separately.
 
-## Setting up with a plain virtualenv
+## Setting up without uv
 
-If you prefer not to use uv, any Python 3.11+ virtual environment works:
+If you prefer not to use uv, any Python 3.11+ virtual environment (made with
+the standard `venv` module) works:
 
 ```
 python3 -m venv .venv
 source .venv/bin/activate          # Windows: .\.venv\Scripts\activate
 pip install -e ./plugins/circuitpython -e ./plugins/pygamezero -e ".[dev]"
+pip install -e ./plugins/microbit   # optional: the opt-in micro:bit plugin
 ```
 
 pip doesn't know about the uv workspace, so the bundled plugins (which
@@ -55,16 +58,16 @@ pip doesn't know about the uv workspace, so the bundled plugins (which
 uv run pytest
 ```
 
-Qt tests need a platform plugin. To run headlessly (no display) set
-`QT_QPA_PLATFORM=offscreen`:
+To run them without a display (over SSH, in a container) use Qt's `offscreen`
+platform:
 
 ```
-QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly -q
+QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -q --basetemp=$HOME/.cache/nu-pytest/bt
 ```
 
-Note that `--random-order` is enabled by default (see `pyproject.toml`), so add
-`-p no:randomly` or `--random-order-seed=...` when you need a reproducible order
-while debugging.
+The tests never touch your real Nu settings or `mu_code` folder. See
+[tests](tests.md) for what each part of that command does, the random test
+order, coverage and how to write a test.
 
 ## Linting and formatting
 
@@ -88,17 +91,19 @@ make coverage  - run the tests with a coverage report.
 make lint      - lint with ruff.
 make format    - check formatting; `make tidy` reformats in place.
 make check     - format + lint + coverage (the pre-commit gate).
-make dist      - build an sdist and wheel.
-make docs      - build the documentation with MkDocs.
+make dist      - build an sdist and wheel (runs make check first).
+make docs      - build the documentation with MkDocs (make docs-serve to preview).
+make translate_status - how complete each translation is (see translations).
 ```
 
 !!! note
     On Windows there is a `make.cmd` file that works in a similar way to the
-    `make` command on Unix-like operating systems.
+    `make` command on Unix-like operating systems (it calls `make.py`, as the
+    `Makefile` does).
 
 ## Before submitting
 
 Before contributing code please make sure you've read
 [contributing](contributing.md) and follow its checklist. We expect everyone
-participating in the development of Nu to act in accordance with the PSF's
+participating in the development of Nu to act in accordance with the
 [Code of Conduct](code_of_conduct.md).

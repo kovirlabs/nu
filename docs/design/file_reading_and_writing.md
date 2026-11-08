@@ -67,3 +67,10 @@ encoding cookie, that should be preserved and the encoding honoured.
 
 * https://github.com/mu-editor/mu/issues/402
 * https://github.com/mu-editor/mu/issues/696
+
+## Nu today
+
+Unchanged: `read_and_decode` and `save_and_encode` in `mu/logic.py` still
+work this way (UTF-8 without a cookie by default, a cookie's encoding
+honoured, an explanatory message instead of a guess). Autosave runs every
+few seconds for a tab that has a file name.
