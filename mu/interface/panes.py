@@ -675,7 +675,7 @@ class PythonProcessPane(QTextEdit):
         """
         self.running = False
         cursor = self.textCursor()
-        cursor.movePosition(cursor.End)
+        cursor.movePosition(QTextCursor.MoveOperation.End)
         cursor.insertText("\n\n---------- FINISHED ----------\n")
         msg = "exit code: {} status: {}".format(code, status)
         cursor.insertText(msg)
