@@ -12,8 +12,8 @@ smaller codebase (less to port, lower risk). Keep the test suite green at every
 step — it's what makes the bigger changes safe.
 
 Baseline test suite (Python 3.8 + PyQt5, pre-changes): **1120 passed, 20 skipped**.
-Current baseline (Python 3.11–3.14 + PyQt6): **929 passed, 20 skipped**
-(924 after Phase 4a + 5 new `find_uv` tests in the Phase 4 packaging work).
+Current baseline (Python 3.11–3.14 + PyQt6): **1267 passed, 20 skipped** (after Phase
+4b part 1; 1148 before it, 929 after Phase 4a's packaging work).
 Run headless with:
 ```
 QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly -q
@@ -186,12 +186,29 @@ feel; offline-first via bundled assets; **Briefcase** for native installers.
   `uv run` to the "Run" action for PEP 723 inline deps, and scoping the UI to the env
   (indicator + package list), land with 4b.
 
-**4b. Env UX (progressive disclosure):**
-- [ ] "Environment: <name>" indicator + package list scoped to the active env.
-- [ ] `uv` buttons (new env / add package / show packages) that **echo the real command**
-  into a log/console pane — the transparency is the lesson.
-- [ ] PEP 723: "Run" uses `uv run` so inline `# /// script` dependencies auto-resolve.
-- [ ] Advanced multi-env create/switch, hidden by default.
+**4b. Env UX (progressive disclosure):** part 1 ✅ (2026-11, `feature/env-ux-transparency`)
+- [x] "Environment: <name>" indicator + package list scoped to the active env. The status
+  bar reads `Environment: mu_venv · Python 3.11` in modes with `uses_user_environment`
+  (hidden in CircuitPython/the debugger); the name is the env folder without its
+  version/timestamp suffix, the version comes from `pyvenv.cfg`. Clicking it opens the
+  admin dialog's new **Environment** tab: the facts (folder, interpreter, the exact
+  activate / `uv pip --python` / `uv run --python` commands, Nu's uv, each copyable), then
+  Packages / Environment variables (unchanged editors and settings keys) / What Nu ran.
+- [x] **Echo the real command**: every uv command goes through `Uv`, which records it in
+  the GUI-free `mu/command_log.py` (argv, cwd, start, exit code, output tail; also logged
+  at INFO); "What Nu ran" renders it (`uv …` as typed, uv's full path in the tooltip and
+  the log file), and the package dialog prints `$ uv pip install …` before the output.
+  (No separate "new env" button yet: that's multi-env, below.)
+- [x] PEP 723: Run uses `uv run --python <env python> --script <file>` when the file has a
+  `# /// script` block (`mu/script_metadata.py`, PEP regex + tokenize so a block in a
+  string doesn't count); the command is the Run pane's first line and a `Hint:` line goes
+  above uv errors it can explain. NB: uv builds the script's env from the env's *base*
+  Python, so packages added to the learner env aren't visible to a PEP 723 script
+  (standard `uv run` semantics), and there's no `>>>` afterwards (`--script` can't take
+  `-i`). Plain files run exactly as before. **Not yet** for the debugger and Pygame Zero's
+  Play (they'd need `uv run … python -m pgzero` / the debug runner via `--with-requirements`).
+- [ ] Advanced multi-env create/switch, hidden by default — **4b part 2** (not started):
+  the indicator and Environment tab are where it would surface.
 
 **4c. Bundle assets for offline:**
 - [x] Vendor a pinned `uv` binary per platform — achieved via the PyPI **`uv` wheel** in
