@@ -1638,10 +1638,13 @@ version numbers and the order of publishing are up to whoever cuts it.</p>
   See <a href="../packaging/">packaging</a>.</li>
 </ul>
 <h2 id="version-numbers">Version numbers<a class="headerlink" href="#version-numbers" title="Permanent link">&para;</a></h2>
-<p>Nu's versions are plain <a href="https://peps.python.org/pep-0440/">PEP 440</a> numbers:
-<code>2.0.0</code>, or <code>2.0.0b3</code>, <code>2.0.0rc1</code> for a pre-release. The tag is the version
-with a <code>v</code> in front (<code>v2.0.0</code>). A tag with a pre-release segment publishes a
-GitHub <em>pre-release</em>; a plain <code>vX.Y.Z</code> publishes a full release.</p>
+<p>Release versions are <strong>plain numeric <code>X.Y.Z</code></strong>: no <code>rc</code>/<code>b</code>/<code>dev</code>
+suffixes. Windows MSI versions must be numeric, and Briefcase strips any
+suffix, so <code>2.0.0b3</code> and <code>2.0.0</code> would be the same version to Windows (the
+2.0.0 betas all were). To try out a release before publishing it, build the
+installers from a manual run (below); once a version is tagged, ship fixes as
+the next patch (<code>2.0.1</code>). The tag is the version with a <code>v</code> in front
+(<code>v2.0.0</code>).</p>
 <p>The version lives in <strong>two</strong> places, and both must change together:</p>
 <ol>
 <li><code>__version__</code> in <code>mu/__init__.py</code>: the canonical one, read by hatchling
@@ -1726,13 +1729,18 @@ release needs a new plugin version, that version must be on PyPI before
    see <a href="../packaging/#opt-in-workspace-plugins-microbit">packaging</a>.)</li>
 <li>Bump Nu's version in <strong>both</strong> places (above), finish <code>CHANGES.md</code>, and
    commit.</li>
-<li>Push an annotated tag: <code>git tag -a v2.0.0 -m "Nu 2.0.0"</code> then
-   <code>git push origin v2.0.0</code>. <code>build.yml</code> builds the three installers (from
-   the plugins in the repository, not PyPI) and publishes the GitHub Release
-   with them attached.</li>
-<li>Download each installer from the release and run the learner checks above
-   on real machines: at least current Windows 11, current macOS (Apple
-   Silicon) and a current Ubuntu LTS.</li>
+<li>On that branch, run <strong>Build installers</strong> by hand (Actions tab → <em>Run
+   workflow</em> → pick the branch). It builds all three installers as
+   downloadable artifacts without publishing anything.</li>
+<li>Download each installer from that run and do the learner checks above on
+   real machines: at least current Windows 11 (installing <strong>over the previous
+   release</strong>, which it should replace: one "Nu Editor" in <em>Apps</em>), current
+   macOS (Apple Silicon) and a current Ubuntu LTS, with a first launch with
+   the network off.</li>
+<li>Merge, then push an annotated tag on that commit:
+   <code>git tag -a v2.0.0 -m "Nu 2.0.0"</code> then <code>git push origin v2.0.0</code>.
+   <code>build.yml</code> rebuilds the three installers (from the plugins in the
+   repository, not PyPI) and publishes the GitHub Release with them attached.</li>
 <li>Publish to PyPI with <code>make publish-live</code> (try <code>make publish-test</code> first to
    upload to test PyPI). It runs <code>make check</code>, builds the sdists and wheels of
    <code>nu-editor</code>, <code>nu-pygamezero</code> and <code>nu-circuitpython</code> into <code>dist/</code> (<code>make

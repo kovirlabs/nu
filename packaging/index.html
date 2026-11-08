@@ -1782,9 +1782,14 @@ what a new learner environment is built with.</p>
 uploads the installer as a downloadable artifact. <strong>Trigger it from the GitHub
 Actions tab</strong> ("Build installers" → <em>Run workflow</em>) and download the artifact
 for your OS from the run. Pushing a <code>v*</code> tag also builds all three and
-publishes a GitHub Release with the installers attached (a tag with a
-pre-release segment such as <code>v2.0.0rc1</code> publishes as a pre-release). See
-<a href="../release/">Release process</a>.</p>
+publishes a GitHub Release with the installers attached. Release tags are
+plain numeric <code>vX.Y.Z</code> (Windows MSI versions can't carry a pre-release
+segment). See <a href="../release/">Release process</a>.</p>
+<p>Briefcase is pinned per platform in <code>build.yml</code>: Windows uses 0.4.5, whose MSI
+template replaces an installed older (or same-version) Nu instead of
+installing alongside it; macOS and Linux stay on 0.4.2 because 0.4.5 breaks
+the AppImage. The MSI's UpgradeCode is pinned as <code>guid</code> in <code>pyproject.toml</code>
+— never change it, or Windows will stop treating new installers as upgrades.</p>
 <p>Locally (inside a virtual environment that has pip, with the <code>package</code> extra:
 <code>uv sync --extra package</code>, or with pip <code>pip install -e ./plugins/circuitpython -e ./plugins/pygamezero -e ".[package]"</code>):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$ make win64     # 64-bit Windows MSI
