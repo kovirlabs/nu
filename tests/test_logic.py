@@ -825,8 +825,10 @@ def test_editor_setup():
         e.setup(mock_modes)
         assert mkd.call_count == 1
         assert mkd.call_args_list[0][0][0] == "foo"
+        # The core copies nothing into the workspace itself (the removed Web
+        # mode's templates/static folders are gone with it).
         assert mock_shutil_copy.call_count == 0
-        assert mock_shutil_copytree.call_count == 2
+        assert mock_shutil_copytree.call_count == 0
     # Each mode puts what it needs in the workspace (e.g. Pygame Zero's
     # images and sounds folders).
     mock_mode.ensure_workspace_assets.assert_called_once_with("foo")
