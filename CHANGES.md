@@ -39,7 +39,8 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
 
 ### Fixed
 
-Regressions from the move to PyQt6, found by checking Nu against Mu 1.2.2:
+Things that worked in Mu 1.2.2 but broke in the 2.0.0 betas with the move to
+PyQt6 and uv, found by checking Nu against Mu:
 
 * **Check** no longer crashes Nu when it finds a problem in your code; the
   problems are shown under the lines again.
