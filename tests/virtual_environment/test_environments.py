@@ -331,8 +331,9 @@ def test_create_venv_reports_the_command(venv):
     ):
         venv.create_venv()
     version = "%d.%d" % sys.version_info[:2]
+    # Quoted for a POSIX shell, as on Linux (sys.platform was patched).
     assert lines[0] == "$ " + mu.virtual_environment.quote_command(
-        ["uv", "venv", "--python", version, "--seed", venv.path]
+        ["uv", "venv", "--python", version, "--seed", venv.path], windows=False
     )
     assert lines[1] == "Using CPython 3.11"
 
