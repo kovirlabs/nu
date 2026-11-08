@@ -142,7 +142,7 @@ release.
 
 | Name | What it is |
 |---|---|
-| `PLUGIN_API_VERSION` | The API version this Nu provides, e.g. `"0.3"`. |
+| `PLUGIN_API_VERSION` | The API version this Nu provides, e.g. `"0.4"`. |
 | `Plugin` | Base class for a plugin. |
 | `ModePlugin` | A `Plugin` that registers one or more modes for you. |
 | `Mode` | Base class for a mode (today's `BaseMode`). |
@@ -183,7 +183,8 @@ from mu.plugin import Plugin
 
 class MyPlugin(Plugin):
     name = "My Plugin"
-    api_version = "0.3"
+    description = "Adds My mode, for doing my thing."
+    api_version = "0.4"
 
     def register(self, host):
         """Called once when the plugin loads. Do all wiring here, through
@@ -193,6 +194,10 @@ class MyPlugin(Plugin):
         """Optional. Called when the plugin unloads. Modes it registered are
         removed for you; undo anything else here."""
 ```
+
+`name` and `description` *(0.4)* are what the Plugins tab shows: keep the
+description to one sentence saying what the plugin adds. Both are optional; a
+plugin without a `name` is called by its id.
 
 If `register` raises, the plugin is logged and skipped, and any modes it had
 already registered are removed. A broken plugin never stops Nu starting.
@@ -204,7 +209,8 @@ from mu.plugin import ModePlugin
 
 class MicrobitPlugin(ModePlugin):
     name = "micro:bit"
-    api_version = "0.3"
+    description = "Adds micro:bit mode, for the BBC micro:bit."
+    api_version = "0.4"
     mode = MicrobitMode          # or: modes = (ModeA, ModeB)
     # Optional: the folder of icons the modes use (see "Icons and images").
     images = os.path.join(os.path.dirname(__file__), "images")
@@ -346,6 +352,12 @@ them:
 - **Translations for plugins.** Bundled plugins use Nu's own message catalog
   (their strings are extracted with Nu's); a community plugin's strings aren't
   translated yet.
+
+### What changed in 0.4
+
+0.4 adds `Plugin.description`, the sentence the Plugins tab shows under your
+plugin's name. Nothing was removed, but a 0.3 plugin needs its `api_version`
+changed to `"0.4"`.
 
 ### What changed in 0.3
 

@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #: The version of the plugin API this core provides, as "MAJOR.MINOR".
 #: While MAJOR is 0 the API is still settling, so every MINOR bump may break
 #: plugins; from 1.0 a MINOR bump only adds to the API.
-PLUGIN_API_VERSION = "0.3"
+PLUGIN_API_VERSION = "0.4"
 
 
 def _parse_version(version):
@@ -65,12 +65,15 @@ class Plugin:
     """
     Base class for a Nu plugin.
 
-    Subclasses set `name` and `api_version`, then do all their wiring in
-    `register`, using only the `Host` they are given.
+    Subclasses set `name`, `description` and `api_version`, then do all their
+    wiring in `register`, using only the `Host` they are given.
     """
 
-    #: Human readable name, used in logs and (later) the Plugins tab.
+    #: Human readable name, used in logs and the Plugins tab. A plugin that
+    #: doesn't set it is called by its id.
     name = "UNNAMED PLUGIN"
+    #: One sentence saying what the plugin adds, shown in the Plugins tab.
+    description = ""
     #: The PLUGIN_API_VERSION this plugin was written against. Required.
     api_version = None
 

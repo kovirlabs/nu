@@ -26,8 +26,9 @@ from .mode import PyGameZeroMode
 
 
 class PygameZeroPlugin(ModePlugin):
-    name = "Pygame Zero"
-    api_version = "0.3"
+    name = _("Pygame Zero")
+    description = _("Adds Pygame Zero mode, for making games.")
+    api_version = "0.4"
     mode = PyGameZeroMode
     # The mode and toolbar icons (play, images, fonts, sounds, music,
     # pygamezero). "stop" is Nu's own.

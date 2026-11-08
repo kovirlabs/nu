@@ -26,8 +26,9 @@ from .mode import CircuitPythonMode
 
 
 class CircuitPythonPlugin(ModePlugin):
-    name = "CircuitPython"
-    api_version = "0.3"
+    name = _("CircuitPython")
+    description = _("Adds CircuitPython mode, for boards that run CircuitPython.")
+    api_version = "0.4"
     mode = CircuitPythonMode
     # The mode and Serial button icons (circuitpython, circuitpython-serial).
     # "plotter" is Nu's own.
