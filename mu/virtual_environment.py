@@ -5,6 +5,7 @@ import functools
 import glob
 import json
 import logging
+import re
 import shutil
 import subprocess
 import tarfile
@@ -449,6 +450,11 @@ def _uv_from_package():
     except (ImportError, AttributeError, FileNotFoundError):
         return None
     return candidate if candidate and os.path.exists(candidate) else None
+
+
+def canonical_package_name(name):
+    """Normalise a package name as PEP 503 does (``Foo_Bar`` -> ``foo-bar``)."""
+    return re.sub(r"[-_.]+", "-", name).lower()
 
 
 def find_uv():
@@ -1263,9 +1269,12 @@ class VirtualEnvironment(object):
         """
         logger.info("Discovering installed third party modules in venv.")
         baseline_packages = [name for name, version in self.baseline_packages()]
+        # The baseline names come from `pip list` (e.g. "jupyter_client") but
+        # uv reports normalised ones ("jupyter-client"), so compare those.
+        baseline_names = {canonical_package_name(n) for n in baseline_packages}
         user_packages = []
         for package, version in self._uv().list_packages():
-            if package not in baseline_packages:
+            if canonical_package_name(package) not in baseline_names:
                 user_packages.append(package)
         logger.info(user_packages)
 

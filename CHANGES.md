@@ -45,9 +45,12 @@ Regressions from the move to PyQt6, found by checking Nu against Mu 1.2.2:
   problems are shown under the lines again.
 * **Tidy** works on code that uses newer Python syntax, such as `match`
   statements, instead of saying the code contains problems.
-* The **admin dialog** (Ctrl+Shift+D, or the icon at the right of the status bar) opens
-  again in Python 3 and Pygame Zero modes; it crashed Nu while listing your
-  installed packages.
+* The **admin dialog** (Ctrl+Shift+D, or the icon at the right of the status
+  bar) opens again in Python 3 and Pygame Zero modes; it crashed Nu while
+  listing your installed packages.
+* The admin dialog's **Third Party Packages** list shows only packages you
+  added again, not ones Nu installed for itself (such as `jupyter-client`),
+  so removing lines there can't uninstall the REPL's own packages.
 
 ### Security
 

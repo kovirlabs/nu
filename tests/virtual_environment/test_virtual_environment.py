@@ -609,6 +609,27 @@ def test_installed_packages(venv):
             assert set(user_result) == set(name for name, _ in user_packages)
 
 
+def test_installed_packages_matches_normalised_names(venv):
+    """
+    The baseline list is recorded from ``pip list`` (e.g. ``jupyter_client``,
+    ``Pygments``) but uv reports normalised names (``jupyter-client``,
+    ``pygments``). Those are the same packages, so they mustn't be shown as
+    the user's own packages (where deleting them would uninstall them).
+    """
+    baseline_packages = [("jupyter_client", "8"), ("Pygments", "2"), ("pip", "26")]
+    uv_packages = [
+        ("jupyter-client", "8"),
+        ("pygments", "2"),
+        ("pip", "26"),
+        ("requests", "2"),
+    ]
+    with mock.patch.object(VE, "baseline_packages", return_value=baseline_packages):
+        with mock.patch.object(mu.virtual_environment, "Uv") as MockUv:
+            MockUv.return_value.list_packages.return_value = uv_packages
+            _, user_result = venv.installed_packages()
+    assert user_result == ["requests"]
+
+
 def test_activation_vars(venv):
     """activation_vars points VIRTUAL_ENV at the env and prepends its bin
     directory to the supplied PATH."""
