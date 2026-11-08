@@ -459,7 +459,8 @@ def check_only_running_once(paths=()):
         if not tell_running_instance(paths, pid):
             logging.error("The running Nu didn't answer.")
             if "MU_SUPPRESS_CRASH_REPORT_FORM" not in os.environ:
-                app = QApplication.instance() or QApplication(sys.argv)  # noqa: F841
+                app = QApplication.instance() or QApplication(sys.argv)
+                app.setWindowIcon(load_icon("icon"))  # The message box's icon.
                 QMessageBox.information(
                     None,
                     "Nu",
@@ -601,11 +602,13 @@ def run():
     # Restore the previous session along with files passed by the os
     editor.restore_session(sys.argv[1:])
     # Come to the front (and open their files) when Nu is started again.
-    instance_server = listen_for_other_instances(editor_window, editor)  # noqa: F841
+    instance_server = listen_for_other_instances(editor_window, editor)
 
     # Save the exit code for sys.exit call below.
     exit_status = app.exec()
-    # Clean up the shared memory used to signal an app instance is running
+    # Stop listening for other launches, and clean up the shared memory used
+    # to signal an app instance is running.
+    instance_server.close()
     _shared_memory.release()
 
     # Stop the program after the application finishes executing.
