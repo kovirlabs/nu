@@ -22,7 +22,9 @@ import importlib.util
 import inspect
 import logging
 import os
+import re
 import sys
+import traceback
 from dataclasses import dataclass, field
 
 from .. import config, settings
@@ -36,11 +38,23 @@ ENTRY_POINT_GROUP = "mu.plugins"
 DROPIN_DIR = os.path.join(config.DATA_DIR, "plugins")
 #: The settings key holding the ids of plugins the user has switched off.
 DISABLED_SETTING = "disabled_plugins"
+#: The settings key holding the ids of plugins Nu's error handler switched
+#: off (with the learner's OK) because they kept failing.
+SWITCHED_OFF_SETTING = "plugins_switched_off_after_errors"
+#: The plugin packages that ship with Nu (nu-editor depends on them, and the
+#: installers include them). Their kind is "bundled" rather than "package".
+BUNDLED_DISTRIBUTIONS = frozenset({"nu-circuitpython", "nu-pygamezero"})
 
 # Statuses recorded for each discovered plugin.
 LOADED = "loaded"
 DISABLED = "disabled"
 SKIPPED = "skipped"
+
+# Why a plugin was skipped (PluginRecord.problem).
+DUPLICATE = "duplicate"
+IMPORT_FAILED = "import-failed"
+INCOMPATIBLE = "incompatible"
+REGISTER_FAILED = "register-failed"
 
 
 class PluginLoadError(Exception):
@@ -53,20 +67,31 @@ class PluginSource:
     A plugin that has been found but not yet imported.
 
     `id` is the stable name used to enable/disable it: the entry point name,
-    or the module name in the drop-in folder. `origin` says where it came from
-    for logs and the (future) Plugins tab. Calling `load()` imports it and
-    returns a Plugin instance, or raises.
+    or the module name in the drop-in folder. `kind` is "bundled" (ships with
+    Nu), "package" (another installed package) or "folder" (the drop-in
+    folder); `origin` says where exactly, for logs and the Plugins tab.
+    `description` is what the package says about itself, if anything.
+    Calling `load()` imports it and returns a Plugin instance, or raises.
     """
 
     id: str
-    kind: str  # "package" or "folder"
+    kind: str  # "bundled", "package" or "folder"
     origin: str
     load: object = field(repr=False)
+    description: str = ""
 
 
 @dataclass
 class PluginRecord:
-    """What happened to one discovered plugin."""
+    """
+    What happened to one discovered plugin.
+
+    A skipped plugin has a `reason` (one line, for the log), a `problem`
+    saying which kind of failure it was (DUPLICATE, IMPORT_FAILED,
+    INCOMPATIBLE or REGISTER_FAILED) and, when there is one, the traceback in
+    `detail`. `name` and `description` are the plugin's own once it's loaded;
+    until then the id and the package's description.
+    """
 
     id: str
     kind: str
@@ -74,6 +99,10 @@ class PluginRecord:
     status: str  # LOADED, DISABLED or SKIPPED
     reason: str = ""
     plugin: object = None
+    problem: str = ""
+    detail: str = ""
+    name: str = ""
+    description: str = ""
 
 
 def _instantiate(obj, what):
@@ -102,13 +131,32 @@ def entry_point_sources(group=ENTRY_POINT_GROUP):
     sources = []
     for entry_point in importlib.metadata.entry_points(group=group):
         dist = entry_point.dist
-        origin = "{} {}".format(dist.name, dist.version) if dist else entry_point.value
+        kind = "package"
+        description = ""
+        if dist:
+            origin = "{} {}".format(dist.name, dist.version)
+            if _normalise(dist.name) in BUNDLED_DISTRIBUTIONS:
+                kind = "bundled"
+            description = _summary(dist)
+        else:
+            origin = entry_point.value
 
         def load(entry_point=entry_point):
             return _instantiate(entry_point.load(), entry_point.value)
 
-        sources.append(PluginSource(entry_point.name, "package", origin, load))
+        sources.append(PluginSource(entry_point.name, kind, origin, load, description))
     return sources
+
+
+def _normalise(dist_name):
+    """A distribution name as PEP 503 compares them."""
+    return re.sub(r"[-_.]+", "-", dist_name).lower()
+
+
+def _summary(dist):
+    """The one-line description a package declares, or ""."""
+    summary = dist.metadata.get("Summary")
+    return summary.strip() if isinstance(summary, str) else ""
 
 
 def _dropin_plugin_object(module):
@@ -217,10 +265,22 @@ def disabled_plugins(store=None):
     return set(store.get(DISABLED_SETTING, []))
 
 
-def set_plugin_enabled(plugin_id, enabled, store=None):
+def switched_off_after_errors(store=None):
+    """
+    The ids of the plugins Nu switched off, with the learner's OK, because
+    they kept having errors (see mu.plugin.errors).
+    """
+    store = settings.settings if store is None else store
+    return set(store.get(SWITCHED_OFF_SETTING, []))
+
+
+def set_plugin_enabled(plugin_id, enabled, store=None, after_errors=False):
     """
     Switch a plugin on or off; takes effect the next time Nu starts. The
     settings are saved straight away, so the change survives Nu crashing.
+
+    `after_errors` marks a plugin switched off because it kept failing, so
+    the Plugins tab can say so. Any other change clears the mark.
     """
     store = settings.settings if store is None else store
     disabled = disabled_plugins(store)
@@ -229,6 +289,13 @@ def set_plugin_enabled(plugin_id, enabled, store=None):
     else:
         disabled.add(plugin_id)
     store[DISABLED_SETTING] = sorted(disabled)
+    marked = switched_off_after_errors(store)
+    if after_errors and not enabled:
+        marked.add(plugin_id)
+    else:
+        marked.discard(plugin_id)
+    if marked or SWITCHED_OFF_SETTING in store:
+        store[SWITCHED_OFF_SETTING] = sorted(marked)
     _save(store)
 
 
@@ -254,9 +321,17 @@ def load_plugins(host, sources=None, store=None):
     records = []
     seen = set()
     for source in sources:
-        record = PluginRecord(source.id, source.kind, source.origin, SKIPPED)
+        record = PluginRecord(
+            source.id,
+            source.kind,
+            source.origin,
+            SKIPPED,
+            name=source.id,
+            description=source.description,
+        )
         records.append(record)
         if source.id in seen:
+            record.problem = DUPLICATE
             record.reason = "another plugin is already called {!r}".format(source.id)
             logger.warning("Skipping plugin %s (%s): %s", *_describe(record))
             continue
@@ -270,13 +345,20 @@ def load_plugins(host, sources=None, store=None):
         except KeyboardInterrupt:
             raise
         except BaseException as ex:  # incl. SystemExit from a plugin's import
-            record.reason = "it failed to import: {}".format(ex)
+            record.problem = IMPORT_FAILED
+            record.reason = "it failed to import: {}".format(
+                "".join(traceback.format_exception_only(ex)).strip()
+            )
+            record.detail = traceback.format_exc()
             logger.exception("Skipping plugin %s (%s)", source.id, source.origin)
             continue
         if plugin.name == Plugin.name:
             plugin.name = source.id  # unnamed: use its id in logs and the UI
+        record.name = plugin.name
+        record.description = getattr(plugin, "description", "") or record.description
         reason = check_compatible(getattr(plugin, "api_version", None))
         if reason:
+            record.problem = INCOMPATIBLE
             record.reason = reason
             logger.warning("Skipping plugin %s (%s): %s", *_describe(record))
             continue
@@ -284,8 +366,46 @@ def load_plugins(host, sources=None, store=None):
             record.status = LOADED
             record.plugin = plugin
         else:
+            record.problem = REGISTER_FAILED
             record.reason = "it failed to register (see the log)"
     return records
+
+
+def describe(records, store=None, modes_of=None):
+    """
+    What the Plugins tab shows: a dict per record, in the same order, with
+    the record's facts plus `enabled` (whether it will load at the next
+    start, from the settings), `switched_off_after_errors`, `can_switch`
+    (False for a duplicate id, which is switched with the first plugin of
+    that id) and `modes` (from `modes_of(plugin)`; [] if it isn't loaded).
+    """
+    disabled = disabled_plugins(store)
+    after_errors = switched_off_after_errors(store)
+    rows = []
+    seen = set()
+    for record in records:
+        modes = []
+        if record.plugin is not None and modes_of is not None:
+            modes = list(modes_of(record.plugin))
+        rows.append(
+            {
+                "id": record.id,
+                "name": record.name or record.id,
+                "description": record.description,
+                "kind": record.kind,
+                "origin": record.origin,
+                "status": record.status,
+                "problem": record.problem,
+                "reason": record.reason,
+                "detail": record.detail,
+                "enabled": record.id not in disabled,
+                "switched_off_after_errors": record.id in after_errors,
+                "can_switch": record.id not in seen,
+                "modes": modes,
+            }
+        )
+        seen.add(record.id)
+    return rows
 
 
 def _describe(record):

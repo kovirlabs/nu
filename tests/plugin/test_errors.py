@@ -352,8 +352,11 @@ def test_offers_to_switch_off_a_plugin_that_keeps_failing(
     assert host._view.show_message.call_count == handler.SWITCH_OFF_AFTER
     (call,) = host._view.show_confirmation.call_args_list
     assert call.args[0] == "The Buggy plugin keeps having problems."
+    assert "Plugins tab" in call.args[1]
     assert call.args[2] == "Question"
     assert sorted(store.get("disabled_plugins", [])) == disabled
+    # The Plugins tab can say why it's off.
+    assert sorted(loader.switched_off_after_errors(store)) == disabled
 
 
 def test_no_switch_off_offer_without_a_plugin_id(host, handler, clock):

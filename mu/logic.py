@@ -758,6 +758,8 @@ class Editor(QObject):
         self.python_extensions = [".py", ".pyw"]
         self.modes = {}
         self.envars = {}  # See restore session and show_admin
+        # The plugin Host (set by app.setup_modes), for the Plugins tab.
+        self.plugin_host = None
         self.user_locale = ""  # user defined language locale
         self.connected_devices = DeviceList(self.modes, parent=self)
         self.current_device = None

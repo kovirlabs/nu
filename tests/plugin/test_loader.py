@@ -118,6 +118,58 @@ def test_entry_point_sources():
         sources[1].load()
 
 
+def test_entry_point_sources_bundled_and_summary():
+    """
+    A plugin package that ships with Nu is "bundled"; any other is a
+    "package". Before it's imported, its description is the package's
+    summary.
+    """
+
+    def entry_point(name, dist_name, summary):
+        ep = mock.MagicMock()
+        ep.name = name
+        ep.dist.name = dist_name
+        ep.dist.version = "1.0"
+        ep.dist.metadata = {"Summary": summary} if summary else {}
+        return ep
+
+    entry_points = [
+        entry_point("pygamezero", "nu-pygamezero", "Pygame Zero for Nu."),
+        entry_point("circuitpython", "Nu_CircuitPython", None),
+        entry_point("cowmode", "nu-cowmode", "Cows."),
+    ]
+    with mock.patch("importlib.metadata.entry_points", return_value=entry_points):
+        sources = loader.entry_point_sources()
+    assert [(s.id, s.kind, s.description) for s in sources] == [
+        ("pygamezero", "bundled", "Pygame Zero for Nu."),
+        ("circuitpython", "bundled", ""),
+        ("cowmode", "package", "Cows."),
+    ]
+
+
+def test_bundled_distributions_match_nus_dependencies():
+    """
+    BUNDLED_DISTRIBUTIONS lists exactly the plugin packages nu-editor
+    depends on (and Briefcase ships).
+    """
+    import tomllib
+    from pathlib import Path
+
+    pyproject = Path(__file__).parents[2] / "pyproject.toml"
+    project = tomllib.loads(pyproject.read_text())
+    deps = {
+        dep.split(">")[0].split("=")[0].strip()
+        for dep in project["project"]["dependencies"]
+    }
+    plugin_dirs = {
+        "nu-" + Path(path).name
+        for path in project["tool"]["briefcase"]["app"]["mu"]["requires"]
+        if path.startswith("./plugins/")
+    }
+    assert loader.BUNDLED_DISTRIBUTIONS == plugin_dirs
+    assert loader.BUNDLED_DISTRIBUTIONS <= deps
+
+
 def test_entry_point_sources_finds_a_real_entry_point():
     """
     A real EntryPoint object (as importlib.metadata returns) works too.
@@ -304,6 +356,38 @@ def test_set_plugin_enabled_defaults_to_user_settings():
     assert store["disabled_plugins"] == ["x"]
 
 
+def test_switched_off_after_errors():
+    """
+    The error handler marks a plugin it switched off, so the Plugins tab can
+    say why; switching it on or off from the tab clears the mark.
+    """
+    store = settings.UserSettings()
+    assert loader.switched_off_after_errors(store) == set()
+    loader.set_plugin_enabled("flaky", False, store, after_errors=True)
+    loader.set_plugin_enabled("other", False, store, after_errors=True)
+    assert loader.disabled_plugins(store) == {"flaky", "other"}
+    assert loader.switched_off_after_errors(store) == {"flaky", "other"}
+    loader.set_plugin_enabled("flaky", True, store)
+    loader.set_plugin_enabled("other", False, store)
+    assert loader.disabled_plugins(store) == {"other"}
+    assert loader.switched_off_after_errors(store) == set()
+
+
+def test_set_plugin_enabled_leaves_out_an_unused_mark():
+    """settings.json only gets the after-errors list once it's needed."""
+    store = settings.UserSettings()
+    loader.set_plugin_enabled("x", False, store)
+    loader.set_plugin_enabled("x", True, store)
+    assert loader.SWITCHED_OFF_SETTING not in store
+
+
+def test_switched_off_after_errors_defaults_to_user_settings():
+    with mock.patch.object(
+        settings, "settings", {"plugins_switched_off_after_errors": ["x"]}
+    ):
+        assert loader.switched_off_after_errors() == {"x"}
+
+
 def test_set_plugin_enabled_saves_at_once():
     """
     The change is written straight away, so it survives Nu crashing before
@@ -396,13 +480,54 @@ def test_load_plugins_skips_everything_that_goes_wrong(host, caplog):
     ]
     off.assert_not_called()  # a switched-off plugin isn't even imported
     reasons = {r.id: r.reason for r in records if r.status == SKIPPED}
-    assert "failed to import: no module named nope" in reasons["broken"]
+    assert reasons["broken"] == (
+        "it failed to import: ImportError: no module named nope"
+    )
+    assert reasons["exits"] == "it failed to import: SystemExit: 1"
     assert reasons["old"].startswith("it targets plugin API 99.0")
     assert reasons["fails"] == "it failed to register (see the log)"
     assert records[-1].reason == "another plugin is already called 'good'"
+    problems = [r.problem for r in records]
+    assert problems == [
+        "",
+        loader.IMPORT_FAILED,
+        loader.IMPORT_FAILED,
+        loader.INCOMPATIBLE,
+        loader.REGISTER_FAILED,
+        "",
+        loader.DUPLICATE,
+    ]
+    # The traceback of a failed import is kept for the Plugins tab.
+    assert records[1].detail.startswith("Traceback (most recent call last):")
+    assert "ImportError: no module named nope" in records[1].detail
     assert list(host.modes) == ["good"]
     assert "Plugin off (off 1.0) is switched off" in caplog.text
     assert "Skipping plugin broken" in caplog.text
+
+
+def test_load_plugins_records_names_and_descriptions(host):
+    """
+    A loaded plugin's record has its name and description; one that wasn't
+    imported keeps its id and what the package says about itself.
+    """
+    plugin = make_mode_plugin("alpha")
+    plugin.name = "Alpha"
+    plugin.description = "Adds Alpha mode."
+    unnamed = make_mode_plugin("beta")
+    unnamed.name = Plugin.name
+    off = PluginSource("off", "package", "off 1.0", mock.MagicMock(), "Off things.")
+    store = settings.UserSettings()
+    loader.set_plugin_enabled("off", False, store)
+    records = loader.load_plugins(
+        host,
+        [source("alpha", lambda: plugin), source("beta", lambda: unnamed), off],
+        store,
+    )
+    assert [(r.name, r.description) for r in records] == [
+        ("Alpha", "Adds Alpha mode."),
+        ("beta", ""),
+        ("off", "Off things."),
+    ]
 
 
 def test_load_plugins_lets_ctrl_c_through(host):
@@ -450,3 +575,89 @@ def test_load_plugins_names_unnamed_plugins_by_id(host):
     assert plugin.name == "anon"
     assert named.name == "alpha"
     assert GoodPlugin.name == Plugin.name  # the class is untouched
+
+
+# --- describing plugins for the Plugins tab ---
+
+
+def test_describe(host):
+    """
+    What the Plugins tab shows for each plugin, from its record and the
+    settings (which say what happens at the next start).
+    """
+    store = settings.UserSettings()
+    loader.set_plugin_enabled("off", False, store)
+    loader.set_plugin_enabled("flaky", False, store, after_errors=True)
+    good = make_mode_plugin("good")
+    records = [
+        loader.PluginRecord(
+            "good",
+            "bundled",
+            "nu-good 1.0",
+            LOADED,
+            plugin=good,
+            name="Good",
+            description="Adds Good mode.",
+        ),
+        loader.PluginRecord("off", "package", "nu-off 1.0", DISABLED, name="off"),
+        loader.PluginRecord("flaky", "folder", "/p/flaky.py", DISABLED, name="flaky"),
+        loader.PluginRecord(
+            "broken",
+            "folder",
+            "/p/broken.py",
+            SKIPPED,
+            reason="it failed to import: NameError: x",
+            problem=loader.IMPORT_FAILED,
+            detail="Traceback...",
+            name="broken",
+        ),
+        loader.PluginRecord(
+            "good",
+            "folder",
+            "/p/good.py",
+            SKIPPED,
+            reason="another plugin is already called 'good'",
+            problem=loader.DUPLICATE,
+            name="good",
+        ),
+    ]
+    rows = loader.describe(
+        records, store, modes_of=lambda plugin: ["Good mode"] if plugin else []
+    )
+    assert rows[0] == {
+        "id": "good",
+        "name": "Good",
+        "description": "Adds Good mode.",
+        "kind": "bundled",
+        "origin": "nu-good 1.0",
+        "status": LOADED,
+        "problem": "",
+        "reason": "",
+        "detail": "",
+        "enabled": True,
+        "switched_off_after_errors": False,
+        "can_switch": True,
+        "modes": ["Good mode"],
+    }
+    assert [
+        (r["id"], r["enabled"], r["switched_off_after_errors"], r["can_switch"])
+        for r in rows
+    ] == [
+        ("good", True, False, True),
+        ("off", False, False, True),
+        ("flaky", False, True, True),
+        ("broken", True, False, True),
+        # A second plugin with the same id is switched with the first.
+        ("good", True, False, False),
+    ]
+    assert rows[3]["detail"] == "Traceback..."
+    assert rows[1]["modes"] == []
+
+
+def test_describe_defaults(host):
+    with mock.patch.object(settings, "settings", settings.UserSettings()):
+        (row,) = loader.describe(
+            [loader.PluginRecord("x", "folder", "/p/x.py", DISABLED, name="x")]
+        )
+    assert row["modes"] == []
+    assert row["enabled"] is True

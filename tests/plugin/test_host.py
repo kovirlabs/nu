@@ -263,6 +263,56 @@ def test_setup_modes_registers_builtins_through_a_host():
     assert isinstance(hosts.pop(), Host)
 
 
+def test_setup_modes_gives_the_editor_the_host():
+    """The editor reaches the plugin records (for the Plugins tab) this way."""
+    editor = mock.MagicMock()
+    with mock.patch("mu.app.load_plugins", return_value=[]):
+        modes = setup_modes(editor, mock.MagicMock())
+    assert editor.plugin_host is modes["python"].host
+
+
+def test_describe_plugins(host):
+    """The Plugins tab's rows, with the names of each plugin's modes."""
+    from mu.plugin import loader
+
+    plugin = AlphaPlugin()
+    host.load_plugin(plugin)
+    host.plugin_records = [
+        loader.PluginRecord("alpha", "package", "a 1", loader.LOADED, plugin=plugin),
+        loader.PluginRecord("off", "folder", "/off.py", loader.DISABLED),
+    ]
+    with mock.patch.object(settings, "settings", settings.UserSettings()):
+        rows = host.describe_plugins()
+    assert [(r["id"], r["modes"]) for r in rows] == [("alpha", ["Alpha"]), ("off", [])]
+
+
+def test_set_plugin_enabled(host):
+    """
+    Switching a plugin back on forgets its errors this session, so if it
+    keeps failing Nu offers to switch it off again.
+    """
+    from mu.plugin import loader
+
+    plugin = AlphaPlugin()
+    host.load_plugin(plugin)
+    host.plugin_records = [
+        loader.PluginRecord("alpha", "package", "a 1", loader.LOADED, plugin=plugin),
+        loader.PluginRecord("gone", "folder", "/gone.py", loader.DISABLED),
+    ]
+    store = settings.UserSettings()
+    handler = host._error_handler
+    handler._state(plugin).errors = 5
+    handler._state(plugin).offered_switch_off = True
+    with mock.patch.object(settings, "settings", store):
+        host.set_plugin_enabled("alpha", False)
+        assert handler.error_count(plugin) == 5  # switching off forgets nothing
+        host.set_plugin_enabled("alpha", True)
+        host.set_plugin_enabled("gone", True)  # not loaded: nothing to forget
+    assert handler.error_count(plugin) == 0
+    assert handler._state(plugin).offered_switch_off is False
+    assert loader.disabled_plugins(store) == set()
+
+
 def test_setup_modes_adds_plugin_modes():
     """
     Plugins are loaded into the same Host after the built-in modes, and what

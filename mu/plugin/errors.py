@@ -112,6 +112,10 @@ class PluginErrorHandler:
         """How many unexpected errors `plugin` has had this session."""
         return self._state(plugin).errors
 
+    def forget(self, plugin):
+        """Start counting `plugin`'s errors afresh, as if Nu had restarted."""
+        self._states.pop(id(plugin), None)
+
     # --- working out whose code failed ---
 
     def _plugin_modules(self):
@@ -260,11 +264,12 @@ class PluginErrorHandler:
             message = _("The {} plugin keeps having problems.").format(plugin.name)
             information = _(
                 "Nu is still running. Switch the plugin off? It won't be "
-                "loaded the next time Nu starts. (You can switch it back on "
-                "by removing it from disabled_plugins in settings.json.)"
+                "loaded the next time Nu starts. You can switch it back on in "
+                "the Plugins tab of Nu's administration window (the cog in "
+                "the status bar)."
             )
             if self._show_dialog(self._host.confirm, message, information, "Question"):
-                loader.set_plugin_enabled(plugin_id, False)
+                loader.set_plugin_enabled(plugin_id, False, after_errors=True)
                 self._host.show_status(
                     _("The {} plugin is switched off from the next start.").format(
                         plugin.name

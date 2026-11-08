@@ -266,6 +266,8 @@ def setup_modes(editor, view):
         host.register_mode(mode_class)
     host.plugin_records = load_plugins(host)
     plugin_errors.install(host._error_handler)
+    # The admin dialog's Plugins tab shows what happened to each plugin.
+    editor.plugin_host = host
     return host.modes
 
 
