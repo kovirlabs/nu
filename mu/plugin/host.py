@@ -407,7 +407,7 @@ class Host:
 
     def log_command(self, argv, cwd=None, note=None):
         """
-        Record a command in the log the learner sees under "What Nu ran"
+        Record a command in the log the learner sees under "What Nu Ran"
         (and in Nu's log file), as uv's commands are: `argv` is the command
         as the learner could type it (`["mpremote", "connect", port, ...]`),
         `cwd` the folder it runs in, `note` a sentence for anything they

@@ -56,12 +56,12 @@ Installed 1 package in 13ms
 Packages come from [PyPI](https://pypi.org/), so adding one needs the
 internet.
 
-**Environment variables** (also on the Environment tab) are set each time you
+**Environment Variables** (also on the Environment tab) are set each time you
 run a program, one `NAME=value` per line.
 
-## What Nu ran
+## What Nu Ran
 
-The **What Nu ran** section lists every command Nu has run in your environment
+The **What Nu Ran** section lists every command Nu has run in your environment
 since it started, newest last: when it ran, where, whether it worked (`exit
 code 0` means it did), and the last few lines it printed. These are the
 commands you'll see:
@@ -80,7 +80,7 @@ uv run --python /home/you/…/bin/python --script /home/you/mu_code/hello.py
 - `uv run` ran a program that lists the packages it needs (next section).
 
 Modes for boards don't use this environment, so they have no Environment tab;
-the admin dialog shows **What Nu ran** as a tab of its own there instead. In
+the admin dialog shows **What Nu Ran** as a tab of its own there instead. In
 [micro:bit mode](microbit.md) that's where you'll see the `mpremote` command
 that copied your program onto the micro:bit.
 
@@ -174,5 +174,5 @@ uv's own message:
 | *Nu can't find uv* | Reinstall Nu, or remove the block to run the program as an ordinary one. |
 
 If installing a package fails, the package dialog shows uv's message; the
-same is in **What Nu ran**. Nu's full log (the **Current Log** tab) has every
+same is in **What Nu Ran**. Nu's full log (the **Current Log** tab) has every
 command with uv's full path.

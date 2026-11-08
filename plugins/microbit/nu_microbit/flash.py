@@ -12,7 +12,7 @@ is a function on `BoardIO`, so tests swap in fakes.
 
 Each step reports a status line for the learner, and each one with a command
 the learner could type (downloading the firmware, copying it to the drive,
-mpremote) records that command in "What Nu ran".
+mpremote) records that command in "What Nu Ran".
 
 Copyright (c) 2026 the Nu contributors (see the AUTHORS file).
 

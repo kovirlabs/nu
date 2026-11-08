@@ -48,11 +48,11 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   tab: where the environment is, which Python it has, and the exact commands
   to activate it or use it with uv from a terminal, each with a **Copy**
   button. The package and environment-variable editors moved there.
-* **What Nu ran.** Every `uv` command Nu runs for you (making the
+* **What Nu Ran.** Every `uv` command Nu runs for you (making the
   environment, adding, removing and listing packages, running a program) is
   listed on the Environment tab as you'd type it, with whether it worked. When
   you add or remove packages, the progress window shows the real command too.
-  Modes without that environment (boards) show the list as a **What Nu ran**
+  Modes without that environment (boards) show the list as a **What Nu Ran**
   tab of its own, with the commands a plugin ran (micro:bit's `mpremote`).
 * **Programs can list the packages they need.** If a program starts with a
   `# /// script` block ([PEP 723](https://peps.python.org/pep-0723/)) such as
@@ -74,7 +74,7 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   there; **Shift+Flash** puts it back on anyway. MicroPython (V1 1.1.1, V2
   2.1.2) is downloaded from its official releases on first use and checked,
   never shipped inside Nu; offline, Nu says which file to put where. Each step
-  shows in the status bar, and the commands are listed under **What Nu ran**.
+  shows in the status bar, and the commands are listed under **What Nu Ran**.
   **REPL** and **Plotter** work as in CircuitPython mode, and autocomplete
   knows micro:bit MicroPython 2.x (sound, microphone, logo, `log`, `power`,
   radio, music…). It hasn't been tried on real micro:bits yet, so it isn't in

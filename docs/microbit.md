@@ -70,7 +70,7 @@ The status bar at the bottom of the window says what's happening at each step:
    micro:bit starts, even without a computer, from a battery pack.
 
 Steps 3 and 4 are things you could do yourself in a terminal, and Nu shows the
-commands under **What Nu ran** (the cog in the bottom-right corner → the Python
+commands under **What Nu Ran** (the cog in the bottom-right corner → the Python
 environment tab), for example:
 
 ```bash

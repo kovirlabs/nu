@@ -359,7 +359,7 @@ tell the learner if there's none). Offer the Plotter only if
 | `plotter_available` | `True` if Nu can show the plotter (the optional Qt Charts package is installed). A property. *(0.3)* |
 | `current_device` | The board picked in the device selector (a `Device`), or `None`. A property; use it instead of `self.editor.current_device`. *(0.5)* |
 | `data_dir(name)` | A folder of your plugin's own in Nu's data folder, `<data folder>/<name>`, made if missing (`name` is a plain folder name, normally your plugin's id). For downloads and caches, not the learner's work. *(0.5)* |
-| `log_command(argv, cwd=None, note=None)` | Add a command to **What Nu ran** (and Nu's log), next to uv's: `argv` as the learner could type it, `note` for anything they should know (e.g. "Nu did this through mpremote's Python API"). Returns a record: call `add_output(text)` as output arrives and `finish(exit_code, output=None)` when done (0 for success). Safe from any thread. *(0.5)* |
+| `log_command(argv, cwd=None, note=None)` | Add a command to **What Nu Ran** (and Nu's log), next to uv's: `argv` as the learner could type it, `note` for anything they should know (e.g. "Nu did this through mpremote's Python API"). Returns a record: call `add_output(text)` as output arrives and `finish(exit_code, output=None)` when done (0 for success). Safe from any thread. *(0.5)* |
 | `settings(namespace)` | A `PluginSettings` with `get(key, default=None)` and `set(key, value)`. Values are saved with the user's settings under `plugins.<namespace>` and must be JSON-serialisable. |
 | `logger(name)` | A logger writing to Nu's log as `mu.plugins.<name>`. |
 | `api_version` | The `PLUGIN_API_VERSION` this Nu provides. |
@@ -423,7 +423,7 @@ them:
 ### What changed in 0.5
 
 0.5 adds what the micro:bit plugin needs to stay on the API: `Host.log_command`
-(so a plugin's equivalent commands show in **What Nu ran**, as uv's do),
+(so a plugin's equivalent commands show in **What Nu Ran**, as uv's do),
 `Host.current_device` (the selected board, without `self.editor`) and
 `Host.data_dir` (a folder for downloads such as firmware). Nothing was removed,
 but a 0.4 plugin needs its `api_version` changed to `"0.5"`.
@@ -541,7 +541,7 @@ uv pip install --python <DATA_DIR>/plugin-env/bin/python nu-microbit
 ```
 
 The command goes through the same `Uv` wrapper as the learner's packages, so
-it's in **What Nu ran** and the log, and its output streams into the same
+it's in **What Nu Ran** and the log, and its output streams into the same
 progress window. Like switching, an added plugin loads at the next start.
 **Add from a file…** takes a `.whl` the teacher downloaded, which works
 offline.
@@ -619,7 +619,7 @@ Phase 1. It comes back as **plugin-owned UI** driven by mpremote:
 - **Talking to the board:** the same worker pattern as Flash: one job at a
   time on a `QThread`, through `mpremote.transport_serial.SerialTransport`:
   `fs_listdir` to list, `fs_readfile` / `fs_writefile` to copy each way,
-  `fs_rmfile` to delete, each logged under **What Nu ran** as
+  `fs_rmfile` to delete, each logged under **What Nu Ran** as
   `mpremote connect <port> fs ls` / `fs cp :a.py a.py` / `fs cp a.py :a.py` /
   `fs rm :a.py`.
 - **One serial port:** the pane, the REPL and Flash all need it, so the pane

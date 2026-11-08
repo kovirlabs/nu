@@ -236,8 +236,8 @@ class CopyButton(QPushButton):
 
 class CommandLogWidget(QWidget):
     """
-    "What Nu ran": the uv commands Nu has run in the learner's environment
-    (see `mu.command_log`), as they'd type them, newest last.
+    "What Nu Ran": the commands Nu has run for the learner (uv's, and those
+    plugins log, see `mu.command_log`), as they'd type them, newest last.
     """
 
     def setup(self, commands, uv_path=None):
@@ -245,9 +245,8 @@ class CommandLogWidget(QWidget):
         self.setLayout(widget_layout)
         label = QLabel(
             _(
-                "These are the commands Nu has run in your environment since "
-                "it started, newest last. You can type them in a terminal "
-                "yourself."
+                "These are the commands Nu has run for you since it started, "
+                "newest last. You can type them in a terminal yourself."
             )
         )
         label.setWordWrap(True)
@@ -349,12 +348,12 @@ class EnvironmentWidget(QWidget):
         self.sections.addTab(self.package_widget, _("Packages"))
         self.envar_widget = EnvironmentVariablesWidget(self)
         self.envar_widget.setup(envars)
-        self.sections.addTab(self.envar_widget, _("Environment variables"))
+        self.sections.addTab(self.envar_widget, _("Environment Variables"))
         self.commands_widget = CommandLogWidget(self)
         self.commands_widget.setup(
             environment.get("commands"), uv_path=environment.get("uv")
         )
-        self.sections.addTab(self.commands_widget, _("What Nu ran"))
+        self.sections.addTab(self.commands_widget, _("What Nu Ran"))
         widget_layout.addWidget(self.sections, stretch=1)
 
 
@@ -756,7 +755,7 @@ class AdminDialog(QDialog):
             # still have run commands for it (e.g. micro:bit's mpremote).
             self.commands_tab = CommandLogWidget(self)
             self.commands_tab.setup(environment["commands"])
-            self.tabs.addTab(self.commands_tab, _("What Nu ran"))
+            self.tabs.addTab(self.commands_tab, _("What Nu Ran"))
         if plugins is not None:
             self.plugins_tab = PluginsWidget(self)
             self.plugins_tab.setup(plugins, open_directory=open_directory)

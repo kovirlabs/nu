@@ -193,10 +193,10 @@ feel; offline-first via bundled assets; **Briefcase** for native installers.
   version/timestamp suffix, the version comes from `pyvenv.cfg`. Clicking it opens the
   admin dialog's new **Environment** tab: the facts (folder, interpreter, the exact
   activate / `uv pip --python` / `uv run --python` commands, Nu's uv, each copyable), then
-  Packages / Environment variables (unchanged editors and settings keys) / What Nu ran.
+  Packages / Environment variables (unchanged editors and settings keys) / What Nu Ran.
 - [x] **Echo the real command**: every uv command goes through `Uv`, which records it in
   the GUI-free `mu/command_log.py` (argv, cwd, start, exit code, output tail; also logged
-  at INFO); "What Nu ran" renders it (`uv …` as typed, uv's full path in the tooltip and
+  at INFO); "What Nu Ran" renders it (`uv …` as typed, uv's full path in the tooltip and
   the log file), and the package dialog prints `$ uv pip install …` before the output.
   (No separate "new env" button yet: that's multi-env, below.)
 - [x] PEP 723: Run uses `uv run --python <env python> --script <file>` when the file has a
@@ -421,7 +421,7 @@ drop-in dir covers them.
     then find its plugins as ordinary installed packages (kind "package").
   - **Add a plugin…** on the Plugins tab: package name → PyPI summary/author + trust note
     + the exact command → `uv pip install --python <plugin env> <pkg>` through `Uv`, so it
-    is in "What Nu ran" and streams into the package progress window. **Add from a file…**
+    is in "What Nu Ran" and streams into the package progress window. **Add from a file…**
     (`.whl`) for offline. Takes effect at the next start, like switching.
   - The new package's `learner-env` extra is read from its metadata and installed into
     the learner env right away (same command log); `wheels.baseline_packages()` already
@@ -540,7 +540,7 @@ the maintainer's checklist is in `plugins/microbit/README.md`)
   `<workspace>/microbit`. Flash closes an open REPL/plotter first (they hold the port),
   greys the buttons while it runs and reopens them after. Needed plugin API **0.5**
   (`Host.log_command`, `Host.current_device`, `Host.data_dir`); boards' modes now show
-  **What Nu ran** as a tab of its own in the admin dialog. Opt-in (root `microbit` extra)
+  **What Nu Ran** as a tab of its own in the admin dialog. Opt-in (root `microbit` extra)
   until validated — see 6c.
 - [ ] Reintroduce the **file-transfer pane** (the old `FileSystemPane`, removed in Phase 1d)
   as plugin-owned UI driven by `mpremote`. **Designed, not built**: `docs/plugins.md` →

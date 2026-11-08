@@ -28,7 +28,7 @@ The code is found in the `mu` directory and organised in the following way:
   run) is managed in `virtual_environment.py`: `VirtualEnvironment` (the `venv`
   singleton) and the `Uv` wrapper around [uv](https://docs.astral.sh/uv/).
   Every uv command goes through `Uv`, which records it in the GUI-free
-  `command_log.py` (shown to the learner as "What Nu ran", and logged at
+  `command_log.py` (shown to the learner as "What Nu Ran", and logged at
   INFO). `script_metadata.py` finds [PEP 723](https://peps.python.org/pep-0723/)
   `# /// script` blocks: the Python 3 mode's **Run** uses
   `uv run --python <env python> --script <file>` for a file with one. The
