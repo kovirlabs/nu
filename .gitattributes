@@ -1,0 +1,17 @@
+# Every text file is stored and checked out with LF line endings, on every
+# platform (Python, Qt and git all cope with LF on Windows).
+* text=auto eol=lf
+
+# Binary files: never touch their bytes.
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.xcf binary
+*.wav binary
+*.otf binary
+*.ttf binary
+*.mo binary
+*.zip binary
+*.whl binary
