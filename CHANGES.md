@@ -56,6 +56,8 @@ Regressions from the move to PyQt6, found by checking Nu against Mu 1.2.2:
 * The Python 3 **REPL** button starts the Jupyter REPL again instead of
   crashing Nu.
 * Opening a file Nu can't handle no longer suggests micro:bit `.hex` files.
+* When a program finishes, the footer shows `status: 0` again rather than
+  `status: ExitStatus.NormalExit`.
 
 ### Security
 

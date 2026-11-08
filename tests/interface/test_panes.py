@@ -1385,6 +1385,18 @@ def test_PythonProcessPane_finished_without_qtpy_enum_promotion():
     )
 
 
+def test_PythonProcessPane_finished_shows_numeric_status():
+    """
+    The FINISHED footer shows the exit status as a number, as Mu did
+    ("status: 0"), not PyQt6's enum repr ("status: ExitStatus.NormalExit").
+    """
+    from PyQt6.QtCore import QProcess
+
+    ppp = mu.interface.panes.PythonProcessPane()
+    ppp.finished(1, QProcess.ExitStatus.CrashExit)
+    assert ppp.toPlainText().endswith("exit code: 1 status: 1")
+
+
 def test_PythonProcessPane_context_menu():
     """
     Ensure the context menu for the REPL is configured correctly for non-OSX
