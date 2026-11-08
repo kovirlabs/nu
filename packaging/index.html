@@ -1735,9 +1735,10 @@ template and nothing depends on it.</p>
   published to PyPI before the <code>nu-editor</code> release that needs it</strong> (or
   <code>pip install nu-editor</code> can't resolve). The order is: <code>nu-circuitpython</code> and
   <code>nu-pygamezero</code> (in either order: neither depends on the other or on
-  <code>nu-editor</code>), then <code>nu-editor</code>. Build and upload a plugin from its folder
-  (<code>uv build plugins/circuitpython</code>, then upload as usual); bump its own
-  version when it changes, independently of Nu's.</li>
+  <code>nu-editor</code>), then <code>nu-editor</code>. <code>make dist</code> builds all three into <code>dist/</code>,
+  and <code>make publish-live</code> (or <code>make publish-test</code> for test PyPI) uploads them
+  in that order, skipping a plugin version PyPI already has. Bump a plugin's
+  own version when it changes, independently of Nu's.</li>
 </ul>
 <h3 id="opt-in-workspace-plugins-microbit">Opt-in workspace plugins: micro:bit<a class="headerlink" href="#opt-in-workspace-plugins-microbit" title="Permanent link">&para;</a></h3>
 <p><strong><code>nu-microbit</code></strong> (<code>plugins/microbit</code>, Phase 6) is a workspace member too, but

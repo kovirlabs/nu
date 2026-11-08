@@ -2512,7 +2512,11 @@ literal string. When loading it, the host compares that with its own version:</p
 </code></pre></div>
 <p><code>name</code> and <code>description</code> <em>(0.4)</em> are what the Plugins tab shows: keep the
 description to one sentence saying what the plugin adds. Both are optional; a
-plugin without a <code>name</code> is called by its id.</p>
+plugin without a <code>name</code> is called by its id. A plugin that isn't imported
+(it's switched off, or failed to import) is shown with what its package says
+about itself, read without importing it: its distribution name and its
+summary (<code>description</code> in <code>pyproject.toml</code>), so make that summary the same
+sentence. A drop-in plugin has no package, so it's shown by its id.</p>
 <p>If <code>register</code> raises, the plugin is logged and skipped, and any modes it had
 already registered are removed. A broken plugin never stops Nu starting.</p>
 <p>For the common case of a plugin that only adds modes, use <code>ModePlugin</code>:</p>
