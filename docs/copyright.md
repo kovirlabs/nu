@@ -110,28 +110,6 @@ status, with these notes:
   upstream Mu's, so they carry Mu's copyright and licence, nothing new.
 * **The Python logo** (`python.png`, `python.svg`): see python.png above.
 
-The following images are still in `mu/resources/images` but belong to modes
-Nu removed (ESP, Pico, Pyboard, Lego, Snek and Web). Nothing in Nu shows
-them; while they're in the repository, their credits stay here.
-
-### lego.png
-
-This is a copped version of the
-[Creative Commons licensed](https://creativecommons.org/licenses/by-sa/2.0/)
-photograph taken by
-[Jeff Eaton](https://www.flickr.com/people/jeffeaton/)
-that can be [found here](https://www.flickr.com/photos/jeffeaton/7298224068).
-
-### pyboard.png
-
-The [MicroPython Logo](https://commons.wikimedia.org/wiki/File:MicroPython_new_logo.svg)
-is covered by the MIT license.
-
-### web.png
-
-The [Flask Logo](https://commons.wikimedia.org/wiki/File:Flask_logo.svg) has
-been released to the public domain.
-
 ## Mu's design archive
 
 `docs/icon_brief`, `docs/logo_design` and `docs/swag` hold Mu's original

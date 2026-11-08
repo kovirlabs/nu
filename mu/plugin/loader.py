@@ -44,6 +44,9 @@ SWITCHED_OFF_SETTING = "plugins_switched_off_after_errors"
 #: The plugin packages that ship with Nu (nu-editor depends on them, and the
 #: installers include them). Their kind is "bundled" rather than "package".
 BUNDLED_DISTRIBUTIONS = frozenset({"nu-circuitpython", "nu-pygamezero"})
+#: What the bundled plugins call themselves (their Plugin.name), so the
+#: Plugins tab can name one that's switched off, and so isn't imported.
+BUNDLED_NAMES = {"nu-circuitpython": "CircuitPython", "nu-pygamezero": "Pygame Zero"}
 
 # Statuses recorded for each discovered plugin.
 LOADED = "loaded"
@@ -70,7 +73,9 @@ class PluginSource:
     or the module name in the drop-in folder. `kind` is "bundled" (ships with
     Nu), "package" (another installed package) or "folder" (the drop-in
     folder); `origin` says where exactly, for logs and the Plugins tab.
-    `description` is what the package says about itself, if anything.
+    `name` and `description` are what the package says about itself (its
+    distribution name, or a bundled plugin's own name, and its summary), if
+    anything: what the Plugins tab shows for a plugin that isn't imported.
     Calling `load()` imports it and returns a Plugin instance, or raises.
     """
 
@@ -79,6 +84,7 @@ class PluginSource:
     origin: str
     load: object = field(repr=False)
     description: str = ""
+    name: str = ""
 
 
 @dataclass
@@ -90,7 +96,7 @@ class PluginRecord:
     saying which kind of failure it was (DUPLICATE, IMPORT_FAILED,
     INCOMPATIBLE or REGISTER_FAILED) and, when there is one, the traceback in
     `detail`. `name` and `description` are the plugin's own once it's loaded;
-    until then the id and the package's description.
+    until then the package's (see PluginSource), or the id for a name.
     """
 
     id: str
@@ -132,19 +138,25 @@ def entry_point_sources(group=ENTRY_POINT_GROUP):
     for entry_point in importlib.metadata.entry_points(group=group):
         dist = entry_point.dist
         kind = "package"
-        description = ""
+        name = description = ""
         if dist:
             origin = "{} {}".format(dist.name, dist.version)
-            if _normalise(dist.name) in BUNDLED_DISTRIBUTIONS:
+            dist_name = _normalise(dist.name)
+            if dist_name in BUNDLED_DISTRIBUTIONS:
                 kind = "bundled"
-            description = _summary(dist)
+                name = _(BUNDLED_NAMES[dist_name])
+            else:
+                name = _metadata(dist, "Name")
+            description = _metadata(dist, "Summary")
         else:
             origin = entry_point.value
 
         def load(entry_point=entry_point):
             return _instantiate(entry_point.load(), entry_point.value)
 
-        sources.append(PluginSource(entry_point.name, kind, origin, load, description))
+        sources.append(
+            PluginSource(entry_point.name, kind, origin, load, description, name)
+        )
     return sources
 
 
@@ -153,10 +165,11 @@ def _normalise(dist_name):
     return re.sub(r"[-_.]+", "-", dist_name).lower()
 
 
-def _summary(dist):
-    """The one-line description a package declares, or ""."""
-    summary = dist.metadata.get("Summary")
-    return summary.strip() if isinstance(summary, str) else ""
+def _metadata(dist, key):
+    """A one-line field (such as "Name" or "Summary") a package declares, or
+    "". Reading it doesn't import the package."""
+    value = dist.metadata.get(key)
+    return value.strip() if isinstance(value, str) else ""
 
 
 def _dropin_plugin_object(module):
@@ -326,7 +339,7 @@ def load_plugins(host, sources=None, store=None):
             source.kind,
             source.origin,
             SKIPPED,
-            name=source.id,
+            name=source.name or source.id,
             description=source.description,
         )
         records.append(record)

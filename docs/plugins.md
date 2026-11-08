@@ -257,7 +257,11 @@ class MyPlugin(Plugin):
 
 `name` and `description` *(0.4)* are what the Plugins tab shows: keep the
 description to one sentence saying what the plugin adds. Both are optional; a
-plugin without a `name` is called by its id.
+plugin without a `name` is called by its id. A plugin that isn't imported
+(it's switched off, or failed to import) is shown with what its package says
+about itself, read without importing it: its distribution name and its
+summary (`description` in `pyproject.toml`), so make that summary the same
+sentence. A drop-in plugin has no package, so it's shown by its id.
 
 If `register` raises, the plugin is logged and skipped, and any modes it had
 already registered are removed. A broken plugin never stops Nu starting.

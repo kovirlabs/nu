@@ -12,7 +12,7 @@ build-backend = "hatchling.build"
 [project]
 name = "nu-circuitpython"
 version = "0.1.0"
-description = "The CircuitPython mode for the Nu editor: write code for CircuitPython boards."
+description = "Adds CircuitPython mode, for boards that run CircuitPython."
 readme = "README.md"
 license = "GPL-3.0-or-later"
 requires-python = ">=3.11"

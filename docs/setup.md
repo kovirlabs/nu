@@ -91,7 +91,8 @@ make coverage  - run the tests with a coverage report.
 make lint      - lint with ruff.
 make format    - check formatting; `make tidy` reformats in place.
 make check     - format + lint + coverage (the pre-commit gate).
-make dist      - build an sdist and wheel (runs make check first).
+make dist      - build sdists and wheels of Nu and its bundled plugins
+                 (runs make check first).
 make docs      - build the documentation with MkDocs (make docs-serve to preview).
 make translate_status - how complete each translation is (see translations).
 ```

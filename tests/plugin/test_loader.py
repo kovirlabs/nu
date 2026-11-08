@@ -122,7 +122,8 @@ def test_entry_point_sources_bundled_and_summary():
     """
     A plugin package that ships with Nu is "bundled"; any other is a
     "package". Before it's imported, its description is the package's
-    summary.
+    summary, and its name the package's name, or for a bundled plugin the
+    name the plugin itself goes by.
     """
 
     def entry_point(name, dist_name, summary):
@@ -130,7 +131,9 @@ def test_entry_point_sources_bundled_and_summary():
         ep.name = name
         ep.dist.name = dist_name
         ep.dist.version = "1.0"
-        ep.dist.metadata = {"Summary": summary} if summary else {}
+        ep.dist.metadata = {"Name": dist_name}
+        if summary:
+            ep.dist.metadata["Summary"] = summary
         return ep
 
     entry_points = [
@@ -140,11 +143,35 @@ def test_entry_point_sources_bundled_and_summary():
     ]
     with mock.patch("importlib.metadata.entry_points", return_value=entry_points):
         sources = loader.entry_point_sources()
-    assert [(s.id, s.kind, s.description) for s in sources] == [
-        ("pygamezero", "bundled", "Pygame Zero for Nu."),
-        ("circuitpython", "bundled", ""),
-        ("cowmode", "package", "Cows."),
+    assert [(s.id, s.kind, s.name, s.description) for s in sources] == [
+        ("pygamezero", "bundled", "Pygame Zero", "Pygame Zero for Nu."),
+        ("circuitpython", "bundled", "CircuitPython", ""),
+        ("cowmode", "package", "nu-cowmode", "Cows."),
     ]
+    for ep in entry_points:
+        ep.load.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "dist_name, module, class_name",
+    [
+        ("nu-pygamezero", "nu_pygamezero", "PygameZeroPlugin"),
+        ("nu-circuitpython", "nu_circuitpython", "CircuitPythonPlugin"),
+    ],
+)
+def test_bundled_plugins_metadata_matches_the_plugin(dist_name, module, class_name):
+    """
+    A switched-off bundled plugin shows on the Plugins tab as it would
+    loaded: BUNDLED_NAMES has the plugin's own name, and the installed
+    package's summary is the plugin's description.
+    """
+    import importlib
+
+    assert set(loader.BUNDLED_NAMES) == loader.BUNDLED_DISTRIBUTIONS
+    plugin_class = getattr(importlib.import_module(module), class_name)
+    dist = importlib.metadata.distribution(dist_name)
+    assert loader.BUNDLED_NAMES[dist_name] == plugin_class.name
+    assert dist.metadata["Summary"] == plugin_class.description
 
 
 def test_bundled_distributions_match_nus_dependencies():
@@ -519,18 +546,30 @@ def test_load_plugins_records_names_and_descriptions(host):
     unnamed = make_mode_plugin("beta")
     unnamed.name = Plugin.name
     off = PluginSource("off", "package", "off 1.0", mock.MagicMock(), "Off things.")
+    named_off = PluginSource(
+        "pz", "bundled", "nu-pz 1.0", mock.MagicMock(), "Games.", "Pygame Zero"
+    )
     store = settings.UserSettings()
     loader.set_plugin_enabled("off", False, store)
+    loader.set_plugin_enabled("pz", False, store)
     records = loader.load_plugins(
         host,
-        [source("alpha", lambda: plugin), source("beta", lambda: unnamed), off],
+        [
+            source("alpha", lambda: plugin),
+            source("beta", lambda: unnamed),
+            off,
+            named_off,
+        ],
         store,
     )
     assert [(r.name, r.description) for r in records] == [
         ("Alpha", "Adds Alpha mode."),
         ("beta", ""),
         ("off", "Off things."),
+        ("Pygame Zero", "Games."),
     ]
+    named_off.load.assert_not_called()
+    assert loader.describe(records)[3]["name"] == "Pygame Zero"
 
 
 def test_load_plugins_lets_ctrl_c_through(host):

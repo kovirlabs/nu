@@ -11,9 +11,9 @@ all:
 	@echo "make format - check code formatting with ruff."
 	@echo "make tidy - reformat code with the 'ruff' formatter."
 	@echo "make check - run all the checkers and tests."
-	@echo "make dist - make a dist/wheel for the project."
-	@echo "make publish-test - publish the project to PyPI test instance."
-	@echo "make publish-live - publish the project to PyPI production."
+	@echo "make dist - build nu-editor and its bundled plugins into dist/."
+	@echo "make publish-test - publish the plugins, then nu-editor, to test PyPI."
+	@echo "make publish-live - publish the plugins, then nu-editor, to PyPI."
 	@echo "make docs - build the documentation with MkDocs."
 	@echo "make docs-serve - serve the documentation locally with live reload."
 	@echo "make translate_begin LANG=xx_XX - create/update a mu.po file for translation."
@@ -69,17 +69,26 @@ format:
 
 check: clean format lint coverage
 
+# nu-editor depends on the bundled plugins, so they're built with it and go up
+# to PyPI first (a plugin version already there is skipped). The opt-in
+# plugins/microbit and the plugins/example template aren't published.
+BUNDLED_PLUGINS = plugins/pygamezero plugins/circuitpython
+PLUGIN_DISTS = dist/nu_pygamezero-* dist/nu_circuitpython-*
+
 dist: check
 	@echo "\nChecks pass, good to package..."
-	python -m build
+	python -m build --outdir dist .
+	for plugin in $(BUNDLED_PLUGINS); do python -m build --outdir dist $$plugin || exit 1; done
 
 publish-test: dist
 	@echo "\nPackaging complete... Uploading to PyPi..."
-	twine upload -r test --sign dist/*
+	twine upload -r test --skip-existing $(PLUGIN_DISTS)
+	twine upload -r test dist/nu_editor-*
 
 publish-live: dist
 	@echo "\nPackaging complete... Uploading to PyPi..."
-	twine upload --sign dist/*
+	twine upload --skip-existing $(PLUGIN_DISTS)
+	twine upload dist/nu_editor-*
 
 docs:
 	@python make.py docs

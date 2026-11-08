@@ -64,7 +64,9 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   Nu found: where it comes from, whether it's on, and the modes it adds. If
   one couldn't start, it says why in plain words, with the error underneath
   to copy for whoever wrote it. Untick a plugin to switch it off, tick it to
-  switch it back on; the change happens when you restart Nu. **Open plugins
+  switch it back on; the change happens when you restart Nu. A plugin that's
+  switched off keeps its name and description (Pygame Zero, not
+  `pygamezero`), read from its package without loading it. **Open plugins
   folder** takes you to where you add your own. See
   [Managing plugins](https://kovirlabs.github.io/nu/plugins/#managing-plugins).
 * **BBC micro:bit mode is back, opt-in (it needs testing on real
@@ -104,6 +106,12 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
 * Nu removes the copy of Python an earlier version of Nu unpacked for your
   programs' environment (about 70 MB each) once nothing uses it, instead of
   keeping every one after each upgrade.
+* For maintainers: `make dist` builds `nu-pygamezero` and `nu-circuitpython`
+  as well as `nu-editor`, and `make publish-test` / `make publish-live`
+  upload the two plugins before `nu-editor` (which needs them), skipping a
+  plugin version PyPI already has. They no longer sign uploads with
+  `--sign` (PyPI stopped accepting PGP signatures in 2023), and need twine 7
+  or later.
 
 ### Fixed
 
