@@ -1354,11 +1354,18 @@ class Editor(QObject):
             "envars": envars,
             "locale": self.user_locale,
         }
-        baseline_packages, user_packages = venv.installed_packages()
+        mode = self.modes[self.mode]
+        if mode.uses_user_environment:
+            baseline_packages, user_packages = venv.installed_packages()
+            # The environment's facts and the commands Nu ran (listing the
+            # packages just above being the latest), for the Environment tab.
+            environment = venv.describe()
+        else:
+            # A board's mode has no Environment tab, so don't ask uv for the
+            # packages: just show what Nu ran.
+            user_packages = []
+            environment = {}
         packages = user_packages
-        # The environment's facts and the uv commands Nu ran in it (listing
-        # the packages just above being the latest), for the Environment tab.
-        environment = venv.describe()
         environment["commands"] = command_log.render()
         # Every plugin Nu found, for the Plugins tab.
         plugins = None
@@ -1373,7 +1380,7 @@ class Editor(QObject):
                 logfile.read(),
                 settings,
                 "\n".join(packages),
-                self.modes[self.mode],
+                mode,
                 self.connected_devices,
                 environment=environment,
                 focus=focus,

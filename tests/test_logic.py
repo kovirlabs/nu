@@ -2270,6 +2270,32 @@ def test_show_admin_passes_the_environment_and_what_nu_ran():
     assert "$ uv pip install cowsay" in kwargs["environment"]["commands"]
 
 
+def test_show_admin_in_a_board_mode_does_not_list_packages():
+    """
+    A mode without the learner's environment (a board's) has no Environment
+    tab, so Nu doesn't run `uv pip list` (nor describe the environment) for
+    it; the dialog still gets what Nu ran.
+    """
+    view = mock.MagicMock()
+    ed = mu.logic.Editor(view)
+    ed.modes = {"python": mock.MagicMock(uses_user_environment=False)}
+    view.show_admin.return_value = {"locale": ""}
+    log = mu.command_log.CommandLog()
+    log.start(["mpremote", "connect", "COM3"]).finish(0)
+    with (
+        mock.patch.object(venv, "installed_packages") as installed_packages,
+        mock.patch.object(venv, "describe") as describe,
+        mock.patch.object(mu.logic, "command_log", log),
+        mock.patch("builtins.open", mock.mock_open(read_data="the log")),
+    ):
+        ed.show_admin()
+    installed_packages.assert_not_called()
+    describe.assert_not_called()
+    args, kwargs = view.show_admin.call_args
+    assert args[2] == ""
+    assert kwargs["environment"] == {"commands": log.render()}
+
+
 PLUGIN_ROWS = [
     {"id": "pygamezero", "enabled": True, "can_switch": True},
     {"id": "flaky", "enabled": False, "can_switch": True},
