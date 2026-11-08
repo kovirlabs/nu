@@ -61,8 +61,8 @@ run a program, one `NAME=value` per line.
 
 ## What Nu Ran
 
-The **What Nu Ran** section lists every command Nu has run in your environment
-since it started, newest last: when it ran, where, whether it worked (`exit
+The **What Nu Ran** section lists every command Nu has run for you since it
+started, newest last: when it ran, where, whether it worked (`exit
 code 0` means it did), and the last few lines it printed. These are the
 commands you'll see:
 
