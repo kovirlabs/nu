@@ -585,6 +585,13 @@ class PluginsWidget(QWidget):
                     "back on."
                 )
             )
+        elif row["switched_off_after_errors"] and not self._checked(item):
+            lines.append(
+                _(
+                    "It kept having errors, so it will be off the next time "
+                    "you start Nu. They're in the log (the Current Log tab)."
+                )
+            )
         elif row["status"] == "disabled":
             lines.append(_("It's switched off, so Nu didn't load it."))
         lines.append(

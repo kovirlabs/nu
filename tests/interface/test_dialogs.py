@@ -1132,3 +1132,19 @@ def test_PluginsWidget_rows_fit_a_checkbox(plugins_widget):
     """The themes draw 16px checkboxes with a border: rows leave room."""
     tree = plugins_widget.tree
     assert tree.sizeHintForRow(0) >= 24
+
+
+def test_PluginsWidget_switched_off_after_errors_this_session():
+    """
+    Switched off after errors earlier this session: still on until Nu
+    restarts, and the details say why it will be off.
+    """
+    widget = mu.interface.dialogs.PluginsWidget()
+    row = plugin_row(enabled=False, switched_off_after_errors=True)
+    widget.setup({"plugins": [row], "folder": "/p", "help_url": ""})
+    item = widget.tree.topLevelItem(0)
+    assert item.text(widget.STATUS) == "On until you restart Nu"
+    assert "kept having errors, so it will be off" in widget.summary.text()
+    # Ticking it again keeps it on: no warning any more.
+    item.setCheckState(widget.ON, Qt.CheckState.Checked)
+    assert "kept having errors" not in widget.summary.text()
