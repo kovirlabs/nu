@@ -544,7 +544,7 @@ msgid "Python3 (Jupyter)"
 msgstr "Python3-gegevenstupel"
 
 #: mu/interface/main.py:621
-#, python-brace-format
+#, fuzzy, python-brace-format
 msgid "{} REPL"
 msgstr "Python3-gegevenstupel"
 
