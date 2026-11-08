@@ -896,8 +896,9 @@ def test_run_with_expected_exception():
         mock.patch("mu.debugger.runner.sys", mock_sys),
         mock.patch("mu.debugger.runner.socket", mock_socket),
     ):
-        mu.debugger.runner.run("localhost", 1908, "foo.py", ["bar", "baz"])
+        code = mu.debugger.runner.run("localhost", 1908, "foo.py", ["bar", "baz"])
     assert mock_debugger.client is None
+    assert code == 0
 
 
 def test_run_with_unexpected_exception():
@@ -918,6 +919,35 @@ def test_run_with_unexpected_exception():
         mock.patch("mu.debugger.runner.sys", mock_sys),
         mock.patch("mu.debugger.runner.socket", mock_socket),
     ):
-        mu.debugger.runner.run("localhost", 1908, "foo.py", ["bar", "baz"])
+        code = mu.debugger.runner.run("localhost", 1908, "foo.py", ["bar", "baz"])
     assert mock_debugger.output.call_count == 1
     assert mock_debugger.output.call_args_list[0][0][0] == "postmortem"
+    # A script that ends with an error doesn't report success.
+    assert code == 1
+
+
+@pytest.mark.parametrize(
+    "raised, expected",
+    [
+        (SystemExit(3), 3),
+        (SystemExit("Bye!"), 1),
+        (KeyboardInterrupt(), 1),
+    ],
+)
+def test_run_exit_codes(raised, expected):
+    """
+    The runner exits with the code the script would have had outside the
+    debugger.
+    """
+    mock_debugger = mock.MagicMock()
+    mock_debugger._runscript.side_effect = raised
+    mock_sys = mock.MagicMock()
+    mock_sys.argv = [None, None]
+    mock_sys.path = [None]
+    with (
+        mock.patch("mu.debugger.runner.Debugger", return_value=mock_debugger),
+        mock.patch("mu.debugger.runner.sys", mock_sys),
+        mock.patch("mu.debugger.runner.socket", mock.MagicMock()),
+    ):
+        code = mu.debugger.runner.run("localhost", 1908, "foo.py", [])
+    assert code == expected

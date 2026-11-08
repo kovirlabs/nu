@@ -106,6 +106,12 @@ QTabWidget::tab-bar {
     subcontrol-position: top left;
 }
 
+/* No focus frame around the current cell (the Windows 11 style draws one
+   beside a row's checkbox): the selected row's colour shows where you are. */
+QListWidget, QTreeView {
+    outline: none;
+}
+
 QListWidget, QTreeView, QTreeView::branch {
     background-color: white;
     color: black;

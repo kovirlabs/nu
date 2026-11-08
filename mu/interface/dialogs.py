@@ -74,7 +74,7 @@ class ModeItem(QListWidgetItem):
 
 class ModeSelector(QDialog):
     """
-    Defines a UI for selecting the mode for Mu.
+    Defines a UI for selecting the mode for Nu.
     """
 
     def __init__(self, parent=None):
@@ -84,12 +84,7 @@ class ModeSelector(QDialog):
         self.setMinimumSize(600, 400)
         self.setWindowTitle(_("Select Mode"))
         widget_layout = QVBoxLayout()
-        label = QLabel(
-            _(
-                'Please select the desired mode then click "OK". '
-                'Otherwise, click "Cancel".'
-            )
-        )
+        label = QLabel(_('Choose what you\'d like to make, then click "OK".'))
         label.setWordWrap(True)
         widget_layout.addWidget(label)
         self.setLayout(widget_layout)
@@ -97,12 +92,16 @@ class ModeSelector(QDialog):
         self.mode_list.itemDoubleClicked.connect(self.select_and_accept)
         widget_layout.addWidget(self.mode_list)
         self.mode_list.setIconSize(QSize(48, 48))
-        for name, item in modes.items():
-            if not item.is_debugger:
-                litem = ModeItem(item.name, item.description, item.icon, self.mode_list)
-                if item.icon == current_mode:
-                    self.mode_list.setCurrentItem(litem)
-        self.mode_list.sortItems()
+        # Plain Python first (it's where most learners start), then the
+        # other modes (all from plugins) by name.
+        ordered = sorted(
+            (item for item in modes.values() if not item.is_debugger),
+            key=lambda item: (item.icon != "python", item.name.lower()),
+        )
+        for item in ordered:
+            litem = ModeItem(item.name, item.description, item.icon, self.mode_list)
+            if item.icon == current_mode:
+                self.mode_list.setCurrentItem(litem)
         instructions = QLabel(
             _(
                 "Change mode at any time by clicking "
@@ -136,7 +135,7 @@ class ModeSelector(QDialog):
 
 class LogWidget(QWidget):
     """
-    Used to display Mu's logs.
+    Used to display Nu's logs.
     """
 
     def setup(self, log):
@@ -154,6 +153,8 @@ class LogWidget(QWidget):
         self.log_text_area.setReadOnly(True)
         self.log_text_area.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.log_text_area.setPlainText(log)
+        # Open at the end: the newest entries, about what just happened.
+        self.log_text_area.moveCursor(QTextCursor.MoveOperation.End)
         widget_layout.addWidget(self.log_text_area)
 
 

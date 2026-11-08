@@ -823,10 +823,10 @@ def test_editor_setup():
         e.setup(mock_modes)
         assert mkd.call_count == 1
         assert mkd.call_args_list[0][0][0] == "foo"
-    # Each mode puts what it needs in the workspace (e.g. Pygame Zero's
-    # images and sounds folders).
-    mock_mode.ensure_workspace_assets.assert_called_once_with("foo")
-    other_mode.ensure_workspace_assets.assert_called_once_with("foo")
+    # Modes put what they need in the workspace when first used (see
+    # change_mode), not all of them at startup.
+    mock_mode.ensure_workspace_assets.assert_not_called()
+    other_mode.ensure_workspace_assets.assert_not_called()
     assert e.modes == mock_modes
     view.set_usb_checker.assert_called_once_with(1, e.connected_devices.check_usb)
 
@@ -846,7 +846,9 @@ def test_editor_setup_new_workspace(tmp_path):
     assert wd.is_dir()
     assert not (wd / "templates").exists()
     assert not (wd / "static").exists()
-    mock_mode.ensure_workspace_assets.assert_called_once_with(str(wd))
+    # The mode adds its own things when it's first used (change_mode).
+    mock_mode.ensure_workspace_assets.assert_not_called()
+    assert e.workspace_assets_dir == str(wd)
 
 
 def test_editor_connect_to_status_bar():
@@ -873,6 +875,7 @@ def test_editor_connect_to_status_bar():
         assert sb.device_selector.device_changed.connect.call_count == 3
         # Clicking the environment indicator shows the environment.
         sb.connect_environment.assert_called_once_with(e.show_environment)
+        sb.connect_mode.assert_called_once_with(e.select_mode)
 
 
 def test_editor_restore_session_missing_files():
@@ -3745,3 +3748,84 @@ def test_show_admin_environment_refused():
         "Nu can't switch to the environment “env”.", "Nu can't use it: No pip."
     )
     ed.show_status_message.assert_not_called()
+
+
+def _quit_editor(running, program_done=False, answer=QMessageBox.StandardButton.Ok):
+    view = mock.MagicMock()
+    view.modified = False
+    view.process_runner.running = running
+    view.process_runner.program_done = program_done
+    view.show_confirmation = mock.MagicMock(return_value=answer)
+    view.widgets = []
+    return mu.logic.Editor(view), view
+
+
+def test_quit_program_running_cancelled():
+    """
+    Quitting while the learner's program is still running asks first, and
+    cancelling leaves everything as it is.
+    """
+    ed, view = _quit_editor(True, answer=QMessageBox.StandardButton.Cancel)
+    ed.modes = {"python": mock.MagicMock()}
+    ed.mode = "python"
+    event = mock.MagicMock()
+    with mock.patch("PyQt6.QtCore.QCoreApplication.exit") as exit_app:
+        ed.quit(event)
+    assert "still running" in view.show_confirmation.call_args[0][0]
+    event.ignore.assert_called_once_with()
+    exit_app.assert_not_called()
+
+
+def test_quit_program_running_ok(mocked_session):
+    ed, view = _quit_editor(True)
+    ed.modes = {"python": mock.MagicMock()}
+    ed.mode = "python"
+    with mock.patch("PyQt6.QtCore.QCoreApplication.exit") as exit_app:
+        ed.quit()
+    view.show_confirmation.assert_called_once()
+    exit_app.assert_called_once_with(0)
+
+
+def test_quit_program_finished_no_question(mocked_session):
+    """
+    A program that has finished (Python's just waiting at >>>) or nothing
+    running at all: no question.
+    """
+    for running, done in ((True, True), (False, False)):
+        ed, view = _quit_editor(running, program_done=done)
+        ed.modes = {"python": mock.MagicMock()}
+        ed.mode = "python"
+        with mock.patch("PyQt6.QtCore.QCoreApplication.exit"):
+            ed.quit()
+        view.show_confirmation.assert_not_called()
+
+
+def test_change_mode_ensures_workspace_assets_once():
+    """
+    The first time a mode is used it puts what it needs in the workspace;
+    switching back to it later doesn't ask again.
+    """
+    view = mock.MagicMock()
+    ed = mu.logic.Editor(view)
+    python = mock.MagicMock()
+    python.workspace_dir.return_value = "ws"
+    python.actions.return_value = []
+    python.save_timeout = 0
+    games = mock.MagicMock()
+    games.workspace_dir.return_value = "ws"
+    games.actions.return_value = []
+    games.save_timeout = 0
+    with (
+        mock.patch("os.path.exists", return_value=True),
+        mock.patch("os.makedirs"),
+    ):
+        ed.setup({"python": python, "games": games})
+    ed.mode = "python"
+    ed.change_mode("python")
+    python.ensure_workspace_assets.assert_called_once_with("ws")
+    games.ensure_workspace_assets.assert_not_called()
+    ed.change_mode("games")
+    ed.change_mode("python")
+    ed.change_mode("games")
+    python.ensure_workspace_assets.assert_called_once_with("ws")
+    games.ensure_workspace_assets.assert_called_once_with("ws")

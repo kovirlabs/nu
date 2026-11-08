@@ -43,8 +43,14 @@ from . import settings
 from .virtual_environment import venv
 from .command_log import command_log
 
-# The default directory for application logs.
-LOG_DIR = platformdirs.user_log_dir(appname="mu", appauthor="python")
+# The default directory for application logs: with the rest of Nu's data
+# when MU_DATA_DIR moves it (tests, a throwaway profile), so those never
+# write to the real log.
+LOG_DIR = (
+    os.path.join(os.environ["MU_DATA_DIR"], "logs")
+    if os.environ.get("MU_DATA_DIR")
+    else platformdirs.user_log_dir(appname="mu", appauthor="python")
+)
 # The path to the log file for the application.
 LOG_FILE = os.path.join(LOG_DIR, "mu.log")
 #: What the Help button opens: the "Using Nu" page (docs/help.md).
@@ -792,9 +798,11 @@ class Editor(QObject):
         if not os.path.exists(wd):
             logger.debug("Creating directory: {}".format(wd))
             os.makedirs(wd)
-        # Let each mode put what it needs in the workspace.
-        for mode in self.modes.values():
-            mode.ensure_workspace_assets(wd)
+        # Each mode puts what it needs in the workspace when it's first used
+        # (see change_mode), so a mode the learner never picks (Pygame Zero's
+        # images, sounds... folders) doesn't fill it with folders.
+        self.workspace_assets_done = set()
+        self.workspace_assets_dir = wd
         # Start the timer to poll every second for an attached or removed
         # USB device.
         self._view.set_usb_checker(1, self.connected_devices.check_usb)
@@ -808,6 +816,9 @@ class Editor(QObject):
         status_bar.connect_logs(self.show_admin, "Ctrl+Shift+D")
         # Clicking the environment indicator shows the environment.
         status_bar.connect_environment(self.show_environment)
+        # Clicking the mode's name changes mode, like the Mode button (whose
+        # Ctrl+Shift+M it doesn't repeat: two shortcuts would clash).
+        status_bar.connect_mode(self.select_mode)
         # Show connection messages in status_bar
         self.connected_devices.device_connected.connect(status_bar.device_connected)
         # Connect to device list
@@ -1279,16 +1290,35 @@ class Editor(QObject):
         logger.info("Showing help at %r.", HELP_URL)
         webbrowser.open_new(HELP_URL)
 
+    def program_running(self):
+        """
+        True if the learner's program is still running in the output pane
+        (not just waiting at the >>> prompt after it finished).
+        """
+        runner = getattr(self._view, "process_runner", None)
+        return (
+            getattr(runner, "running", False) is True
+            and getattr(runner, "program_done", False) is not True
+        )
+
     def quit(self, *args, **kwargs):
         """
         Exit the application.
         """
+        questions = []
         if self._view.modified:
             # Alert the user to handle unsaved work.
-            msg = _(
-                "There is un-saved work, exiting the application will"
-                " cause you to lose it."
+            questions.append(
+                _(
+                    "There is un-saved work, exiting the application will"
+                    " cause you to lose it."
+                )
             )
+        if self.program_running():
+            questions.append(
+                _("Your program is still running. Quitting Nu will stop it.")
+            )
+        for msg in questions:
             result = self._view.show_confirmation(msg)
             if result == QMessageBox.StandardButton.Cancel:
                 if args and hasattr(args[0], "ignore"):
@@ -1499,6 +1529,12 @@ class Editor(QObject):
         self.modes[self.mode].deactivate()
         # Re-assign to new mode.
         self.mode = mode
+        # The first time the mode's used, let it put what it needs in the
+        # workspace (e.g. Pygame Zero's images and sounds folders).
+        assets_dir = getattr(self, "workspace_assets_dir", None)
+        if assets_dir and mode not in self.workspace_assets_done:
+            self.workspace_assets_done.add(mode)
+            self.modes[mode].ensure_workspace_assets(assets_dir)
         # Activate new mode
         self.modes[mode].activate()
         # Update buttons.

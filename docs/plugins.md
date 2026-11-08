@@ -410,7 +410,7 @@ Two more things a mode can declare (new in 0.2):
 | Member | Meaning |
 |---|---|
 | `uses_user_environment = False` | Set it to `True` if the mode runs the learner's programs in Nu's Python environment (as Python 3 and Pygame Zero do). The admin dialog then shows that environment's variables and third-party packages. |
-| `ensure_workspace_assets(workspace_dir)` | Called for every mode each time Nu starts, once the workspace exists. Put what the mode needs there (Pygame Zero makes its `images`, `fonts`, `sounds` and `music` folders and copies in demo files). Leave anything already there alone. Errors are reported like any other plugin error and don't stop Nu starting. |
+| `ensure_workspace_assets(workspace_dir)` | Called the first time the mode is used each time Nu runs (including the mode Nu starts in), once the workspace exists; a mode the learner doesn't use leaves the workspace alone. Put what the mode needs there (Pygame Zero makes its `images`, `fonts`, `sounds` and `music` folders and copies in demo files). Leave anything already there alone. Errors are reported like any other plugin error and don't stop Nu starting. |
 
 Inside a mode, `self.host` is the `Host` that registered it. Use it rather
 than `self.editor` and `self.view`, which are the internal objects and are not

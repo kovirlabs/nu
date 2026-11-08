@@ -88,7 +88,7 @@ def test_all_images_load_without_qt_warnings(qtapp):
     try:
         for current in sorted(os.listdir(images_dir)):
             if not current.endswith((".png", ".svg", ".gif", ".jpg")):
-                continue  # e.g. the splash screen's GIMP source (.xcf)
+                continue  # Not an image Qt loads.
             pixmap = QPixmap(os.path.join(images_dir, current))
             assert not pixmap.isNull(), current
     finally:
@@ -97,9 +97,7 @@ def test_all_images_load_without_qt_warnings(qtapp):
 
 
 #: Images in mu/resources/images that nothing in mu/ names, and why they stay.
-UNREFERENCED_IMAGES = {
-    "splash_screen_base_image": "the artwork splash_screen.gif was made from",
-}
+UNREFERENCED_IMAGES = {}
 
 
 def _image_stems():

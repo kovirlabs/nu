@@ -32,6 +32,12 @@ QToolButton:hover, QMenu::item:selected  {
 QStackedWidget, QWidget, QApplication, QDialog,
 QLabel, QStatusBar, QTabBar, QMenu,
 QDockWidget::title, QHeaderView, QHeaderView::section,
+/* No focus frame around the current cell (the Windows 11 style draws one
+   beside a row's checkbox): the selected row's colour shows where you are. */
+QListWidget, QTreeView {
+    outline: none;
+}
+
 QListWidget, QTreeView, QTreeView::branch {
     background-color: black;
     color: white;

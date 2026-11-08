@@ -19,15 +19,17 @@ def debug(filename=None, *args):
     """
     Create a debug runner in a new process.
 
-    This is what the Mu debugger will drive. Uses the filename and associated
-    args found in sys.argv.
+    This is what Nu's debugger will drive. Uses the filename and associated
+    args found in sys.argv. Returns the script's exit code.
     """
     if filename is None:
         print("Debugger requires a Python script filename to run.")
-    else:
-        filepath = os.path.normcase(os.path.abspath(filename))
-        mu.debugger.runner.run("localhost", DEBUGGER_PORT, filepath, args)
+        return 2
+    # Not normcase'd: that would lower-case the path in the learner's
+    # tracebacks on Windows (the debugger compares paths normcase'd itself).
+    filepath = os.path.abspath(filename)
+    return mu.debugger.runner.run("localhost", DEBUGGER_PORT, filepath, args)
 
 
 if __name__ == "__main__":
-    debug(*sys.argv[1:])
+    sys.exit(debug(*sys.argv[1:]))

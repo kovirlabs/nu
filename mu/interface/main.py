@@ -610,7 +610,7 @@ class Window(QMainWindow):
         plotter_pane = PlotterPane()
         self.data_received.connect(plotter_pane.process_tty_data)
         plotter_pane.data_flood.connect(mode.on_data_flood)
-        self.add_plotter(plotter_pane, _("Python3 data tuple"))
+        self.add_plotter(plotter_pane, _("Python"))
 
     def add_jupyter_repl(self, kernel_manager, kernel_client):
         """
@@ -621,7 +621,18 @@ class Window(QMainWindow):
         ipython_widget.kernel_manager = kernel_manager
         ipython_widget.kernel_client = kernel_client
         ipython_widget.on_append_text.connect(self.on_stdout_write)
-        self.add_repl(ipython_widget, _("Python3 (Jupyter)"))
+        self.add_repl(ipython_widget, _("Python"))
+
+    def give_editor_room(self, dock, area):
+        """
+        A pane docked below the editor starts a third of the window high, so
+        the editor keeps most of the room (left to themselves, the panes'
+        preferred sizes squeezed it down to a couple of lines).
+        """
+        if area == Qt.DockWidgetArea.BottomDockWidgetArea:
+            self.resizeDocks(
+                [dock], [max(120, self.height() // 3)], Qt.Orientation.Vertical
+            )
 
     def add_repl(self, repl_pane, name):
         """
@@ -638,6 +649,7 @@ class Window(QMainWindow):
         )
         area = self._repl_area or Qt.DockWidgetArea.BottomDockWidgetArea
         self.addDockWidget(area, self.repl)
+        self.give_editor_room(self.repl, area)
         self.connect_zoom(self.repl_pane)
         self.repl_pane.set_theme(self.theme)
         self.repl_pane.setFocus()
@@ -657,6 +669,7 @@ class Window(QMainWindow):
         )
         area = self._plotter_area or Qt.DockWidgetArea.BottomDockWidgetArea
         self.addDockWidget(area, self.plotter)
+        self.give_editor_room(self.plotter, area)
         self.plotter_pane.set_theme(self.theme)
         self.plotter_pane.setFocus()
 
@@ -716,6 +729,7 @@ class Window(QMainWindow):
         else:
             area = self._runner_area or Qt.DockWidgetArea.BottomDockWidgetArea
         self.addDockWidget(area, self.runner)
+        self.give_editor_room(self.runner, area)
         logger.info(
             "About to start_process: %r, %r, %r, %r, %r, %r, %r, %r",
             interpreter,
@@ -773,8 +787,11 @@ class Window(QMainWindow):
         Given the contents of a dict representation of the locals in the
         current stack frame, update the debug inspector with the new values.
         """
-        excluded_names = ["__builtins__", "__debug_code__", "__debug_script__"]
-        names = sorted([x for x in locals_dict if x not in excluded_names])
+        # Python's own __dunder__ names (__file__, __name__ and the like)
+        # aren't the learner's variables: leave them out.
+        names = sorted(
+            x for x in locals_dict if not (x.startswith("__") and x.endswith("__"))
+        )
 
         # Remove rows so we keep the same column layouts if manually set
         while self.debug_model.rowCount() > 0:
@@ -973,6 +990,16 @@ class Window(QMainWindow):
         package_box = PackageDialog(self)
         package_box.setup(to_remove, to_add)
         package_box.exec()
+
+    def bring_to_front(self):
+        """
+        Show the window in front of the others (e.g. when Nu is started
+        again while it's already running).
+        """
+        if self.isMinimized():
+            self.showNormal()
+        self.raise_()
+        self.activateWindow()
 
     def show_message(self, message, information=None, icon=None):
         """
@@ -1335,7 +1362,8 @@ class StatusBar(QStatusBar):
 
         # Mode selector.
         self.mode_label = QLabel()
-        self.mode_label.setToolTip(_("Nu's current mode of behaviour."))
+        self.mode_label.setToolTip(_("Nu's current mode. Click to change it."))
+        self.mode_label.setCursor(Qt.CursorShape.PointingHandCursor)
         self.addPermanentWidget(self.mode_label)
         self.set_mode(mode)
 
@@ -1360,13 +1388,14 @@ class StatusBar(QStatusBar):
         self.logs_label.shortcut.activated.connect(handler)
         self.logs_label.mousePressEvent = handler
 
-    def connect_mode(self, handler, shortcut):
+    def connect_mode(self, handler, shortcut=None):
         """
-        Connect the mouse press event and keyboard shortcut for the mode widget
-        to the referenced handler function.
+        Connect the mouse press event (and keyboard shortcut, if given) for
+        the mode widget to the referenced handler function.
         """
-        self.mode_label.shortcut = QShortcut(QKeySequence(shortcut), self.parent())
-        self.mode_label.shortcut.activated.connect(handler)
+        if shortcut:
+            self.mode_label.shortcut = QShortcut(QKeySequence(shortcut), self.parent())
+            self.mode_label.shortcut.activated.connect(handler)
         self.mode_label.mousePressEvent = handler
 
     def connect_environment(self, handler):

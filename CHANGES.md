@@ -1,5 +1,39 @@
 # Release History
 
+## Unreleased
+
+### Changed
+
+* Nu's own artwork everywhere: the splash screen, the window icon and the
+  **Mode** button still showed Mu's logo and codewith.mu.
+* Starting Nu while it's already running brings the open Nu to the front (and
+  opens any files it was given) instead of silently doing nothing.
+* The first start is much faster: the bundled packages are installed with one
+  `uv` command instead of one pip run per package.
+* When a program run with **Run** finishes, the output pane says so above the
+  `>>>` prompt, so it no longer looks as if it's still running.
+* **Quit** asks first if a program is still running.
+* The mode picker lists Python 3 first; clicking the mode's name in the status
+  bar opens it.
+* The REPL starts with a short greeting instead of IPython's banner, panes have
+  plainer titles ("Python REPL", "Python Plotter"), and the debugger's variable
+  list leaves out Python's own `__dunder__` names.
+* Panes open below the editor at a third of the window's height, so the editor
+  keeps most of the room.
+* A mode's workspace folders (Pygame Zero's `images`, `sounds` and so on) are
+  made the first time the mode is used, not for every mode at every start.
+  For plugin authors: `ensure_workspace_assets` is now called then.
+
+### Fixed
+
+* The debugger reported "exit code: 0" for a program that ended with an error.
+* Tracebacks on Windows showed the program's path in lower case.
+* The Environment tab's commands used Windows short paths (`MU_VEN~1`); the
+  workaround behind them (for a Python bug fixed before 3.11) is gone, and so
+  is the `pywin32` dependency.
+* The Plugins tab drew a stray empty box on the selected row (Windows 11).
+* The log tab opens at the newest entries.
+
 ## 2.0.0
 
 The first stable release of **Nu**, a maintained continuation of the

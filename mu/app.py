@@ -20,6 +20,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import getpass
+import json
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
@@ -38,7 +40,8 @@ from PyQt6.QtCore import (
     pyqtSignal,
     QSharedMemory,
 )
-from PyQt6.QtWidgets import QApplication, QSplashScreen
+from PyQt6.QtNetwork import QLocalServer, QLocalSocket
+from PyQt6.QtWidgets import QApplication, QMessageBox, QSplashScreen
 
 from . import i18n
 from .virtual_environment import venv, logger as vlogger
@@ -320,6 +323,7 @@ class SharedMemoryMutex(object):
         sharedAppName = self.NAME
         if "MU_TEST_SUPPORT_RANDOM_APP_NAME_EXT" in os.environ:
             sharedAppName += os.environ["MU_TEST_SUPPORT_RANDOM_APP_NAME_EXT"]
+        self.name = sharedAppName
         self._shared_memory = QSharedMemory(sharedAppName)
 
     def __enter__(self):
@@ -341,8 +345,8 @@ class SharedMemoryMutex(object):
         self._shared_memory.detach()
 
         if self._shared_memory.attach():
-            pid = struct.unpack("q", self._shared_memory.data()[:8])
-            raise MutexError("MUTEX: Mu is already running with pid %d" % pid)
+            [pid] = struct.unpack("q", self._shared_memory.data()[:8])
+            raise MutexError("MUTEX: Nu is already running with pid %d" % pid, pid)
         else:
             self._shared_memory.create(8)
             self._shared_memory.data()[:8] = struct.pack("q", os.getpid())
@@ -366,14 +370,105 @@ def is_linux_wayland():
     return False
 
 
-def check_only_running_once():
-    """If the application is already running log the error and exit"""
+def instance_server_name():
+    """
+    The name of the local socket the running Nu listens on, so a second
+    launch can hand over to it (one per user, like the lock).
+    """
+    try:
+        user = getpass.getuser()
+    except Exception:  # No user name to be had (rare); share the default.
+        user = "user"
+    return "{}-{}-open".format(_shared_memory.name, user)
+
+
+def tell_running_instance(paths, pid=None):
+    """
+    Ask the Nu that's already running to come to the front and open `paths`
+    (files the second launch was given, e.g. by "Open with"). Returns True
+    if it took the message.
+    """
+    socket = QLocalSocket()
+    socket.connectToServer(instance_server_name())
+    if not socket.waitForConnected(2000):
+        return False
+    if pid and sys.platform == "win32":  # pragma: no cover (Windows only)
+        # Windows only lets a program take the focus if the one in front
+        # (this one, just launched) says it may.
+        import ctypes
+
+        ctypes.windll.user32.AllowSetForegroundWindow(pid)
+    paths = [os.path.abspath(path) for path in paths]
+    socket.write(json.dumps(paths).encode("utf8"))
+    socket.flush()
+    if socket.bytesToWrite():  # Not all sent straight away: wait for it.
+        socket.waitForBytesWritten(2000)
+    sent = not socket.bytesToWrite()
+    socket.disconnectFromServer()
+    if socket.state() != QLocalSocket.LocalSocketState.UnconnectedState:
+        socket.waitForDisconnected(2000)
+    return sent
+
+
+def listen_for_other_instances(window, editor):
+    """
+    Listen for a second launch of Nu (see `tell_running_instance`): bring
+    the window to the front and open the files it passes on. Returns the
+    server, which must be kept alive.
+    """
+    name = instance_server_name()
+    QLocalServer.removeServer(name)  # A crashed Nu's leftover (Unix).
+    server = QLocalServer()
+
+    def on_connection():
+        socket = server.nextPendingConnection()
+        data = b""
+        while socket.waitForReadyRead(500):
+            data += bytes(socket.readAll())
+        data += bytes(socket.readAll())
+        socket.deleteLater()
+        try:
+            paths = json.loads(data.decode("utf8") or "[]")
+        except ValueError:
+            logging.warning("Ignored a garbled message from another Nu.")
+            return
+        logging.info("Another Nu was started; opening {}".format(paths))
+        window.bring_to_front()
+        for path in paths:
+            editor.direct_load(path)
+
+    server.newConnection.connect(on_connection)
+    if not server.listen(name):
+        logging.warning(
+            "Can't listen for other Nu launches: {}".format(server.errorString())
+        )
+    return server
+
+
+def check_only_running_once(paths=()):
+    """
+    If Nu is already running, hand over to it (it comes to the front and
+    opens `paths`) and exit; if it doesn't answer, say so before exiting.
+    """
     try:
         with _shared_memory:
             _shared_memory.acquire()
     except MutexError as exc:
-        [message] = exc.args
+        message, pid = exc.args
         logging.error(message)
+        if not tell_running_instance(paths, pid):
+            logging.error("The running Nu didn't answer.")
+            if "MU_SUPPRESS_CRASH_REPORT_FORM" not in os.environ:
+                app = QApplication.instance() or QApplication(sys.argv)
+                app.setWindowIcon(load_icon("icon"))  # The message box's icon.
+                QMessageBox.information(
+                    None,
+                    "Nu",
+                    _(
+                        "Nu is already running, but isn't responding. Close "
+                        "it (or wait for it), then start Nu again."
+                    ),
+                )
         sys.exit(2)
 
 
@@ -391,14 +486,14 @@ def run():
     - close the splash screen after startup timer ends
     """
     setup_logging()
-    logging.info("\n\n-----------------\n\nStarting Mu {}".format(__version__))
+    logging.info("\n\n-----------------\n\nStarting Nu {}".format(__version__))
     logging.info(platform.uname())
     logging.info("Process id: {}".format(os.getpid()))
     logging.info("Platform: {}".format(platform.platform()))
     logging.info("Python path: {}".format(sys.path))
     logging.info("Language code: {}".format(i18n.language_code))
     setup_exception_handler()
-    check_only_running_once()
+    check_only_running_once(sys.argv[1:])
 
     # Remove the VIRTUAL_ENV env var: when set, it stops programs run in the
     # learner's environment (e.g. Pygame Zero games) from finding their
@@ -487,7 +582,7 @@ def run():
         else:
             app.setStyleSheet(DAY_STYLE)
 
-    # Make sure all windows have the Mu icon as a fallback
+    # Make sure all windows have the Nu icon as a fallback
     app.setWindowIcon(load_icon(editor_window.icon))
     # Create the "editor" that'll control the "window".
     editor = Editor(view=editor_window)
@@ -506,10 +601,14 @@ def run():
 
     # Restore the previous session along with files passed by the os
     editor.restore_session(sys.argv[1:])
+    # Come to the front (and open their files) when Nu is started again.
+    instance_server = listen_for_other_instances(editor_window, editor)
 
     # Save the exit code for sys.exit call below.
     exit_status = app.exec()
-    # Clean up the shared memory used to signal an app instance is running
+    # Stop listening for other launches, and clean up the shared memory used
+    # to signal an app instance is running.
+    instance_server.close()
     _shared_memory.release()
 
     # Stop the program after the application finishes executing.

@@ -143,7 +143,8 @@ def load_pixmap(name, size=None):
 
 
 def load_movie(name):
-    """Load an animated GIF from the core's (or a plugin's) images."""
+    """Load an animation (or a still image) from the core's (or a plugin's)
+    images."""
     return QMovie(image_path(name))
 
 
