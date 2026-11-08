@@ -53,9 +53,10 @@ template and nothing depends on it.
   published to PyPI before the `nu-editor` release that needs it** (or
   `pip install nu-editor` can't resolve). The order is: `nu-circuitpython` and
   `nu-pygamezero` (in either order: neither depends on the other or on
-  `nu-editor`), then `nu-editor`. Build and upload a plugin from its folder
-  (`uv build plugins/circuitpython`, then upload as usual); bump its own
-  version when it changes, independently of Nu's.
+  `nu-editor`), then `nu-editor`. `make dist` builds all three into `dist/`,
+  and `make publish-live` (or `make publish-test` for test PyPI) uploads them
+  in that order, skipping a plugin version PyPI already has. Bump a plugin's
+  own version when it changes, independently of Nu's.
 
 ### Opt-in workspace plugins: micro:bit
 

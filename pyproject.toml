@@ -120,7 +120,7 @@ tests = [
     "coverage",
 ]
 docs = ["mkdocs-material", "mkdocstrings[python]"]
-package = ["build", "wheel", "twine", "briefcase>=0.3.19"]
+package = ["build", "wheel", "twine>=7", "briefcase>=0.3.19"]
 i18n = ["babel"]
 utils = ["beautifulsoup4", "requests"]
 # BBC micro:bit (Phase 6): opt-in until the maintainer has validated it on

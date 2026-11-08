@@ -364,42 +364,71 @@ def run():
     return subprocess.run([sys.executable, "-m", "mu"]).returncode
 
 
+# The plugins nu-editor depends on (and so bundles), built and published with
+# it. They go up to PyPI first: nu-editor's wheel requires them. The opt-in
+# plugins/microbit and the plugins/example template aren't published.
+BUNDLED_PLUGINS = ["plugins/pygamezero", "plugins/circuitpython"]
+
+
+def _build():
+    """
+    Build the sdist and wheel of nu-editor and of each bundled plugin into
+    dist/. Return the first non-zero exit code, or 0.
+    """
+    for project in [".", *BUNDLED_PLUGINS]:
+        return_code = subprocess.run(
+            [sys.executable, "-m", "build", "--outdir", "dist", project]
+        ).returncode
+        if return_code != 0:
+            return return_code
+    return 0
+
+
 @export
 def dist():
-    """Generate a source distribution and a binary wheel"""
+    """Build nu-editor and its bundled plugins (sdists and wheels) in dist/"""
     if check() != 0:
         raise RuntimeError("Check failed")
     print("Checks pass; good to package")
-    return subprocess.run([sys.executable, "-m", "build"]).returncode
+    return _build()
+
+
+def _publish(*repository):
+    """
+    Build everything, then upload the bundled plugins to PyPI (or the
+    `repository` given as twine options) before nu-editor, which depends on
+    them. A plugin version that's already there (it didn't change this
+    release) is skipped; nu-editor's must be new.
+    """
+    return_code = dist()
+    if return_code != 0:
+        return return_code
+    print("Packaging complete; upload to PyPI")
+    twine = [sys.executable, "-m", "twine", "upload", *repository]
+    plugins = [
+        os.path.join("dist", _dist_name(plugin) + "-*") for plugin in BUNDLED_PLUGINS
+    ]
+    return_code = subprocess.run([*twine, "--skip-existing", *plugins]).returncode
+    if return_code != 0:
+        return return_code
+    return subprocess.run([*twine, os.path.join("dist", "nu_editor-*")]).returncode
+
+
+def _dist_name(plugin):
+    """The file-name prefix of a bundled plugin's dists: nu_<folder name>."""
+    return "nu_" + os.path.basename(plugin)
 
 
 @export
 def publish_test():
-    """Upload to a test PyPI"""
-    dist()
-    print("Packaging complete; upload to PyPI")
-    return subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "twine",
-            "upload",
-            "-r",
-            "test",
-            "--sign",
-            "dist/*",
-        ]
-    ).returncode
+    """Upload nu-editor and its bundled plugins to the test PyPI"""
+    return _publish("-r", "test")
 
 
 @export
 def publish_live():
-    """Upload to PyPI"""
-    dist()
-    print("Packaging complete; upload to PyPI")
-    return subprocess.run(
-        [sys.executable, "-m", "twine", "upload", "--sign", "dist/*"]
-    ).returncode
+    """Upload nu-editor and its bundled plugins to PyPI"""
+    return _publish()
 
 
 #

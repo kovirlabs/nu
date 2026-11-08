@@ -100,27 +100,31 @@ pass; the installers get the same checks after they're built (below).
 
 ## Cutting the release
 
-**Publish the bundled plugins to PyPI first.** `nu-editor`'s wheel says
-`Requires-Dist: nu-circuitpython>=…` and `nu-pygamezero>=…`, so if a release
-needs a new plugin version, that version must be on PyPI before `nu-editor`
-is, or `pip install nu-editor` can't resolve (see
-[packaging](packaging.md#bundled-plugins-the-uv-workspace)):
+**The bundled plugins go to PyPI before `nu-editor`.** `nu-editor`'s wheel
+says `Requires-Dist: nu-circuitpython>=…` and `nu-pygamezero>=…`, so if a
+release needs a new plugin version, that version must be on PyPI before
+`nu-editor` is, or `pip install nu-editor` can't resolve (see
+[packaging](packaging.md#bundled-plugins-the-uv-workspace)).
+`make publish-live` takes care of the order:
 
-1. For each bundled plugin that changed: bump its version, build it
-   (`uv build plugins/circuitpython`, `uv build plugins/pygamezero`) and
-   upload it to PyPI. The two don't depend on each other, so either can go
-   first. (`nu-microbit` stays unpublished until it's promoted; see
-   [packaging](packaging.md#opt-in-workspace-plugins-microbit).)
+1. For each bundled plugin that changed, bump its version (in its own
+   `pyproject.toml`). (`nu-microbit` stays unpublished until it's promoted;
+   see [packaging](packaging.md#opt-in-workspace-plugins-microbit).)
 2. Bump Nu's version in **both** places (above), finish `CHANGES.md`, and
    commit.
 3. Push an annotated tag: `git tag -a v2.0.0 -m "Nu 2.0.0"` then
-   `git push origin v2.0.0`. `build.yml` builds the three installers and
-   publishes the GitHub Release with them attached.
+   `git push origin v2.0.0`. `build.yml` builds the three installers (from
+   the plugins in the repository, not PyPI) and publishes the GitHub Release
+   with them attached.
 4. Download each installer from the release and run the learner checks above
    on real machines: at least current Windows 11, current macOS (Apple
    Silicon) and a current Ubuntu LTS.
-5. Build `nu-editor` (`make dist`, which runs `make check` first, or
-   `uv build`) and upload the wheel and sdist to PyPI. Check that
+5. Publish to PyPI with `make publish-live` (try `make publish-test` first to
+   upload to test PyPI). It runs `make check`, builds the sdists and wheels of
+   `nu-editor`, `nu-pygamezero` and `nu-circuitpython` into `dist/` (`make
+   dist`), uploads the two plugins (a version PyPI already has, because the
+   plugin didn't change, is skipped) and then `nu-editor`. It needs twine 7
+   or later (the `package` extra) and your PyPI credentials. Check that
    `pip install nu-editor` in a fresh virtual environment installs Nu and its
    plugins and starts.
 
