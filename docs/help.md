@@ -82,12 +82,17 @@ the packages it needs in a `# /// script` block, and **Run** fetches them. See
 [Your Python environment](environment.md).
 
 The **cog** in the bottom-right corner opens the same window, which also has
-Nu's log and the language setting.
+Nu's log, your plugins and the language setting.
 
 ## Plugins
 
-Plugins add new modes to Nu. To try one, put its `.py` file (or folder) in
-Nu's plugins folder and restart Nu:
+Plugins add new modes to Nu. The **Plugins** tab (click the **cog**) lists
+them: where each comes from, whether it's on and, if it couldn't start, why.
+Untick one to switch it off, or tick it to switch it back on; changes take
+effect when you restart Nu.
+
+To try a new plugin, click **Open plugins folder** on that tab, put the
+plugin's `.py` file (or folder) there, and restart Nu. The folder is:
 
 | System | Plugins folder |
 |---|---|
@@ -96,7 +101,8 @@ Nu's plugins folder and restart Nu:
 | Linux | `~/.local/share/mu/plugins` |
 
 Plugins are Python code that runs inside Nu, so only add ones you trust. If a
-plugin has a problem, Nu tells you and keeps running. To write one, see
+plugin has a problem, Nu tells you and keeps running. See
+[Managing plugins](plugins.md#managing-plugins), and to write one,
 [Writing a Nu plugin](plugins.md).
 
 ## Something went wrong?

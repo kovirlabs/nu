@@ -231,7 +231,9 @@ class SettingsBase(object):
 
 class UserSettings(SettingsBase):
     DEFAULTS = {"workspace": os.path.join(config.HOME_DIRECTORY, config.WORKSPACE_NAME)}
-    autosave = False
+    # Saved when Nu exits: Nu changes some of these (switching a plugin off)
+    # and plugins keep theirs here (see mu.plugin.PluginSettings).
+    autosave = True
     filestem = "settings"
 
 

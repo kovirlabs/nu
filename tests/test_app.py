@@ -3,12 +3,15 @@
 Tests for the app script.
 """
 
+import logging
 import sys
 import os.path
 import pytest
 import subprocess
+import threading
 
 from unittest import mock
+import mu.app
 from mu.app import (
     crash_details,
     show_crash_dialog,
@@ -16,6 +19,7 @@ from mu.app import (
     run,
     setup_logging,
     setup_exception_handler,
+    thread_excepthook,
     AnimatedSplash,
     StartupWorker,
     vlogger,
@@ -243,14 +247,100 @@ def test_setup_logging_with_envvar():
         os.environ.pop("MU_LOG_TO_STDOUT", "")
 
 
-def test_setup_except_hook():
+def test_setup_except_hook(monkeypatch):
     """
     confirm that setup_exception_handler() is setting up the global exception hook
     """
     saved = sys.excepthook
+    previous = mock.MagicMock()
+    monkeypatch.setattr(threading, "excepthook", previous)
+    monkeypatch.setattr(mu.app, "_previous_thread_excepthook", None)
     setup_exception_handler()
     assert sys.excepthook == excepthook
+    assert threading.excepthook is thread_excepthook
+    assert mu.app._previous_thread_excepthook is previous
+    # Setting up again never chains the hook to itself.
+    setup_exception_handler()
+    assert mu.app._previous_thread_excepthook is previous
     sys.excepthook = saved
+
+
+def thread_error(exc_type=ValueError, message="BANG", thread_name="worker"):
+    """The argument threading.excepthook gets for an error in a thread."""
+    try:
+        raise exc_type(message)
+    except BaseException as ex:
+        exc = ex
+    thread = mock.MagicMock()
+    thread.name = thread_name
+    return mock.MagicMock(
+        exc_type=exc_type,
+        exc_value=exc,
+        exc_traceback=exc.__traceback__,
+        thread=thread,
+    )
+
+
+def test_thread_excepthook_logs_core_errors(monkeypatch, caplog):
+    """
+    An error in a thread that isn't a plugin's goes to Nu's log (with its
+    traceback) and then to the previous hook, which prints it as before.
+    """
+    previous = mock.MagicMock()
+    monkeypatch.setattr(mu.app, "_previous_thread_excepthook", previous)
+    args = thread_error()
+    with (
+        mock.patch.object(mu.app.plugin_errors, "handle_uncaught", return_value=False),
+        caplog.at_level(logging.ERROR),
+    ):
+        thread_excepthook(args)
+    assert "Unhandled error in thread worker" in caplog.text
+    assert "ValueError: BANG" in caplog.text
+    previous.assert_called_once_with(args)
+
+
+def test_thread_excepthook_plugin_errors(monkeypatch, caplog):
+    """A plugin's error is reported by the plugin error handler instead."""
+    previous = mock.MagicMock()
+    monkeypatch.setattr(mu.app, "_previous_thread_excepthook", previous)
+    args = thread_error()
+    with (
+        mock.patch.object(
+            mu.app.plugin_errors, "handle_uncaught", return_value=True
+        ) as handle,
+        caplog.at_level(logging.ERROR),
+    ):
+        thread_excepthook(args)
+    handle.assert_called_once_with(args.exc_type, args.exc_value, args.exc_traceback)
+    previous.assert_not_called()
+    assert caplog.text == ""
+
+
+def test_thread_excepthook_system_exit(monkeypatch, caplog):
+    """sys.exit() in a thread just ends the thread, as it always has."""
+    previous = mock.MagicMock()
+    monkeypatch.setattr(mu.app, "_previous_thread_excepthook", previous)
+    args = thread_error(SystemExit, 0)
+    with (
+        mock.patch.object(mu.app.plugin_errors, "handle_uncaught") as handle,
+        caplog.at_level(logging.ERROR),
+    ):
+        thread_excepthook(args)
+    handle.assert_not_called()
+    previous.assert_called_once_with(args)
+    assert caplog.text == ""
+
+
+def test_thread_excepthook_without_a_previous_hook(monkeypatch):
+    """Before setup, the hook falls back to Python's own."""
+    monkeypatch.setattr(mu.app, "_previous_thread_excepthook", None)
+    original = mock.MagicMock()
+    monkeypatch.setattr(threading, "__excepthook__", original)
+    args = thread_error()
+    args.thread = None
+    with mock.patch.object(mu.app.plugin_errors, "handle_uncaught", return_value=False):
+        thread_excepthook(args)
+    original.assert_called_once_with(args)
 
 
 def test_run():

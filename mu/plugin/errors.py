@@ -27,6 +27,12 @@ A plugin's code runs in two ways, and both are covered:
   `handle_uncaught`, which recognises plugin code in the traceback and reports
   the error instead of letting Nu exit.
 
+A plugin can also start threads. An error in a `threading.Thread` reaches
+`threading.excepthook` (`app.thread_excepthook`), and one in a Qt `QThread` or
+`QRunnable` reaches `sys.excepthook` on that thread; both ask
+`handle_uncaught` too. The plugin is worked out there, but the report (which
+shows a dialog) is handed to the main thread, since only it may touch the GUI.
+
 Either way the learner sees a dialog naming the plugin (rate limited, so a
 failing timer can't bury them in dialogs), the details go to the log, and a
 plugin that keeps failing is offered to be switched off.
@@ -34,8 +40,11 @@ plugin that keeps failing is offered to be switched off.
 
 import functools
 import logging
+import threading
 import time
 import traceback
+
+from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot
 
 from ..modes.base import BaseMode
 from . import loader
@@ -80,6 +89,23 @@ GUARDED_MODE_METHODS = {
 }
 
 
+class _MainThreadRelay(QObject):
+    """
+    Runs functions on the thread it was created on (Nu's main thread), when
+    asked from any thread: emitting a signal across threads queues the call.
+    """
+
+    call = pyqtSignal(object)
+
+    def __init__(self):
+        super().__init__()
+        self.call.connect(self._run)
+
+    @pyqtSlot(object)
+    def _run(self, function):
+        function()
+
+
 class _PluginState:
     def __init__(self):
         self.errors = 0
@@ -104,6 +130,9 @@ class PluginErrorHandler:
         self._clock = clock
         self._states = {}
         self._dialog_open = False
+        # Created on the main thread, with the Host: reports from other
+        # threads go through it.
+        self._relay = _MainThreadRelay()
 
     def _state(self, plugin):
         return self._states.setdefault(id(plugin), _PluginState())
@@ -111,6 +140,10 @@ class PluginErrorHandler:
     def error_count(self, plugin):
         """How many unexpected errors `plugin` has had this session."""
         return self._state(plugin).errors
+
+    def forget(self, plugin):
+        """Start counting `plugin`'s errors afresh, as if Nu had restarted."""
+        self._states.pop(id(plugin), None)
 
     # --- working out whose code failed ---
 
@@ -152,8 +185,12 @@ class PluginErrorHandler:
 
     def handle_uncaught(self, exc_type, exc, tb):
         """
-        Called from `app.excepthook`. If plugin code raised the exception,
-        report it and return True (Nu carries on); otherwise return False.
+        Called from `app.excepthook` and `app.thread_excepthook`. If plugin
+        code raised the exception, report it and return True (Nu carries on);
+        otherwise return False.
+
+        On a thread other than the main one, the report is queued for the main
+        thread, which shows it (and logs it) as soon as it can.
         """
         if issubclass(exc_type, KeyboardInterrupt):
             return False
@@ -166,7 +203,13 @@ class PluginErrorHandler:
             return False
         if exc is None:
             exc = exc_type()
-        self.report(plugin, exc, tb)
+        current = threading.current_thread()
+        if current is threading.main_thread():
+            self.report(plugin, exc, tb)
+        else:
+            self._relay.call.emit(
+                functools.partial(self.report, plugin, exc, tb, thread=current.name)
+            )
         return True
 
     # --- guarding the calls the core makes into plugin modes ---
@@ -191,16 +234,17 @@ class PluginErrorHandler:
 
     # --- telling the learner ---
 
-    def report(self, plugin, exc, tb=None, where=None):
+    def report(self, plugin, exc, tb=None, where=None, thread=None):
         """
-        Tell the learner (and the log) that `plugin` raised `exc`. This never
-        raises.
+        Tell the learner (and the log) that `plugin` raised `exc`, in the mode
+        method `where` or the thread called `thread` if given. Call it on the
+        main thread. This never raises.
         """
         try:
             if isinstance(exc, PluginError):
                 self._report_expected(plugin, exc)
             else:
-                self._report_unexpected(plugin, exc, tb, where)
+                self._report_unexpected(plugin, exc, tb, where, thread)
         except Exception:
             logger.exception("Failed to report an error in plugin %s", plugin)
 
@@ -213,11 +257,13 @@ class PluginErrorHandler:
             self._host.show_message, exc.message, exc.information, "Information"
         )
 
-    def _report_unexpected(self, plugin, exc, tb, where):
+    def _report_unexpected(self, plugin, exc, tb, where, thread):
         state = self._state(plugin)
         state.errors += 1
         signature = (type(exc).__name__, str(exc), where)
         location = " in {}()".format(where) if where else ""
+        if thread:
+            location += " in thread {!r}".format(thread)
         if signature in state.seen:
             logger.error(
                 "Plugin %s failed again%s: %s: %s (error #%d)",
@@ -260,11 +306,12 @@ class PluginErrorHandler:
             message = _("The {} plugin keeps having problems.").format(plugin.name)
             information = _(
                 "Nu is still running. Switch the plugin off? It won't be "
-                "loaded the next time Nu starts. (You can switch it back on "
-                "by removing it from disabled_plugins in settings.json.)"
+                "loaded the next time Nu starts. You can switch it back on in "
+                "the Plugins tab of Nu's administration window (the cog in "
+                "the status bar)."
             )
             if self._show_dialog(self._host.confirm, message, information, "Question"):
-                loader.set_plugin_enabled(plugin_id, False)
+                loader.set_plugin_enabled(plugin_id, False, after_errors=True)
                 self._host.show_status(
                     _("The {} plugin is switched off from the next start.").format(
                         plugin.name

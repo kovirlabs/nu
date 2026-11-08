@@ -36,6 +36,10 @@ Each has a **Copy** button.
 You'll only see the environment in modes that use it. CircuitPython runs
 your code on the board, so it doesn't show it.
 
+Some [plugins](plugins.md#managing-plugins) need packages in this
+environment for their mode (Pygame Zero needs `pgzero` and `pygame`). Nu
+installs those itself when it makes the environment.
+
 ## Adding and removing packages
 
 On the Environment tab, open **Packages**, put each package's name on its own

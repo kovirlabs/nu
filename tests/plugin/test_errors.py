@@ -6,6 +6,7 @@ Tests for keeping Nu running when a plugin has an error.
 import logging
 import sys
 import textwrap
+import threading
 import uuid
 from unittest import mock
 
@@ -47,6 +48,9 @@ PLUGIN_MODULE = textwrap.dedent(
 
     def helper():
         raise ZeroDivisionError("division by zero")
+
+    def work_in_a_thread():
+        raise KeyError("lost in a thread")
 
     class BuggyPlugin(ModePlugin):
         name = "Buggy"
@@ -352,8 +356,11 @@ def test_offers_to_switch_off_a_plugin_that_keeps_failing(
     assert host._view.show_message.call_count == handler.SWITCH_OFF_AFTER
     (call,) = host._view.show_confirmation.call_args_list
     assert call.args[0] == "The Buggy plugin keeps having problems."
+    assert "Plugins tab" in call.args[1]
     assert call.args[2] == "Question"
     assert sorted(store.get("disabled_plugins", [])) == disabled
+    # The Plugins tab can say why it's off.
+    assert sorted(loader.switched_off_after_errors(store)) == disabled
 
 
 def test_no_switch_off_offer_without_a_plugin_id(host, handler, clock):
@@ -440,3 +447,74 @@ def test_startup_hooks_are_guarded():
     A plugin mode failing to set up the workspace mustn't stop Nu starting.
     """
     assert GUARDED_MODE_METHODS["ensure_workspace_assets"] is None
+
+
+# --- errors in a plugin's threads ---
+
+
+def run_in_thread(target, name="plugin-worker"):
+    """Run `target` in a real thread, as a plugin would, and wait for it."""
+    thread = threading.Thread(target=target, name=name)
+    thread.start()
+    thread.join()
+
+
+def test_a_plugin_thread_error_is_reported_on_the_main_thread(
+    host, loaded, plugin_module, monkeypatch
+):
+    """
+    An error in a plugin's thread is worked out on that thread, but reported
+    (dialog, log) on the main thread, which owns the GUI.
+    """
+    plugin, mode = loaded
+    errors.install(host._error_handler)
+    monkeypatch.setattr(threading, "excepthook", mu.app.thread_excepthook)
+    calls = []
+
+    def report(*args, **kwargs):
+        calls.append((threading.current_thread(), args, kwargs))
+
+    with mock.patch.object(host._error_handler, "report", side_effect=report):
+        run_in_thread(plugin_module.work_in_a_thread)
+        assert calls == []  # not from the plugin's thread
+        for _ in range(5):
+            QApplication.processEvents()
+    ((thread, args, kwargs),) = calls
+    assert thread is threading.main_thread()
+    assert args[0] is plugin
+    assert isinstance(args[1], KeyError)
+    assert kwargs == {"thread": "plugin-worker"}
+
+
+def test_a_plugin_thread_error_is_logged_and_shown(host, loaded, plugin_module, caplog):
+    """End to end: the traceback goes to Nu's log and the learner is told."""
+    plugin, mode = loaded
+    errors.install(host._error_handler)
+    with caplog.at_level(logging.ERROR):
+        try:
+            plugin_module.work_in_a_thread()
+        except KeyError as ex:
+            exc = ex
+        done = threading.Event()
+
+        def from_a_thread():
+            errors.handle_uncaught(KeyError, exc, exc.__traceback__)
+            done.set()
+
+        threading.Thread(target=from_a_thread, name="worker").start()
+        done.wait(5)
+        for _ in range(5):
+            QApplication.processEvents()
+    assert "Plugin Buggy failed in thread 'worker'" in caplog.text
+    assert "lost in a thread" in caplog.text
+    assert "Traceback" in caplog.text
+    message, information, icon = host._view.show_message.call_args.args
+    assert "Buggy plugin had a problem" in message
+
+
+def test_report_from_the_main_thread_is_immediate(host, loaded):
+    plugin, mode = loaded
+    with mock.patch.object(host._error_handler, "report") as report:
+        exc_info = raise_and_get_tb(mode.go)
+        assert host._error_handler.handle_uncaught(*exc_info) is True
+    report.assert_called_once_with(plugin, exc_info[1], exc_info[2])

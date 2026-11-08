@@ -73,7 +73,7 @@ def test_loaded_by_setup_modes_from_its_entry_point():
     assert isinstance(mode, CircuitPythonMode)
     (record,) = [r for r in mode.host.plugin_records if r.id == "circuitpython"]
     assert record.status == loader.LOADED
-    assert record.kind == "package"
+    assert record.kind == "bundled"  # it ships with Nu
     assert record.origin.startswith("nu-circuitpython ")
 
 

@@ -26,6 +26,7 @@ from .. import resources, settings
 from ..modes.api import PI_APIS, PYTHON3_APIS, SHARED_APIS
 from ..modes.base import BaseMode
 from ..virtual_environment import venv
+from . import loader
 from .base import PLUGIN_API_VERSION, check_compatible
 from .errors import PluginErrorHandler
 
@@ -147,6 +148,33 @@ class Host:
         if plugin in self._plugins:
             self._plugins.remove(plugin)
         logger.info("Unloaded plugin %s", name)
+
+    def describe_plugins(self):
+        """
+        Every discovered plugin as the Plugins tab shows it (see
+        `loader.describe`), with the names of the modes each one added.
+        """
+        return loader.describe(
+            self.plugin_records,
+            modes_of=lambda plugin: [mode.name for mode in self._modes_of(plugin)],
+        )
+
+    @property
+    def plugins_folder(self):
+        """The folder Nu loads drop-in plugins from."""
+        return loader.DROPIN_DIR
+
+    def set_plugin_enabled(self, plugin_id, enabled):
+        """
+        Switch the plugin `plugin_id` on or off from the next start. Switching
+        a plugin that's loaded back on also forgets its errors this session,
+        so Nu offers to switch it off again if it keeps failing.
+        """
+        loader.set_plugin_enabled(plugin_id, enabled)
+        if enabled:
+            for record in self.plugin_records:
+                if record.id == plugin_id and record.plugin is not None:
+                    self._error_handler.forget(record.plugin)
 
     def _modes_of(self, plugin):
         """The mode instances `plugin` registered."""

@@ -158,13 +158,13 @@ QMenu::separator {
     margin: 0px;
 }
 
-QCheckBox::indicator {
+QCheckBox::indicator, QTreeView::indicator {
     border: 1px solid #6b6b6b;
     width: 16px;
     height: 16px;
 }
 
-QCheckBox::indicator:checked {
+QCheckBox::indicator:checked, QTreeView::indicator:checked {
     image: url(images:checked.png);
 }
 

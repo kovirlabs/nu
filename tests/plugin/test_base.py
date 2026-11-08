@@ -3,6 +3,7 @@
 Tests for the plugin base classes and API versioning.
 """
 
+import importlib
 from unittest import mock
 
 import pytest
@@ -36,6 +37,31 @@ def test_public_api_reexports_device():
 
     assert mu.plugin.Device is mu.logic.Device
     assert "Device" in mu.plugin.__all__
+
+
+def test_plugin_name_and_description_defaults():
+    """
+    A plugin's name and description (0.4) are what the Plugins tab shows;
+    both are optional. An unnamed plugin is called by its id when loaded.
+    """
+    assert Plugin.name == "UNNAMED PLUGIN"
+    assert Plugin.description == ""
+
+
+@pytest.mark.parametrize(
+    "plugin_class",
+    [
+        "nu_pygamezero:PygameZeroPlugin",
+        "nu_circuitpython:CircuitPythonPlugin",
+        "nu_example:ExamplePlugin",
+    ],
+)
+def test_bundled_and_example_plugins_describe_themselves(plugin_class):
+    module, cls = plugin_class.split(":")
+    plugin = getattr(importlib.import_module(module), cls)
+    assert plugin.api_version == PLUGIN_API_VERSION
+    assert plugin.name != Plugin.name
+    assert plugin.description.endswith(".")
 
 
 def test_core_version_is_compatible_with_itself():

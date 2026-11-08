@@ -925,14 +925,17 @@ class Window(QMainWindow):
         device_list,
         environment=None,
         focus=None,
+        plugins=None,
     ):
         """
         Display the administrative dialog with referenced content of the log
         and settings, and (for modes that use it) the facts about the
         learner's Python `environment` (see `VirtualEnvironment.describe`,
-        plus the rendered command log under "commands"). Open on the tab
-        named by `focus` (e.g. "environment") if given. Return a dictionary
-        of the settings that may have been changed by the admin dialog.
+        plus the rendered command log under "commands"). `plugins` is what
+        the Plugins tab shows (see `PluginsWidget.setup`), if anything. Open
+        on the tab named by `focus` (e.g. "environment") if given. Return a
+        dictionary of the settings that may have been changed by the admin
+        dialog.
         """
         admin_box = AdminDialog(self)
         admin_box.setup(
@@ -943,6 +946,8 @@ class Window(QMainWindow):
             device_list,
             environment=environment,
             focus=focus,
+            plugins=plugins,
+            open_directory=self.open_directory_from_os,
         )
         result = admin_box.exec()
         if result:

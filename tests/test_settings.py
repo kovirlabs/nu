@@ -538,3 +538,12 @@ def test_default_file_location_no_files_cannot_create():
             os.path.sep
         )
         logger.error.assert_called_once_with(msg)
+
+
+def test_user_settings_are_saved_when_nu_exits():
+    """
+    What Nu (or a plugin) changes in the user settings -- switching a plugin
+    off, a plugin's own settings -- is written back when Nu exits.
+    """
+    assert mu.settings.UserSettings.autosave is True
+    assert mu.settings.SessionSettings.autosave is True

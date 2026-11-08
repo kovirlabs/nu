@@ -32,9 +32,16 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
 * **Plugins (experimental).** Plugins can add modes, with their own icons,
   and say which packages their modes need in your programs' environment. Drop
   one into Nu's plugins folder, or install one as a package; a plugin that
-  fails is skipped or reported, and Nu keeps running. The plugin API is at
-  version 0.3 and may change. See
+  fails is skipped or reported (errors in its background threads too), and Nu
+  keeps running. The plugin API is at version 0.4 and may change. See
   [Writing a Nu plugin](https://kovirlabs.github.io/nu/plugins/).
+* **A Plugins tab.** Click the cog and choose **Plugins** to see every plugin
+  Nu found: where it comes from, whether it's on, and the modes it adds. If
+  one couldn't start, it says why in plain words, with the error underneath
+  to copy for whoever wrote it. Untick a plugin to switch it off (CircuitPython
+  and Pygame Zero too), tick it to switch it back on; the change happens when
+  you restart Nu. **Open plugins folder** takes you to where you add your
+  own. See [Managing plugins](https://kovirlabs.github.io/nu/plugins/#managing-plugins).
 * **See your Python environment.** In Python 3 and Pygame Zero modes the
   status bar shows the environment your programs run in
   (`Environment: mu_venv · Python 3.11`). Click it for the new **Environment**
