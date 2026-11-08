@@ -96,6 +96,59 @@ def test_all_images_load_without_qt_warnings(qtapp):
     assert warnings == []
 
 
+#: Images in mu/resources/images that nothing in mu/ names, and why they stay.
+UNREFERENCED_IMAGES = {
+    "splash_screen_base_image": "the artwork splash_screen.gif was made from",
+}
+
+
+def _image_stems():
+    images_dir = mu.resources.path("", resource_dir="images/")
+    return {
+        name.rsplit(".", 1)[0]
+        for name in os.listdir(images_dir)
+        if not name.startswith(".")
+    }
+
+
+def test_every_image_is_used_or_allowed():
+    """
+    Every image in mu/resources/images is named somewhere in Nu's source or
+    stylesheets, or is on UNREFERENCED_IMAGES with a reason, so icons of
+    removed features don't pile up again. An image is known by its file name
+    without the extension (an action's `name` doubles as its icon), and it
+    counts as named where that stem appears quoted, as a file name or as an
+    "images:" URL. The generated API stubs in mu/modes/api don't count.
+    """
+    mu_dir = os.path.dirname(mu.__file__)
+    skip = {
+        os.path.join(mu_dir, "resources", "images"),
+        os.path.join(mu_dir, "modes", "api"),
+    }
+    sources = []
+    for folder, subfolders, files in os.walk(mu_dir):
+        if folder in skip:
+            subfolders[:] = []
+            continue
+        for name in files:
+            if name.endswith((".py", ".css")):
+                with open(os.path.join(folder, name), encoding="utf8") as f:
+                    sources.append(f.read())
+    text = "\n".join(sources)
+    unused = [
+        stem
+        for stem in sorted(_image_stems())
+        if stem not in UNREFERENCED_IMAGES
+        and not re.search(r"""["':/]{}["'.]""".format(re.escape(stem)), text)
+    ]
+    assert unused == []
+
+
+def test_unreferenced_images_allow_list_is_current():
+    """Every image allowed to go unnamed still exists."""
+    assert set(UNREFERENCED_IMAGES) <= _image_stems()
+
+
 @pytest.fixture
 def plugin_images(tmp_path):
     """
