@@ -110,6 +110,8 @@ def patched():
         mock.patch.object(
             VE, "run_subprocess", return_value=(True, "")
         ) as run_subprocess,
+        # `uv venv` goes through the Uv wrapper (so it's in the command log).
+        mock.patch.object(UV, "run_subprocess", return_value=(True, "")),
     ):
         yield subprocess_run, run_python, run_subprocess
 
@@ -265,7 +267,7 @@ def test_create_virtual_environment_name_obj(patched, venv_dirpath):
 
 def test_create_virtual_environment_failure(venv):
     output = uuid.uuid1().hex
-    with mock.patch.object(venv, "run_subprocess", return_value=(False, output)):
+    with mock.patch.object(UV, "run_subprocess", return_value=(False, output)):
         try:
             venv.create()
         except Exception as exc:
@@ -275,10 +277,10 @@ def test_create_virtual_environment_failure(venv):
 
 
 def _uv_venv_args(run_subprocess):
-    """The argv `create_venv` passed to `run_subprocess` (minus the uv path)."""
+    """The uv arguments `create_venv` passed to `Uv.run_subprocess`."""
     args, _ = run_subprocess.call_args
-    assert args[1] == "venv"
-    return list(args[1:])
+    assert args[0] == "venv"
+    return list(args)
 
 
 def test_create_venv_pins_python_version_without_bundled_python(venv):
@@ -287,7 +289,7 @@ def test_create_venv_pins_python_version_without_bundled_python(venv):
     with (
         mock.patch.object(venv, "ensure_bundled_python", return_value=None),
         mock.patch.object(mu.virtual_environment, "find_uv", return_value="/x/uv"),
-        mock.patch.object(venv, "run_subprocess", return_value=(True, "")) as run,
+        mock.patch.object(UV, "run_subprocess", return_value=(True, "")) as run,
     ):
         venv.create_venv()
     version = "%d.%d" % sys.version_info[:2]
@@ -304,7 +306,7 @@ def test_create_venv_uses_bundled_python_offline(venv, tmp_path):
         ),
         mock.patch.object(mu.wheels, "PYTHON_DIRPATH", str(tmp_path)),
         mock.patch.object(mu.virtual_environment, "find_uv", return_value="/x/uv"),
-        mock.patch.object(venv, "run_subprocess", return_value=(True, "")) as run,
+        mock.patch.object(UV, "run_subprocess", return_value=(True, "")) as run,
     ):
         venv.create_venv()
     assert _uv_venv_args(run) == [
@@ -327,7 +329,7 @@ def test_create_venv_bundled_python_without_pip_wheel(venv, tmp_path):
         ),
         mock.patch.object(mu.wheels, "PYTHON_DIRPATH", str(tmp_path)),
         mock.patch.object(mu.virtual_environment, "find_uv", return_value="/x/uv"),
-        mock.patch.object(venv, "run_subprocess", return_value=(True, "")) as run,
+        mock.patch.object(UV, "run_subprocess", return_value=(True, "")) as run,
     ):
         venv.create_venv()
     assert _uv_venv_args(run) == [
@@ -835,8 +837,12 @@ def test_uv_run_connects_supplied_slots(uv_process):
     process = UV(uv_executable="/x/uv").run("pip", "list", slots=slots)
     assert process is uv_process
     uv_process.started.connect.assert_called_once_with(started)
-    uv_process.output.connect.assert_called_once_with(output)
-    uv_process.finished.connect.assert_called_once_with(finished)
+    # The command log's recorder is connected first (see test_uv.py), then
+    # the caller's slots.
+    uv_process.output.connect.assert_called_with(output)
+    assert uv_process.output.connect.call_count == 2
+    uv_process.finished.connect.assert_called_with(finished)
+    assert uv_process.finished.connect.call_count == 2
     (executable, args), _ = uv_process.run.call_args
     assert executable == "/x/uv"
     assert args == ["pip", "list"]

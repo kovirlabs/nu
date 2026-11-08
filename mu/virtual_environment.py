@@ -30,6 +30,7 @@ from . import wheels
 from . import settings
 from . import config
 from . import __version__ as mu_version
+from .command_log import CommandLog, command_log  # noqa: F401 (CommandLog: tests)
 
 wheels_dirpath = os.path.dirname(wheels.__file__)
 
@@ -497,6 +498,12 @@ class Uv(object):
     When ``venv_path`` is given, package and run operations target that
     environment explicitly (``--python``) for determinism, rather than relying
     on an ambient ``VIRTUAL_ENV``.
+
+    Every command it runs is recorded in the learner-visible
+    :data:`~mu.command_log.command_log` (Phase 4b): the four ways of running
+    uv below (``run_blocking``, ``run``, ``run_subprocess``, and
+    ``script_command`` for the Run pane) each record theirs, so no caller can
+    forget to.
     """
 
     def __init__(self, uv_executable=None, venv_path=None):
@@ -510,33 +517,97 @@ class Uv(object):
         """`--python <venv>` selector, when this Uv targets a specific env."""
         return ["--python", str(self.venv_path)] if self.venv_path else []
 
+    def _argv(self, command, args):
+        """The arguments for uv (without the executable), as strings."""
+        return [str(command), *(str(a) for a in args)]
+
+    @staticmethod
+    def _exit_code(process):
+        """The exit code of a :class:`Process`'s QProcess; None if it never
+        started or didn't exit normally (crashed or was killed)."""
+        qprocess = getattr(process, "process", None)
+        if qprocess is None:
+            return None
+        if qprocess.exitStatus() != QProcess.ExitStatus.NormalExit:
+            return None
+        return qprocess.exitCode()
+
     def run_blocking(self, command, *args, wait_for_s=180.0, **envvars):
         """Run a uv subcommand synchronously and return its combined output."""
+        argv = self._argv(command, args)
+        record = command_log.start([self.executable, *argv])
         process = Process()
-        return process.run_blocking(
-            self.executable,
-            [command, *(str(a) for a in args)],
-            wait_for_s=wait_for_s,
-            **envvars,
+        try:
+            output = process.run_blocking(
+                self.executable,
+                argv,
+                wait_for_s=wait_for_s,
+                **envvars,
+            )
+        except VirtualEnvironmentError as exc:
+            record.finish(self._exit_code(process), exc.message)
+            raise
+        record.finish(self._exit_code(process), output)
+        return output
+
+    def run_subprocess(self, command, *args):
+        """
+        Run a uv subcommand with :mod:`subprocess` (no Qt, so safe on a worker
+        thread before the event loop runs — e.g. creating the environment at
+        start-up). Return ``(succeeded, output)``.
+        """
+        argv = [self.executable, *self._argv(command, args)]
+        record = command_log.start(argv)
+        try:
+            process = subprocess.run(
+                argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+        except OSError as exc:
+            record.finish(None, str(exc))
+            return False, str(exc)
+        output = process.stdout.decode(ENCODING, errors="replace")
+        stderr_output = process.stderr.decode(ENCODING, errors="replace")
+        if stderr_output:
+            output += "\n" + stderr_output
+        record.finish(process.returncode, output)
+        return process.returncode == 0, output
+
+    def script_command(self, script, cwd=None):
+        """
+        Record ``uv run --python <venv> --script <script>`` — how Nu runs a
+        program with inline (PEP 723) dependencies — and return its
+        :class:`~mu.command_log.CommandRecord`.
+
+        Unlike the other methods this doesn't start the process: the Run pane
+        does (it needs its own QProcess to talk to the program), launching
+        ``record.argv`` and calling ``record.finish(exit_code)`` when it ends.
+        """
+        argv = [self.executable, "run", *self._python_args(), "--script", str(script)]
+        return command_log.start(
+            argv, cwd=cwd, note=_("Its output is in the Run pane.")
         )
 
     def run(self, command, *args, slots=Process.Slots(), **envvars):
         """Run a uv subcommand asynchronously, streaming via `slots`.
 
-        Returns the live :class:`Process` so the caller can keep a reference.
+        Returns the live :class:`Process` so the caller can keep a reference;
+        its ``command_record`` is the command's entry in the command log.
         """
+        argv = self._argv(command, args)
         process = Process()
+        record = command_log.start([self.executable, *argv])
+        process.command_record = record
+        # Connected before the caller's slots, so the record is complete by
+        # the time their `finished` slot runs.
+        process.output.connect(record.add_output)
+        process.finished.connect(lambda: record.finish(self._exit_code(process)))
         if slots.started:
             process.started.connect(slots.started)
         if slots.output:
             process.output.connect(slots.output)
         if slots.finished:
             process.finished.connect(slots.finished)
-        process.run(
-            self.executable,
-            [command, *(str(a) for a in args)],
-            **envvars,
-        )
+        process.run(self.executable, argv, **envvars)
         return process
 
     def version(self):
@@ -1106,9 +1177,10 @@ class VirtualEnvironment(object):
         the version is the running app's Python, which is what the baseline
         wheels were built for.
 
-        Run synchronously via ``run_subprocess`` (not the QProcess-based
-        ``Uv`` wrapper) because creation happens on the startup worker thread,
-        before the Qt event loop is available.
+        Run synchronously via ``Uv.run_subprocess`` (plain subprocess, not
+        QProcess) because creation happens on the startup worker thread,
+        before the Qt event loop is available. Like every uv command, it's
+        recorded in the learner-visible command log.
         """
         logger.info("Creating virtualenv: {}".format(self.path))
         logger.info("Virtualenv name: {}".format(self.name))
@@ -1122,8 +1194,7 @@ class VirtualEnvironment(object):
                 seed_args += ["--no-index", "--find-links", wheels.PYTHON_DIRPATH]
         else:
             python = "%d.%d" % sys.version_info[:2]
-        ok, output = self.run_subprocess(
-            uv_executable,
+        ok, output = Uv(uv_executable).run_subprocess(
             "venv",
             "--python",
             python,
