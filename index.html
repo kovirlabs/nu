@@ -320,6 +320,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-nu-is-made-of" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Nu is made of
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#where-to-start" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1486,6 +1497,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-nu-is-made-of" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Nu is made of
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#where-to-start" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1534,24 +1556,40 @@ beginner programmers.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p><strong>This documentation is for developers</strong> who want to work on Nu itself, not
-for end users (who want <a href="help/">Using Nu</a>). Much of it is inherited from upstream Mu and still describes
-the pre-fork toolchain (PyQt5, <code>setup.py</code>, Sphinx/ReadTheDocs, and the
-micro:bit/web modes). Nu has since moved to <strong>PyQt6</strong>, <strong>Python 3.11+</strong>,
-<strong>uv</strong> and <strong>ruff</strong>, and trimmed the mode set to Python 3, Pygame Zero,
-CircuitPython and the debugger (the core keeps Python 3 and the debugger;
-the other two are bundled <a href="plugins/">plugins</a>). For the current,
-authoritative state of the
-project see
+for end users (who want <a href="help/">Using Nu</a> and
+<a href="environment/">Your Python environment</a>). Some of it is inherited from
+upstream Mu and still describes the pre-fork toolchain (PyQt5, <code>setup.py</code>,
+Sphinx/ReadTheDocs, the web mode). Nu has since moved to <strong>PyQt6</strong>,
+<strong>Python 3.11+</strong>, <strong>uv</strong> and <strong>ruff</strong>. For the current, authoritative state
+of the project see
 <a href="https://github.com/kovirlabs/nu/blob/master/README.md"><code>README.md</code></a>,
 <code>CLAUDE.md</code> and <code>TODO.md</code> in the repository root. These pages are being
 modernized incrementally.</p>
 </div>
+<h2 id="what-nu-is-made-of">What Nu is made of<a class="headerlink" href="#what-nu-is-made-of" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>The core:</strong> the editor, the Run pane, the REPL and plotter, the learner's
+  Python environment (made and managed with uv, and shown to the learner: see
+  <a href="environment/">Your Python environment</a>), and two modes, <strong>Python 3</strong> and
+  the <strong>Graphical Debugger</strong>.</li>
+<li><strong>Plugins</strong> add the other modes, through a versioned
+  <a href="plugins/">plugin API</a>. Three live in this repository, under <code>plugins/</code>:<ul>
+<li><strong>Pygame Zero</strong> (<code>nu-pygamezero</code>) and <strong>CircuitPython</strong>
+  (<code>nu-circuitpython</code>) are bundled: installed with Nu and switched on.</li>
+<li><strong>BBC micro:bit</strong> (<code>nu-microbit</code>) is opt-in (<code>uv sync --extra
+  microbit</code>) until it has been tried on real micro:bits; see
+  <a href="microbit/">The BBC micro:bit</a>.</li>
+</ul>
+</li>
+</ul>
+<p>Learners switch plugins on and off on the admin dialog's <strong>Plugins</strong> tab.</p>
 <h2 id="where-to-start">Where to start<a class="headerlink" href="#where-to-start" title="Permanent link">&para;</a></h2>
 <ul>
 <li>New here? Read the <a href="setup/">developer setup</a> and the
   <a href="first-steps/">first steps</a> for new contributors.</li>
 <li>Want the big picture? Start with the <a href="architecture/">architecture overview</a>.</li>
-<li>Writing a mode? Follow the <a href="modes/">modes tutorial</a>.</li>
+<li>Writing a mode? Follow the <a href="modes/">modes tutorial</a>, then make it a
+  <a href="plugins/">plugin</a>.</li>
 <li>Curious how the debugger works? See <a href="debugger/">debugger / runner</a>.</li>
 <li>Adding tests or translations? See <a href="tests/">tests</a> and
   <a href="translations/">translations</a>.</li>

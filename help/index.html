@@ -469,6 +469,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#bbc-microbit-coming-soon" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BBC micro:bit (coming soon)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1650,6 +1661,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#bbc-microbit-coming-soon" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BBC micro:bit (coming soon)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1822,15 +1844,25 @@ save.</p>
   to it. Press Ctrl+C there to get a REPL on the board.</li>
 <li><strong>Plotter</strong> (Ctrl+Shift+P) graphs tuples your board prints.</li>
 </ul>
+<h3 id="bbc-microbit-coming-soon">BBC micro:bit (coming soon)<a class="headerlink" href="#bbc-microbit-coming-soon" title="Permanent link">&para;</a></h3>
+<p>Write MicroPython for the <a href="https://microbit.org/">BBC micro:bit</a>. <strong>Flash</strong>
+(F3) puts your program on the micro:bit, and <strong>REPL</strong> and <strong>Plotter</strong> work as
+in CircuitPython mode. This mode is new and hasn't been tried on real
+micro:bits yet, so it isn't part of the installers; see
+<a href="../microbit/">The BBC micro:bit</a>.</p>
+<p>Pygame Zero and CircuitPython are <a href="#plugins">plugins</a> that come with Nu,
+switched on; you can switch them off if you don't need them. micro:bit will
+join them once it has been tested.</p>
 <h2 id="where-your-files-go">Where your files go<a class="headerlink" href="#where-your-files-go" title="Permanent link">&para;</a></h2>
 <p>Nu saves your work in a folder called <code>mu_code</code> in your home folder (the name
 comes from Mu, the editor Nu continues). It's what <strong>Load</strong> and <strong>Save</strong> show
 first.</p>
 <h2 id="adding-python-packages">Adding Python packages<a class="headerlink" href="#adding-python-packages" title="Permanent link">&para;</a></h2>
 <p>Your programs run in their own Python environment, separate from Nu; the
-status bar shows which (<code>Environment: mu_venv · Python 3.11</code>). To use a
-package such as <code>requests</code>, click that, open <strong>Packages</strong> on the
-<strong>Environment</strong> tab, put the package's name on its own line, and click
+status bar shows which (<code>Environment: mu_venv · Python 3.11</code>). Click it to
+open the <strong>Environment</strong> tab, which shows where the environment is and the
+commands to use it from a terminal. To use a package such as <code>requests</code>, open
+<strong>Packages</strong> there, put the package's name on its own line, and click
 <strong>OK</strong>. Nu shows you the real <code>uv</code> command it runs. A program can also list
 the packages it needs in a <code># /// script</code> block, and <strong>Run</strong> fetches them. See
 <a href="../environment/">Your Python environment</a>.</p>
@@ -1878,7 +1910,8 @@ plugin has a problem, Nu tells you and keeps running. See
   <a href="https://github.com/kovirlabs/nu/issues">github.com/kovirlabs/nu/issues</a>.</li>
 <li><strong>Learn more:</strong> the original Mu's
   <a href="https://codewith.mu/en/tutorials/1.2/">tutorials</a> still apply to most of
-  Nu, though Nu no longer has the micro:bit, ESP, Pico or web modes.</li>
+  Nu, though Nu no longer has the ESP, Pico or web modes, and its micro:bit
+  mode is new.</li>
 </ul>
 
 

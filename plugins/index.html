@@ -2675,7 +2675,7 @@ tell the learner if there's none). Offer the Plotter only if
 </tr>
 <tr>
 <td><code>log_command(argv, cwd=None, note=None)</code></td>
-<td>Add a command to <strong>What Nu ran</strong> (and Nu's log), next to uv's: <code>argv</code> as the learner could type it, <code>note</code> for anything they should know (e.g. "Nu did this through mpremote's Python API"). Returns a record: call <code>add_output(text)</code> as output arrives and <code>finish(exit_code, output=None)</code> when done (0 for success). Safe from any thread. <em>(0.5)</em></td>
+<td>Add a command to <strong>What Nu Ran</strong> (and Nu's log), next to uv's: <code>argv</code> as the learner could type it, <code>note</code> for anything they should know (e.g. "Nu did this through mpremote's Python API"). Returns a record: call <code>add_output(text)</code> as output arrives and <code>finish(exit_code, output=None)</code> when done (0 for success). Safe from any thread. <em>(0.5)</em></td>
 </tr>
 <tr>
 <td><code>settings(namespace)</code></td>
@@ -2739,7 +2739,7 @@ them:</p>
 </ul>
 <h3 id="what-changed-in-05">What changed in 0.5<a class="headerlink" href="#what-changed-in-05" title="Permanent link">&para;</a></h3>
 <p>0.5 adds what the micro:bit plugin needs to stay on the API: <code>Host.log_command</code>
-(so a plugin's equivalent commands show in <strong>What Nu ran</strong>, as uv's do),
+(so a plugin's equivalent commands show in <strong>What Nu Ran</strong>, as uv's do),
 <code>Host.current_device</code> (the selected board, without <code>self.editor</code>) and
 <code>Host.data_dir</code> (a folder for downloads such as firmware). Nothing was removed,
 but a 0.4 plugin needs its <code>api_version</code> changed to <code>"0.5"</code>.</p>
@@ -2838,7 +2838,7 @@ run:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span>&lt;DATA_DIR&gt;/plugin-env/bin/python<span class="w"> </span>nu-microbit
 </code></pre></div>
 <p>The command goes through the same <code>Uv</code> wrapper as the learner's packages, so
-it's in <strong>What Nu ran</strong> and the log, and its output streams into the same
+it's in <strong>What Nu Ran</strong> and the log, and its output streams into the same
 progress window. Like switching, an added plugin loads at the next start.
 <strong>Add from a file…</strong> takes a <code>.whl</code> the teacher downloaded, which works
 offline.</p>
@@ -2907,7 +2907,7 @@ Phase 1. It comes back as <strong>plugin-owned UI</strong> driven by mpremote:</
 <li><strong>Talking to the board:</strong> the same worker pattern as Flash: one job at a
   time on a <code>QThread</code>, through <code>mpremote.transport_serial.SerialTransport</code>:
   <code>fs_listdir</code> to list, <code>fs_readfile</code> / <code>fs_writefile</code> to copy each way,
-  <code>fs_rmfile</code> to delete, each logged under <strong>What Nu ran</strong> as
+  <code>fs_rmfile</code> to delete, each logged under <strong>What Nu Ran</strong> as
   <code>mpremote connect &lt;port&gt; fs ls</code> / <code>fs cp :a.py a.py</code> / <code>fs cp a.py :a.py</code> /
   <code>fs rm :a.py</code>.</li>
 <li><strong>One serial port:</strong> the pane, the REPL and Flash all need it, so the pane
