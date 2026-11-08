@@ -28,6 +28,7 @@ import platform
 import traceback
 import struct
 import sys
+import threading
 
 from PyQt6.QtCore import (
     Qt,
@@ -213,11 +214,35 @@ def excepthook(*exc_args):
         sys.exit(0)
 
 
+# The threading.excepthook that was there before thread_excepthook.
+_previous_thread_excepthook = None
+
+
+def thread_excepthook(args):
+    """
+    For an error that ends a thread: a plugin's is reported like any other
+    plugin error (see mu.plugin.errors); anything else goes to Nu's log, then
+    to the previous hook (which prints it). Nu carries on either way, as
+    Python always has for threads.
+    """
+    if args.exc_type is not SystemExit:  # sys.exit() just ends the thread
+        exc_info = (args.exc_type, args.exc_value, args.exc_traceback)
+        if plugin_errors.handle_uncaught(*exc_info):
+            return
+        name = args.thread.name if args.thread else "(unknown)"
+        logging.error("Unhandled error in thread %s", name, exc_info=exc_info)
+    (_previous_thread_excepthook or threading.__excepthook__)(args)
+
+
 def setup_exception_handler():
     """
-    Install global exception handler
+    Install global exception handlers, for the main thread and for others.
     """
+    global _previous_thread_excepthook
     sys.excepthook = excepthook
+    if threading.excepthook is not thread_excepthook:
+        _previous_thread_excepthook = threading.excepthook
+        threading.excepthook = thread_excepthook
 
 
 def setup_logging():
