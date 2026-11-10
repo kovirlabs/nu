@@ -1,47 +1,5 @@
 # Release History
 
-## Unreleased
-
-### Changed
-
-* Nu's own artwork everywhere: the splash screen, the window icon and the
-  **Mode** button still showed Mu's logo and codewith.mu.
-* Starting Nu while it's already running brings the open Nu to the front (and
-  opens any files it was given) instead of silently doing nothing.
-* The first start is much faster: the bundled packages are installed with one
-  `uv` command instead of one pip run per package.
-* When a program run with **Run** finishes, the output pane says so above the
-  `>>>` prompt, so it no longer looks as if it's still running.
-* **Quit** asks first if a program is still running.
-* The mode picker lists Python 3 first; clicking the mode's name in the status
-  bar opens it.
-* The REPL starts with a short greeting instead of IPython's banner, panes have
-  plainer titles ("Python REPL", "Python Plotter"), and the debugger's variable
-  list leaves out Python's own `__dunder__` names.
-* Panes open below the editor at a third of the window's height, so the editor
-  keeps most of the room.
-* A mode's workspace folders (Pygame Zero's `images`, `sounds` and so on) are
-  made the first time the mode is used, not for every mode at every start.
-  For plugin authors: `ensure_workspace_assets` is now called then.
-
-### Fixed
-
-* The debugger reported "exit code: 0" for a program that ended with an error.
-* Tracebacks on Windows showed the program's path in lower case.
-* The Environment tab's commands used Windows short paths (`MU_VEN~1`); the
-  workaround behind them (for a Python bug fixed before 3.11) is gone, and so
-  is the `pywin32` dependency.
-* The Plugins tab drew a stray empty box on the selected row (Windows 11).
-* The log tab opens at the newest entries.
-
-### Removed
-
-* Code and files left over from Mu's removed modes: the micro:bit special case
-  in **Check** (modes can now declare `star_imports`, and the micro:bit plugin
-  does), unused REPL and file-system hooks, about 35 icon files that were never
-  loaded, the unused `nudatus` and `semver` dependencies, and obsolete
-  translations of strings Nu no longer has.
-
 ## 2.0.0
 
 The first stable release of **Nu**, a maintained continuation of the
@@ -149,6 +107,27 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
 
 ### Changed
 
+* **Nu looks like Nu:** the splash screen, the window icon and the **Mode**
+  button show Nu's logo; the betas still showed Mu's, with codewith.mu.
+* **Starting Nu while it's already running** brings the open Nu to the front,
+  and opens any files it was given, instead of silently doing nothing.
+* **The first start is quicker:** the packages Nu needs in your programs'
+  environment are installed with one `uv` command (seconds) instead of one
+  pip run each (a couple of minutes).
+* When a program run with **Run** finishes, the output pane says so above the
+  `>>>` prompt where you can look at its variables, so it no longer looks as
+  if it's still running. **Quit** asks first if a program is still running.
+* The mode picker lists Python 3 first, with plainer instructions, and
+  clicking the mode's name in the status bar opens it again (as in Mu).
+* The **REPL** starts with a short greeting naming its Python, instead of
+  IPython's banner; panes have plainer titles (**Python REPL**, **Python
+  Plotter**); and the debugger's variable list leaves out Python's own
+  `__dunder__` names, showing just your variables.
+* Panes open below the editor at a third of the window's height, so the
+  editor keeps most of the room.
+* A mode's folders in your workspace (Pygame Zero's `images`, `sounds` and so
+  on) are made the first time you use that mode, not for every mode at every
+  start.
 * **Pygame Zero and CircuitPython are now plugins that come with Nu**
   (`nu-pygamezero`, `nu-circuitpython`). They're installed and switched on as
   before, saved sessions in those modes carry on, and they work the same way,
@@ -193,6 +172,8 @@ PyQt6 and uv, found by checking Nu against Mu:
 * Opening a file Nu can't handle no longer suggests micro:bit `.hex` files.
 * When a program finishes, the footer shows `status: 0` again rather than
   `status: ExitStatus.NormalExit`.
+* The Plugins tab no longer draws a stray empty box on the selected row
+  (Windows 11).
 * **Translations restored for the renamed strings.** Text that changed when
   Mu became Nu (the admin dialog's title, the Quit and Help tooltips, file
   and mode messages, and more) had fallen back to English in every language;
@@ -211,6 +192,12 @@ And older problems, found while checking the whole app:
   saved; they were lost when Nu closed.
 * Opening the admin dialog in a board's mode no longer runs `uv pip list`
   for a package list that mode doesn't show.
+* The debugger reports a program that ends with an error as such ("exit code:
+  1"), not "exit code: 0".
+* On Windows, tracebacks show your program's path as you wrote it, not in
+  lower case, and the Environment tab's commands show full paths, not short
+  ones like `MU_VEN~1`.
+* The **Current Log** tab opens at the newest entries, not the oldest.
 
 ### Security
 
@@ -252,6 +239,14 @@ And older problems, found while checking the whole app:
   elsewhere. Every test file can be run on its own, in any order.
 * Every text file in the repository uses LF line endings
   (`.gitattributes`).
+* A mode can declare `star_imports` (a module and the names its `import *`
+  brings in) so **Check** can still spot undefined names; the micro:bit plugin
+  uses it for `from microbit import *`, which the core no longer names. A
+  mode's `ensure_workspace_assets` is called the first time the mode is used
+  in a session, not for every mode at start-up.
+* Gone, with Mu's removed modes: the unused `nudatus`, `semver` and `pywin32`
+  dependencies, dead REPL and file-system hooks, the icon files nothing
+  loaded, and obsolete translations of strings Nu no longer has.
 
 ## Mu 1.2.2 and earlier
 

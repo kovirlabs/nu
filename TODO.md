@@ -12,11 +12,11 @@ smaller codebase (less to port, lower risk). Keep the test suite green at every
 step — it's what makes the bigger changes safe.
 
 Baseline test suite (Python 3.8 + PyQt5, pre-changes): **1120 passed, 20 skipped**.
-Current baseline (Python 3.11–3.14 + PyQt6): **1638 passed, 20 skipped** (after Phase 4b
-part 2; 1572 after the post-Phase 5/6 hardening; 1545 after Phase 6a/6b, 1267 after Phase 4b part 1, 929 after
+Current baseline (Python 3.11–3.14 + PyQt6): **1778 passed, 20 skipped** (after the
+Windows review, #39/#40; 1638 after Phase 4b part 2; 1572 after the post-Phase 5/6 hardening; 1545 after Phase 6a/6b, 1267 after Phase 4b part 1, 929 after
 Phase 4a's packaging work). Run headless with:
 ```
-QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -p no:randomly -q
+QT_QPA_PLATFORM=offscreen LANG=en_GB.utf8 uv run --no-sync pytest -q --random-order-bucket=none
 ```
 (On a headless box without Mesa, Qt6 needs `libEGL.so.1` on `LD_LIBRARY_PATH`
 even for the `offscreen` platform plugin. Where `/tmp` is mounted `noexec`, add
@@ -256,7 +256,8 @@ part 2 ✅ (2026-11, `feature/env-advanced-multi`)
   `VirtualEnvironment.remove_old_bundled_pythons`.)
 - [x] Build a wheelhouse — `python -m mu.wheels --package` builds `mu/wheels/<version>.zip`
   (pgzero/pygame/ipykernel + deps), bundled via `sources`; the first-run baseline install
-  is offline (pip from the zip, see `install_from_zipped_wheels`). Bumped the stale
+  is offline (one `uv pip install --no-index --no-deps` of the zip's wheels since #39; it
+  was one pip run per wheel, see `install_from_zipped_wheels`). Bumped the stale
   `pygame<2.1.3` cap (no 3.12+ wheels) → `pygame>=2.6`. (`UV_FIND_LINKS` not wired: only
   *new* user-package installs hit the network, which is expected; baseline is already
   offline.)
@@ -637,12 +638,43 @@ English; every mode, toolbar button, pane and admin tab), then the deferred fixe
   Variables texts still say "Python 3 mode" (translated upstream strings) though Pygame
   Zero uses the environment too; the overflow button stays a thin strip.
 
+## Windows review ✅ (2026-11, #37, #39, #40)
+
+A hands-on pass over a fresh install on Windows 11 (first run, every Python 3 toolbar
+button, the debugger, the admin dialog's tabs, Pygame Zero Play, a second launch), plus
+an audit for what Mu left behind.
+- [x] #37: the first start crashed after #34 removed the Web mode's templates that
+  `Editor.setup` still copied into the workspace.
+- [x] #39 (learner-facing): Nu's own splash, window icon and Mode button
+  (`utils/make_artwork.py` draws them from `icon.png`); a second launch hands over to
+  the running Nu (`QLocalServer`: front, open its files) instead of exiting silently;
+  baseline wheels in one `uv` call (about 9 s, was minutes); the 8.3 short-path
+  workaround and `pywin32` gone; debugger exit codes; "program finished" note above
+  `>>>`; Quit asks while a program runs; mode picker (Python 3 first, status-bar click);
+  friendlier REPL banner, pane titles, debug inspector (no `__dunder__`s), pane height;
+  Plugins-tab focus frame; log opens at the end and follows `MU_DATA_DIR`;
+  `ensure_workspace_assets` on a mode's first use.
+- [x] #40 (cleanup): Check's micro:bit special case → the `star_imports` mode attribute;
+  dead REPL/file-system hooks, `device_list`, `_del_`, `find_next_match`; `nudatus`,
+  `semver`, `mu/contrib`; 36 unused images; the Web API generator, `make video`, the
+  CodeQL config; about 1,600 obsolete translations (`translate_begin` now passes
+  `--ignore-obsolete`).
+- Kept on purpose: the `mu_code` / `mu_venv` / data-folder names and the Briefcase app id
+  (renaming needs a migration); the `venv_path` session key (documented); the docs'
+  Mu design archive (`docs/swag`, `docs/logo_design`, `docs/icon_brief`).
+- [ ] Check #39's changes on **macOS and Linux** (the second-launch hand-over uses a
+  socket file there; the one-call wheel install; the new artwork) and in the installers.
+- [ ] **Release 2.0.0**: `v2.0.0` was never tagged (the latest tag is `v2.0.0b3`); follow
+  `docs/release.md`. The releases page still lists Mu's `v1.0.0-beta0.1`, and the
+  `v1.0.0-beta0.1` / `v1.2.2.alpha.1` tags are Mu's too: consider removing them.
+
 ## Notes / deferred
 
 - `virtual_environment.py` (~1.5k lines) powers "install packages from the UI" — reshaped
-  around uv in Phase 4 (venv creation, `uv pip`, `uv run`); the baseline install at first
-  run still goes through the venv's pip from the bundled wheelhouse.
-- Orphaned resource icons / locale strings for removed modes are harmless; sweep later.
+  around uv in Phase 4 (venv creation, `uv pip`, `uv run`); since #39 the baseline install
+  at first run is uv too (only `pip --version` and listing the baseline packages still
+  use the venv's pip).
+- ~~Orphaned resource icons / locale strings for removed modes~~ — swept in #40.
 - 100%-coverage mandate is great for the Qt6 port; can relax to "don't regress" afterward
   if it slows iteration.
 - ~~**Translations re-extraction after the in-app "Mu" → "Nu" rename**~~ — done
