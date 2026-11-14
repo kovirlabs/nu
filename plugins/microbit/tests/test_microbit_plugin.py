@@ -305,6 +305,65 @@ def test_plotter_without_a_device(mm):
     assert "Could not find an attached device." in mm.view.show_message.call_args[0]
 
 
+EXAMPLES = [
+    "buttons.py",
+    "dice.py",
+    "heartbeat.py",
+    "hello.py",
+    "score_keeper.py",
+    "tilt_plot.py",
+]
+
+
+def test_examples_copied_the_first_time(mm, tmp_path):
+    workspace = tmp_path / "mu_code"
+    mm.ensure_workspace_assets(str(workspace))
+    examples = workspace / "microbit" / "examples"
+    assert sorted(os.listdir(examples)) == EXAMPLES
+    assert "from microbit import *" in (examples / "hello.py").read_text()
+    # The learner's changes (and deletions) stay.
+    (examples / "hello.py").write_text("# mine")
+    (examples / "dice.py").unlink()
+    mm.ensure_workspace_assets(str(workspace))
+    assert (examples / "hello.py").read_text() == "# mine"
+    assert not (examples / "dice.py").exists()
+
+
+def test_examples_cant_be_copied(mm, tmp_path, caplog):
+    with mock.patch("nu_microbit.mode.shutil.copytree", side_effect=OSError("full")):
+        mm.ensure_workspace_assets(str(tmp_path))
+    assert "Couldn't copy the micro:bit examples" in caplog.text
+
+
+def test_examples_are_valid_micropython_for_the_microbit():
+    """
+    Each example compiles, and every name it takes from `microbit` is one
+    the micro:bit has (Check's list of what `from microbit import *` brings).
+    """
+    import ast
+    import builtins
+
+    known = set(MicrobitMode.star_imports["microbit"])
+    builtins_and_modules = set(dir(builtins)) | {"random", "f"}
+    for name in EXAMPLES:
+        path = os.path.join(mode_module.EXAMPLES_DIR, name)
+        with open(path, encoding="utf-8") as f:
+            source = f.read()
+        tree = ast.parse(source, name)
+        assigned = {
+            node.id
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store)
+        } | {node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)}
+        used = {
+            node.id
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)
+        }
+        unknown = used - known - assigned - builtins_and_modules
+        assert not unknown, (name, unknown)
+
+
 def test_activate_and_deactivate(mm):
     mm.activate()
     assert mm.active is True

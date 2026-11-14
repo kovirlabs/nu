@@ -43,7 +43,7 @@ below has passed on real boards.
 | `files.py` | The Files pane's jobs: list, copy each way, delete, through mpremote. GUI-free; all I/O injected. |
 | `files_pane.py` | The Files pane widget: the board's files and the learner's `microbit` folder, side by side. |
 | `worker.py` | Runs a flash or files job on a `QThread`, reporting back through signals. |
-| `mode.py` | `MicrobitMode`: buttons, board detection, wiring. |
+| `mode.py` | `MicrobitMode`: buttons, board detection, wiring; copies `examples/` (starter programs, V1 and V2) into the learner's `microbit/examples` folder the first time. |
 | `api/` | Autocomplete stubs for micro:bit MicroPython 2.x (and 1.x). |
 
 ```

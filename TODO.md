@@ -620,6 +620,13 @@ the maintainer's checklist is in `plugins/microbit/README.md`)
   MicroPython 2.x (microphone, speaker, `Sound`, `audio.SoundEffect`, `log`, `power`,
   `pin_logo`, `run_every`, radio, music, neopixel, speech…), checked against the v2-docs and
   `micropython-microbit-stubs`; V2-only entries say "(micro:bit V2)".
+- [x] **Starter programs** (2026-11, `feature/microbit-examples`): six examples
+  (`nu_microbit/examples/`: hello, buttons, heartbeat, dice, tilt_plot for the Plotter,
+  score_keeper writing a file for the Files pane), V1 + V2, copied into
+  `<workspace>/microbit/examples` by `ensure_workspace_assets` the first time (an existing
+  folder is left alone). A test checks each only uses names `from microbit import *` gives.
+  The firmware pins were re-checked (2026-11-14): V2 2.1.2 and V1 1.1.1 are still the newest
+  releases.
 
 **6c. Packaging + distribution:**
 - [ ] **After the maintainer's hardware pass**: promote to a default-enabled bundled plugin —
