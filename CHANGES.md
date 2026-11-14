@@ -147,7 +147,9 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   Nu Ran**), **Plugins** and **Select Language**.
 * Nu removes the copy of Python an earlier version of Nu unpacked for your
   programs' environment (about 70 MB each) once nothing uses it, instead of
-  keeping every one after each upgrade.
+  keeping every one after each upgrade. It unpacks that Python into a
+  shorter folder (`cpython-3.12.16-20261110`, not the archive's full name),
+  leaving more room under Windows' 260-character path limit.
 * The REPL's Jupyter kernel is registered inside your programs' environment
   instead of in your own Jupyter folder, so it goes away with the
   environment and each environment has its own.
