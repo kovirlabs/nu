@@ -1688,7 +1688,10 @@ open the <strong>Environment</strong> tab, which shows:</p>
 <li><strong>Python</strong>: the Python program inside it that runs your code.</li>
 <li><strong>Activate it</strong>, <strong>Add a package</strong> and <strong>Run a program</strong>: the commands to do
   the same things yourself in a terminal (see below).</li>
-<li><strong>Nu's uv</strong>: where the copy of <code>uv</code> that Nu uses is.</li>
+<li><strong>Nu's uv</strong>: where the copy of <code>uv</code> that Nu uses is. Nu uses the one it
+  comes with, even if you've installed uv yourself (yours may be too old for
+  what Nu asks of it). To make Nu use a different one, set the <code>MU_UV</code>
+  environment variable to its full path before starting Nu.</li>
 </ul>
 <p>Each has a <strong>Copy</strong> button.</p>
 <table>

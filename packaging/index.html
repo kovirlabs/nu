@@ -1843,7 +1843,9 @@ demand).</p>
   into the bundle by Briefcase from <code>[tool.briefcase.app.mu].requires</code>.</li>
 <li>A pinned <strong><code>uv</code></strong> binary — it rides in via the PyPI <code>uv</code> wheel, and
   <code>find_uv()</code> locates it at runtime through <code>uv.find_uv_bin()</code> (no <code>PATH</code> or
-  <code>MU_UV</code> needed in the packaged app).</li>
+  <code>MU_UV</code> needed in the packaged app). It's preferred to a <code>uv</code> on the
+  learner's <code>PATH</code>, which may be older than Nu needs (<code>uv&gt;=0.9.8</code>); <code>MU_UV</code>
+  still overrides both.</li>
 <li>The bundled plugins (<code>plugins/pygamezero</code>, <code>plugins/circuitpython</code>),
   installed by Briefcase from wheels built from the checkout
   (<code>build/plugin-wheels/</code>, see <a href="#bundled-plugins-the-uv-workspace">above</a>).</li>
