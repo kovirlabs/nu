@@ -144,6 +144,9 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
 * Nu removes the copy of Python an earlier version of Nu unpacked for your
   programs' environment (about 70 MB each) once nothing uses it, instead of
   keeping every one after each upgrade.
+* The REPL's Jupyter kernel is registered inside your programs' environment
+  instead of in your own Jupyter folder, so it goes away with the
+  environment and each environment has its own.
 * For maintainers: `make dist` builds `nu-pygamezero` and `nu-circuitpython`
   as well as `nu-editor`, and `make publish-test` / `make publish-live`
   upload the two plugins before `nu-editor` (which needs them), skipping a

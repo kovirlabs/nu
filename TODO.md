@@ -685,8 +685,13 @@ an audit for what Mu left behind.
   3.14 learner environment, where the baseline install can't get pygame (it tries to
   compile it; a warning in the log, and Pygame Zero's Play then fails). The installers
   (Python 3.12) are fine. Decide: cap the learner environment's Python, or `pygame-ce`.
-- [ ] `MU_DATA_DIR` doesn't cover the Jupyter kernelspec (`ipykernel install --user` writes
-  to the real `~/Library/Jupyter/kernels` etc.), so a throwaway profile leaves one behind.
+- [x] `MU_DATA_DIR` didn't cover the Jupyter kernelspec (`ipykernel install --user` wrote
+  to the real `~/Library/Jupyter/kernels` etc.), so a throwaway profile left one behind.
+  Now `ipykernel install --prefix <env>` puts it in the environment
+  (`<env>/share/jupyter/kernels`, `VirtualEnvironment.kernels_dir`), which `MuKernelManager`
+  searches first: it goes with the environment, each named environment has its own. An
+  environment made by an older Nu keeps using its `--user` spec until it's re-created;
+  those old specs are left in the learner's Jupyter folder (not deleted by Nu).
 - [ ] **Release 2.0.0**: `v2.0.0` was never tagged (the latest tag is `v2.0.0b3`); follow
   `docs/release.md`. The releases page still lists Mu's `v1.0.0-beta0.1`, and the
   `v1.0.0-beta0.1` / `v1.2.2.alpha.1` tags are Mu's too: consider removing them.

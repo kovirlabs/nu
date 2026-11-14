@@ -666,6 +666,18 @@ def test_jupyter_kernel_installed(patched, venv):
             )
             args, _ = run_subprocess.call_args
             assert expected_jupyter_args == args[: len(expected_jupyter_args)]
+            #
+            # The kernelspec goes inside the environment, not the learner's
+            # own Jupyter folder (where --user would put it).
+            #
+            assert "--user" not in args
+            prefix = args.index("--prefix")
+            assert args[prefix + 1] == venv.path
+
+
+def test_kernels_dir(venv):
+    """The kernelspec folder --prefix <env> gives ipykernel install."""
+    assert venv.kernels_dir == os.path.join(venv.path, "share", "jupyter", "kernels")
 
 
 def test_jupyter_kernel_failure(patched, venv):
