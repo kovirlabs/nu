@@ -372,7 +372,8 @@ def test_ensure_bundled_python_extracts_once(venv, tmp_path, workspace_dirpath):
     archive = _make_python_archive(
         str(tmp_path), ["/".join(_bundled_interpreter_relpath())]
     )
-    name = os.path.basename(archive)[: -len(".tar.gz")]
+    # In a short folder: the version and build date only.
+    name = "cpython-%d.%d.9-20260101" % sys.version_info[:2]
     expected = os.path.join(
         str(workspace_dirpath), "python", name, *_bundled_interpreter_relpath()
     )
@@ -387,6 +388,41 @@ def test_ensure_bundled_python_extracts_once(venv, tmp_path, workspace_dirpath):
         with mock.patch.object(mu.virtual_environment.tarfile, "open") as tar_open:
             assert venv.ensure_bundled_python() == expected
         tar_open.assert_not_called()
+
+
+def test_bundled_python_folder():
+    """Short enough for Windows' path limit; unknown names unchanged."""
+    folder = mu.virtual_environment.bundled_python_folder
+    assert (
+        folder("cpython-3.12.16+20261110-x86_64-pc-windows-msvc-install_only_stripped")
+        == "cpython-3.12.16-20261110"
+    )
+    assert folder("cpython-3.99.0-old") == "cpython-3.99.0-old"
+
+
+def test_ensure_bundled_python_reuses_a_long_named_extraction(
+    venv, tmp_path, workspace_dirpath
+):
+    """
+    The same build, extracted by an earlier Nu under the archive's full
+    name (which the environment is based on), is used rather than
+    extracted again.
+    """
+    archive = _make_python_archive(
+        str(tmp_path), ["/".join(_bundled_interpreter_relpath())]
+    )
+    name = os.path.basename(archive)[: -len(".tar.gz")]
+    legacy = os.path.join(
+        str(workspace_dirpath), "python", name, *_bundled_interpreter_relpath()
+    )
+    os.makedirs(os.path.dirname(legacy))
+    open(legacy, "w").close()
+    with (
+        mock.patch.object(mu.wheels, "bundled_python_archive", return_value=archive),
+        mock.patch.object(mu.virtual_environment.tarfile, "open") as tar_open,
+    ):
+        assert venv.ensure_bundled_python() == legacy
+    tar_open.assert_not_called()
 
 
 def test_ensure_bundled_python_without_data_filter(venv, tmp_path, workspace_dirpath):
@@ -484,6 +520,26 @@ def test_remove_old_bundled_pythons_once_the_environment_moved_on(
     with mock.patch.object(mu.wheels, "bundled_python_archive", return_value=archive):
         venv.remove_old_bundled_pythons()
     assert os.listdir(root) == ["cpython-3.11.15"]
+
+
+def test_remove_old_bundled_pythons_short_and_long_names(venv, workspace_dirpath):
+    """
+    The current build is kept under either name (short, or the archive's
+    full name an earlier Nu used); an older build goes under either.
+    """
+    current = "cpython-3.12.16+20261110-x86_64-pc-windows-msvc-install_only_stripped"
+    old = "cpython-3.12.15+20261010-x86_64-pc-windows-msvc-install_only_stripped"
+    root = _extracted_builds(
+        workspace_dirpath,
+        current,
+        "cpython-3.12.16-20261110",
+        old,
+        "cpython-3.12.15-20261010",
+    )
+    archive = "/bundle/%s.tar.gz" % current
+    with mock.patch.object(mu.wheels, "bundled_python_archive", return_value=archive):
+        venv.remove_old_bundled_pythons()
+    assert sorted(os.listdir(root)) == sorted([current, "cpython-3.12.16-20261110"])
 
 
 def test_remove_old_bundled_pythons_not_an_installer_build(venv, workspace_dirpath):

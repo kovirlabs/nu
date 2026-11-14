@@ -157,6 +157,22 @@ def environment_display_name(folder):
     return re.sub(r"-\d+-\d{8}-\d{6}$", "", folder)
 
 
+def bundled_python_folder(archive_name):
+    """
+    The folder name to extract the bundled CPython build `archive_name`
+    into (the archive's name without ``.tar.gz``): its version and build
+    date, ``cpython-3.12.16+20261110-x86_64-pc-windows-msvc-install_only_stripped``
+    → ``cpython-3.12.16-20261110``, else the name unchanged.
+
+    Kept short for Windows' 260-character path limit: the full name took 74
+    of them, and the build's deepest file another 105.
+    """
+    match = re.match(r"^cpython-(\d+(?:\.\d+)+)\+(\d+)", archive_name)
+    if not match:
+        return archive_name
+    return "cpython-{}-{}".format(*match.groups())
+
+
 def compact(text):
     """Remove double line spaces and anything else which might help"""
     compacted = "\n".join(line for line in text.splitlines() if line.strip())
@@ -1451,11 +1467,13 @@ class VirtualEnvironment(object):
         if not archive:
             return None
         name = os.path.basename(archive)[: -len(".tar.gz")]
-        target = os.path.join(config.DATA_DIR, "python", name)
-        if self._is_windows:
-            interpreter = os.path.join(target, "python", "python.exe")
-        else:
-            interpreter = os.path.join(target, "python", "bin", "python3")
+        root = os.path.join(config.DATA_DIR, "python")
+        # The archive's name, as an earlier Nu used, if that's already there.
+        legacy = self._bundled_interpreter(os.path.join(root, name))
+        if os.path.isfile(legacy):
+            return legacy
+        target = os.path.join(root, bundled_python_folder(name))
+        interpreter = self._bundled_interpreter(target)
         if os.path.isfile(interpreter):
             return interpreter
 
@@ -1483,6 +1501,12 @@ class VirtualEnvironment(object):
             return None
         return interpreter
 
+    def _bundled_interpreter(self, folder):
+        """Where an extracted bundled Python in `folder` has its interpreter."""
+        if self._is_windows:
+            return os.path.join(folder, "python", "python.exe")
+        return os.path.join(folder, "python", "bin", "python3")
+
     def remove_old_bundled_pythons(self):
         """
         Delete the CPython builds an earlier Nu extracted (see
@@ -1498,7 +1522,10 @@ class VirtualEnvironment(object):
         root = os.path.join(config.DATA_DIR, "python")
         if not archive or not os.path.isdir(root):
             return []
-        current = os.path.basename(archive)[: -len(".tar.gz")]
+        archive_name = os.path.basename(archive)[: -len(".tar.gz")]
+        current_names = set()
+        for current in (archive_name, bundled_python_folder(archive_name)):
+            current_names |= {current, current + ".partial"}
         in_use = self._pyvenv_paths()
         # Named environments made by Nu are based on a bundled Python too.
         for path in self.named_environment_paths():
@@ -1506,7 +1533,7 @@ class VirtualEnvironment(object):
         removed = []
         for name in sorted(os.listdir(root)):
             path = os.path.join(root, name)
-            if name in (current, current + ".partial") or not os.path.isdir(path):
+            if name in current_names or not os.path.isdir(path):
                 continue
             if any(is_within(used, path) for used in in_use):
                 logger.info("Keeping %s: the environment %s uses it", path, self.path)
