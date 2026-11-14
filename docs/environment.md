@@ -127,6 +127,20 @@ Some things to know:
 The same file works anywhere uv is installed: `uv run cow.py` in a terminal
 does the same thing.
 
+**Debug**, and Pygame Zero's **Play**, also use `uv run` for a program with
+the block, a little differently: uv adds the packages the block lists *on
+top of* your environment, so the debugger and Pygame Zero (and the packages
+you added) are still there. The first line in the output pane shows that
+command too:
+
+```text
+$ uv run --python /home/you/…/bin/python --no-project --with-requirements /home/you/mu_code/game.py python -m pgzero /home/you/mu_code/game.py
+```
+
+The debugger waits for uv to fetch the packages before it starts (up to five
+minutes). Such a game, or a program you're debugging, stops when you click
+**Stop**, as usual.
+
 ## Using it yourself from a terminal
 
 Copy the commands from the Environment tab. To **activate** the environment,
@@ -206,8 +220,17 @@ and Pygame Zero's packages); if not, Nu tells you what's missing and keeps the
 environment it has. Using one from a terminal works as above: the Advanced
 section shows the command to activate the selected one.
 
-Nu can't delete an environment yet. To remove one, switch to another, restart
-Nu, then delete its folder.
+To delete an environment you've made, select it and click **Delete…**. Nu
+asks first, then removes its folder with every package in it (your programs
+aren't in it, so they stay). You can't delete the default environment, the
+one Nu is using, or the one you've chosen for the next start: choose another
+and restart Nu first. If Windows says a file in the folder is in use, close
+the program using it (or restart your computer) and try again.
+
+Each environment remembers which version of Nu made it (in a
+`nu-environment.json` file inside it). When you start Nu with an environment
+an older Nu made, Nu brings it up to date first, keeping the packages you
+added, just as it does with the default one after an upgrade.
 
 ## Troubleshooting
 

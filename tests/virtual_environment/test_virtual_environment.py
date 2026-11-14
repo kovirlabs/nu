@@ -666,6 +666,18 @@ def test_jupyter_kernel_installed(patched, venv):
             )
             args, _ = run_subprocess.call_args
             assert expected_jupyter_args == args[: len(expected_jupyter_args)]
+            #
+            # The kernelspec goes inside the environment, not the learner's
+            # own Jupyter folder (where --user would put it).
+            #
+            assert "--user" not in args
+            prefix = args.index("--prefix")
+            assert args[prefix + 1] == venv.path
+
+
+def test_kernels_dir(venv):
+    """The kernelspec folder --prefix <env> gives ipykernel install."""
+    assert venv.kernels_dir == os.path.join(venv.path, "share", "jupyter", "kernels")
 
 
 def test_jupyter_kernel_failure(patched, venv):
@@ -1450,6 +1462,17 @@ def test_script_command(venv):
     MockUv.assert_called_once_with(venv_path=venv.interpreter)
     MockUv.return_value.script_command.assert_called_once_with("/w/cow.py", cwd="/w")
     assert record is MockUv.return_value.script_command.return_value
+
+
+def test_with_requirements_command(venv):
+    """The debugger's and Play's `uv run` targets the learner's environment."""
+    with mock.patch.object(mu.virtual_environment, "Uv") as MockUv:
+        record = venv.with_requirements_command("/w/g.py", ["/w/g.py"], "/w")
+    MockUv.assert_called_once_with(venv_path=venv.interpreter)
+    MockUv.return_value.with_requirements_command.assert_called_once_with(
+        "/w/g.py", ["/w/g.py"], cwd="/w"
+    )
+    assert record is MockUv.return_value.with_requirements_command.return_value
 
 
 def test_run_subprocess_includes_stderr(venv):

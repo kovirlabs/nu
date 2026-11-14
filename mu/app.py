@@ -410,18 +410,54 @@ def tell_running_instance(paths, pid=None):
     return sent
 
 
-def listen_for_other_instances(window, editor):
+class OtherInstances:
     """
-    Listen for a second launch of Nu (see `tell_running_instance`): bring
-    the window to the front and open the files it passes on. Returns the
-    server, which must be kept alive.
-    """
-    name = instance_server_name()
-    QLocalServer.removeServer(name)  # A crashed Nu's leftover (Unix).
-    server = QLocalServer()
+    Listens for a second launch of Nu (see `tell_running_instance`), to bring
+    the window to the front and open the files it passes on.
 
-    def on_connection():
-        socket = server.nextPendingConnection()
+    Listening starts before the window exists, so that a launch during a
+    (possibly long, first-run) start-up is taken instead of being told the
+    running Nu isn't responding: what it asked for waits until `ready`.
+    """
+
+    def __init__(self):
+        self.server = QLocalServer()
+        self.server.newConnection.connect(self._on_connection)
+        self.window = None
+        self.editor = None
+        # The paths asked for before `ready`; None until something asks.
+        self.waiting = None
+
+    def listen(self):
+        """Start listening; a failure is logged, not raised."""
+        name = instance_server_name()
+        QLocalServer.removeServer(name)  # A crashed Nu's leftover (Unix).
+        if not self.server.listen(name):
+            logging.warning(
+                "Can't listen for other Nu launches: {}".format(
+                    self.server.errorString()
+                )
+            )
+
+    def ready(self, window, editor):
+        """
+        The window is up: act on what was asked for meanwhile, and on each
+        launch from now on as it comes.
+        """
+        self.window = window
+        self.editor = editor
+        if self.waiting is not None:
+            paths, self.waiting = self.waiting, None
+            self._open(paths)
+
+    def isListening(self):
+        return self.server.isListening()
+
+    def close(self):
+        self.server.close()
+
+    def _on_connection(self):
+        socket = self.server.nextPendingConnection()
         data = b""
         while socket.waitForReadyRead(500):
             data += bytes(socket.readAll())
@@ -432,17 +468,30 @@ def listen_for_other_instances(window, editor):
         except ValueError:
             logging.warning("Ignored a garbled message from another Nu.")
             return
-        logging.info("Another Nu was started; opening {}".format(paths))
-        window.bring_to_front()
-        for path in paths:
-            editor.direct_load(path)
+        if self.window is None:
+            logging.info("Another Nu was started; {} can wait.".format(paths))
+            self.waiting = (self.waiting or []) + paths
+        else:
+            self._open(paths)
 
-    server.newConnection.connect(on_connection)
-    if not server.listen(name):
-        logging.warning(
-            "Can't listen for other Nu launches: {}".format(server.errorString())
-        )
-    return server
+    def _open(self, paths):
+        logging.info("Another Nu was started; opening {}".format(paths))
+        self.window.bring_to_front()
+        for path in paths:
+            self.editor.direct_load(path)
+
+
+def listen_for_other_instances(window=None, editor=None):
+    """
+    Listen for a second launch of Nu (see `OtherInstances`). Without a
+    window and editor, what's asked for waits for the listener's `ready`.
+    Returns the listener, which must be kept alive.
+    """
+    listener = OtherInstances()
+    listener.listen()
+    if window is not None:
+        listener.ready(window, editor)
+    return listener
 
 
 def check_only_running_once(paths=()):
@@ -539,6 +588,9 @@ def run():
     app.setDesktopFileName("org.kovir.mu")
     app.setApplicationVersion(__version__)
     app.setAttribute(Qt.ApplicationAttribute.AA_DontShowIconsInMenus)
+    # Take other launches of Nu from here on (the splash screen's event loop
+    # answers them); they're acted on once the window is up.
+    other_instances = listen_for_other_instances()
 
     def splash_context():
         """
@@ -601,14 +653,15 @@ def run():
 
     # Restore the previous session along with files passed by the os
     editor.restore_session(sys.argv[1:])
-    # Come to the front (and open their files) when Nu is started again.
-    instance_server = listen_for_other_instances(editor_window, editor)
+    # Come to the front (and open their files) when Nu is started again,
+    # or was while it started.
+    other_instances.ready(editor_window, editor)
 
     # Save the exit code for sys.exit call below.
     exit_status = app.exec()
     # Stop listening for other launches, and clean up the shared memory used
     # to signal an app instance is running.
-    instance_server.close()
+    other_instances.close()
     _shared_memory.release()
 
     # Stop the program after the application finishes executing.

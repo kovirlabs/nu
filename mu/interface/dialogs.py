@@ -431,6 +431,9 @@ class EnvironmentsWidget(QWidget):
         self.new_button.clicked.connect(self.new_environment)
         buttons.addWidget(self.new_button)
         buttons.addStretch()
+        self.delete_button = QPushButton(_("Delete…"))
+        self.delete_button.clicked.connect(self.delete_selected)
+        buttons.addWidget(self.delete_button)
         body_layout.addLayout(buttons)
         layout.addWidget(self.body)
         self.body.setVisible(False)
@@ -501,12 +504,40 @@ class EnvironmentsWidget(QWidget):
         item = self.tree.currentItem()
         return item.data(0, Qt.ItemDataRole.UserRole) if item else None
 
+    def _can_delete(self, environment):
+        """
+        Whether "Delete…" is for `environment`: a named one Nu isn't using
+        and won't use from the next start (counting a choice not yet saved).
+        """
+        return (
+            environment is not None
+            and not environment["default"]
+            and not environment["in_use"]
+            and not environment["next_start"]
+            and not self._is_next(environment)
+        )
+
     def _update_buttons(self, *args):
-        """ "Use this one" is for an environment Nu won't already use next."""
+        """
+        "Use this one" is for an environment Nu won't already use next;
+        "Delete…" for one it can delete (see `_can_delete`).
+        """
         environment = self._selected()
         self.use_button.setEnabled(
             environment is not None and not self._is_next(environment)
         )
+        can_delete = self._can_delete(environment)
+        self.delete_button.setEnabled(can_delete)
+        if environment is None or can_delete:
+            self.delete_button.setToolTip("")
+        elif environment["default"]:
+            self.delete_button.setToolTip(
+                _("The default environment can't be deleted.")
+            )
+        else:
+            self.delete_button.setToolTip(
+                _("Choose another environment, and restart Nu, to delete this one.")
+            )
         if environment is None:
             self.command_label.setText("")
             return
@@ -554,6 +585,38 @@ class EnvironmentsWidget(QWidget):
         if dialog.path:
             self.environments = venv.list_environments()
             self.fill(select=dialog.path)
+
+    def delete_selected(self):
+        """
+        Ask, then delete the selected environment (its folder and every
+        package in it) and take it off the list. Says why if Nu can't.
+        """
+        environment = self._selected()
+        if not self._can_delete(environment):
+            return
+        title = _("Delete Environment")
+        answer = QMessageBox.question(
+            self,
+            title,
+            _(
+                "Delete the environment “{name}” and every package in it?\n\n"
+                "Your programs aren't in it, so they stay. This can't be "
+                "undone.\n\n{path}"
+            ).format(name=environment["name"], path=environment["path"]),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        try:
+            problem = venv.delete_environment(environment["path"])
+        finally:
+            QApplication.restoreOverrideCursor()
+        if problem:
+            QMessageBox.warning(self, title, problem)
+        self.environments = venv.list_environments()
+        self.fill()
 
 
 class CreateEnvironmentWorker(QObject):

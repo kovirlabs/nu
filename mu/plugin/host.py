@@ -27,12 +27,22 @@ from .. import config, resources, settings
 from ..command_log import command_log
 from ..modes.api import PI_APIS, PYTHON3_APIS, SHARED_APIS
 from ..modes.base import BaseMode
-from ..virtual_environment import venv
+from ..script_metadata import wants_uv_run
+from ..virtual_environment import UvNotFound, venv
 from . import loader, plugin_env
 from .base import PLUGIN_API_VERSION, check_compatible
 from .errors import PluginErrorHandler
 
 logger = logging.getLogger(__name__)
+
+
+def _read_text(path):
+    """The text of the file at `path`, or "" if it can't be read."""
+    try:
+        with open(path, encoding="utf-8", errors="replace") as f:
+            return f.read()
+    except OSError:
+        return ""
 
 
 class PluginSettings:
@@ -460,17 +470,54 @@ class Host:
         Python before the program (e.g. `["-m", "pgzero"]`); `interactive`
         leaves a Python prompt open when it finishes. Return True if it
         started. Save it first (see `save_current`).
+
+        A program with a ``# /// script`` block (PEP 723 inline
+        dependencies) runs with ``uv run … --with-requirements <path> python
+        <python_args> <path>``, which adds the packages it lists on top of
+        the learner's environment; there's no Python prompt afterwards then.
         """
-        self._runner = self._view.add_python3_runner(
-            interpreter=venv.interpreter,
-            script_name=path,
-            working_directory=os.path.dirname(path),
-            interactive=interactive,
-            envars=self._editor.envars,
-            python_args=python_args,
-        )
+        cwd = os.path.dirname(path)
+        envars = self._editor.envars
+        record = None
+        if wants_uv_run(_read_text(path)):
+            run_args = [*(python_args or []), path]
+            try:
+                record = venv.with_requirements_command(path, run_args, cwd)
+            except UvNotFound:
+                logger.exception("No uv to run a script with inline metadata.")
+                self.show_message(
+                    _("Nu can't find uv, so it can't run this program."),
+                    _(
+                        "This program starts with a “# /// script” block "
+                        "listing the packages it needs, and Nu uses uv to "
+                        "fetch them. Reinstalling Nu should bring uv back. Or "
+                        "remove the block to run the program with your "
+                        "environment's packages."
+                    ),
+                )
+                return False
+            self._runner = self._view.add_python3_runner(
+                interpreter=record.program,
+                script_name=path,
+                working_directory=cwd,
+                interactive=False,
+                envars=envars,
+                python_args=record.argv[1:-1],
+                echo="$ " + record.display(),
+            )
+        else:
+            self._runner = self._view.add_python3_runner(
+                interpreter=venv.interpreter,
+                script_name=path,
+                working_directory=cwd,
+                interactive=interactive,
+                envars=envars,
+                python_args=python_args,
+            )
         if self._runner is None:
             return False
+        if record is not None:
+            self._runner.track_uv_command(record)
         self._runner.process.waitForStarted()
         return True
 

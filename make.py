@@ -445,6 +445,7 @@ def _briefcase(platform, fmt=None, *package_args):
     """
     print("\nFetching baseline wheels")
     subprocess.check_call([sys.executable, "-m", "mu.wheels", "--package"])
+    _build_plugin_wheels()
     fmt_args = [fmt] if fmt else []
     for step in ("create", "build", "package"):
         cmd = [sys.executable, "-m", "briefcase", step, platform, *fmt_args]
@@ -452,6 +453,27 @@ def _briefcase(platform, fmt=None, *package_args):
             cmd.extend(package_args)
         print("Running:", " ".join(cmd))
         subprocess.check_call(cmd)
+
+
+#: Where Briefcase's pip finds the bundled plugins' wheels: the folder named
+#: by `requirement_installer_args` in pyproject.toml.
+PLUGIN_WHEELS_DIR = os.path.join("build", "plugin-wheels")
+
+
+def _build_plugin_wheels():
+    """
+    Build a wheel of each bundled plugin from the checkout for Briefcase to
+    install into the app (nu-editor's dependencies name them, and they
+    needn't be on PyPI). Wheels left from an earlier build are removed, so
+    that pip can't pick a stale one.
+    """
+    print("\nBuilding the bundled plugins' wheels")
+    shutil.rmtree(PLUGIN_WHEELS_DIR, ignore_errors=True)
+    for plugin in BUNDLED_PLUGINS:
+        subprocess.check_call(
+            [sys.executable, "-m", "build", "--wheel", "--outdir", PLUGIN_WHEELS_DIR]
+            + [plugin]
+        )
 
 
 @export
