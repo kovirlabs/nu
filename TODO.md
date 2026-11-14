@@ -399,8 +399,9 @@ drop-in dir covers them.
   `plugins/<name>/` with its own `pyproject.toml` + `mu.plugins` entry point — independently
   buildable/publishable, sharing the repo lockfile. (`plugins/example` is a member but not a
   dependency.) `nu-editor` depends on each bundled plugin by name, resolved from the
-  workspace by `[tool.uv.sources]`; Briefcase `requires` lists it as a local path
-  (`./plugins/<name>`); pip installs from a checkout pass the path. Publishing order:
+  workspace by `[tool.uv.sources]`; Briefcase installs it from a wheel built from the
+  checkout (`build/plugin-wheels`, found with `--find-links`; listing it in `requires` as a
+  local path, the first approach, broke every installer build until 2026-11); pip installs from a checkout pass the path. Publishing order:
   bundled plugins to PyPI **before** the `nu-editor` release that needs them
   (`docs/packaging.md`).
 - [x] Move the specialized modes out of the core set into bundled plugins loaded through the same
@@ -601,8 +602,8 @@ the maintainer's checklist is in `plugins/microbit/README.md`)
 **6c. Packaging + distribution:**
 - [ ] **After the maintainer's hardware pass**: promote to a default-enabled bundled plugin —
   move `nu-microbit>=0.1` from the `microbit` extra to `nu-editor`'s dependencies, add
-  `./plugins/microbit` to Briefcase `requires`, `loader.BUNDLED_DISTRIBUTIONS` and
-  `build.yml`'s plugin installs (see `docs/packaging.md` → "Opt-in workspace plugins").
+  `plugins/microbit` to `BUNDLED_PLUGINS` (`make.py`, `Makefile`), `loader.BUNDLED_DISTRIBUTIONS`
+  and `build.yml`'s plugin installs and wheels (see `docs/packaging.md` → "Opt-in workspace plugins").
   Include `mpremote` (+ pyOCD if adopted) wheels for offline installers; optionally fetch the
   two pinned `.hex` files (SHA-256 checked) into `nu_microbit/firmware/` at build time so a
   fresh install can flash offline.
@@ -662,8 +663,30 @@ an audit for what Mu left behind.
 - Kept on purpose: the `mu_code` / `mu_venv` / data-folder names and the Briefcase app id
   (renaming needs a migration); the `venv_path` session key (documented); the docs'
   Mu design archive (`docs/swag`, `docs/logo_design`, `docs/icon_brief`).
-- [ ] Check #39's changes on **macOS and Linux** (the second-launch hand-over uses a
-  socket file there; the one-call wheel install; the new artwork) and in the installers.
+- [x] #39's changes checked on **macOS** (Apple Silicon, 2026-11-13; from source and in a
+  locally built `.app`): the new artwork, the one-call wheel install (under a second), and
+  the second-launch hand-over (front + opens the file). Found and fixed on the way:
+  - **The installers hadn't built since Phase 5c** (CI's last `build.yml` run, 2026-11-08,
+    failed on all three OSes): Briefcase adds `[project.dependencies]` to `requires`, and
+    pip can't match `nu-circuitpython>=0.1` with the `./plugins/circuitpython` path listed
+    after it. The plugins now reach Briefcase as wheels built from the checkout
+    (`build/plugin-wheels`, `requirement_installer_args`); see `docs/packaging.md`.
+  - **The packaged app crashed at start**: `mu/plugin/loader.py` read
+    `importlib.util.__file__`, which a frozen importlib (Briefcase's Python) doesn't have.
+  - A second launch **while Nu was still starting** (splash, first-run mode picker) got
+    "Nu is already running, but isn't responding": Nu now listens from the start and acts
+    on it once the window is up (`app.OtherInstances`).
+  - With both fixes the `.app` (`make macos`) does a first start with the network blocked
+    and empty uv caches in about 3 s, loads both plugins, and runs a program importing
+    pygame. Not exercised there: the REPL, the debugger, Pygame Zero's Play.
+- [ ] Check #39's changes on **Linux**, and in the installers from a `build.yml` run (none
+  has been built by CI since the fix above: run it by hand before tagging).
+- [ ] **pygame has no wheels for Python 3.14**: a source/`pip` install of Nu on 3.14 makes a
+  3.14 learner environment, where the baseline install can't get pygame (it tries to
+  compile it; a warning in the log, and Pygame Zero's Play then fails). The installers
+  (Python 3.12) are fine. Decide: cap the learner environment's Python, or `pygame-ce`.
+- [ ] `MU_DATA_DIR` doesn't cover the Jupyter kernelspec (`ipykernel install --user` writes
+  to the real `~/Library/Jupyter/kernels` etc.), so a throwaway profile leaves one behind.
 - [ ] **Release 2.0.0**: `v2.0.0` was never tagged (the latest tag is `v2.0.0b3`); follow
   `docs/release.md`. The releases page still lists Mu's `v1.0.0-beta0.1`, and the
   `v1.0.0-beta0.1` / `v1.2.2.alpha.1` tags are Mu's too: consider removing them.
