@@ -688,8 +688,19 @@ an audit for what Mu left behind.
   picker** handed over and the file opened once the window was up, Run (incl. `import
   pygame`), the REPL (kernel in the learner env), the debugger (step, inspector, exit 0),
   Pygame Zero Play, Quit: no errors in the log.
-- [ ] Check #39's changes on **Linux** (from source and the AppImage), and install the
-  Windows **MSI** from the CI run above (clean install, and an upgrade over 2.0.0b3).
+- [x] The **MSI** from that run, installed on Windows 11 (clean install; per-user, to
+  `%LOCALAPPDATA%\Programs\Kovir Labs\Nu Editor`, Start-menu entry): first start extracts
+  the bundled CPython 3.12.16 and makes the env from it with `--seed --no-index`, baseline
+  wheels offline in ~9 s, both plugins load; Run (with pygame), the REPL and the debugger
+  work, Quit is clean. Seen on the way: with a very long `MU_DATA_DIR` the extraction hits
+  Windows' 260-character limit (the stub isn't long-path aware) and Nu silently falls back
+  to `uv venv --python 3.12` (a download on a machine without one). A real data folder
+  leaves ~30 characters of room (`%LOCALAPPDATA%\python\mu\python\<build>.partial\` is 124
+  for a 5-letter user name, the archive's deepest file 105; Windows user names are ≤ 20), so
+  not a learner problem today; a shorter extraction folder name would widen the margin.
+  That MSI predates the kernelspec change above, so it still wrote `--user` kernelspecs.
+- [ ] Check #39's changes on **Linux** (from source and the AppImage), and an MSI
+  **upgrade** over 2.0.0b3 (no b3 install was on the Windows machine).
 - [ ] **pygame has no wheels for Python 3.14**: a source/`pip` install of Nu on 3.14 makes a
   3.14 learner environment, where the baseline install can't get pygame (it tries to
   compile it; a warning in the log, and Pygame Zero's Play then fails). The installers
