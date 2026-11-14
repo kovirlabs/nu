@@ -23,7 +23,10 @@ open the **Environment** tab, which shows:
 - **Python**: the Python program inside it that runs your code.
 - **Activate it**, **Add a package** and **Run a program**: the commands to do
   the same things yourself in a terminal (see below).
-- **Nu's uv**: where the copy of `uv` that Nu uses is.
+- **Nu's uv**: where the copy of `uv` that Nu uses is. Nu uses the one it
+  comes with, even if you've installed uv yourself (yours may be too old for
+  what Nu asks of it). To make Nu use a different one, set the `MU_UV`
+  environment variable to its full path before starting Nu.
 
 Each has a **Copy** button.
 
