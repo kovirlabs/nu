@@ -679,8 +679,17 @@ an audit for what Mu left behind.
   - With both fixes the `.app` (`make macos`) does a first start with the network blocked
     and empty uv caches in about 3 s, loads both plugins, and runs a program importing
     pygame. Not exercised there: the REPL, the debugger, Pygame Zero's Play.
-- [ ] Check #39's changes on **Linux**, and in the installers from a `build.yml` run (none
-  has been built by CI since the fix above: run it by hand before tagging).
+- [x] **Windows 11** (2026-11-14, on the `pypi-publishing` branch): suite green (1780
+  passed, 20 skipped); `build.yml` run by hand on the branch, **all three installers built**
+  (run 43606776451). Locally, `make win64` created and built the app (`briefcase package`
+  stopped at the WiX download on that machine, not a project problem). The built
+  `Nu Editor.exe`, with a throwaway `MU_DATA_DIR`: first start offline-style (baseline wheels
+  in ~9 s), both plugins loaded, a second launch with a file **during the first-run mode
+  picker** handed over and the file opened once the window was up, Run (incl. `import
+  pygame`), the REPL (kernel in the learner env), the debugger (step, inspector, exit 0),
+  Pygame Zero Play, Quit: no errors in the log.
+- [ ] Check #39's changes on **Linux** (from source and the AppImage), and install the
+  Windows **MSI** from the CI run above (clean install, and an upgrade over 2.0.0b3).
 - [ ] **pygame has no wheels for Python 3.14**: a source/`pip` install of Nu on 3.14 makes a
   3.14 learner environment, where the baseline install can't get pygame (it tries to
   compile it; a warning in the log, and Pygame Zero's Play then fails). The installers
