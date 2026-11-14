@@ -973,6 +973,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#what-changed-in-06" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What changed in 0.6
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#what-changed-in-05" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1055,10 +1066,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#roadmap-the-microbit-files-pane" class="md-nav__link">
+  <a href="#the-microbit-files-pane" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Roadmap: the micro:bit Files pane
+        The micro:bit Files pane
       
     </span>
   </a>
@@ -2039,6 +2050,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#what-changed-in-06" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What changed in 0.6
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#what-changed-in-05" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2121,10 +2143,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#roadmap-the-microbit-files-pane" class="md-nav__link">
+  <a href="#the-microbit-files-pane" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Roadmap: the micro:bit Files pane
+        The micro:bit Files pane
       
     </span>
   </a>
@@ -2210,7 +2232,7 @@ Zero ship as plugins (5c), the <strong>Plugins</strong> tab lists them and switc
 them on and off (5e), and micro:bit is back as an opt-in plugin (Phase 6,
 see <a href="../microbit/">The BBC micro:bit</a>). Learners add plugins from PyPI or
 a wheel file on the Plugins tab, installers included (5d, see
-<a href="#adding-a-plugin">Adding a plugin</a>). The API is at version <strong>0.5</strong>, so
+<a href="#adding-a-plugin">Adding a plugin</a>). The API is at version <strong>0.6</strong>, so
 it can still change between releases.</p>
 </div>
 <h2 id="managing-plugins">Managing plugins<a class="headerlink" href="#managing-plugins" title="Permanent link">&para;</a></h2>
@@ -2521,7 +2543,7 @@ release.</p>
 <tbody>
 <tr>
 <td><code>PLUGIN_API_VERSION</code></td>
-<td>The API version this Nu provides, e.g. <code>"0.5"</code>.</td>
+<td>The API version this Nu provides, e.g. <code>"0.6"</code>.</td>
 </tr>
 <tr>
 <td><code>Plugin</code></td>
@@ -2584,7 +2606,7 @@ literal string. When loading it, the host compares that with its own version:</p
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyPlugin</span><span class="p">(</span><span class="n">Plugin</span><span class="p">):</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">"My Plugin"</span>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">description</span> <span class="o">=</span> <span class="s2">"Adds My mode, for doing my thing."</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">api_version</span> <span class="o">=</span> <span class="s2">"0.5"</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">api_version</span> <span class="o">=</span> <span class="s2">"0.6"</span>
 <a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
 <a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">):</span>
 <a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">        </span><span class="sd">"""Called once when the plugin loads. Do all wiring here, through</span>
@@ -2609,7 +2631,7 @@ already registered are removed. A broken plugin never stops Nu starting.</p>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">MicrobitPlugin</span><span class="p">(</span><span class="n">ModePlugin</span><span class="p">):</span>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">"micro:bit"</span>
 <a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">description</span> <span class="o">=</span> <span class="s2">"Adds micro:bit mode, for the BBC micro:bit."</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">api_version</span> <span class="o">=</span> <span class="s2">"0.5"</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">api_version</span> <span class="o">=</span> <span class="s2">"0.6"</span>
 <a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">mode</span> <span class="o">=</span> <span class="n">MicrobitMode</span>          <span class="c1"># or: modes = (ModeA, ModeB)</span>
 <a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="c1"># Optional: the folder of icons the modes use (see "Icons and images").</span>
 <a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="n">images</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">"images"</span><span class="p">)</span>
@@ -2770,6 +2792,18 @@ tell the learner if there's none). Offer the Plotter only if
 <td>Add a command to <strong>What Nu Ran</strong> (and Nu's log), next to uv's: <code>argv</code> as the learner could type it, <code>note</code> for anything they should know (e.g. "Nu did this through mpremote's Python API"). Returns a record: call <code>add_output(text)</code> as output arrives and <code>finish(exit_code, output=None)</code> when done (0 for success). Safe from any thread. <em>(0.5)</em></td>
 </tr>
 <tr>
+<td><code>add_pane(widget, title, area="bottom")</code></td>
+<td>Dock <code>widget</code>, your own Qt widget (PyQt6 is Nu's, so you can import it), in Nu's window with <code>title</code>, at <code>"bottom"</code>, <code>"left"</code> or <code>"right"</code>, as the REPL and plotter are docked. If the widget has a <code>set_theme(theme)</code> method, it's called with <code>"day"</code>, <code>"night"</code> or <code>"contrast"</code> now and whenever the theme changes. Returns a handle for <code>remove_pane</code>. The pane belongs to the current mode: Nu removes it when the learner leaves the mode or your plugin unloads. <em>(0.6)</em></td>
+</tr>
+<tr>
+<td><code>remove_pane(pane)</code></td>
+<td>Take away a pane <code>add_pane</code> docked; nothing happens if it's already gone. <em>(0.6)</em></td>
+</tr>
+<tr>
+<td><code>open_file(path)</code></td>
+<td>Open the file at <code>path</code> in a tab, as if the learner had loaded it (or go to its tab). <em>(0.6)</em></td>
+</tr>
+<tr>
 <td><code>settings(namespace)</code></td>
 <td>A <code>PluginSettings</code> with <code>get(key, default=None)</code> and <code>set(key, value)</code>. Values are saved with the user's settings under <code>plugins.&lt;namespace&gt;</code> and must be JSON-serialisable.</td>
 </tr>
@@ -2825,12 +2859,16 @@ metadata) can't declare any.</p>
 <p>These are planned, and are deliberately left out until a real plugin needs
 them:</p>
 <ul>
-<li><strong>Panes and settings pages</strong>, e.g. micro:bit's file-transfer pane (designed
-  below: <a href="#roadmap-the-microbit-files-pane">Roadmap: the micro:bit Files pane</a>).</li>
+<li><strong>Settings pages</strong> in the admin dialog.</li>
 <li><strong>Translations for plugins.</strong> Bundled plugins use Nu's own message catalog
   (their strings are extracted with Nu's); a community plugin's strings aren't
   translated yet.</li>
 </ul>
+<h3 id="what-changed-in-06">What changed in 0.6<a class="headerlink" href="#what-changed-in-06" title="Permanent link">&para;</a></h3>
+<p>0.6 adds panes, for micro:bit's Files pane: <code>Host.add_pane</code> and
+<code>Host.remove_pane</code> (see <a href="#the-microbit-files-pane">the micro:bit Files pane</a>),
+and <code>Host.open_file</code>. Nothing was removed, but a 0.5 plugin needs its
+<code>api_version</code> changed to <code>"0.6"</code>.</p>
 <h3 id="what-changed-in-05">What changed in 0.5<a class="headerlink" href="#what-changed-in-05" title="Permanent link">&para;</a></h3>
 <p>0.5 adds what the micro:bit plugin needs to stay on the API: <code>Host.log_command</code>
 (so a plugin's equivalent commands show in <strong>What Nu Ran</strong>, as uv's do),
@@ -2882,9 +2920,9 @@ until it is).</p>
   version of Nu, with the exact versions in its details.</li>
 <li>The API is bumped deliberately, with a short compatibility-shim window. It
   stays at 0.x until the micro:bit plugin (Phase 6) has proven it: 0.5 is
-  what micro:bit needed to be built on the API alone, and it should reach 1.0
-  once the plugin has passed its hardware checks and the Files pane (below)
-  has settled the API for panes.</li>
+  what micro:bit needed to be built on the API alone and 0.6 added panes for
+  its Files pane (below); it should reach 1.0 once the plugin has passed its
+  hardware checks.</li>
 </ul>
 <h2 id="trust-safety">Trust &amp; safety<a class="headerlink" href="#trust-safety" title="Permanent link">&para;</a></h2>
 <p>Plugins are <strong>arbitrary in-process Python</strong> — there is no sandbox. The trust
@@ -2895,34 +2933,32 @@ you trust. Before adding a plugin, Nu shows what PyPI says about it (to help
 spot a look-alike name) and the real <code>uv</code> commands it will run. (A
 curated/signed index is a possible future, not a v1 guarantee.) In-process plugins can't be meaningfully sandboxed without a
 far larger redesign, which is out of scope.</p>
-<h2 id="roadmap-the-microbit-files-pane">Roadmap: the micro:bit Files pane<a class="headerlink" href="#roadmap-the-microbit-files-pane" title="Permanent link">&para;</a></h2>
-<div class="admonition note">
-<p class="admonition-title">Design only</p>
-<p>Phase 6b. Not built yet: micro:bit mode has Flash, REPL and Plotter.</p>
-</div>
+<h2 id="the-microbit-files-pane">The micro:bit Files pane<a class="headerlink" href="#the-microbit-files-pane" title="Permanent link">&para;</a></h2>
 <p>Upstream Mu's micro:bit mode had a <strong>Files</strong> pane: the files on the board on
-one side, the learner's <code>microbit</code> folder on the other, drag between them.
-Nu removed the old <code>FileSystemPane</code> (and the frozen <code>microfs</code> behind it) in
-Phase 1. It comes back as <strong>plugin-owned UI</strong> driven by mpremote:</p>
+one side, the learner's <code>microbit</code> folder on the other. Nu removed the old
+<code>FileSystemPane</code> (and the frozen <code>microfs</code> behind it) in Phase 1; it came back
+in API 0.6 as <strong>plugin-owned UI</strong> driven by mpremote, and is the worked
+example for panes:</p>
 <ul>
-<li><strong>API (0.6):</strong> a plugin needs to put a widget in the window.
-  <code>Host.add_pane(widget, title, area="bottom")</code> docks it (as the REPL and
-  plotter are docked) and returns a handle; <code>Host.remove_pane(handle)</code> takes
-  it away, and the core removes a plugin's panes when it unloads or its mode
-  is deactivated. The widget is the plugin's own Qt code (PyQt6 is Nu's
-  dependency, so a plugin may import it); the core owns where it goes and
-  its theme.</li>
-<li><strong>Talking to the board:</strong> the same worker pattern as Flash: one job at a
-  time on a <code>QThread</code>, through <code>mpremote.transport_serial.SerialTransport</code>:
-  <code>fs_listdir</code> to list, <code>fs_readfile</code> / <code>fs_writefile</code> to copy each way,
-  <code>fs_rmfile</code> to delete, each logged under <strong>What Nu Ran</strong> as
-  <code>mpremote connect &lt;port&gt; fs ls</code> / <code>fs cp :a.py a.py</code> / <code>fs cp a.py :a.py</code> /
-  <code>fs rm :a.py</code>.</li>
-<li><strong>One serial port:</strong> the pane, the REPL and Flash all need it, so the pane
-  is closed while the REPL is open and vice versa (as in Mu), and Flash
-  refreshes it afterwards.</li>
-<li><strong>Tests:</strong> a fake transport with an in-memory file system, as the flash
-  tests fake the board.</li>
+<li><strong>The widget</strong> (<code>nu_microbit/files_pane.py</code>) is the plugin's own PyQt6
+  code: two lists and the buttons between them. It only says what the learner
+  asked for, through Qt signals; the mode does it.</li>
+<li><strong>Docking:</strong> the mode calls <code>host.add_pane(pane, "micro:bit Files")</code> and
+  <code>host.remove_pane(handle)</code>; Nu removes it anyway when the learner leaves
+  micro:bit mode. A file is opened with <code>host.open_file(path)</code>.</li>
+<li><strong>Talking to the board</strong> (<code>nu_microbit/files.py</code>): the same worker pattern
+  as Flash, one job at a time on a <code>QThread</code>, through mpremote's
+  <code>SerialTransport</code>: <code>fs_readfile</code> / <code>fs_writefile</code> to copy each way and
+  <code>fs_rmfile</code> to delete, each logged under <strong>What Nu Ran</strong> as <code>mpremote
+  connect &lt;port&gt; fs cp :a.py a.py</code> / <code>fs cp a.py :a.py</code> / <code>fs rm :a.py</code>.
+  Listing (<code>fs ls</code>) runs a few lines of its own: mpremote's <code>fs_listdir</code> needs
+  <code>os.ilistdir</code>, which micro:bit MicroPython's flat file system doesn't have
+  (it has <code>os.listdir</code> and <code>os.size</code>).</li>
+<li><strong>One serial port:</strong> the pane, the REPL and Flash all need it, so the REPL
+  and plotter close (and stay off) while the pane is open, and Flash
+  refreshes the pane afterwards.</li>
+<li><strong>Tests:</strong> a fake board with an in-memory file system, as the flash tests
+  fake the board; the hardware checklist in <code>plugins/microbit/README.md</code>.</li>
 </ul>
 <h2 id="a-minimal-example">A minimal example<a class="headerlink" href="#a-minimal-example" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>my-nu-plugin/
