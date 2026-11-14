@@ -47,14 +47,18 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
 * **More than one environment (advanced).** A collapsed **Advanced: more
   environments** section on the Environment tab lists your environments and
   lets you make a new one (a separate set of packages for a project, made the
-  same way as the first, showing the `uv venv` command as it runs) and choose
-  which one Nu uses from the next start. Beginners never need to open it.
+  same way as the first, showing the `uv venv` command as it runs), choose
+  which one Nu uses from the next start, and delete one you no longer need.
+  Each environment remembers which Nu made it, so one an older Nu made is
+  brought up to date when you next use it. Beginners never need to open it.
 * **Programs can list the packages they need.** If a program starts with a
   `# /// script` block ([PEP 723](https://peps.python.org/pep-0723/)) such as
   `# dependencies = ["cowsay"]`, **Run** runs it with `uv run`, which fetches
   those packages first. The command is the first line of the output, and if
   something goes wrong (no internet, a misspelt package) a `Hint:` line says
-  what to try. Programs without the block run as before. See
+  what to try. **Debug** and Pygame Zero's **Play** use it too, adding the
+  listed packages on top of your environment. Programs without the block run
+  as before. See
   [Your Python environment](https://kovirlabs.github.io/nu/environment/).
 * **Plugins (experimental).** Plugins add modes to Nu, with their own icons,
   and can say which packages their modes need in your programs' environment.
@@ -93,7 +97,9 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   there; **Shift+Flash** puts it back on anyway. MicroPython (V1 1.1.1, V2
   2.1.2) is downloaded from its official releases on first use and checked,
   never shipped inside Nu; offline, Nu says which file to put where. Each step
-  shows in the status bar. **REPL** and **Plotter** work as in CircuitPython
+  shows in the status bar. **Files** shows the files on the micro:bit next to
+  your `microbit` folder, to copy them either way or delete them. **REPL**
+  and **Plotter** work as in CircuitPython
   mode, and autocomplete knows micro:bit MicroPython 2.x (sound, microphone,
   logo, `log`, `power`, radio, music…). The first time, Nu puts six starter
   programs (a dice, a heartbeat, a score keeper…) in `microbit/examples` to
@@ -112,7 +118,8 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
 * **Nu looks like Nu:** the splash screen, the window icon and the **Mode**
   button show Nu's logo; the betas still showed Mu's, with codewith.mu.
 * **Starting Nu while it's already running** brings the open Nu to the front,
-  and opens any files it was given, instead of silently doing nothing.
+  and opens any files it was given, instead of silently doing nothing. If
+  the open Nu is still starting, it does so as soon as its window is up.
 * **The first start is quicker:** the packages Nu needs in your programs'
   environment are installed with one `uv` command (seconds) instead of one
   pip run each (a couple of minutes).
@@ -144,19 +151,35 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   Nu Ran**), **Plugins** and **Select Language**.
 * Nu removes the copy of Python an earlier version of Nu unpacked for your
   programs' environment (about 70 MB each) once nothing uses it, instead of
-  keeping every one after each upgrade.
+  keeping every one after each upgrade. It unpacks that Python into a
+  shorter folder (`cpython-3.12.16-20261110`, not the archive's full name),
+  leaving more room under Windows' 260-character path limit.
+* The REPL's Jupyter kernel is registered inside your programs' environment
+  instead of in your own Jupyter folder, so it goes away with the
+  environment and each environment has its own.
 * For maintainers: `make dist` builds `nu-pygamezero` and `nu-circuitpython`
   as well as `nu-editor`, and `make publish-test` / `make publish-live`
   upload the two plugins before `nu-editor` (which needs them), skipping a
   plugin version PyPI already has. They no longer sign uploads with
   `--sign` (PyPI stopped accepting PGP signatures in 2023), and need twine 7
   or later.
+* For maintainers: the installers build again. Briefcase now installs the
+  bundled plugins from wheels built from the checkout
+  (`build/plugin-wheels`); listing them as local paths made pip fail on
+  every platform. The packaged app also no longer crashes at start-up on a
+  Python whose `importlib` is frozen.
+* For maintainers: a `publish.yml` workflow uploads the same three packages
+  to PyPI on a release tag using Trusted Publishing (no stored token), or to
+  TestPyPI on a manual run. See `docs/pypi.md`.
 
 ### Fixed
 
 Things that worked in Mu 1.2.2 but broke in the 2.0.0 betas with the move to
 PyQt6 and uv, found by checking Nu against Mu:
 
+* On Windows, **Stop** ends a program run with `uv run` (one with a
+  `# /// script` block) completely; it used to leave the program running,
+  e.g. a Pygame Zero window that wouldn't close.
 * **Check** no longer crashes Nu when it finds a problem in your code; the
   problems are shown under the lines again.
 * **Tidy** works on code that uses newer Python syntax, such as `match`
@@ -227,13 +250,15 @@ And older problems, found while checking the whole app:
 * Removing a plugin you added leaves behind the packages it needed (they do
   nothing unless they're plugins themselves), and the packages it added to
   your Python environment, since your programs may use them.
-* The **plugin API** (version 0.5) may still change; plugins say which
+* The **plugin API** (version 0.6) may still change; plugins say which
   version they were written for, and Nu skips ones it can't run.
 
 ### For developers
 
-* Plugin API **0.5**: `Host.log_command`, `Host.current_device` and
-  `Host.data_dir` (plugins written for 0.4 need `api_version = "0.5"`). See
+* Plugin API **0.6**: `Host.log_command`, `Host.current_device` and
+  `Host.data_dir` (0.5), and panes, `Host.add_pane` / `remove_pane`, and
+  `Host.open_file` (0.6); plugins written for 0.5 need
+  `api_version = "0.6"`. See
   [What changed](https://kovirlabs.github.io/nu/plugins/).
 * The test suite never touches your real Nu data, workspace or IPython
   profile, and runs against a running Nu: `MU_DATA_DIR` and `MU_HOME_DIR`

@@ -395,17 +395,25 @@ def load_plugins(host, sources=None, store=None):
     return records
 
 
-#: Where importlib's own code is, to leave it out of a plugin's traceback.
-_IMPORTLIB_DIR = os.path.dirname(importlib.util.__file__) + os.sep
+def _import_machinery_prefixes(module=importlib.util):
+    """
+    What the file names of Python's import machinery start with, to leave
+    its frames out of a plugin's traceback. importlib can be frozen into
+    Python (it is in Nu's installers), and then has no file on disk.
+    """
+    prefixes = ["<frozen importlib"]
+    path = getattr(module, "__file__", None)
+    if path:
+        prefixes.append(os.path.dirname(path) + os.sep)
+    return tuple(prefixes)
+
+
+_IMPORT_MACHINERY = _import_machinery_prefixes()
 
 
 def _is_loading_frame(frame):
     """Is `frame` Nu's loader or Python's import machinery, not a plugin?"""
-    return (
-        frame.filename == __file__
-        or frame.filename.startswith("<frozen importlib")
-        or frame.filename.startswith(_IMPORTLIB_DIR)
-    )
+    return frame.filename == __file__ or frame.filename.startswith(_IMPORT_MACHINERY)
 
 
 def _plugin_traceback(ex):

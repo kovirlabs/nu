@@ -810,6 +810,37 @@ def test_listen_for_other_instances_garbled():
     editor.direct_load.assert_not_called()
 
 
+def test_listen_for_other_instances_while_starting(tmp_path):
+    """
+    A second launch while Nu is still starting (no window yet) is taken, and
+    acted on once the window is up; nothing waits if nothing asked.
+    """
+    listener = mu.app.listen_for_other_instances()
+    window = mock.MagicMock()
+    editor = mock.MagicMock()
+    try:
+        assert listener.isListening()
+        target = str(tmp_path / "game.py")
+        script = (
+            "import sys; from mu import app; "
+            "sys.exit(0 if app.tell_running_instance([{!r}]) else 1)"
+        ).format(target)
+        asked = lambda: listener.waiting is not None  # noqa: E731
+        assert _talk_to_server(listener, script, until=asked) == 0
+        both = lambda: len(listener.waiting) == 2  # noqa: E731
+        assert _talk_to_server(listener, script, until=both) == 0
+        assert listener.waiting == [target, target]
+        listener.ready(window, editor)
+        assert listener.waiting is None
+        window.bring_to_front.assert_called_once_with()
+        assert editor.direct_load.call_args_list == [mock.call(target)] * 2
+        # Ready with nothing waiting: nothing happens.
+        listener.ready(window, editor)
+        window.bring_to_front.assert_called_once_with()
+    finally:
+        listener.close()
+
+
 def test_listen_for_other_instances_cannot_listen():
     with mock.patch("mu.app.QLocalServer.listen", return_value=False):
         server = mu.app.listen_for_other_instances(mock.MagicMock(), mock.MagicMock())

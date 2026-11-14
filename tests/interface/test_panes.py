@@ -3,7 +3,7 @@
 Tests for the user interface elements of Mu.
 """
 
-from PyQt6.QtCore import Qt, QEvent, QPointF
+from PyQt6.QtCore import Qt, QEvent, QPointF, QProcess
 from PyQt6.QtGui import QTextCursor, QMouseEvent
 from collections import deque
 from unittest import mock
@@ -14,6 +14,7 @@ import signal
 import pytest
 
 import mu
+import mu.debugger.utils
 import mu.interface.panes
 from mu import i18n
 from mu.interface.panes import CHARTS
@@ -1173,6 +1174,62 @@ def test_PythonProcessPane_start_process_debugger():
     ppp.process.start.assert_called_once_with(interpreter, expected_args)
 
 
+def test_PythonProcessPane_start_process_debugger_through_uv():
+    """
+    Debugging through `uv run … python` (a program with inline metadata):
+    those arguments go before the debug runner and the program.
+    """
+    mock_process_class = mock.MagicMock()
+    with mock.patch("mu.interface.panes.QProcess", mock_process_class):
+        ppp = mu.interface.panes.PythonProcessPane()
+        ppp.start_process(
+            "/bin/uv",
+            "script.py",
+            "workspace",
+            debugger=True,
+            python_args=["run", "--with-requirements", "script.py", "python"],
+        )
+    ppp.process.start.assert_called_once_with(
+        "/bin/uv",
+        [
+            "run",
+            "--with-requirements",
+            "script.py",
+            "python",
+            mu.debugger.utils.debug_runner(),
+            os.path.abspath("script.py"),
+        ],
+    )
+
+
+def test_PythonProcessPane_track_uv_command():
+    """
+    When the uv command ends, its exit code goes in the command log (None
+    if it was stopped) and a hint above any uv error it can explain, once
+    the last of the output's in.
+    """
+    ppp = mu.interface.panes.PythonProcessPane()
+    ppp.process = mock.MagicMock()
+    record = mock.MagicMock()
+    ppp.track_uv_command(record)
+    finished = ppp.process.finished.connect.call_args.args[0]
+    ppp.setPlainText("$ uv run\nerror: Request failed after 3 retries\n")
+    ppp.reading_stdout = True
+    with mock.patch("mu.interface.panes.QTimer.singleShot") as single_shot:
+        finished(2, QProcess.ExitStatus.NormalExit)
+    record.finish.assert_called_once_with(2)
+    # Still reading: it waits, then adds the hint.
+    ppp.reading_stdout = False
+    single_shot.call_args.args[1]()
+    assert "Hint:" in ppp.toPlainText().splitlines()[1]
+    # Stopped (crashed/killed): no exit code; nothing to explain.
+    record.reset_mock()
+    ppp.setPlainText("$ uv run\nhello\n")
+    finished(1, QProcess.ExitStatus.CrashExit)
+    record.finish.assert_called_once_with(None)
+    assert "Hint:" not in ppp.toPlainText()
+
+
 def test_PythonProcessPane_start_process_not_interactive():
     """
     Ensure that if the interactive flag is unset, the "-i" flag passed into
@@ -1337,10 +1394,49 @@ def test_PythonProcessPane_stop_process_with_error():
     ppp = mu.interface.panes.PythonProcessPane()
     ppp.process = mock.MagicMock()
     ppp.process.waitForFinished.return_value = False
-    ppp.stop_process()
+    with (
+        mock.patch.object(sys, "platform", "linux"),
+        mock.patch("mu.interface.panes.subprocess.run") as run,
+    ):
+        ppp.stop_process()
     ppp.process.terminate.assert_called_once_with()
     ppp.process.kill.assert_called_once_with()
     ppp.process.waitForFinished.call_count == 2
+    run.assert_not_called()
+
+
+def test_PythonProcessPane_stop_process_kills_the_tree_on_windows():
+    """
+    On Windows the process's children go too: killing `uv run` alone left
+    the learner's program (e.g. a Pygame Zero window) running.
+    """
+    ppp = mu.interface.panes.PythonProcessPane()
+    ppp.process = mock.MagicMock()
+    ppp.process.waitForFinished.return_value = False
+    ppp.process.processId.return_value = 1234
+    with (
+        mock.patch.object(sys, "platform", "win32"),
+        mock.patch("mu.interface.panes.subprocess.run") as run,
+    ):
+        ppp.stop_process()
+    assert run.call_args.args[0] == ["taskkill", "/T", "/F", "/PID", "1234"]
+    ppp.process.kill.assert_called_once_with()
+
+
+def test_PythonProcessPane_kill_process_tree_edge_cases(caplog):
+    """No process id yet: nothing to do. taskkill failing: logged."""
+    ppp = mu.interface.panes.PythonProcessPane()
+    ppp.process = mock.MagicMock()
+    ppp.process.processId.return_value = 0
+    with mock.patch("mu.interface.panes.subprocess.run") as run:
+        ppp._kill_process_tree()
+    run.assert_not_called()
+    ppp.process.processId.return_value = 99
+    with mock.patch(
+        "mu.interface.panes.subprocess.run", side_effect=OSError("no taskkill")
+    ):
+        ppp._kill_process_tree()
+    assert "Unable to end the processes of 99" in caplog.text
 
 
 def test_PythonProcessPane_finished():

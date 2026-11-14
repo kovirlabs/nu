@@ -5,6 +5,7 @@ Tests for plugin discovery and loading.
 
 import importlib.metadata
 import logging
+import os
 import sys
 import textwrap
 import uuid
@@ -215,24 +216,37 @@ def test_bundled_plugins_metadata_matches_the_plugin(dist_name, module, class_na
 def test_bundled_distributions_match_nus_dependencies():
     """
     BUNDLED_DISTRIBUTIONS lists exactly the plugin packages nu-editor
-    depends on (and Briefcase ships).
+    depends on. Briefcase ships those (it adds the project's dependencies to
+    its own `requires`), from wheels of the checkout that make.py builds
+    for it: listing them in `requires` as paths too breaks the build.
     """
     import tomllib
     from pathlib import Path
 
-    pyproject = Path(__file__).parents[2] / "pyproject.toml"
-    project = tomllib.loads(pyproject.read_text())
+    root = Path(__file__).parents[2]
+    project = tomllib.loads((root / "pyproject.toml").read_text())
     deps = {
         dep.split(">")[0].split("=")[0].strip()
         for dep in project["project"]["dependencies"]
     }
-    plugin_dirs = {
-        "nu-" + Path(path).name
-        for path in project["tool"]["briefcase"]["app"]["mu"]["requires"]
-        if path.startswith("./plugins/")
+    assert loader.BUNDLED_DISTRIBUTIONS == {
+        dep for dep in deps if dep.startswith("nu-")
     }
-    assert loader.BUNDLED_DISTRIBUTIONS == plugin_dirs
-    assert loader.BUNDLED_DISTRIBUTIONS <= deps
+    app = project["tool"]["briefcase"]["app"]["mu"]
+    assert not [path for path in app["requires"] if "plugins/" in path]
+    assert app["requirement_installer_args"] == [
+        "--find-links",
+        "./build/plugin-wheels",
+    ]
+    sys.path.insert(0, str(root))
+    try:
+        import make
+    finally:
+        sys.path.remove(str(root))
+    assert make.PLUGIN_WHEELS_DIR == os.path.join("build", "plugin-wheels")
+    assert {
+        "nu-" + Path(path).name for path in make.BUNDLED_PLUGINS
+    } == loader.BUNDLED_DISTRIBUTIONS
 
 
 def test_entry_point_sources_finds_a_real_entry_point():
@@ -770,3 +784,20 @@ def test_plugin_traceback_keeps_everything_if_its_all_nus():
         text = loader._plugin_traceback(ex)
     assert loader.__file__ in text
     assert "PluginLoadError" in text
+
+
+def test_import_machinery_prefixes_frozen_importlib():
+    """
+    In Nu's installers importlib is frozen into Python and has no
+    `__file__`: that mustn't stop Nu starting (it did, in the first build
+    of the installers with this code).
+    """
+    import importlib.util
+    import types
+
+    frozen = types.ModuleType("importlib.util")
+    assert not hasattr(frozen, "__file__")
+    assert loader._import_machinery_prefixes(frozen) == ("<frozen importlib",)
+    on_disk = loader._import_machinery_prefixes(importlib.util)
+    if getattr(importlib.util, "__file__", None):
+        assert on_disk[1] == os.path.dirname(importlib.util.__file__) + os.sep

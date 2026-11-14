@@ -3,9 +3,11 @@
 Tests for the debug mode.
 """
 
+import os
+
 from mu.debugger.config import DEBUGGER_PORT
-from mu.modes.debugger import DebugMode
-from mu.virtual_environment import venv
+from mu.modes.debugger import UV_CONNECT_TIMEOUT, DebugMode, debug_runner
+from mu.virtual_environment import UvNotFound, venv
 from unittest import mock
 
 
@@ -48,6 +50,7 @@ def test_debug_start():
     editor.envars = [["name", "value"]]
     view = mock.MagicMock()
     view.current_tab.path = "/foo/bar"
+    view.current_tab.text.return_value = "print('hello')\n"
     view.current_tab.isModified.return_value = True
     mock_runner = mock.MagicMock()
     view.add_python3_runner.return_value = mock_runner
@@ -72,12 +75,92 @@ def test_debug_start():
     view.add_debug_inspector.assert_called_once_with()
     view.set_read_only.assert_called_once_with(True)
     mock_debugger_class.assert_called_once_with(
-        "localhost", DEBUGGER_PORT, proc=mock_runner.process
+        "localhost", DEBUGGER_PORT, proc=mock_runner.process, connect_timeout=10
     )
     assert dm.runner == mock_runner
     assert dm.debugger == mock_debugger
     assert mock_debugger.view == dm
     mock_debugger.start.assert_called_once_with()
+
+
+SCRIPT_WITH_METADATA = '# /// script\n# dependencies = ["cowsay"]\n# ///\nprint(1)\n'
+
+
+def test_debug_start_with_inline_metadata():
+    """
+    A program with a `# /// script` block is debugged through `uv run
+    --with-requirements`, shown as the pane's first line and logged, and
+    the debugger waits longer for it (uv may be fetching packages).
+    """
+    editor = mock.MagicMock()
+    editor.envars = {"A": "1"}
+    view = mock.MagicMock()
+    view.current_tab.path = os.path.join("foo", "game.py")
+    view.current_tab.text.return_value = SCRIPT_WITH_METADATA
+    view.current_tab.isModified.return_value = False
+    mock_runner = mock.MagicMock()
+    view.add_python3_runner.return_value = mock_runner
+    record = mock.MagicMock()
+    path = view.current_tab.path
+    runner_script = debug_runner()
+    record.program = "/bin/uv"
+    record.argv = ["/bin/uv", "run", "--python", "py", "x", "python"] + [
+        runner_script,
+        path,
+    ]
+    record.display.return_value = "uv run …"
+    mock_debugger_class = mock.MagicMock()
+    dm = DebugMode(editor, view)
+    with (
+        mock.patch("mu.modes.debugger.Debugger", mock_debugger_class),
+        mock.patch.object(
+            venv, "with_requirements_command", return_value=record
+        ) as command,
+    ):
+        dm.start()
+    command.assert_called_once_with(path, [runner_script, path], "foo")
+    view.add_python3_runner.assert_called_once_with(
+        "/bin/uv",
+        path,
+        "foo",
+        debugger=True,
+        envars={"A": "1"},
+        python_args=["run", "--python", "py", "x", "python"],
+        echo="$ uv run …",
+    )
+    mock_runner.track_uv_command.assert_called_once_with(record)
+    assert mock_debugger_class.call_args.kwargs["connect_timeout"] == (
+        UV_CONNECT_TIMEOUT
+    )
+
+
+def test_debug_start_with_inline_metadata_without_uv():
+    """No uv: the learner's told why, and debugging stops."""
+    view = mock.MagicMock()
+    view.current_tab.path = os.path.join("foo", "game.py")
+    view.current_tab.text.return_value = SCRIPT_WITH_METADATA
+    dm = DebugMode(mock.MagicMock(), view)
+    dm.stop = mock.MagicMock()
+    with mock.patch.object(
+        venv,
+        "with_requirements_command",
+        side_effect=UvNotFound("no uv"),
+    ):
+        dm.start()
+    assert "can't find uv" in view.show_message.call_args.args[0]
+    view.add_python3_runner.assert_not_called()
+    dm.stop.assert_called_once_with()
+
+
+def test_debug_stop_while_connecting():
+    """Stop tells the listener to give up connecting before waiting for it."""
+    dm = DebugMode(mock.MagicMock(), mock.MagicMock())
+    dm.runner = mock.MagicMock()
+    debugger = mock.MagicMock()
+    debugger.command_handler.stopped = False
+    dm.debugger = debugger
+    dm.stop()
+    assert debugger.command_handler.stopped is True
 
 
 def test_debug_start_no_tab():

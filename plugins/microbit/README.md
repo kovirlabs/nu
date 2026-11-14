@@ -25,8 +25,9 @@ below has passed on real boards.
 
 - **Entry point:** `mu.plugins` → `microbit = "nu_microbit:MicrobitPlugin"`;
   the mode's id is `microbit`, as in Mu, so old sessions keep working.
-- **Plugin API:** 0.5 (`Host.log_command`, `Host.current_device`,
-  `Host.data_dir`).
+- **Plugin API:** 0.6 (`Host.log_command`, `Host.current_device`,
+  `Host.data_dir`; `Host.add_pane`, `remove_pane` and `open_file` for the
+  Files pane).
 - **Dependencies:** `mpremote` (and pyserial, which Nu has). No
   `learner-env` extra: the code runs on the board.
 - **Tests:** `plugins/microbit/tests/`, run with Nu's suite. Everything that
@@ -39,7 +40,9 @@ below has passed on real boards.
 | `board.py` | Board IDs (9900/9901 → V1, 9903–9906 → V2), `DETAILS.TXT`, finding the `MICROBIT` drive and the serial port, asking the REPL for its banner. GUI-free. |
 | `firmware.py` | The pinned releases; a checked local copy, or a download. GUI-free. |
 | `flash.py` | The flash state machine (below). GUI-free; all I/O injected. |
-| `worker.py` | Runs a flash on a `QThread`, reporting back through signals. |
+| `files.py` | The Files pane's jobs: list, copy each way, delete, through mpremote. GUI-free; all I/O injected. |
+| `files_pane.py` | The Files pane widget: the board's files and the learner's `microbit` folder, side by side. |
+| `worker.py` | Runs a flash or files job on a `QThread`, reporting back through signals. |
 | `mode.py` | `MicrobitMode`: buttons, board detection, wiring; copies `examples/` (starter programs, V1 and V2) into the learner's `microbit/examples` folder the first time. |
 | `api/` | Autocomplete stubs for micro:bit MicroPython 2.x (and 1.x). |
 
@@ -116,6 +119,25 @@ out-of-box demo) onto the V2 first, so it has no MicroPython.
 15. Plug it back in (it may show a sad face, or nothing): Flash again
     recovers it. If it comes back as **MAINTENANCE**, Flash says so; unplug
     and replug.
+
+**G. Files (3 min)** — on the V2 with MicroPython and `hello.py` flashed:
+
+16. Click **Files** (F4): the REPL/plotter close if open and their buttons go
+    grey; the pane lists `main.py` (with its size on hover) on the left and
+    your `microbit` folder on the right. The board's program stops (the
+    display goes blank): the pane says to press reset to run it again.
+17. Select `hello.py` on the right, **Copy to micro:bit ▶**: it appears on the
+    left. Again: Nu asks before replacing it.
+18. Flash a program that writes a file (`with open("log.txt", "w") as f:
+    f.write("hi")`), press reset, then **Refresh**: `log.txt` is listed.
+    Double-click it: it's copied into your folder; open it with **Open**.
+19. Select `log.txt` on the left, **Delete from micro:bit**: Nu asks, then
+    it's gone. **What Nu Ran** shows `mpremote connect <port> fs ls`, `fs cp`
+    and `fs rm`.
+20. With the pane open, click Flash: the pane greys, then lists the files
+    again; the REPL stays off until you close the pane (Files again).
+21. On a V1, step 16: the list appears (it uses `os.listdir`/`os.size`, not
+    mpremote's `fs ls`, which needs `os.ilistdir`).
 
 **E. V1 (3 min)** — repeat 3–4 and 8 on a V1: the status bar says
 "…micro:bit V1", the V1 firmware (1.1.1) is downloaded, and `hello.py` runs.

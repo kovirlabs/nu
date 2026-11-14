@@ -17,6 +17,9 @@ version numbers and the order of publishing are up to whoever cuts it.
   zipped `.app`, Linux `.AppImage`) when run by hand or when a `v*` tag is
   pushed. A tag also publishes a GitHub Release with the installers attached.
   See [packaging](packaging.md).
+* `publish.yml` uploads `nu-editor` and its bundled plugins to PyPI when a
+  `vX.Y.Z` tag is pushed (after your approval), or to TestPyPI when run by
+  hand. See [Publishing to PyPI](pypi.md).
 
 ## Version numbers
 
@@ -108,7 +111,7 @@ says `Requires-Dist: nu-circuitpython>=…` and `nu-pygamezero>=…`, so if a
 release needs a new plugin version, that version must be on PyPI before
 `nu-editor` is, or `pip install nu-editor` can't resolve (see
 [packaging](packaging.md#bundled-plugins-the-uv-workspace)).
-`make publish-live` takes care of the order:
+`publish.yml` (and `make publish-live`) take care of the order:
 
 1. For each bundled plugin that changed, bump its version (in its own
    `pyproject.toml`). (`nu-microbit` stays unpublished until it's promoted;
@@ -127,14 +130,13 @@ release needs a new plugin version, that version must be on PyPI before
    `git tag -a v2.0.0 -m "Nu 2.0.0"` then `git push origin v2.0.0`.
    `build.yml` rebuilds the three installers (from the plugins in the
    repository, not PyPI) and publishes the GitHub Release with them attached.
-6. Publish to PyPI with `make publish-live` (try `make publish-test` first to
-   upload to test PyPI). It runs `make check`, builds the sdists and wheels of
-   `nu-editor`, `nu-pygamezero` and `nu-circuitpython` into `dist/` (`make
-   dist`), uploads the two plugins (a version PyPI already has, because the
-   plugin didn't change, is skipped) and then `nu-editor`. It needs twine 7
-   or later (the `package` extra) and your PyPI credentials. Check that
-   `pip install nu-editor` in a fresh virtual environment installs Nu and its
-   plugins and starts.
+   The tag also starts `publish.yml`, which uploads the two plugins (a
+   version PyPI already has, because the plugin didn't change, is skipped)
+   and then `nu-editor` to PyPI once you approve the run in the `pypi`
+   environment. See [Publishing to PyPI](pypi.md) for the one-time setup, the
+   TestPyPI dry run and the manual fallback (`make publish-live`).
+6. Check that `pip install nu-editor` in a fresh virtual environment installs
+   Nu and its plugins and starts.
 
 If the release went out wrong (say, the installers carry the old version):
 delete the GitHub Release (`gh release delete vX.Y.Z --yes`) and the tag

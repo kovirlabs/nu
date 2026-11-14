@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- micro:bit Files: Nu's round yellow button, a micro:bit and two documents
+     with arrows between them. Drawn for Nu in the style of microbit-flash.svg. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="59.619438mm" height="59.619438mm"
+     viewBox="0 0 59.619438 59.619438" version="1.1">
+  <circle cx="29.809719" cy="29.809719" r="27.630468"
+          style="fill:#ffffff;stroke:#ffcc33;stroke-width:4.3585" />
+  <!-- the micro:bit (as on the Flash button), left -->
+  <path d="M 11.5,23.6 h 9.6 c 2.9,0 5.2,2.2 5.2,5 v 0.1 c 0,2.8 -2.3,5 -5.2,5 h -9.6 c -2.9,0 -5.2,-2.2 -5.2,-5 v -0.1 c 0,-2.8 2.3,-5 5.2,-5 z"
+        style="fill:none;stroke:#336699;stroke-width:2.6" />
+  <circle cx="11.4" cy="28.65" r="1.35" style="fill:#336699" />
+  <circle cx="21.2" cy="28.65" r="1.35" style="fill:#336699" />
+  <!-- a document, right -->
+  <path d="M 38.6,17.2 h 7.6 l 4.4,4.4 v 18.2 h -12 z"
+        style="fill:none;stroke:#336699;stroke-width:2.4;stroke-linejoin:round" />
+  <path d="M 41.4,26.6 h 6.4 M 41.4,30.6 h 6.4 M 41.4,34.6 h 4.4"
+        style="fill:none;stroke:#336699;stroke-width:1.8;stroke-linecap:round" />
+  <!-- arrows both ways -->
+  <path d="M 27.6,20.6 h 7.6 l -2.8,-2.8 M 35.2,37.2 h -7.6 l 2.8,2.8"
+        style="fill:none;stroke:#336699;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round" />
+</svg>

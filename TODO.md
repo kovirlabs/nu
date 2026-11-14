@@ -213,8 +213,18 @@ part 2 ✅ (2026-11, `feature/env-advanced-multi`)
   above uv errors it can explain. NB: uv builds the script's env from the env's *base*
   Python, so packages added to the learner env aren't visible to a PEP 723 script
   (standard `uv run` semantics), and there's no `>>>` afterwards (`--script` can't take
-  `-i`). Plain files run exactly as before. **Not yet** for the debugger and Pygame Zero's
-  Play (they'd need `uv run … python -m pgzero` / the debug runner via `--with-requirements`).
+  `-i`). Plain files run exactly as before. **Debug and Pygame Zero's Play** (2026-11,
+  `feature/pep723-debug-and-play`): `uv run --python <env> --no-project --with-requirements
+  <file> python <debug runner | -m pgzero> <file>` (`Uv.with_requirements_command`), which
+  layers the block's packages *on top of* the env (checked: the env's packages and the
+  block's both import), so pgzero and the debugger's needs stay; any plugin's
+  `Host.run_program` does the same. The debugger waits up to 5 min (was 10 s) for the
+  runner while uv fetches, and Stop now ends a still-connecting listener. Found on the
+  way: on Windows, **Stop left uv's child running** (killing `uv.exe` orphans the
+  program: a Pygame Zero window stayed open; the same for Run's `--script`), so
+  `PythonProcessPane.stop_process` now ends the whole tree (`taskkill /T`). Open
+  question: Run could switch to `--with-requirements` too (env packages visible, `>>>`
+  after), at the cost of PEP 723's `requires-python` check and exact isolation.
 - [x] **Advanced multi-env create/switch, hidden by default** (4b part 2): a collapsed
   "Advanced: more environments" section at the bottom of the Environment tab lists the
   environments (name, Python, In use / From the next start), with **Use this one** and
@@ -231,10 +241,15 @@ part 2 ✅ (2026-11, `feature/env-advanced-multi`)
   repairs nothing (tested). A named env Nu rebuilds (upgrade / failed check) keeps its
   folder; a bundled Python a named env uses isn't removed. Verified in the real app under
   Xvfb: create, use, restart, add a package, switch back, the package isn't there.
-  - [ ] **Not done:** deleting an environment (by hand for now: switch away, restart,
-    delete the folder; documented). `mu_version`/`baseline_packages` in venv.json are still
-    global, not per environment: a named env made by an older Nu isn't rebuilt on upgrade
-    until it's the one in use when the version changes.
+  - [x] **Deleting an environment** (2026-11, `feature/delete-environment`): **Delete…** in
+    the Advanced section, for a named env that isn't in use or chosen for the next start
+    (the default one stays), after a confirmation. `VirtualEnvironment.delete_environment`
+    removes the folder (a file in use on Windows is reported) and the `--user` kernelspec an
+    older Nu made for it, only if that spec runs the env's own Python.
+  - [x] **Per-environment version**: `create` writes `nu-environment.json` into the env
+    (`nu_version`, `baseline_packages`); `ensure_and_create` and `baseline_packages()` read
+    it first and fall back to venv.json's (global) values for envs made before. So a named
+    env made by an older Nu is rebuilt when Nu next starts with it.
 
 **4c. Bundle assets for offline:**
 - [x] Vendor a pinned `uv` binary per platform — achieved via the PyPI **`uv` wheel** in
@@ -399,8 +414,9 @@ drop-in dir covers them.
   `plugins/<name>/` with its own `pyproject.toml` + `mu.plugins` entry point — independently
   buildable/publishable, sharing the repo lockfile. (`plugins/example` is a member but not a
   dependency.) `nu-editor` depends on each bundled plugin by name, resolved from the
-  workspace by `[tool.uv.sources]`; Briefcase `requires` lists it as a local path
-  (`./plugins/<name>`); pip installs from a checkout pass the path. Publishing order:
+  workspace by `[tool.uv.sources]`; Briefcase installs it from a wheel built from the
+  checkout (`build/plugin-wheels`, found with `--find-links`; listing it in `requires` as a
+  local path, the first approach, broke every installer build until 2026-11); pip installs from a checkout pass the path. Publishing order:
   bundled plugins to PyPI **before** the `nu-editor` release that needs them
   (`docs/packaging.md`).
 - [x] Move the specialized modes out of the core set into bundled plugins loaded through the same
@@ -521,8 +537,8 @@ plugin**: if it can be a clean plugin, the API is good.
 
 ## Phase 6 — micro:bit, reintroduced as a modern plugin
 
-Status: 6a and 6b built and tested against fakes, opt-in (`uv sync --extra microbit`) until
-the maintainer's hardware pass; the Files pane is designed, not built; 6c (default-on,
+Status: 6a and 6b (now with the Files pane) built and tested against fakes, opt-in
+(`uv sync --extra microbit`) until the maintainer's hardware pass; 6c (default-on,
 installers, PyPI) and 6d open.
 
 micro:bit was **dropped in Phase 1** because its desktop tooling (`uflash`, `microfs`) was
@@ -568,7 +584,7 @@ the maintainer's checklist is in `plugins/microbit/README.md`)
   offline → a message naming the file, its URL and the folder. Also looked for in
   `nu_microbit/firmware/` (the installer-bundling hook for 6c). To update a pin: change the
   URL, version, size and SHA-256 together and re-run the tests.
-- [ ] REPL file ops (`ls`/`cp`/`rm`) via mpremote — with the Files pane (6b).
+- [x] File ops (`ls`/`cp`/`rm`) via mpremote — with the Files pane (6b, below).
 - [ ] **Universal Hex** (one image for V1+V2): deferred. Per-version hex picked from
   `DETAILS.TXT` is simpler and robust; revisit if we ever ship the firmware in installers
   and want one file.
@@ -587,11 +603,18 @@ the maintainer's checklist is in `plugins/microbit/README.md`)
   (`Host.log_command`, `Host.current_device`, `Host.data_dir`); boards' modes now show
   **What Nu Ran** as a tab of its own in the admin dialog. Opt-in (root `microbit` extra)
   until validated — see 6c.
-- [ ] Reintroduce the **file-transfer pane** (the old `FileSystemPane`, removed in Phase 1d)
-  as plugin-owned UI driven by `mpremote`. **Designed, not built**: `docs/plugins.md` →
-  "Roadmap: the micro:bit Files pane" (API 0.6 `Host.add_pane`/`remove_pane`; mpremote
-  `fs_listdir`/`fs_readfile`/`fs_writefile`/`fs_rmfile` on the same worker pattern, logged;
-  exclusive with the REPL).
+- [x] The **Files pane** is back (2026-11, `feature/microbit-files-pane`; the old
+  `FileSystemPane` was removed in Phase 1d), as plugin-owned UI driven by mpremote, built
+  and tested against a fake board, **not yet on hardware** (README checklist, section G).
+  Plugin API **0.6**: `Host.add_pane(widget, title, area)` / `remove_pane` (Window
+  `add_plugin_pane`; themed via the widget's `set_theme`; removed when its mode is left or
+  its plugin unloads) and `Host.open_file`. `nu_microbit/files.py` (GUI-free `FilesJob`:
+  list, `fs_readfile`/`fs_writefile`/`fs_rmfile`, then list again; each logged as `mpremote
+  connect <port> fs …`) on the Flash worker; `files_pane.py` (two lists, Copy each way,
+  Delete, Open, Refresh). Listing runs its own `os.listdir`/`os.size` code: mpremote's
+  `fs_listdir` needs `os.ilistdir`, which micro:bit MicroPython doesn't have. One job at a
+  time (flash or files); the REPL/plotter close and stay off while the pane is open; Flash
+  refreshes it. **Files** button (F4, `microbit-files.svg`).
 - [x] **Modern `microbit` V2 API stubs** for autocomplete/calltips
   (`nu_microbit/api/microbit.py`, 349 entries): upstream's, corrected and brought up to
   MicroPython 2.x (microphone, speaker, `Sound`, `audio.SoundEffect`, `log`, `power`,
@@ -608,8 +631,8 @@ the maintainer's checklist is in `plugins/microbit/README.md`)
 **6c. Packaging + distribution:**
 - [ ] **After the maintainer's hardware pass**: promote to a default-enabled bundled plugin —
   move `nu-microbit>=0.1` from the `microbit` extra to `nu-editor`'s dependencies, add
-  `./plugins/microbit` to Briefcase `requires`, `loader.BUNDLED_DISTRIBUTIONS` and
-  `build.yml`'s plugin installs (see `docs/packaging.md` → "Opt-in workspace plugins").
+  `plugins/microbit` to `BUNDLED_PLUGINS` (`make.py`, `Makefile`), `loader.BUNDLED_DISTRIBUTIONS`
+  and `build.yml`'s plugin installs and wheels (see `docs/packaging.md` → "Opt-in workspace plugins").
   Include `mpremote` (+ pyOCD if adopted) wheels for offline installers; optionally fetch the
   two pinned `.hex` files (SHA-256 checked) into `nu_microbit/firmware/` at build time so a
   fresh install can flash offline.
@@ -669,8 +692,55 @@ an audit for what Mu left behind.
 - Kept on purpose: the `mu_code` / `mu_venv` / data-folder names and the Briefcase app id
   (renaming needs a migration); the `venv_path` session key (documented); the docs'
   Mu design archive (`docs/swag`, `docs/logo_design`, `docs/icon_brief`).
-- [ ] Check #39's changes on **macOS and Linux** (the second-launch hand-over uses a
-  socket file there; the one-call wheel install; the new artwork) and in the installers.
+- [x] #39's changes checked on **macOS** (Apple Silicon, 2026-11-13; from source and in a
+  locally built `.app`): the new artwork, the one-call wheel install (under a second), and
+  the second-launch hand-over (front + opens the file). Found and fixed on the way:
+  - **The installers hadn't built since Phase 5c** (CI's last `build.yml` run, 2026-11-08,
+    failed on all three OSes): Briefcase adds `[project.dependencies]` to `requires`, and
+    pip can't match `nu-circuitpython>=0.1` with the `./plugins/circuitpython` path listed
+    after it. The plugins now reach Briefcase as wheels built from the checkout
+    (`build/plugin-wheels`, `requirement_installer_args`); see `docs/packaging.md`.
+  - **The packaged app crashed at start**: `mu/plugin/loader.py` read
+    `importlib.util.__file__`, which a frozen importlib (Briefcase's Python) doesn't have.
+  - A second launch **while Nu was still starting** (splash, first-run mode picker) got
+    "Nu is already running, but isn't responding": Nu now listens from the start and acts
+    on it once the window is up (`app.OtherInstances`).
+  - With both fixes the `.app` (`make macos`) does a first start with the network blocked
+    and empty uv caches in about 3 s, loads both plugins, and runs a program importing
+    pygame. Not exercised there: the REPL, the debugger, Pygame Zero's Play.
+- [x] **Windows 11** (2026-11-14, on the `pypi-publishing` branch): suite green (1780
+  passed, 20 skipped); `build.yml` run by hand on the branch, **all three installers built**
+  (run 43606776451). Locally, `make win64` created and built the app (`briefcase package`
+  stopped at the WiX download on that machine, not a project problem). The built
+  `Nu Editor.exe`, with a throwaway `MU_DATA_DIR`: first start offline-style (baseline wheels
+  in ~9 s), both plugins loaded, a second launch with a file **during the first-run mode
+  picker** handed over and the file opened once the window was up, Run (incl. `import
+  pygame`), the REPL (kernel in the learner env), the debugger (step, inspector, exit 0),
+  Pygame Zero Play, Quit: no errors in the log.
+- [x] The **MSI** from that run, installed on Windows 11 (clean install; per-user, to
+  `%LOCALAPPDATA%\Programs\Kovir Labs\Nu Editor`, Start-menu entry): first start extracts
+  the bundled CPython 3.12.16 and makes the env from it with `--seed --no-index`, baseline
+  wheels offline in ~9 s, both plugins load; Run (with pygame), the REPL and the debugger
+  work, Quit is clean. Seen on the way: with a very long `MU_DATA_DIR` the extraction hits
+  Windows' 260-character limit (the stub isn't long-path aware) and Nu silently falls back
+  to `uv venv --python 3.12` (a download on a machine without one). A real data folder
+  leaves ~30 characters of room (`%LOCALAPPDATA%\python\mu\python\<build>.partial\` is 124
+  for a 5-letter user name, the archive's deepest file 105; Windows user names are ≤ 20), so
+  not a learner problem today; a shorter extraction folder name would widen the margin.
+  That MSI predates the kernelspec change above, so it still wrote `--user` kernelspecs.
+- [ ] Check #39's changes on **Linux** (from source and the AppImage), and an MSI
+  **upgrade** over 2.0.0b3 (no b3 install was on the Windows machine).
+- [ ] **pygame has no wheels for Python 3.14**: a source/`pip` install of Nu on 3.14 makes a
+  3.14 learner environment, where the baseline install can't get pygame (it tries to
+  compile it; a warning in the log, and Pygame Zero's Play then fails). The installers
+  (Python 3.12) are fine. Decide: cap the learner environment's Python, or `pygame-ce`.
+- [x] `MU_DATA_DIR` didn't cover the Jupyter kernelspec (`ipykernel install --user` wrote
+  to the real `~/Library/Jupyter/kernels` etc.), so a throwaway profile left one behind.
+  Now `ipykernel install --prefix <env>` puts it in the environment
+  (`<env>/share/jupyter/kernels`, `VirtualEnvironment.kernels_dir`), which `MuKernelManager`
+  searches first: it goes with the environment, each named environment has its own. An
+  environment made by an older Nu keeps using its `--user` spec until it's re-created;
+  those old specs are left in the learner's Jupyter folder (not deleted by Nu).
 - [ ] **Release 2.0.0**: `v2.0.0` was never tagged (the latest tag is `v2.0.0b3`); follow
   `docs/release.md`. The releases page still lists Mu's `v1.0.0-beta0.1`, and the
   `v1.0.0-beta0.1` / `v1.2.2.alpha.1` tags are Mu's too: consider removing them.

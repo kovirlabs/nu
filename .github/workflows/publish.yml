@@ -1,0 +1,103 @@
+name: Publish to PyPI
+
+# Uploads nu-editor and the bundled plugins it depends on to PyPI with Trusted
+# Publishing (OIDC): no API token is stored anywhere. See docs/pypi.md for the
+# one-time setup on pypi.org / test.pypi.org and the GitHub environments.
+#
+# - A release tag (plain numeric `vX.Y.Z`, the only kind Nu releases with)
+#   publishes to PyPI. Pre-release-style tags (v2.0.0b1, ...) don't match.
+# - A manual run publishes to TestPyPI by default (a dry run of the whole
+#   path), or to PyPI when asked.
+#
+# An uploaded version number can never be reused, on either index.
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: Where to upload
+        type: choice
+        options: [testpypi, pypi]
+        default: testpypi
+  push:
+    tags: 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build sdists and wheels
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # A tag must name the version in mu/__init__.py, or the upload would
+      # burn a version number the tag doesn't describe.
+      - name: Check the tag matches the version
+        if: github.event_name == 'push'
+        run: |
+          version="$(sed -n 's/^__version__ = "\(.*\)"$/\1/p' mu/__init__.py)"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match mu/__init__.py ($version)"
+            exit 1
+          fi
+
+      # The same builds as `make dist` (make.py `_build`), kept apart so the
+      # plugins can be uploaded before nu-editor, which requires them. To
+      # publish another plugin, add its folder here (and to BUNDLED_PLUGINS in
+      # make.py and the Makefile) and give it a publisher on PyPI.
+      - name: Build
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m build --outdir dist/editor .
+          for plugin in plugins/pygamezero plugins/circuitpython; do
+            python -m build --outdir dist/plugins "$plugin"
+          done
+          twine check --strict dist/editor/* dist/plugins/*
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-dists
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Upload to ${{ (github.event_name == 'push' || inputs.repository == 'pypi') && 'PyPI' || 'TestPyPI' }}
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # The environment is part of what PyPI trusts; `pypi` should have a
+    # required reviewer so nothing goes out unapproved.
+    environment: ${{ (github.event_name == 'push' || inputs.repository == 'pypi') && 'pypi' || 'testpypi' }}
+    permissions:
+      id-token: write
+    env:
+      REPOSITORY_URL: ${{ (github.event_name == 'push' || inputs.repository == 'pypi') && 'https://upload.pypi.org/legacy/' || 'https://test.pypi.org/legacy/' }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-dists
+          path: dist
+
+      # Plugins first: nu-editor's wheel requires them. A plugin version the
+      # index already has (the plugin didn't change this release) is skipped.
+      - name: Upload the bundled plugins
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/plugins
+          repository-url: ${{ env.REPOSITORY_URL }}
+          skip-existing: true
+
+      # Not skip-existing: nu-editor's version must be new.
+      - name: Upload nu-editor
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/editor
+          repository-url: ${{ env.REPOSITORY_URL }}

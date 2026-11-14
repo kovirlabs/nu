@@ -10,7 +10,7 @@ import pytest
 from PyQt6.QtWidgets import QMessageBox
 
 from mu import resources, settings
-from mu.virtual_environment import venv
+from mu.virtual_environment import UvNotFound, venv
 from mu.app import setup_modes
 from mu.plugin import PLUGIN_API_VERSION, Host, ModePlugin, Plugin, PluginSettings
 from mu.modes.base import BaseMode
@@ -482,6 +482,110 @@ def test_run_program_interactive(host):
     kwargs = host._view.add_python3_runner.call_args.kwargs
     assert kwargs["interactive"] is True
     assert kwargs["python_args"] is None
+
+
+def test_add_and_remove_pane(host):
+    """A plugin's pane is docked through the view, and taken away again."""
+    widget = mock.MagicMock()
+    pane = host.add_pane(widget, "Files", area="right")
+    host._view.add_plugin_pane.assert_called_once_with(widget, "Files", "right")
+    assert pane is host._view.add_plugin_pane.return_value
+    host.remove_pane(pane)
+    host._view.remove_plugin_pane.assert_called_once_with(pane)
+    host.remove_pane(pane)  # already gone
+    host._view.remove_plugin_pane.assert_called_once_with(pane)
+
+
+def test_panes_go_when_their_mode_is_left(host):
+    """
+    Leaving a mode (its deactivate) takes away the panes added while it was
+    current, even if deactivate fails; other modes' panes stay.
+    """
+    alpha = host.register_mode(AlphaMode)
+    host.register_mode(BetaMode)
+    host._view.add_plugin_pane.side_effect = lambda *args: mock.MagicMock()
+    host._editor.mode = "alpha"
+    alphas = host.add_pane(mock.MagicMock(), "Alpha's")
+    host._editor.mode = "beta"
+    host.add_pane(mock.MagicMock(), "Beta's")
+    alpha.deactivate()
+    host._view.remove_plugin_pane.assert_called_once_with(alphas)
+    # A deactivate that fails: the pane still goes.
+    host._view.remove_plugin_pane.reset_mock()
+    host._editor.mode = "alpha"
+    again = host.add_pane(mock.MagicMock(), "Alpha's again")
+    with (
+        mock.patch.object(AlphaMode, "deactivate", side_effect=RuntimeError("x")),
+        pytest.raises(RuntimeError),
+    ):
+        host2 = Host(host._editor, host._view)
+        host2._panes = [("alpha", again)]
+        host2.register_mode(AlphaMode).deactivate()
+    host._view.remove_plugin_pane.assert_called_once_with(again)
+
+
+def test_panes_go_when_their_plugin_unloads(host):
+    plugin = AlphaPlugin()
+    host.load_plugin(plugin)
+    host._editor.mode = "alpha"
+    pane = host.add_pane(mock.MagicMock(), "Pane")
+    host.unload_plugin(plugin)
+    host._view.remove_plugin_pane.assert_called_once_with(pane)
+
+
+def test_open_file(host):
+    host.open_file("/work/a.py")
+    host._editor.direct_load.assert_called_once_with("/work/a.py")
+
+
+def test_run_program_with_inline_metadata(host, tmp_path):
+    """
+    A program with a `# /// script` block runs with `uv run
+    --with-requirements` (its packages on top of the environment, so
+    pgzero's still there), echoed and logged.
+    """
+    game = tmp_path / "game.py"
+    game.write_text('# /// script\n# dependencies = ["cowsay"]\n# ///\n')
+    host._editor.envars = {"A": "1"}
+    runner = host._view.add_python3_runner.return_value
+    record = mock.MagicMock()
+    record.program = "/bin/uv"
+    record.argv = ["/bin/uv", "run", "python", "-m", "pgzero", str(game)]
+    record.display.return_value = "uv run …"
+    with mock.patch.object(
+        venv, "with_requirements_command", return_value=record
+    ) as command:
+        assert host.run_program(str(game), python_args=["-m", "pgzero"])
+    command.assert_called_once_with(
+        str(game), ["-m", "pgzero", str(game)], str(tmp_path)
+    )
+    host._view.add_python3_runner.assert_called_once_with(
+        interpreter="/bin/uv",
+        script_name=str(game),
+        working_directory=str(tmp_path),
+        interactive=False,
+        envars={"A": "1"},
+        python_args=["run", "python", "-m", "pgzero"],
+        echo="$ uv run …",
+    )
+    runner.track_uv_command.assert_called_once_with(record)
+    runner.process.waitForStarted.assert_called_once_with()
+
+
+def test_run_program_with_inline_metadata_without_uv(host, tmp_path):
+    game = tmp_path / "game.py"
+    game.write_text('# /// script\n# dependencies = ["cowsay"]\n# ///\n')
+    with (
+        mock.patch.object(
+            venv,
+            "with_requirements_command",
+            side_effect=UvNotFound("no uv"),
+        ),
+        mock.patch.object(host, "show_message") as show_message,
+    ):
+        assert host.run_program(str(game)) is False
+    assert "can't find uv" in show_message.call_args.args[0]
+    host._view.add_python3_runner.assert_not_called()
 
 
 def test_run_program_not_started(host):

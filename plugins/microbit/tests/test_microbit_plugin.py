@@ -148,8 +148,8 @@ def test_icons_come_from_the_plugin():
     mode = host.modes["microbit"]
     with mock.patch("mu.interface.panes.CHARTS", True):
         names = [action["name"] for action in mode.actions()]
-    assert names == ["microbit-flash", "repl", "plotter"]
-    for name in [mode.icon, "microbit-flash"]:
+    assert names == ["microbit-flash", "microbit-files", "repl", "plotter"]
+    for name in [mode.icon, "microbit-flash", "microbit-files"]:
         assert os.path.dirname(resources.image_path(name)) == IMAGES_DIR, name
         assert not resources.load_icon(name).isNull(), name
     for name in ["repl", "plotter"]:
@@ -189,17 +189,28 @@ def test_mode_basics(mm):
 def test_actions(mm, host):
     host.plotter_available = True
     actions = mm.actions()
-    assert [a["name"] for a in actions] == ["microbit-flash", "repl", "plotter"]
+    assert [a["name"] for a in actions] == [
+        "microbit-flash",
+        "microbit-files",
+        "repl",
+        "plotter",
+    ]
     assert actions[0]["handler"] == mm.flash
     assert actions[0]["shortcut"] == "F3"
     assert "Shift" in actions[0]["description"]
-    assert actions[1]["handler"] == mm.toggle_repl
-    assert actions[2]["handler"] == mm.toggle_plotter
+    assert actions[1]["handler"] == mm.toggle_files
+    assert actions[1]["shortcut"] == "F4"
+    assert actions[2]["handler"] == mm.toggle_repl
+    assert actions[3]["handler"] == mm.toggle_plotter
 
 
 def test_actions_without_charts(mm, host):
     host.plotter_available = False
-    assert [a["name"] for a in mm.actions()] == ["microbit-flash", "repl"]
+    assert [a["name"] for a in mm.actions()] == [
+        "microbit-flash",
+        "microbit-files",
+        "repl",
+    ]
 
 
 def test_api(mm, host):
@@ -476,7 +487,12 @@ def test_flash_finished_gives_the_buttons_back(mm, started):
     mm.set_buttons = mock.MagicMock()
     mm.on_flash_finished()
     mm.set_buttons.assert_called_once_with(
-        **{"microbit-flash": True, "repl": True, "plotter": True}
+        **{
+            "microbit-flash": True,
+            "microbit-files": True,
+            "repl": True,
+            "plotter": True,
+        }
     )
 
 
@@ -555,7 +571,12 @@ def test_flash_with_no_microbit_end_to_end(mm, host):
     )
     assert mm.flash_thread is None
     mm.set_buttons.assert_called_with(
-        **{"microbit-flash": True, "repl": True, "plotter": True}
+        **{
+            "microbit-flash": True,
+            "microbit-files": True,
+            "repl": True,
+            "plotter": True,
+        }
     )
     assert mode_module.FLASH_BUTTON == "microbit-flash"
 

@@ -23,13 +23,18 @@ import os
 from .base import BaseMode
 from ..debugger.config import DEBUGGER_PORT
 from ..debugger.client import Debugger
-from ..debugger.utils import is_breakpoint_line
-from ..virtual_environment import venv
+from ..debugger.utils import debug_runner, is_breakpoint_line
+from ..script_metadata import wants_uv_run
+from ..virtual_environment import UvNotFound, venv
 
 from PyQt6.QtCore import QTimer
 
 
 logger = logging.getLogger(__name__)
+
+# How long (in seconds) the debugger waits for a program run with `uv run`
+# to start: uv may be downloading the packages its `# /// script` lists.
+UV_CONNECT_TIMEOUT = 300
 
 
 class DebugMode(BaseMode):
@@ -122,21 +127,73 @@ class DebugMode(BaseMode):
             self.set_buttons(modes=False)
             envars = self.editor.envars
             cwd = os.path.dirname(tab.path)
-            self.runner = self.view.add_python3_runner(
-                venv.interpreter, tab.path, cwd, debugger=True, envars=envars
-            )
+            connect_timeout = 10
+            if wants_uv_run(tab.text()):
+                # Inline (PEP 723) dependencies: uv fetches them first, which
+                # can take a while, so wait longer for the runner.
+                self.runner = self.debug_with_uv(tab.path, cwd, envars)
+                if not self.runner:
+                    self.stop()
+                    return
+                connect_timeout = UV_CONNECT_TIMEOUT
+            else:
+                self.runner = self.view.add_python3_runner(
+                    venv.interpreter, tab.path, cwd, debugger=True, envars=envars
+                )
             self.runner.process.waitForStarted()
             self.runner.process.finished.connect(self.finished)
             self.view.add_debug_inspector()
             self.view.set_read_only(True)
             self.debugger = Debugger(
-                "localhost", DEBUGGER_PORT, proc=self.runner.process
+                "localhost",
+                DEBUGGER_PORT,
+                proc=self.runner.process,
+                connect_timeout=connect_timeout,
             )
             self.debugger.view = self
             self.debugger.start()
         else:
             logger.debug("Current script has not been saved. Aborting debug.")
             self.stop()
+
+    def debug_with_uv(self, path, cwd, envars):
+        """
+        Debug the program at `path`, which has a `# /// script` block (PEP
+        723 inline dependencies), with ``uv run --python <the learner's env>
+        --no-project --with-requirements <path> python <debug runner> <path>``:
+        uv adds the listed packages on top of the environment, then the
+        debugger runs as usual. The command is in the command log and is the
+        pane's first line. Return the pane, or None if there's no uv (the
+        learner is told why).
+        """
+        run_args = [debug_runner(), path]
+        try:
+            record = venv.with_requirements_command(path, run_args, cwd)
+        except UvNotFound:
+            logger.exception("No uv to debug a script with inline metadata.")
+            self.view.show_message(
+                _("Nu can't find uv, so it can't debug this program."),
+                _(
+                    "This program starts with a “# /// script” block listing "
+                    "the packages it needs, and Nu uses uv to fetch them. "
+                    "Reinstalling Nu should bring uv back. Or remove the "
+                    "block to debug the program with your environment's "
+                    "packages."
+                ),
+            )
+            return None
+        # The pane adds the debug runner and the program itself.
+        runner = self.view.add_python3_runner(
+            record.program,
+            path,
+            cwd,
+            debugger=True,
+            envars=envars,
+            python_args=record.argv[1 : -len(run_args)],
+            echo="$ " + record.display(),
+        )
+        runner.track_uv_command(record)
+        return runner
 
     def stop(self):
         """
@@ -147,8 +204,12 @@ class DebugMode(BaseMode):
             self.runner.stop_process()
             self.runner = None
             if getattr(self, "debugger", None):
-                # With the runner gone the debugger's listener thread ends;
-                # wait for it, so it isn't still running if Nu is quitting.
+                # With the runner gone the debugger's listener thread ends
+                # (told to, if it's still trying to connect); wait for it,
+                # so it isn't still running if Nu is quitting.
+                handler = getattr(self.debugger, "command_handler", None)
+                if handler is not None:
+                    handler.stopped = True
                 self.debugger.listener_thread.wait(2000)
             self.debugger = None
             self.view.remove_python_runner()
