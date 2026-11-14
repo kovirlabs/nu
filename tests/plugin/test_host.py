@@ -10,8 +10,7 @@ import pytest
 from PyQt6.QtWidgets import QMessageBox
 
 from mu import resources, settings
-import mu.virtual_environment
-from mu.virtual_environment import venv
+from mu.virtual_environment import UvNotFound, venv
 from mu.app import setup_modes
 from mu.plugin import PLUGIN_API_VERSION, Host, ModePlugin, Plugin, PluginSettings
 from mu.modes.base import BaseMode
@@ -526,7 +525,7 @@ def test_run_program_with_inline_metadata_without_uv(host, tmp_path):
         mock.patch.object(
             venv,
             "with_requirements_command",
-            side_effect=mu.virtual_environment.UvNotFound("no uv"),
+            side_effect=UvNotFound("no uv"),
         ),
         mock.patch.object(host, "show_message") as show_message,
     ):

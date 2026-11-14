@@ -5,11 +5,9 @@ Tests for the debug mode.
 
 import os
 
-import mu.modes.debugger
-import mu.virtual_environment
 from mu.debugger.config import DEBUGGER_PORT
-from mu.modes.debugger import DebugMode
-from mu.virtual_environment import venv
+from mu.modes.debugger import UV_CONNECT_TIMEOUT, DebugMode, debug_runner
+from mu.virtual_environment import UvNotFound, venv
 from unittest import mock
 
 
@@ -104,7 +102,7 @@ def test_debug_start_with_inline_metadata():
     view.add_python3_runner.return_value = mock_runner
     record = mock.MagicMock()
     path = view.current_tab.path
-    runner_script = mu.modes.debugger.debug_runner()
+    runner_script = debug_runner()
     record.program = "/bin/uv"
     record.argv = ["/bin/uv", "run", "--python", "py", "x", "python"] + [
         runner_script,
@@ -132,7 +130,7 @@ def test_debug_start_with_inline_metadata():
     )
     mock_runner.track_uv_command.assert_called_once_with(record)
     assert mock_debugger_class.call_args.kwargs["connect_timeout"] == (
-        mu.modes.debugger.UV_CONNECT_TIMEOUT
+        UV_CONNECT_TIMEOUT
     )
 
 
@@ -146,7 +144,7 @@ def test_debug_start_with_inline_metadata_without_uv():
     with mock.patch.object(
         venv,
         "with_requirements_command",
-        side_effect=mu.virtual_environment.UvNotFound("no uv"),
+        side_effect=UvNotFound("no uv"),
     ):
         dm.start()
     assert "can't find uv" in view.show_message.call_args.args[0]
