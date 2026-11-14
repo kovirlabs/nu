@@ -1303,6 +1303,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../pypi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Publishing to PyPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../docs-site/" class="md-nav__link">
         
   
@@ -1720,24 +1748,30 @@ template and nothing depends on it.</p>
 <li><strong>pip from a checkout</strong> (as CI's test job does): pip doesn't read
   <code>[tool.uv.sources]</code>, so give it the paths too:
   <code>pip install ./plugins/circuitpython ./plugins/pygamezero ".[dev]"</code>.</li>
-<li><strong>Installers:</strong> <code>[tool.briefcase.app.mu].requires</code> lists each bundled plugin
-  as a local path, relative to the project root (<code>"./plugins/circuitpython"</code>,
-  <code>"./plugins/pygamezero"</code>).
-  Briefcase turns a requirement containing a path separator into an absolute
-  path from the project root and pip-installs it into the app, entry points and
-  package data (icons, demo assets) and the plugin's own dependencies
-  (CircuitPython's <code>adafruit-board-toolkit</code>) included. (Checked against Briefcase
-  0.4.2's <code>briefcase/commands/create.py</code>: <code>_is_local_path</code> and
-  <code>_write_requirements_file</code>.)</li>
+<li><strong>Installers:</strong> Briefcase adds <code>[project.dependencies]</code> to its own
+  <code>requires</code>, so it already asks pip for <code>nu-circuitpython</code> and
+  <code>nu-pygamezero</code> by name. pip finds them as wheels built from the checkout
+  into <code>build/plugin-wheels/</code>, which <code>requirement_installer_args</code>
+  (<code>--find-links</code>) in <code>[tool.briefcase.app.mu]</code> points at; <code>make.py</code>
+  (<code>_build_plugin_wheels</code>) and <code>build.yml</code> build them before
+  <code>briefcase create</code>. The app gets the plugins' entry points, package data
+  (icons, demo assets) and own dependencies (CircuitPython's
+  <code>adafruit-board-toolkit</code>). Don't also list a plugin in <code>requires</code> as a
+  local path (<code>"./plugins/&lt;name&gt;"</code>): pip then fails with "No matching
+  distribution found for nu-<name>", because it meets the name before the
+  path. That broke every installer build from Phase 5c until it was caught by
+  building the macOS app locally (2026-11).</li>
 <li><strong>Publishing to PyPI:</strong> <code>[tool.uv.sources]</code> is uv-only; the built <code>nu-editor</code>
   sdist/wheel just says <code>Requires-Dist: nu-circuitpython&gt;=0.1</code> and
   <code>Requires-Dist: nu-pygamezero&gt;=0.1</code>. So <strong>each bundled plugin must be
   published to PyPI before the <code>nu-editor</code> release that needs it</strong> (or
   <code>pip install nu-editor</code> can't resolve). The order is: <code>nu-circuitpython</code> and
   <code>nu-pygamezero</code> (in either order: neither depends on the other or on
-  <code>nu-editor</code>), then <code>nu-editor</code>. <code>make dist</code> builds all three into <code>dist/</code>,
-  and <code>make publish-live</code> (or <code>make publish-test</code> for test PyPI) uploads them
-  in that order, skipping a plugin version PyPI already has. Bump a plugin's
+  <code>nu-editor</code>), then <code>nu-editor</code>. <code>publish.yml</code> builds all three and
+  uploads them in that order on a release tag, skipping a plugin version PyPI
+  already has (see <a href="../pypi/">Publishing to PyPI</a>); <code>make dist</code> and
+  <code>make publish-live</code> (or <code>make publish-test</code> for test PyPI) do the same by
+  hand. Bump a plugin's
   own version when it changes, independently of Nu's.</li>
 </ul>
 <h3 id="opt-in-workspace-plugins-microbit">Opt-in workspace plugins: micro:bit<a class="headerlink" href="#opt-in-workspace-plugins-microbit" title="Permanent link">&para;</a></h3>
@@ -1752,8 +1786,8 @@ micro:bits. Instead:</p>
   entry point skip.</li>
 <li>CI installs it anyway (<code>./plugins/microbit</code> in <code>test.yml</code>'s and <code>docs.yml</code>'s
   pip lines), so its tests and API docs run on every push.</li>
-<li>It is <strong>not</strong> in Briefcase's <code>requires</code> or <code>build.yml</code>'s installs, so the
-  installers don't ship it, and the built <code>nu-editor</code> wheel lists it only as
+<li>It is <strong>not</strong> one of <code>nu-editor</code>'s dependencies or in <code>build.yml</code>'s installs
+  and plugin wheels, so the installers don't ship it, and the built <code>nu-editor</code> wheel lists it only as
   <code>Requires-Dist: nu-microbit&gt;=0.1; extra == "microbit"</code>.</li>
 <li>Its own dependency is <code>mpremote</code>. The MicroPython firmware is <strong>not</strong> in the
   package: it's pinned (URL + SHA-256) and downloaded on first use into
@@ -1761,8 +1795,10 @@ micro:bits. Instead:</p>
 </ul>
 <p><strong>Promotion (Phase 6c), after the maintainer's hardware pass</strong> (the checklist
 in <code>plugins/microbit/README.md</code>): move <code>nu-microbit&gt;=0.1</code> from the extra to the
-dependencies, add <code>"./plugins/microbit"</code> to Briefcase's <code>requires</code>, add it to
-<code>loader.BUNDLED_DISTRIBUTIONS</code> and to <code>build.yml</code>'s plugin installs, and
+dependencies, add it to <code>BUNDLED_PLUGINS</code> in <code>make.py</code> and the <code>Makefile</code>
+(so its wheel is built for Briefcase and published), to
+<code>loader.BUNDLED_DISTRIBUTIONS</code> and to <code>build.yml</code>'s plugin installs and plugin
+wheels, and
 publish it to PyPI before that Nu release. To make Flash work offline from a
 fresh install, the installer build can also put the two pinned <code>.hex</code> files in
 <code>nu_microbit/firmware/</code> (the plugin checks there, after the data folder, and
@@ -1796,7 +1832,8 @@ the AppImage. The MSI's UpgradeCode is pinned as <code>guid</code> in <code>pypr
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>$ make macos     # macOS .app/.dmg (ad-hoc signed)
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>$ make linux     # Linux AppImage
 </code></pre></div>
-<p>Each target fetches the offline baseline wheels and runs the Briefcase
+<p>Each target fetches the offline baseline wheels, builds the bundled plugins'
+wheels and runs the Briefcase
 create → build → package cycle (see <code>make.py</code>). The build is mostly self-driving
 once the build tools are present (Briefcase fetches WiX for the Windows MSI on
 demand).</p>
@@ -1807,8 +1844,9 @@ demand).</p>
 <li>A pinned <strong><code>uv</code></strong> binary — it rides in via the PyPI <code>uv</code> wheel, and
   <code>find_uv()</code> locates it at runtime through <code>uv.find_uv_bin()</code> (no <code>PATH</code> or
   <code>MU_UV</code> needed in the packaged app).</li>
-<li>The bundled plugins (<code>plugins/*</code>), installed by Briefcase from the local
-  paths in <code>requires</code>.</li>
+<li>The bundled plugins (<code>plugins/pygamezero</code>, <code>plugins/circuitpython</code>),
+  installed by Briefcase from wheels built from the checkout
+  (<code>build/plugin-wheels/</code>, see <a href="#bundled-plugins-the-uv-workspace">above</a>).</li>
 <li>The <strong>baseline wheels zip</strong> (<code>mu/wheels/&lt;version&gt;.zip</code>), so the learner's
   baseline packages install without the network: the core's (<code>ipykernel</code>)
   plus the bundled plugins' <code>learner-env</code> packages (Pygame Zero's <code>pgzero</code>

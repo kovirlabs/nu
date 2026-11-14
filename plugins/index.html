@@ -1557,6 +1557,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../pypi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Publishing to PyPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../docs-site/" class="md-nav__link">
         
   
@@ -2931,8 +2959,8 @@ board's drive, Serial and Plotter buttons, and a dependency of its own
 <ul>
 <li>It's a member of the repo's <strong>uv workspace</strong>, and <code>nu-editor</code> depends on it,
   so <code>uv sync</code> installs it (editable) and Nu finds it through its entry point,
-  just as it finds a community plugin. The installers include it through
-  Briefcase's <code>requires</code> (see <a href="../packaging/">packaging</a>).</li>
+  just as it finds a community plugin. The installers include it as a
+  wheel built from the checkout (see <a href="../packaging/">packaging</a>).</li>
 <li>It imports only <code>mu.plugin</code>, so it can graduate to its own repository by
   moving the folder.</li>
 <li>Its tests live in <code>plugins/&lt;name&gt;/tests</code> and run with Nu's (<code>pytest</code>
@@ -2943,16 +2971,18 @@ board's drive, Serial and Plotter buttons, and a dependency of its own
 </ul>
 <p>To add one: create <code>plugins/&lt;name&gt;/</code> (from the template), add
 <code>"nu-&lt;name&gt;&gt;=&lt;version&gt;"</code> to <code>nu-editor</code>'s dependencies and
-<code>nu-&lt;name&gt; = { workspace = true }</code> to <code>[tool.uv.sources]</code>, add
-<code>"./plugins/&lt;name&gt;"</code> to <code>[tool.briefcase.app.mu].requires</code>, its source folder
+<code>nu-&lt;name&gt; = { workspace = true }</code> to <code>[tool.uv.sources]</code>, add its folder to
+<code>BUNDLED_PLUGINS</code> in <code>make.py</code> and the <code>Makefile</code> and its name to
+<code>loader.BUNDLED_DISTRIBUTIONS</code>, its source folder
 to <code>pythonpath</code> in <code>[tool.pytest.ini_options]</code>, its package to
 <code>_TRANSLATE_PLUGIN_PACKAGES</code> in <code>make.py</code>, and its path to the pip installs in
-<code>.github/workflows/test.yml</code>, <code>docs.yml</code> and <code>build.yml</code>, and
+<code>.github/workflows/test.yml</code>, <code>docs.yml</code> and <code>build.yml</code> (and to
+<code>build.yml</code>'s plugin wheels and <code>publish.yml</code>'s builds), and
 to mkdocstrings' <code>paths</code> in <code>mkdocs.yml</code>. Then <code>uv lock</code>.</p>
 <h3 id="in-the-repo-but-opt-in-microbit">In the repo but opt-in: micro:bit<a class="headerlink" href="#in-the-repo-but-opt-in-microbit" title="Permanent link">&para;</a></h3>
 <p><code>plugins/microbit/</code> (<code>nu-microbit</code>) is a workspace member like the bundled
 plugins, with its tests run in CI, but it is <strong>not</strong> one of <code>nu-editor</code>'s
-dependencies or in Briefcase's <code>requires</code>, and not in
+dependencies (so the installers don't carry it), and not in
 <code>loader.BUNDLED_DISTRIBUTIONS</code>, so the Plugins tab shows it as an <em>Installed
 package</em>. It's installed by <code>nu-editor</code>'s <code>microbit</code> extra (<code>uv sync
 --all-extras</code> in a checkout). Until a plugin has been tried on real hardware,

@@ -16,7 +16,7 @@
         <link rel="prev" href="../packaging/">
       
       
-        <link rel="next" href="../docs-site/">
+        <link rel="next" href="../pypi/">
       
       
         
@@ -1280,6 +1280,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../pypi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Publishing to PyPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../docs-site/" class="md-nav__link">
         
   
@@ -1636,6 +1664,9 @@ version numbers and the order of publishing are up to whoever cuts it.</p>
   zipped <code>.app</code>, Linux <code>.AppImage</code>) when run by hand or when a <code>v*</code> tag is
   pushed. A tag also publishes a GitHub Release with the installers attached.
   See <a href="../packaging/">packaging</a>.</li>
+<li><code>publish.yml</code> uploads <code>nu-editor</code> and its bundled plugins to PyPI when a
+  <code>vX.Y.Z</code> tag is pushed (after your approval), or to TestPyPI when run by
+  hand. See <a href="../pypi/">Publishing to PyPI</a>.</li>
 </ul>
 <h2 id="version-numbers">Version numbers<a class="headerlink" href="#version-numbers" title="Permanent link">&para;</a></h2>
 <p>Release versions are <strong>plain numeric <code>X.Y.Z</code></strong>: no <code>rc</code>/<code>b</code>/<code>dev</code>
@@ -1722,7 +1753,7 @@ says <code>Requires-Dist: nu-circuitpython&gt;=…</code> and <code>nu-pygamezer
 release needs a new plugin version, that version must be on PyPI before
 <code>nu-editor</code> is, or <code>pip install nu-editor</code> can't resolve (see
 <a href="../packaging/#bundled-plugins-the-uv-workspace">packaging</a>).
-<code>make publish-live</code> takes care of the order:</p>
+<code>publish.yml</code> (and <code>make publish-live</code>) take care of the order:</p>
 <ol>
 <li>For each bundled plugin that changed, bump its version (in its own
    <code>pyproject.toml</code>). (<code>nu-microbit</code> stays unpublished until it's promoted;
@@ -1740,15 +1771,14 @@ release needs a new plugin version, that version must be on PyPI before
 <li>Merge, then push an annotated tag on that commit:
    <code>git tag -a v2.0.0 -m "Nu 2.0.0"</code> then <code>git push origin v2.0.0</code>.
    <code>build.yml</code> rebuilds the three installers (from the plugins in the
-   repository, not PyPI) and publishes the GitHub Release with them attached.</li>
-<li>Publish to PyPI with <code>make publish-live</code> (try <code>make publish-test</code> first to
-   upload to test PyPI). It runs <code>make check</code>, builds the sdists and wheels of
-   <code>nu-editor</code>, <code>nu-pygamezero</code> and <code>nu-circuitpython</code> into <code>dist/</code> (<code>make
-   dist</code>), uploads the two plugins (a version PyPI already has, because the
-   plugin didn't change, is skipped) and then <code>nu-editor</code>. It needs twine 7
-   or later (the <code>package</code> extra) and your PyPI credentials. Check that
-   <code>pip install nu-editor</code> in a fresh virtual environment installs Nu and its
-   plugins and starts.</li>
+   repository, not PyPI) and publishes the GitHub Release with them attached.
+   The tag also starts <code>publish.yml</code>, which uploads the two plugins (a
+   version PyPI already has, because the plugin didn't change, is skipped)
+   and then <code>nu-editor</code> to PyPI once you approve the run in the <code>pypi</code>
+   environment. See <a href="../pypi/">Publishing to PyPI</a> for the one-time setup, the
+   TestPyPI dry run and the manual fallback (<code>make publish-live</code>).</li>
+<li>Check that <code>pip install nu-editor</code> in a fresh virtual environment installs
+   Nu and its plugins and starts.</li>
 </ol>
 <p>If the release went out wrong (say, the installers carry the old version):
 delete the GitHub Release (<code>gh release delete vX.Y.Z --yes</code>) and the tag
