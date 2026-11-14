@@ -1786,21 +1786,31 @@ tab first. The first line in the output pane shows the command:</p>
 </ul>
 <p>The same file works anywhere uv is installed: <code>uv run cow.py</code> in a terminal
 does the same thing.</p>
+<p><strong>Debug</strong>, and Pygame Zero's <strong>Play</strong>, also use <code>uv run</code> for a program with
+the block, a little differently: uv adds the packages the block lists <em>on
+top of</em> your environment, so the debugger and Pygame Zero (and the packages
+you added) are still there. The first line in the output pane shows that
+command too:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>$ uv run --python /home/you/…/bin/python --no-project --with-requirements /home/you/mu_code/game.py python -m pgzero /home/you/mu_code/game.py
+</code></pre></div>
+<p>The debugger waits for uv to fetch the packages before it starts (up to five
+minutes). Such a game, or a program you're debugging, stops when you click
+<strong>Stop</strong>, as usual.</p>
 <h2 id="using-it-yourself-from-a-terminal">Using it yourself from a terminal<a class="headerlink" href="#using-it-yourself-from-a-terminal" title="Permanent link">&para;</a></h2>
 <p>Copy the commands from the Environment tab. To <strong>activate</strong> the environment,
 so <code>python</code> and <code>pip</code> in that terminal are the environment's:</p>
 <p>On macOS or Linux:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">source</span><span class="w"> </span>/home/you/.local/share/mu/mu_venv-311-…/bin/activate
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>python<span class="w"> </span>hello.py
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nb">source</span><span class="w"> </span>/home/you/.local/share/mu/mu_venv-311-…/bin/activate
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>python<span class="w"> </span>hello.py
 </code></pre></div>
 <p>On Windows (Command Prompt or PowerShell):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>C:\Users\you\AppData\Local\python\mu\mu_venv-311-…\Scripts\activate
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>python hello.py
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>C:\Users\you\AppData\Local\python\mu\mu_venv-311-…\Scripts\activate
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>python hello.py
 </code></pre></div>
 <p>Type <code>deactivate</code> to stop. Or, without activating, tell uv which Python to
 use:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span>/home/you/…/bin/python<span class="w"> </span>cowsay
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>uv<span class="w"> </span>run<span class="w"> </span>--python<span class="w"> </span>/home/you/…/bin/python<span class="w"> </span>hello.py
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span>/home/you/…/bin/python<span class="w"> </span>cowsay
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>uv<span class="w"> </span>run<span class="w"> </span>--python<span class="w"> </span>/home/you/…/bin/python<span class="w"> </span>hello.py
 </code></pre></div>
 <p>If your terminal says <code>uv</code> isn't found, either
 <a href="https://docs.astral.sh/uv/getting-started/installation/">install uv</a>, or
@@ -1853,8 +1863,8 @@ one, one folder each, named after the environment:</p>
 </table>
 <p>Making one is the same as typing this in a terminal (on Linux; the Advanced
 section shows the real command, and Nu then adds the packages it needs):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>uv<span class="w"> </span>venv<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.11<span class="w"> </span>--seed<span class="w"> </span>~/.local/share/mu/envs/project-a
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span>~/.local/share/mu/envs/project-a/bin/python<span class="w"> </span>ipykernel
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>uv<span class="w"> </span>venv<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.11<span class="w"> </span>--seed<span class="w"> </span>~/.local/share/mu/envs/project-a
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span>~/.local/share/mu/envs/project-a/bin/python<span class="w"> </span>ipykernel
 </code></pre></div>
 <p>An environment you make yourself in the <code>envs</code> folder shows up in the list
 too. Nu only switches to it if it can use it: it needs the same Python version
@@ -1862,8 +1872,16 @@ as Nu and the packages Nu needs to run your programs (the REPL's <code>ipykernel
 and Pygame Zero's packages); if not, Nu tells you what's missing and keeps the
 environment it has. Using one from a terminal works as above: the Advanced
 section shows the command to activate the selected one.</p>
-<p>Nu can't delete an environment yet. To remove one, switch to another, restart
-Nu, then delete its folder.</p>
+<p>To delete an environment you've made, select it and click <strong>Delete…</strong>. Nu
+asks first, then removes its folder with every package in it (your programs
+aren't in it, so they stay). You can't delete the default environment, the
+one Nu is using, or the one you've chosen for the next start: choose another
+and restart Nu first. If Windows says a file in the folder is in use, close
+the program using it (or restart your computer) and try again.</p>
+<p>Each environment remembers which version of Nu made it (in a
+<code>nu-environment.json</code> file inside it). When you start Nu with an environment
+an older Nu made, Nu brings it up to date first, keeping the packages you
+added, just as it does with the default one after an upgrade.</p>
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <p>When <code>uv run</code> goes wrong, Nu puts a line starting with <code>Hint:</code> just above
 uv's own message:</p>
