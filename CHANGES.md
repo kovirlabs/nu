@@ -56,7 +56,9 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   `# dependencies = ["cowsay"]`, **Run** runs it with `uv run`, which fetches
   those packages first. The command is the first line of the output, and if
   something goes wrong (no internet, a misspelt package) a `Hint:` line says
-  what to try. Programs without the block run as before. See
+  what to try. **Debug** and Pygame Zero's **Play** use it too, adding the
+  listed packages on top of your environment. Programs without the block run
+  as before. See
   [Your Python environment](https://kovirlabs.github.io/nu/environment/).
 * **Plugins (experimental).** Plugins add modes to Nu, with their own icons,
   and can say which packages their modes need in your programs' environment.
@@ -169,6 +171,9 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
 Things that worked in Mu 1.2.2 but broke in the 2.0.0 betas with the move to
 PyQt6 and uv, found by checking Nu against Mu:
 
+* On Windows, **Stop** ends a program run with `uv run` (one with a
+  `# /// script` block) completely; it used to leave the program running,
+  e.g. a Pygame Zero window that wouldn't close.
 * **Check** no longer crashes Nu when it finds a problem in your code; the
   problems are shown under the lines again.
 * **Tidy** works on code that uses newer Python syntax, such as `match`
