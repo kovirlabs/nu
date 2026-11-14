@@ -31,7 +31,7 @@ class MicrobitPlugin(ModePlugin):
         "Adds BBC micro:bit mode, for writing MicroPython and flashing it "
         "onto a micro:bit."
     )
-    api_version = "0.5"
+    api_version = "0.6"
     mode = MicrobitMode
     # The mode and Flash button icons (microbit, microbit-flash). "repl" and
     # "plotter" are Nu's own.

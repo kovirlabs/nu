@@ -8,7 +8,7 @@
     them on and off (5e), and micro:bit is back as an opt-in plugin (Phase 6,
     see [The BBC micro:bit](microbit.md)). Learners add plugins from PyPI or
     a wheel file on the Plugins tab, installers included (5d, see
-    [Adding a plugin](#adding-a-plugin)). The API is at version **0.5**, so
+    [Adding a plugin](#adding-a-plugin)). The API is at version **0.6**, so
     it can still change between releases.
 
 ## Managing plugins
@@ -293,7 +293,7 @@ release.
 
 | Name | What it is |
 |---|---|
-| `PLUGIN_API_VERSION` | The API version this Nu provides, e.g. `"0.5"`. |
+| `PLUGIN_API_VERSION` | The API version this Nu provides, e.g. `"0.6"`. |
 | `Plugin` | Base class for a plugin. |
 | `ModePlugin` | A `Plugin` that registers one or more modes for you. |
 | `Mode` | Base class for a mode (today's `BaseMode`). |
@@ -335,7 +335,7 @@ from mu.plugin import Plugin
 class MyPlugin(Plugin):
     name = "My Plugin"
     description = "Adds My mode, for doing my thing."
-    api_version = "0.5"
+    api_version = "0.6"
 
     def register(self, host):
         """Called once when the plugin loads. Do all wiring here, through
@@ -365,7 +365,7 @@ from mu.plugin import ModePlugin
 class MicrobitPlugin(ModePlugin):
     name = "micro:bit"
     description = "Adds micro:bit mode, for the BBC micro:bit."
-    api_version = "0.5"
+    api_version = "0.6"
     mode = MicrobitMode          # or: modes = (ModeA, ModeB)
     # Optional: the folder of icons the modes use (see "Icons and images").
     images = os.path.join(os.path.dirname(__file__), "images")
@@ -456,6 +456,9 @@ tell the learner if there's none). Offer the Plotter only if
 | `current_device` | The board picked in the device selector (a `Device`), or `None`. A property; use it instead of `self.editor.current_device`. *(0.5)* |
 | `data_dir(name)` | A folder of your plugin's own in Nu's data folder, `<data folder>/<name>`, made if missing (`name` is a plain folder name, normally your plugin's id). For downloads and caches, not the learner's work. *(0.5)* |
 | `log_command(argv, cwd=None, note=None)` | Add a command to **What Nu Ran** (and Nu's log), next to uv's: `argv` as the learner could type it, `note` for anything they should know (e.g. "Nu did this through mpremote's Python API"). Returns a record: call `add_output(text)` as output arrives and `finish(exit_code, output=None)` when done (0 for success). Safe from any thread. *(0.5)* |
+| `add_pane(widget, title, area="bottom")` | Dock `widget`, your own Qt widget (PyQt6 is Nu's, so you can import it), in Nu's window with `title`, at `"bottom"`, `"left"` or `"right"`, as the REPL and plotter are docked. If the widget has a `set_theme(theme)` method, it's called with `"day"`, `"night"` or `"contrast"` now and whenever the theme changes. Returns a handle for `remove_pane`. The pane belongs to the current mode: Nu removes it when the learner leaves the mode or your plugin unloads. *(0.6)* |
+| `remove_pane(pane)` | Take away a pane `add_pane` docked; nothing happens if it's already gone. *(0.6)* |
+| `open_file(path)` | Open the file at `path` in a tab, as if the learner had loaded it (or go to its tab). *(0.6)* |
 | `settings(namespace)` | A `PluginSettings` with `get(key, default=None)` and `set(key, value)`. Values are saved with the user's settings under `plugins.<namespace>` and must be JSON-serialisable. |
 | `logger(name)` | A logger writing to Nu's log as `mu.plugins.<name>`. |
 | `api_version` | The `PLUGIN_API_VERSION` this Nu provides. |
@@ -512,11 +515,17 @@ metadata) can't declare any.
 These are planned, and are deliberately left out until a real plugin needs
 them:
 
-- **Panes and settings pages**, e.g. micro:bit's file-transfer pane (designed
-  below: [Roadmap: the micro:bit Files pane](#roadmap-the-microbit-files-pane)).
+- **Settings pages** in the admin dialog.
 - **Translations for plugins.** Bundled plugins use Nu's own message catalog
   (their strings are extracted with Nu's); a community plugin's strings aren't
   translated yet.
+
+### What changed in 0.6
+
+0.6 adds panes, for micro:bit's Files pane: `Host.add_pane` and
+`Host.remove_pane` (see [the micro:bit Files pane](#the-microbit-files-pane)),
+and `Host.open_file`. Nothing was removed, but a 0.5 plugin needs its
+`api_version` changed to `"0.6"`.
 
 ### What changed in 0.5
 
@@ -577,9 +586,9 @@ until it is).
   version of Nu, with the exact versions in its details.
 - The API is bumped deliberately, with a short compatibility-shim window. It
   stays at 0.x until the micro:bit plugin (Phase 6) has proven it: 0.5 is
-  what micro:bit needed to be built on the API alone, and it should reach 1.0
-  once the plugin has passed its hardware checks and the Files pane (below)
-  has settled the API for panes.
+  what micro:bit needed to be built on the API alone and 0.6 added panes for
+  its Files pane (below); it should reach 1.0 once the plugin has passed its
+  hardware checks.
 
 ## Trust & safety
 
@@ -592,35 +601,33 @@ spot a look-alike name) and the real `uv` commands it will run. (A
 curated/signed index is a possible future, not a v1 guarantee.) In-process plugins can't be meaningfully sandboxed without a
 far larger redesign, which is out of scope.
 
-## Roadmap: the micro:bit Files pane
-
-!!! note "Design only"
-
-    Phase 6b. Not built yet: micro:bit mode has Flash, REPL and Plotter.
+## The micro:bit Files pane
 
 Upstream Mu's micro:bit mode had a **Files** pane: the files on the board on
-one side, the learner's `microbit` folder on the other, drag between them.
-Nu removed the old `FileSystemPane` (and the frozen `microfs` behind it) in
-Phase 1. It comes back as **plugin-owned UI** driven by mpremote:
+one side, the learner's `microbit` folder on the other. Nu removed the old
+`FileSystemPane` (and the frozen `microfs` behind it) in Phase 1; it came back
+in API 0.6 as **plugin-owned UI** driven by mpremote, and is the worked
+example for panes:
 
-- **API (0.6):** a plugin needs to put a widget in the window.
-  `Host.add_pane(widget, title, area="bottom")` docks it (as the REPL and
-  plotter are docked) and returns a handle; `Host.remove_pane(handle)` takes
-  it away, and the core removes a plugin's panes when it unloads or its mode
-  is deactivated. The widget is the plugin's own Qt code (PyQt6 is Nu's
-  dependency, so a plugin may import it); the core owns where it goes and
-  its theme.
-- **Talking to the board:** the same worker pattern as Flash: one job at a
-  time on a `QThread`, through `mpremote.transport_serial.SerialTransport`:
-  `fs_listdir` to list, `fs_readfile` / `fs_writefile` to copy each way,
-  `fs_rmfile` to delete, each logged under **What Nu Ran** as
-  `mpremote connect <port> fs ls` / `fs cp :a.py a.py` / `fs cp a.py :a.py` /
-  `fs rm :a.py`.
-- **One serial port:** the pane, the REPL and Flash all need it, so the pane
-  is closed while the REPL is open and vice versa (as in Mu), and Flash
-  refreshes it afterwards.
-- **Tests:** a fake transport with an in-memory file system, as the flash
-  tests fake the board.
+- **The widget** (`nu_microbit/files_pane.py`) is the plugin's own PyQt6
+  code: two lists and the buttons between them. It only says what the learner
+  asked for, through Qt signals; the mode does it.
+- **Docking:** the mode calls `host.add_pane(pane, "micro:bit Files")` and
+  `host.remove_pane(handle)`; Nu removes it anyway when the learner leaves
+  micro:bit mode. A file is opened with `host.open_file(path)`.
+- **Talking to the board** (`nu_microbit/files.py`): the same worker pattern
+  as Flash, one job at a time on a `QThread`, through mpremote's
+  `SerialTransport`: `fs_readfile` / `fs_writefile` to copy each way and
+  `fs_rmfile` to delete, each logged under **What Nu Ran** as `mpremote
+  connect <port> fs cp :a.py a.py` / `fs cp a.py :a.py` / `fs rm :a.py`.
+  Listing (`fs ls`) runs a few lines of its own: mpremote's `fs_listdir` needs
+  `os.ilistdir`, which micro:bit MicroPython's flat file system doesn't have
+  (it has `os.listdir` and `os.size`).
+- **One serial port:** the pane, the REPL and Flash all need it, so the REPL
+  and plotter close (and stay off) while the pane is open, and Flash
+  refreshes the pane afterwards.
+- **Tests:** a fake board with an in-memory file system, as the flash tests
+  fake the board; the hardware checklist in `plugins/microbit/README.md`.
 
 ## A minimal example
 

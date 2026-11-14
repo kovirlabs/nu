@@ -338,6 +338,8 @@ class Window(QMainWindow):
         self._repl_area = 0
         self._runner_area = 0
         self.progress = None
+        # Panes plugins docked (see add_plugin_pane).
+        self.plugin_panes = []
 
     def wheelEvent(self, event):
         """
@@ -654,6 +656,50 @@ class Window(QMainWindow):
         self.repl_pane.set_theme(self.theme)
         self.repl_pane.setFocus()
 
+    #: Where a plugin's pane can go (see `add_plugin_pane`).
+    PLUGIN_PANE_AREAS = {
+        "bottom": Qt.DockWidgetArea.BottomDockWidgetArea,
+        "left": Qt.DockWidgetArea.LeftDockWidgetArea,
+        "right": Qt.DockWidgetArea.RightDockWidgetArea,
+    }
+
+    def add_plugin_pane(self, widget, title, area="bottom"):
+        """
+        Dock a plugin's `widget` (e.g. micro:bit's Files pane) with `title`
+        at `area` ("bottom", "left" or "right"), as the REPL and plotter are
+        docked: the learner can move it. If the widget has a `set_theme`
+        method, it's called with the current theme now and when it changes.
+        Returns the dock, for `remove_plugin_pane`.
+        """
+        if area not in self.PLUGIN_PANE_AREAS:
+            raise ValueError(
+                "area must be one of {}, not {!r}".format(
+                    ", ".join(self.PLUGIN_PANE_AREAS), area
+                )
+            )
+        dock = QDockWidget(title)
+        dock.setWidget(widget)
+        dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
+        dock.setAllowedAreas(
+            Qt.DockWidgetArea.BottomDockWidgetArea
+            | Qt.DockWidgetArea.LeftDockWidgetArea
+            | Qt.DockWidgetArea.RightDockWidgetArea
+        )
+        qt_area = self.PLUGIN_PANE_AREAS[area]
+        self.addDockWidget(qt_area, dock)
+        self.give_editor_room(dock, qt_area)
+        self.plugin_panes.append(dock)
+        if hasattr(widget, "set_theme"):
+            widget.set_theme(self.theme)
+        return dock
+
+    def remove_plugin_pane(self, dock):
+        """Take away a pane `add_plugin_pane` docked (if it's still there)."""
+        if dock in self.plugin_panes:
+            self.plugin_panes.remove(dock)
+            dock.setParent(None)
+            dock.deleteLater()
+
     def add_plotter(self, plotter_pane, name):
         """
         Adds the referenced plotter pane to the application.
@@ -928,6 +974,10 @@ class Window(QMainWindow):
             self.plotter_pane.set_theme(theme)
         if hasattr(self, "runner") and self.runner:
             self.process_runner.set_theme(theme)
+        for dock in getattr(self, "plugin_panes", []):
+            widget = dock.widget()
+            if hasattr(widget, "set_theme"):
+                widget.set_theme(theme)
 
     def set_checker_icon(self, icon):
         """

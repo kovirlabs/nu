@@ -44,12 +44,46 @@ microphone, the logo, data logging); their descriptions end with
 | Button | What it does |
 |---|---|
 | **Flash** (F3) | Puts the program in the current tab onto the micro:bit as `main.py`, and restarts the micro:bit so it runs. |
+| **Files** (F4) | Shows the files on the micro:bit next to the files in your `microbit` folder, so you can copy them either way or delete them from the micro:bit (see [Files](#files)). |
 | **REPL** | Opens the micro:bit's MicroPython prompt in Nu, so you can type Python and the micro:bit runs it straight away. It also shows what your program `print`s. |
 | **Plotter** | Draws a graph of numbers your program prints as tuples, e.g. `print((accelerometer.get_x(),))`. |
 
-The REPL and the plotter use the micro:bit's USB connection, and so does
-Flash. If the REPL or plotter is open when you click Flash, Nu closes it, puts
-your program on the micro:bit, then opens it again.
+The REPL and the plotter use the micro:bit's USB connection, and so do Flash
+and Files. If the REPL or plotter is open when you click Flash, Nu closes it,
+puts your program on the micro:bit, then opens it again. While the Files pane
+is open, the REPL and plotter can't be (click **Files** again to close it).
+
+## Files
+
+**Files** opens a pane below your code with two lists: **On your micro:bit**,
+the files in the micro:bit's storage (your program is `main.py`), and **On
+your computer**, the files in your `microbit` folder.
+
+- **Copy to micro:bit ▶** copies the files you've selected on your computer
+  onto the micro:bit, for example a module your program imports, or a data
+  file it reads.
+- **◀ Copy to computer** copies the files selected on the micro:bit into your
+  folder, for example a file your program wrote (with `open(...)` or the
+  `log` module), or the `main.py` of a micro:bit someone else programmed.
+  Double-clicking a file on the micro:bit does the same.
+- **Delete from micro:bit** removes the selected files from the micro:bit.
+  It can't be undone, so Nu asks first.
+- **Open** (or double-click) opens a file from your computer in a tab.
+
+Nu asks before replacing a file that's already there. Select several files
+with Ctrl (⌘ on a Mac) or Shift.
+
+To look at the micro:bit's files, Nu stops the program running on it. Press
+the **reset button** on the back of the micro:bit to run it again.
+
+Each copy or delete is one of mpremote's `fs` commands, and **What Nu Ran**
+shows them, for example:
+
+```bash
+mpremote connect /dev/ttyACM0 fs cp hello.py :hello.py
+mpremote connect /dev/ttyACM0 fs cp :log.txt /home/you/mu_code/microbit/log.txt
+mpremote connect /dev/ttyACM0 fs rm :old.py
+```
 
 ## What Flash does
 
@@ -157,16 +191,17 @@ Flash**. Nu asks first, then puts MicroPython on and then your program.
 
 **"Your code is too big for the micro:bit."**
 : The micro:bit has room for a few tens of kilobytes of code. Make the program
-  shorter, or remove other files from the micro:bit.
+  shorter, or remove other files from the micro:bit (with **Files**).
+
+**"There isn't room on the micro:bit."**
+: Its storage is full. Open **Files**, copy anything you want to keep to your
+  computer, and delete it from the micro:bit.
 
 Nu's log (the cog → the **Logs** tab) has the details of every step, which
 help if you report a problem.
 
 ## Not yet
 
-- A **Files** pane, to see, copy and delete the files on the micro:bit, as the
-  old Mu had. It's planned (see the
-  [plugin roadmap](plugins.md#roadmap-the-microbit-files-pane)).
 - Flashing with [pyOCD](https://pyocd.io/) (faster, and works when the drive
   doesn't), and one "universal" MicroPython file for both V1 and V2.
 - micro:bit mode in the installers, switched on by default, once it has been
