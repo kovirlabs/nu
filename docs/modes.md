@@ -69,8 +69,9 @@ contribution to the project.
 Just like the CircuitPython mode, micro:bit mode inherits from the base
 MicroPython mode, so there's a REPL based interface to the device. **Flash**
 puts the current file on the micro:bit as `main.py` (putting MicroPython on
-first, if it isn't there). Mu's Files pane, for the micro:bit's file system,
-isn't back yet (see [plugins](plugins.md#roadmap-the-microbit-files-pane)).
+first, if it isn't there). **Files** brings back Mu's pane for the micro:bit's
+file system, as a pane the plugin docks through the plugin API (see
+[plugins](plugins.md#the-microbit-files-pane)).
 
 ### Pygame Zero / PyGame Mode
 

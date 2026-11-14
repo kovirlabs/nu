@@ -537,8 +537,8 @@ plugin**: if it can be a clean plugin, the API is good.
 
 ## Phase 6 — micro:bit, reintroduced as a modern plugin
 
-Status: 6a and 6b built and tested against fakes, opt-in (`uv sync --extra microbit`) until
-the maintainer's hardware pass; the Files pane is designed, not built; 6c (default-on,
+Status: 6a and 6b (now with the Files pane) built and tested against fakes, opt-in
+(`uv sync --extra microbit`) until the maintainer's hardware pass; 6c (default-on,
 installers, PyPI) and 6d open.
 
 micro:bit was **dropped in Phase 1** because its desktop tooling (`uflash`, `microfs`) was
@@ -584,7 +584,7 @@ the maintainer's checklist is in `plugins/microbit/README.md`)
   offline → a message naming the file, its URL and the folder. Also looked for in
   `nu_microbit/firmware/` (the installer-bundling hook for 6c). To update a pin: change the
   URL, version, size and SHA-256 together and re-run the tests.
-- [ ] REPL file ops (`ls`/`cp`/`rm`) via mpremote — with the Files pane (6b).
+- [x] File ops (`ls`/`cp`/`rm`) via mpremote — with the Files pane (6b, below).
 - [ ] **Universal Hex** (one image for V1+V2): deferred. Per-version hex picked from
   `DETAILS.TXT` is simpler and robust; revisit if we ever ship the firmware in installers
   and want one file.
@@ -603,11 +603,18 @@ the maintainer's checklist is in `plugins/microbit/README.md`)
   (`Host.log_command`, `Host.current_device`, `Host.data_dir`); boards' modes now show
   **What Nu Ran** as a tab of its own in the admin dialog. Opt-in (root `microbit` extra)
   until validated — see 6c.
-- [ ] Reintroduce the **file-transfer pane** (the old `FileSystemPane`, removed in Phase 1d)
-  as plugin-owned UI driven by `mpremote`. **Designed, not built**: `docs/plugins.md` →
-  "Roadmap: the micro:bit Files pane" (API 0.6 `Host.add_pane`/`remove_pane`; mpremote
-  `fs_listdir`/`fs_readfile`/`fs_writefile`/`fs_rmfile` on the same worker pattern, logged;
-  exclusive with the REPL).
+- [x] The **Files pane** is back (2026-11, `feature/microbit-files-pane`; the old
+  `FileSystemPane` was removed in Phase 1d), as plugin-owned UI driven by mpremote, built
+  and tested against a fake board, **not yet on hardware** (README checklist, section G).
+  Plugin API **0.6**: `Host.add_pane(widget, title, area)` / `remove_pane` (Window
+  `add_plugin_pane`; themed via the widget's `set_theme`; removed when its mode is left or
+  its plugin unloads) and `Host.open_file`. `nu_microbit/files.py` (GUI-free `FilesJob`:
+  list, `fs_readfile`/`fs_writefile`/`fs_rmfile`, then list again; each logged as `mpremote
+  connect <port> fs …`) on the Flash worker; `files_pane.py` (two lists, Copy each way,
+  Delete, Open, Refresh). Listing runs its own `os.listdir`/`os.size` code: mpremote's
+  `fs_listdir` needs `os.ilistdir`, which micro:bit MicroPython doesn't have. One job at a
+  time (flash or files); the REPL/plotter close and stay off while the pane is open; Flash
+  refreshes it. **Files** button (F4, `microbit-files.svg`).
 - [x] **Modern `microbit` V2 API stubs** for autocomplete/calltips
   (`nu_microbit/api/microbit.py`, 349 entries): upstream's, corrected and brought up to
   MicroPython 2.x (microphone, speaker, `Sound`, `audio.SoundEffect`, `log`, `power`,

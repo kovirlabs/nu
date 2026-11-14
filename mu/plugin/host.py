@@ -97,6 +97,7 @@ class Host:
         self._owners = {}  # short_name -> owning plugin (None for the core)
         self._image_dirs = []  # (owning plugin or None, folder) pairs
         self._runner = None  # the program started by run_program
+        self._panes = []  # (mode short_name, dock) for each add_pane
         self._plugins = []
         self._loading = None  # the plugin whose register() is running
         #: What happened to each discovered plugin (mu.plugin.loader.PluginRecord),
@@ -158,6 +159,9 @@ class Host:
             plugin.unregister(self)
         except Exception:
             logger.exception("Plugin %s failed to unregister", name)
+        for short_name, owner in list(self._owners.items()):
+            if owner is plugin:
+                self._remove_panes_of(short_name)
         self._remove_modes_of(plugin)
         self._remove_images_of(plugin)
         if plugin in self._plugins:
@@ -347,6 +351,16 @@ class Host:
             # A plugin's mode: errors in the methods the core calls are
             # reported instead of crashing Nu.
             self._error_handler.guard_mode(mode, self._loading)
+        # Whatever deactivate does, the mode's panes go when it's left.
+        deactivate = mode.deactivate
+
+        def deactivate_and_remove_panes(*args, **kwargs):
+            try:
+                return deactivate(*args, **kwargs)
+            finally:
+                self._remove_panes_of(short_name)
+
+        mode.deactivate = deactivate_and_remove_panes
         self._modes[short_name] = mode
         self._owners[short_name] = self._loading
         return mode
@@ -506,6 +520,45 @@ class Host:
             self._runner.track_uv_command(record)
         self._runner.process.waitForStarted()
         return True
+
+    def add_pane(self, widget, title, area="bottom"):
+        """
+        Dock `widget` (your own Qt widget, e.g. a file list) in Nu's window
+        with `title`, at `area`: "bottom" (the default), "left" or "right",
+        as the REPL and plotter are docked; the learner can move it. If the
+        widget has a `set_theme(theme)` method it's called with "day",
+        "night" or "contrast" now and whenever the theme changes. Returns a
+        handle for `remove_pane`.
+
+        The pane belongs to the current mode: Nu removes it when the learner
+        leaves the mode (after its `deactivate`) or the plugin unloads.
+        """
+        dock = self._view.add_plugin_pane(widget, title, area)
+        self._panes.append((self._editor.mode, dock))
+        return dock
+
+    def remove_pane(self, pane):
+        """
+        Take away a pane `add_pane` docked. Does nothing if it's already
+        gone (e.g. its mode was left).
+        """
+        for entry in list(self._panes):
+            if entry[1] is pane:
+                self._panes.remove(entry)
+                self._view.remove_plugin_pane(pane)
+
+    def _remove_panes_of(self, short_name):
+        """Remove the panes added while the mode `short_name` was current."""
+        for mode_name, dock in list(self._panes):
+            if mode_name == short_name:
+                self.remove_pane(dock)
+
+    def open_file(self, path):
+        """
+        Open the file at `path` in a tab, as if the learner had loaded it
+        (or go to its tab if it's already open).
+        """
+        self._editor.direct_load(path)
 
     def stop_program(self):
         """Stop the program `run_program` started, and close its pane."""

@@ -1117,6 +1117,45 @@ def test_Window_add_plotter():
     )
 
 
+def test_Window_add_and_remove_plugin_pane():
+    """
+    A plugin's widget is docked (where it asked), themed now and when the
+    theme changes, and taken away again.
+    """
+    w = mu.interface.main.Window()
+    w.theme = "day"
+
+    class Themed(QWidget):
+        themes = []
+
+        def set_theme(self, theme):
+            self.themes.append(theme)
+
+    widget = Themed()
+    dock = w.add_plugin_pane(widget, "micro:bit Files", area="left")
+    assert dock.windowTitle() == "micro:bit Files"
+    assert dock.widget() is widget
+    assert w.dockWidgetArea(dock) == Qt.DockWidgetArea.LeftDockWidgetArea
+    assert w.plugin_panes == [dock]
+    assert Themed.themes == ["day"]
+    w.tabs = mock.MagicMock()
+    w.tabs.count.return_value = 0
+    w.button_bar = mock.MagicMock()
+    w.set_theme("night")
+    assert Themed.themes == ["day", "night"]
+    w.remove_plugin_pane(dock)
+    assert w.plugin_panes == []
+    w.remove_plugin_pane(dock)  # already gone: nothing happens
+    plain = w.add_plugin_pane(QWidget(), "Plain")  # no set_theme: fine
+    assert w.dockWidgetArea(plain) == Qt.DockWidgetArea.BottomDockWidgetArea
+
+
+def test_Window_add_plugin_pane_bad_area():
+    w = mu.interface.main.Window()
+    with pytest.raises(ValueError, match="bottom, left, right"):
+        w.add_plugin_pane(QWidget(), "x", area="top")
+
+
 @pytest.mark.skipif(not CHARTS, reason="QtChart unavailable")
 def test_Window_remember_plotter_position():
     """

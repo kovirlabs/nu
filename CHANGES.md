@@ -97,7 +97,9 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   there; **Shift+Flash** puts it back on anyway. MicroPython (V1 1.1.1, V2
   2.1.2) is downloaded from its official releases on first use and checked,
   never shipped inside Nu; offline, Nu says which file to put where. Each step
-  shows in the status bar. **REPL** and **Plotter** work as in CircuitPython
+  shows in the status bar. **Files** shows the files on the micro:bit next to
+  your `microbit` folder, to copy them either way or delete them. **REPL**
+  and **Plotter** work as in CircuitPython
   mode, and autocomplete knows micro:bit MicroPython 2.x (sound, microphone,
   logo, `log`, `power`, radio, music…). Until it has been tried on real
   micro:bits it isn't in the installers: run Nu from source with
@@ -246,13 +248,15 @@ And older problems, found while checking the whole app:
 * Removing a plugin you added leaves behind the packages it needed (they do
   nothing unless they're plugins themselves), and the packages it added to
   your Python environment, since your programs may use them.
-* The **plugin API** (version 0.5) may still change; plugins say which
+* The **plugin API** (version 0.6) may still change; plugins say which
   version they were written for, and Nu skips ones it can't run.
 
 ### For developers
 
-* Plugin API **0.5**: `Host.log_command`, `Host.current_device` and
-  `Host.data_dir` (plugins written for 0.4 need `api_version = "0.5"`). See
+* Plugin API **0.6**: `Host.log_command`, `Host.current_device` and
+  `Host.data_dir` (0.5), and panes, `Host.add_pane` / `remove_pane`, and
+  `Host.open_file` (0.6); plugins written for 0.5 need
+  `api_version = "0.6"`. See
   [What changed](https://kovirlabs.github.io/nu/plugins/).
 * The test suite never touches your real Nu data, workspace or IPython
   profile, and runs against a running Nu: `MU_DATA_DIR` and `MU_HOME_DIR`
