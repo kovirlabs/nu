@@ -5,6 +5,7 @@ Tests for the learner's named environments (Phase 4b part 2): the registry
 default is made, and switching between them from the next start.
 """
 
+import json
 import os
 import sys
 from unittest import mock
@@ -496,6 +497,145 @@ def test_next_start_uses_a_switched_environment(data_dir, default_path):
     recreate.assert_not_called()
     quarantine.assert_not_called()
     assert second.path == named
+
+
+#
+# Deleting a named environment
+#
+def test_delete_environment(venv):
+    """A named environment Nu isn't using goes, and off the list."""
+    named = make_env(os.path.join(mu.config.ENVS_DIR, "project-a"))
+    os.makedirs(os.path.join(named, "Lib", "site-packages", "pkg"))
+    assert venv.delete_environment(named) is None
+    assert not os.path.exists(named)
+    assert [env["name"] for env in venv.list_environments()] == ["mu_venv"]
+
+
+def test_delete_environment_refused(venv, default_path):
+    """Not the default, the one in use, the next start's, or a missing one."""
+    named = make_env(os.path.join(mu.config.ENVS_DIR, "project-a"))
+    assert "default environment" in venv.delete_environment(default_path)
+    venv.settings["dirpath"] = named
+    assert "from the next start" in venv.delete_environment(named)
+    venv.relocate(named)
+    assert "Nu is using this environment" in venv.delete_environment(named)
+    assert os.path.isdir(named)
+    gone = os.path.join(mu.config.ENVS_DIR, "gone")
+    venv.relocate(default_path)
+    assert "isn't there any more" in venv.delete_environment(gone)
+
+
+def test_delete_environment_partly_fails(venv):
+    """A file in use (Windows): the learner's told, the rest is left."""
+    named = make_env(os.path.join(mu.config.ENVS_DIR, "project-a"))
+
+    def rmtree(path, **kwargs):
+        handler = kwargs.get("onexc") or kwargs.get("onerror")
+        handler(os.remove, os.path.join(path, "pyvenv.cfg"), PermissionError())
+
+    with mock.patch.object(mu.virtual_environment.shutil, "rmtree", rmtree):
+        problem = venv.delete_environment(named)
+    assert "couldn't delete all of" in problem
+    assert os.path.isdir(named)
+
+
+def _user_kernelspec(jupyter, interpreter):
+    spec = jupyter / "kernels" / "project-a"
+    spec.mkdir(parents=True)
+    (spec / "kernel.json").write_text(
+        json.dumps({"argv": [interpreter, "-m", "ipykernel_launcher"]})
+    )
+    return spec
+
+
+def test_delete_environment_removes_an_old_user_kernelspec(venv, tmp_path):
+    """
+    The kernelspec an older Nu put in the learner's Jupyter folder goes too,
+    but only if it runs this environment's Python.
+    """
+    named = make_env(os.path.join(mu.config.ENVS_DIR, "project-a"))
+    jupyter = tmp_path / "jupyter"
+    spec = _user_kernelspec(
+        jupyter, mu.virtual_environment.environment_interpreter(named)
+    )
+    with mock.patch("jupyter_core.paths.jupyter_data_dir", return_value=str(jupyter)):
+        assert venv.delete_environment(named) is None
+    assert not spec.exists()
+
+
+def test_delete_environment_keeps_another_kernelspec(venv, tmp_path):
+    """A same-named kernelspec for some other Python is left alone."""
+    named = make_env(os.path.join(mu.config.ENVS_DIR, "project-a"))
+    jupyter = tmp_path / "jupyter"
+    spec = _user_kernelspec(jupyter, str(tmp_path / "elsewhere" / "python"))
+    with mock.patch("jupyter_core.paths.jupyter_data_dir", return_value=str(jupyter)):
+        assert venv.delete_environment(named) is None
+    assert spec.exists()
+    # No kernelspec at all: fine too.
+    other = make_env(os.path.join(mu.config.ENVS_DIR, "project-b"))
+    with mock.patch("jupyter_core.paths.jupyter_data_dir", return_value=str(jupyter)):
+        assert venv.delete_environment(other) is None
+
+
+#
+# Each environment's own record (the Nu version that made it, its baseline)
+#
+def test_record_written_and_read(venv):
+    venv.settings["baseline_packages"] = [["ipykernel", "7.4.0"]]
+    assert venv.record() == {}
+    venv.write_record()
+    assert venv.record() == {
+        "nu_version": mu.__version__,
+        "baseline_packages": [["ipykernel", "7.4.0"]],
+    }
+    assert venv.made_by_version() == mu.__version__
+    venv.settings["baseline_packages"] = [["other", "1"]]
+    assert venv.baseline_packages() == [["ipykernel", "7.4.0"]]
+
+
+def test_record_unreadable_or_unwritable(venv):
+    record = os.path.join(venv.path, mu.virtual_environment.ENVIRONMENT_RECORD)
+    with open(record, "w", encoding="utf-8") as f:
+        f.write("[1, 2]")
+    assert venv.record() == {}
+    with open(record, "w", encoding="utf-8") as f:
+        f.write("not json")
+    assert venv.record() == {}
+    # No record: venv.json's.
+    venv.settings["baseline_packages"] = [["x", "1"]]
+    assert venv.baseline_packages() == [["x", "1"]]
+    assert venv.made_by_version() == mu.__version__
+    with mock.patch("builtins.open", side_effect=OSError("read-only")):
+        venv.write_record()  # logged, not raised
+
+
+def test_named_environment_made_by_an_older_nu_is_rebuilt(venv):
+    """
+    venv.json's version is this Nu's (it rebuilt the env it was using), but
+    the environment's own record says an older Nu made it: rebuilt.
+    """
+    record = os.path.join(venv.path, mu.virtual_environment.ENVIRONMENT_RECORD)
+    with open(record, "w", encoding="utf-8") as f:
+        json.dump({"nu_version": "1.0.0"}, f)
+    with (
+        mock.patch.object(venv, "ensure"),
+        mock.patch.object(venv, "recreate") as recreate,
+        mock.patch.object(venv, "remove_old_bundled_pythons"),
+        mock.patch.object(venv.settings, "save"),
+    ):
+        venv.ensure_and_create()
+    recreate.assert_called_once_with()
+
+
+def test_create_writes_the_record(venv):
+    with (
+        mock.patch.object(venv, "create_venv"),
+        mock.patch.object(venv, "install_baseline_packages"),
+        mock.patch.object(venv, "register_baseline_packages"),
+        mock.patch.object(venv, "install_jupyter_kernel"),
+    ):
+        venv.create()
+    assert venv.record()["nu_version"] == mu.__version__
 
 
 #

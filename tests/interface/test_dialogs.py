@@ -1270,6 +1270,80 @@ def test_EnvironmentsWidget_nothing_selected():
     assert widget.chosen is None
 
 
+def test_EnvironmentsWidget_delete_button_state(environments_widget):
+    """Only a named environment Nu won't use can be deleted; why not, if not."""
+    widget = environments_widget
+    # The default one, in use.
+    assert not widget.delete_button.isEnabled()
+    assert "default environment" in widget.delete_button.toolTip()
+    widget.tree.setCurrentItem(widget.tree.topLevelItem(1))
+    assert widget.delete_button.isEnabled()
+    assert widget.delete_button.toolTip() == ""
+    # Chosen for the next start (not saved yet): not any more.
+    widget.use_button.click()
+    assert not widget.delete_button.isEnabled()
+    assert "Choose another environment" in widget.delete_button.toolTip()
+
+
+def test_EnvironmentsWidget_delete_nothing_selected():
+    widget = mu.interface.dialogs.EnvironmentsWidget()
+    widget.setup([])
+    assert not widget.delete_button.isEnabled()
+    with mock.patch.object(mu.interface.dialogs.QMessageBox, "question") as question:
+        widget.delete_selected()
+    question.assert_not_called()
+
+
+def test_EnvironmentsWidget_delete_cancelled(environments_widget):
+    widget = environments_widget
+    widget.tree.setCurrentItem(widget.tree.topLevelItem(1))
+    with (
+        mock.patch.object(
+            mu.interface.dialogs.QMessageBox,
+            "question",
+            return_value=mu.interface.dialogs.QMessageBox.StandardButton.No,
+        ) as question,
+        mock.patch.object(mu.interface.dialogs.venv, "delete_environment") as delete,
+    ):
+        widget.delete_button.click()
+    assert "Delete the environment “project-a”" in question.call_args.args[2]
+    assert PROJECT_ENV["path"] in question.call_args.args[2]
+    delete.assert_not_called()
+
+
+@pytest.mark.parametrize("problem", [None, "a program may be using it"])
+def test_EnvironmentsWidget_delete(environments_widget, problem):
+    """Deleted: the list is refreshed. Couldn't: the learner's told why."""
+    widget = environments_widget
+    widget.tree.setCurrentItem(widget.tree.topLevelItem(1))
+    with (
+        mock.patch.object(
+            mu.interface.dialogs.QMessageBox,
+            "question",
+            return_value=mu.interface.dialogs.QMessageBox.StandardButton.Yes,
+        ),
+        mock.patch.object(
+            mu.interface.dialogs.venv, "delete_environment", return_value=problem
+        ) as delete,
+        mock.patch.object(
+            mu.interface.dialogs.venv,
+            "list_environments",
+            return_value=[DEFAULT_ENV]
+            if problem is None
+            else [DEFAULT_ENV, PROJECT_ENV],
+        ),
+        mock.patch.object(mu.interface.dialogs.QMessageBox, "warning") as warning,
+    ):
+        widget.delete_button.click()
+    delete.assert_called_once_with(PROJECT_ENV["path"])
+    if problem:
+        assert warning.call_args.args[1:] == ("Delete Environment", problem)
+        assert widget.tree.topLevelItemCount() == 2
+    else:
+        warning.assert_not_called()
+        assert _rows(widget) == [["mu_venv (default)", "3.11.15", "In use"]]
+
+
 def test_EnvironmentsWidget_new_environment_cancelled(environments_widget):
     with (
         mock.patch.object(

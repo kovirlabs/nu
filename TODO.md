@@ -231,10 +231,15 @@ part 2 ✅ (2026-11, `feature/env-advanced-multi`)
   repairs nothing (tested). A named env Nu rebuilds (upgrade / failed check) keeps its
   folder; a bundled Python a named env uses isn't removed. Verified in the real app under
   Xvfb: create, use, restart, add a package, switch back, the package isn't there.
-  - [ ] **Not done:** deleting an environment (by hand for now: switch away, restart,
-    delete the folder; documented). `mu_version`/`baseline_packages` in venv.json are still
-    global, not per environment: a named env made by an older Nu isn't rebuilt on upgrade
-    until it's the one in use when the version changes.
+  - [x] **Deleting an environment** (2026-11, `feature/delete-environment`): **Delete…** in
+    the Advanced section, for a named env that isn't in use or chosen for the next start
+    (the default one stays), after a confirmation. `VirtualEnvironment.delete_environment`
+    removes the folder (a file in use on Windows is reported) and the `--user` kernelspec an
+    older Nu made for it, only if that spec runs the env's own Python.
+  - [x] **Per-environment version**: `create` writes `nu-environment.json` into the env
+    (`nu_version`, `baseline_packages`); `ensure_and_create` and `baseline_packages()` read
+    it first and fall back to venv.json's (global) values for envs made before. So a named
+    env made by an older Nu is rebuilt when Nu next starts with it.
 
 **4c. Bundle assets for offline:**
 - [x] Vendor a pinned `uv` binary per platform — achieved via the PyPI **`uv` wheel** in

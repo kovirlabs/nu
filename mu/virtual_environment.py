@@ -64,6 +64,9 @@ def is_within(path, folder):
 
 #: A named environment's name: a plain folder name (see
 #: `VirtualEnvironment.environment_name_problem`).
+# What Nu records about an environment it made, inside the environment
+# (see `VirtualEnvironment.write_record`), so every environment keeps its own.
+ENVIRONMENT_RECORD = "nu-environment.json"
 ENVIRONMENT_NAME_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 ENVIRONMENT_NAME_MAX_LENGTH = 40
 #: Names Windows keeps for devices: they can't be folder names there.
@@ -1168,6 +1171,91 @@ class VirtualEnvironment(object):
         self.settings.save()
         return None
 
+    def environment_delete_problem(self, path):
+        """
+        Why the environment at `path` can't be deleted, in plain words, or
+        None if it can: only a named environment (in ``config.ENVS_DIR``)
+        that Nu isn't using and won't use from the next start. The default
+        one stays: it's where Nu goes back to, and Nu would make it again.
+        """
+        if not is_named_environment(path):
+            return _("The default environment can't be deleted.")
+        if same_path(path, self.path):
+            return _(
+                "Nu is using this environment. Use another one, restart Nu, "
+                "then delete it."
+            )
+        if same_path(path, self.settings.get("dirpath") or self.path):
+            return _(
+                "Nu will use this environment from the next start. Choose "
+                "another one first."
+            )
+        if not os.path.isdir(path):
+            return _("“{}” isn't there any more.").format(path)
+        return None
+
+    def delete_environment(self, path):
+        """
+        Delete the named environment at `path`: its folder, with every
+        package in it, and the REPL kernelspec an older Nu put in the
+        learner's own Jupyter folder for it (only if that kernelspec runs
+        this environment's Python). Return None if that worked, otherwise
+        why not, in plain words (see `environment_delete_problem`); a folder
+        that can't be removed completely (a file in use on Windows) is
+        reported, with what's left where it was.
+        """
+        problem = self.environment_delete_problem(path)
+        if problem:
+            logger.warning("Not deleting the environment %s: %s", path, problem)
+            return problem
+        logger.info("Deleting the environment at %s", path)
+        failures = []
+
+        def failed(function, failed_path, error):
+            failures.append(failed_path)
+
+        if sys.version_info >= (3, 12):
+            shutil.rmtree(path, onexc=failed)
+        else:  # pragma: no cover (Python 3.11)
+            shutil.rmtree(path, onerror=failed)
+        if failures or os.path.exists(path):
+            logger.error(
+                "Couldn't delete all of %s: %s", path, ", ".join(map(str, failures))
+            )
+            return _(
+                "Nu couldn't delete all of “{}”: a program may be using it. "
+                "Close it, or restart your computer, and try again."
+            ).format(path)
+        self._remove_user_kernelspec(path)
+        logger.info("Deleted the environment at %s", path)
+        return None
+
+    @staticmethod
+    def _remove_user_kernelspec(path):
+        """
+        Remove the kernelspec ``ipykernel install --user`` made for the
+        environment at `path` before Nu kept it inside the environment, if
+        it's there and runs a Python from that environment.
+        """
+        try:
+            from jupyter_core.paths import jupyter_data_dir
+
+            spec_dir = os.path.join(
+                jupyter_data_dir(),
+                "kernels",
+                os.path.basename(path).replace(" ", "-").lower(),
+            )
+            with open(os.path.join(spec_dir, "kernel.json"), encoding="utf-8") as f:
+                interpreter = json.load(f)["argv"][0]
+        except Exception:
+            return
+        environment = os.path.normcase(os.path.abspath(path))
+        if os.path.normcase(os.path.abspath(interpreter)).startswith(
+            environment + os.sep
+        ):
+            shutil.rmtree(spec_dir, ignore_errors=True)
+            logger.info("Removed the kernelspec %s", spec_dir)
+
     def quarantine_venv(self, reason="FAILED"):
         """Rename an existing virtual environment folder out of the way to make
         it clearer which is the current one.
@@ -1256,7 +1344,7 @@ class VirtualEnvironment(object):
                 # the existing user packages
                 #
                 else:
-                    venv_mu_version = self.settings.get("mu_version", "-no-version-")
+                    venv_mu_version = self.made_by_version()
                     if venv_mu_version != mu_version:
                         logger.warning(
                             "Venv created by Mu version %s; Current Mu is version %s",
@@ -1442,6 +1530,51 @@ class VirtualEnvironment(object):
         self._report(_("Setting up the REPL for it…"))
         self.install_jupyter_kernel()
         self.settings["mu_version"] = mu_version
+        self.write_record()
+
+    def write_record(self):
+        """
+        Write what Nu knows about this environment into it
+        (`ENVIRONMENT_RECORD`): the Nu version that made it and its baseline
+        packages. venv.json holds these too, but only for one environment;
+        the record keeps them right for every named one, so one made by an
+        older Nu is rebuilt when Nu next starts with it.
+        """
+        record = {
+            "nu_version": mu_version,
+            "baseline_packages": self.settings.get("baseline_packages") or [],
+        }
+        try:
+            with open(
+                os.path.join(self.path, ENVIRONMENT_RECORD), "w", encoding="utf-8"
+            ) as f:
+                json.dump(record, f, indent=2)
+        except OSError:
+            logger.exception("Unable to write the environment's record")
+
+    def record(self):
+        """
+        What `write_record` wrote into this environment, or {} if nothing
+        (an environment made by an older Nu, or by hand).
+        """
+        try:
+            with open(
+                os.path.join(self.path, ENVIRONMENT_RECORD), encoding="utf-8"
+            ) as f:
+                record = json.load(f)
+        except (OSError, ValueError):
+            return {}
+        return record if isinstance(record, dict) else {}
+
+    def made_by_version(self):
+        """
+        The version of Nu that made this environment: from its record, else
+        (made before Nu kept one) venv.json's, which was the version that
+        made whichever environment Nu was using.
+        """
+        return self.record().get("nu_version") or self.settings.get(
+            "mu_version", "-no-version-"
+        )
 
     def ensure_bundled_python(self):
         """
@@ -1724,8 +1857,12 @@ class VirtualEnvironment(object):
 
     def baseline_packages(self):
         """
-        Return the list of baseline packages.
+        Return the list of baseline packages: this environment's own (from
+        its record), else venv.json's.
         """
+        recorded = self.record().get("baseline_packages")
+        if recorded:
+            return recorded
         return self.settings.get("baseline_packages")
 
     def _uv(self):
