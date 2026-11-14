@@ -84,6 +84,7 @@ nav:
   - Packaging & release:
       - Packaging: packaging.md
       - Release process: release.md
+      - Publishing to PyPI: pypi.md
       - The documentation site: docs-site.md
   - Reference:
       - API reference: api.md
