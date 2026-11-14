@@ -38,7 +38,7 @@ def test_CommandBufferHandler_init():
     Check the CommandBufferHandler initialises as expected: with two signals
     and a reference to the debugger client instance.
     """
-    mock_debugger = mock.MagicMock()
+    mock_debugger = mock.MagicMock(connect_timeout=10)
     cbh = mu.debugger.client.CommandBufferHandler(mock_debugger)
     assert isinstance(cbh.on_command, pyqtBoundSignal)
     assert isinstance(cbh.on_fail, pyqtBoundSignal)
@@ -50,7 +50,7 @@ def test_CommandBufferHandler_worker_with_connection_refused_error():
     Check that the connection will try up to 10 times before emitting an
     on_fail signal.
     """
-    mock_debugger = mock.MagicMock()
+    mock_debugger = mock.MagicMock(connect_timeout=10)
     mock_debugger.host = "localhost"
     mock_debugger.port = 9999
     mock_socket_factory = mock.MagicMock()
@@ -58,7 +58,7 @@ def test_CommandBufferHandler_worker_with_connection_refused_error():
     mock_socket.connect.side_effect = ConnectionRefusedError()
     mock_socket_factory.socket.return_value = mock_socket
     mock_time = mock.MagicMock()
-    mock_debugger = mock.MagicMock()
+    mock_debugger = mock.MagicMock(connect_timeout=10)
     cbh = mu.debugger.client.CommandBufferHandler(mock_debugger)
     cbh.on_fail = mock.MagicMock()
     with (
@@ -80,14 +80,14 @@ def test_CommandBufferHandler_worker_with_address_error():
     Check that the connection will try up to 10 times before emitting an
     on_fail signal.
     """
-    mock_debugger = mock.MagicMock()
+    mock_debugger = mock.MagicMock(connect_timeout=10)
     mock_debugger.host = "localhost"
     mock_debugger.port = 9999
     mock_socket_factory = mock.MagicMock()
     mock_socket = mock.MagicMock()
     mock_socket.connect.side_effect = OSError()
     mock_socket_factory.socket.return_value = mock_socket
-    mock_debugger = mock.MagicMock()
+    mock_debugger = mock.MagicMock(connect_timeout=10)
     cbh = mu.debugger.client.CommandBufferHandler(mock_debugger)
     cbh.on_fail = mock.MagicMock()
     with mock.patch("mu.debugger.client.socket", mock_socket_factory):
@@ -104,7 +104,7 @@ def test_CommandBufferHandler_worker_break_loop():
     Ensure if the worker receives None from the socket then break out of the
     loop to end the thread.
     """
-    mock_debugger = mock.MagicMock()
+    mock_debugger = mock.MagicMock(connect_timeout=10)
     mock_debugger.host = "localhost"
     mock_debugger.port = 9999
     mock_socket_factory = mock.MagicMock()
@@ -120,9 +120,41 @@ def test_CommandBufferHandler_worker_break_loop():
     mock_debugger.listener_thread.quit.assert_called_once_with()
 
 
+def test_CommandBufferHandler_stops_trying_to_connect_when_stopped():
+    """Stopped while still connecting (uv fetching packages): it gives up."""
+    mock_debugger = mock.MagicMock(connect_timeout=300)
+    cbh = mu.debugger.client.CommandBufferHandler(mock_debugger)
+    cbh.stopped = True
+    mock_socket_factory = mock.MagicMock()
+    with mock.patch("mu.debugger.client.socket", mock_socket_factory):
+        cbh.worker()
+    mock_socket_factory.socket.assert_not_called()
+    mock_debugger.listener_thread.quit.assert_called_once_with()
+
+
+def test_CommandBufferHandler_connect_timeout():
+    """It tries for connect_timeout seconds: 3 s is 15 tries 0.2 s apart."""
+    mock_debugger = mock.MagicMock(connect_timeout=3)
+    cbh = mu.debugger.client.CommandBufferHandler(mock_debugger)
+    cbh.on_fail = mock.MagicMock()
+    mock_socket_factory = mock.MagicMock()
+    mock_socket_factory.socket().connect.side_effect = ConnectionRefusedError()
+    with (
+        mock.patch("mu.debugger.client.socket", mock_socket_factory),
+        mock.patch("mu.debugger.client.time.sleep") as sleep,
+    ):
+        cbh.worker()
+    assert sleep.call_count == 14
+    assert cbh.on_fail.emit.call_count == 1
+
+
+def test_Debugger_connect_timeout_default():
+    assert mu.debugger.client.Debugger("localhost", 1908).connect_timeout == 10
+
+
 def test_CommandBufferHandler_worker_ends_the_thread_when_it_fails():
     """A connection that fails (or any error) ends the listener thread too."""
-    mock_debugger = mock.MagicMock()
+    mock_debugger = mock.MagicMock(connect_timeout=10)
     cbh = mu.debugger.client.CommandBufferHandler(mock_debugger)
     with (
         mock.patch.object(cbh, "_listen", side_effect=RuntimeError("bang")),
@@ -137,7 +169,7 @@ def test_CommandBufferHandler_worker_exception_breaks_loop():
     Ensure if the worker has an exception thrown from the socket then break out
     of the loop to end the thread.
     """
-    mock_debugger = mock.MagicMock()
+    mock_debugger = mock.MagicMock(connect_timeout=10)
     mock_debugger.host = "localhost"
     mock_debugger.port = 9999
     mock_socket_factory = mock.MagicMock()
@@ -163,7 +195,7 @@ def test_command_buffer_message():
     pos = len(msg) // 2
     msg1 = msg[:pos]
     msg2 = msg[pos:]
-    mock_debugger = mock.MagicMock()
+    mock_debugger = mock.MagicMock(connect_timeout=10)
     mock_debugger.ETX = mu.debugger.client.Debugger.ETX
     mock_debugger.host = "localhost"
     mock_debugger.port = 9999

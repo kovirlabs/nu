@@ -428,6 +428,35 @@ def test_uv_script_command(log):
     assert log.records() == [record]
 
 
+def test_uv_with_requirements_command(log):
+    """
+    with_requirements_command records `uv run --python <venv> --no-project
+    --with-requirements <file> python <args>` (the script's packages on top
+    of the environment) for a pane to launch.
+    """
+    uv = Uv(uv_executable="/opt/uv", venv_path="/env/bin/python")
+    record = uv.with_requirements_command(
+        "/work/game.py", ["-m", "pgzero", "/work/game.py"], cwd="/work"
+    )
+    assert record.argv == [
+        "/opt/uv",
+        "run",
+        "--python",
+        "/env/bin/python",
+        "--no-project",
+        "--with-requirements",
+        "/work/game.py",
+        "python",
+        "-m",
+        "pgzero",
+        "/work/game.py",
+    ]
+    assert record.cwd == "/work"
+    assert record.note == "Its output is in the Run pane."
+    assert not record.finished
+    assert log.records() == [record]
+
+
 def test_uv_list_packages_record_skips_the_json(log):
     """`uv pip list --format=json` is shown in the log, but not its JSON (Nu
     reads that); a note says what it's for."""

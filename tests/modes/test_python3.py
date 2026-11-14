@@ -75,6 +75,39 @@ def test_mu_kernel_manager_without_curve_support_in_pyzmq():
         assert MuKernelManager().transport_encryption == "disabled"
 
 
+def test_mu_kernel_manager_looks_in_the_environment_first(tmp_path):
+    """
+    The kernelspec lives inside the learner's environment, so its kernels
+    folder is searched before the default Jupyter folders (where an
+    environment made by an older Nu has it); it's only added once.
+    """
+    kernels = str(tmp_path / "share" / "jupyter" / "kernels")
+    with mock.patch("mu.modes.python3.venv") as mock_venv:
+        mock_venv.kernels_dir = kernels
+        km = MuKernelManager()
+        dirs = km.kernel_spec_manager.kernel_dirs
+        assert dirs[0] == kernels
+        assert len(dirs) > 1
+        km.kernel_spec_manager.kernel_dirs = [kernels]
+        km.__init__()
+        assert km.kernel_spec_manager.kernel_dirs == [kernels]
+
+
+def test_mu_kernel_manager_finds_a_kernelspec_in_the_environment(tmp_path):
+    """A kernelspec written with --prefix <env> is the one the REPL uses."""
+    kernel_dir = tmp_path / "share" / "jupyter" / "kernels" / "nu-test-env"
+    kernel_dir.mkdir(parents=True)
+    (kernel_dir / "kernel.json").write_text(
+        '{"argv": ["python", "-m", "ipykernel_launcher", "-f",'
+        ' "{connection_file}"], "display_name": "Nu test", "language": "python"}'
+    )
+    with mock.patch("mu.modes.python3.venv") as mock_venv:
+        mock_venv.kernels_dir = str(tmp_path / "share" / "jupyter" / "kernels")
+        km = MuKernelManager()
+    km.kernel_name = "nu-test-env"
+    assert km.kernel_spec.display_name == "Nu test"
+
+
 def test_mu_kernel_manager_with_an_older_jupyter_client():
     """jupyter_client before 8.9 has no transport_encryption: nothing's set."""
     with (

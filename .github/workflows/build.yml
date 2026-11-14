@@ -107,12 +107,18 @@ jobs:
       # mu/wheels/<version>.zip) plus a relocatable CPython and a pip wheel
       # (mu/wheels/python/) that the learner's environment is built from.
       # mu.wheels reads the plugins' needs from their installed metadata, so
-      # install them first (--no-deps: only their metadata is needed here;
-      # Briefcase installs them into the app from `requires`).
+      # install them first (--no-deps: only their metadata is needed here).
       - name: Build offline baseline wheels and Python
         run: |
           python -m pip install --no-deps ./plugins/circuitpython ./plugins/pygamezero
           python -m mu.wheels --package
+
+      # Briefcase installs the bundled plugins into the app because nu-editor
+      # depends on them by name; pip finds them here (pyproject.toml's
+      # `requirement_installer_args`), built from this checkout, not on PyPI.
+      # The same as make.py's `_build_plugin_wheels`.
+      - name: Build the bundled plugins' wheels
+        run: python -m pip wheel --no-deps --wheel-dir build/plugin-wheels ./plugins/circuitpython ./plugins/pygamezero
 
       - name: Briefcase create
         run: briefcase create ${{ matrix.briefcase-platform }} ${{ matrix.briefcase-format }} ${{ matrix.docker-arg }}

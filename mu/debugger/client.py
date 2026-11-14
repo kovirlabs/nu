@@ -113,9 +113,14 @@ class CommandBufferHandler(QObject):
         """
         connected = False
         tries = 0
-        connection_attempts = 50  # Translates to 10 seconds.
         pause_between_attempts = 0.2
+        # 10 seconds by default; longer while uv fetches a program's packages.
+        connection_attempts = round(
+            self.debugger.connect_timeout / pause_between_attempts
+        )
         while not connected:
+            if self.stopped:  # The learner stopped it before it connected.
+                return
             try:
                 self.debugger.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.debugger.socket.connect((self.debugger.host, self.debugger.port))
@@ -190,13 +195,15 @@ class Debugger(QObject):
 
     ETX = b"\x03"  # End transmission token.
 
-    def __init__(self, host, port, proc=None):
+    def __init__(self, host, port, proc=None, connect_timeout=10):
         """
-        Instantiate given a host, port and process for the debug runner.
+        Instantiate given a host, port and process for the debug runner, and
+        how long (in seconds) to keep trying to connect to it.
         """
         self.host = host
         self.port = port
         self.proc = proc
+        self.connect_timeout = connect_timeout
         self.view = None  # Set after instantiation.
         super().__init__()
 

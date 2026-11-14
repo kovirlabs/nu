@@ -56,6 +56,13 @@ class MuKernelManager(QtKernelManager):
         super().__init__(**kwargs)
         if "transport_encryption" in self.class_trait_names() and zmq.has("curve"):
             self.transport_encryption = "auto"
+        # The kernelspec is installed inside the learner's environment (see
+        # VirtualEnvironment.install_jupyter_kernel), so look there first.
+        # An environment made by an older Nu has it in the learner's own
+        # Jupyter folder instead, still found through the default dirs.
+        kernel_dirs = self.kernel_spec_manager.kernel_dirs
+        if venv.kernels_dir not in kernel_dirs:
+            self.kernel_spec_manager.kernel_dirs = [venv.kernels_dir, *kernel_dirs]
 
     def client(self, **kwargs):
         """
