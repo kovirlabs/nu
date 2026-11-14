@@ -45,23 +45,31 @@ def test_find_uv_env_var_missing_file(tmp_path):
             VE.find_uv()
 
 
-def test_find_uv_falls_back_to_path():
-    """With MU_UV unset, fall back to `uv` on the PATH."""
-    found = "/usr/local/bin/uv"
-    with mock.patch.dict(os.environ, {}, clear=True):
-        with mock.patch.object(VE.shutil, "which", return_value=found) as which:
-            assert VE.find_uv() == found
-    which.assert_called_once_with("uv")
-
-
-def test_find_uv_falls_back_to_bundled_package():
-    """With MU_UV unset and nothing on PATH, use the binary bundled by the
-    `uv` PyPI package (the packaged-app path)."""
+def test_find_uv_prefers_its_own_uv_to_the_path():
+    """
+    With MU_UV unset, Nu's own uv (the `uv` package's binary, a version it
+    needs) wins over a `uv` on the PATH, which may be older.
+    """
     bundled = "/opt/mu/app_packages/uv/bin/uv"
     with mock.patch.dict(os.environ, {}, clear=True):
-        with mock.patch.object(VE.shutil, "which", return_value=None):
-            with mock.patch.object(VE, "_uv_from_package", return_value=bundled):
-                assert VE.find_uv() == bundled
+        with (
+            mock.patch.object(VE.shutil, "which", return_value="/usr/bin/uv") as which,
+            mock.patch.object(VE, "_uv_from_package", return_value=bundled),
+        ):
+            assert VE.find_uv() == bundled
+    which.assert_not_called()
+
+
+def test_find_uv_falls_back_to_path():
+    """With MU_UV unset and no uv package, use `uv` on the PATH."""
+    found = "/usr/local/bin/uv"
+    with mock.patch.dict(os.environ, {}, clear=True):
+        with (
+            mock.patch.object(VE.shutil, "which", return_value=found) as which,
+            mock.patch.object(VE, "_uv_from_package", return_value=None),
+        ):
+            assert VE.find_uv() == found
+    which.assert_called_once_with("uv")
 
 
 def test_find_uv_not_found():

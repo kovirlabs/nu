@@ -538,10 +538,10 @@ def _uv_from_package():
 
     The ``uv`` wheel (a runtime dependency) bundles the executable and exposes
     its location via ``uv.find_uv_bin()``. In a Briefcase-packaged app this is
-    the binary's home: there's no system ``uv`` on ``PATH`` and ``MU_UV`` isn't
-    set, but the wheel is installed into the app, so this resolves it without
-    any path plumbing. Returns ``None`` if the package isn't importable or the
-    binary it points at is missing (e.g. a dev checkout using a standalone uv).
+    the binary's home (the wheel is installed into the app), so this resolves
+    it without any path plumbing, whatever uv the learner has elsewhere.
+    Returns ``None`` if the package isn't importable or the binary it points
+    at is missing (e.g. an environment installed without it).
     """
     try:
         import uv as uv_package
@@ -560,9 +560,13 @@ def canonical_package_name(name):
 def find_uv():
     """Locate the `uv` executable.
 
-    Resolution order: the ``MU_UV`` override → a ``uv`` on the ``PATH`` (dev
-    checkouts, and lets a user supply their own) → the binary bundled by the
-    PyPI ``uv`` package (the packaged-app path, see :func:`_uv_from_package`).
+    Resolution order: the ``MU_UV`` override (to use another uv on purpose)
+    → the binary of the PyPI ``uv`` package, Nu's own dependency (in the
+    installers and in a checkout's environment; see
+    :func:`_uv_from_package`) → a ``uv`` on the ``PATH``, only if Nu has
+    none of its own. Nu's own comes first because it's a version Nu needs
+    (``uv>=0.9.8``, for ``uv pip install --excludes``): a learner may have an
+    older uv on their ``PATH``.
     Raise :class:`UvNotFound` if none of these is available.
     """
     override = os.environ.get(UV_ENV_VAR)
@@ -572,12 +576,12 @@ def find_uv():
         raise UvNotFound(
             "%s points at a non-existent uv executable: %s" % (UV_ENV_VAR, override)
         )
-    found = shutil.which("uv")
-    if found:
-        return found
     bundled = _uv_from_package()
     if bundled:
         return bundled
+    found = shutil.which("uv")
+    if found:
+        return found
     raise UvNotFound(
         "Could not find a `uv` executable on PATH, via the %s "
         "environment variable, or bundled with the `uv` package" % UV_ENV_VAR

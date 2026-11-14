@@ -921,11 +921,19 @@ def test_find_uv_from_environment_missing(monkeypatch, tmp_path):
 
 
 def test_find_uv_from_path(monkeypatch):
-    """With no MU_UV override, fall back to `uv` on the PATH."""
+    """
+    With no MU_UV override and no `uv` package of Nu's own, fall back to
+    `uv` on the PATH.
+    """
     monkeypatch.delenv(mu.virtual_environment.UV_ENV_VAR, raising=False)
-    with mock.patch.object(
-        mu.virtual_environment.shutil, "which", return_value="/usr/bin/uv"
-    ) as which:
+    with (
+        mock.patch.object(
+            mu.virtual_environment.shutil, "which", return_value="/usr/bin/uv"
+        ) as which,
+        mock.patch.object(
+            mu.virtual_environment, "_uv_from_package", return_value=None
+        ),
+    ):
         assert mu.virtual_environment.find_uv() == "/usr/bin/uv"
         which.assert_called_once_with("uv")
 
