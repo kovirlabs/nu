@@ -47,8 +47,10 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
 * **More than one environment (advanced).** A collapsed **Advanced: more
   environments** section on the Environment tab lists your environments and
   lets you make a new one (a separate set of packages for a project, made the
-  same way as the first, showing the `uv venv` command as it runs) and choose
-  which one Nu uses from the next start. Beginners never need to open it.
+  same way as the first, showing the `uv venv` command as it runs), choose
+  which one Nu uses from the next start, and delete one you no longer need.
+  Each environment remembers which Nu made it, so one an older Nu made is
+  brought up to date when you next use it. Beginners never need to open it.
 * **Programs can list the packages they need.** If a program starts with a
   `# /// script` block ([PEP 723](https://peps.python.org/pep-0723/)) such as
   `# dependencies = ["cowsay"]`, **Run** runs it with `uv run`, which fetches
