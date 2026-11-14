@@ -89,3 +89,6 @@ target/
 /local-scripts
 /mu/wheels/*.zip
 /mu/wheels/python/
+
+# Briefcase writes a log here when a command fails
+logs/

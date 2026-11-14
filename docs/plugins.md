@@ -663,8 +663,8 @@ A bundled plugin is an ordinary plugin package that lives in this repo, under
 
 - It's a member of the repo's **uv workspace**, and `nu-editor` depends on it,
   so `uv sync` installs it (editable) and Nu finds it through its entry point,
-  just as it finds a community plugin. The installers include it through
-  Briefcase's `requires` (see [packaging](packaging.md)).
+  just as it finds a community plugin. The installers include it as a
+  wheel built from the checkout (see [packaging](packaging.md)).
 - It imports only `mu.plugin`, so it can graduate to its own repository by
   moving the folder.
 - Its tests live in `plugins/<name>/tests` and run with Nu's (`pytest`
@@ -675,18 +675,20 @@ A bundled plugin is an ordinary plugin package that lives in this repo, under
 
 To add one: create `plugins/<name>/` (from the template), add
 `"nu-<name>>=<version>"` to `nu-editor`'s dependencies and
-`nu-<name> = { workspace = true }` to `[tool.uv.sources]`, add
-`"./plugins/<name>"` to `[tool.briefcase.app.mu].requires`, its source folder
+`nu-<name> = { workspace = true }` to `[tool.uv.sources]`, add its folder to
+`BUNDLED_PLUGINS` in `make.py` and the `Makefile` and its name to
+`loader.BUNDLED_DISTRIBUTIONS`, its source folder
 to `pythonpath` in `[tool.pytest.ini_options]`, its package to
 `_TRANSLATE_PLUGIN_PACKAGES` in `make.py`, and its path to the pip installs in
-`.github/workflows/test.yml`, `docs.yml` and `build.yml`, and
+`.github/workflows/test.yml`, `docs.yml` and `build.yml` (and to
+`build.yml`'s plugin wheels and `publish.yml`'s builds), and
 to mkdocstrings' `paths` in `mkdocs.yml`. Then `uv lock`.
 
 ### In the repo but opt-in: micro:bit
 
 `plugins/microbit/` (`nu-microbit`) is a workspace member like the bundled
 plugins, with its tests run in CI, but it is **not** one of `nu-editor`'s
-dependencies or in Briefcase's `requires`, and not in
+dependencies (so the installers don't carry it), and not in
 `loader.BUNDLED_DISTRIBUTIONS`, so the Plugins tab shows it as an *Installed
 package*. It's installed by `nu-editor`'s `microbit` extra (`uv sync
 --all-extras` in a checkout). Until a plugin has been tried on real hardware,

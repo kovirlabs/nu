@@ -888,6 +888,14 @@ class VirtualEnvironment(object):
         """
         return environment_display_name(self.name)
 
+    @property
+    def kernels_dir(self):
+        """
+        Where the environment's Jupyter kernelspec lives (written by
+        :meth:`install_jupyter_kernel`): ``<env>/share/jupyter/kernels``.
+        """
+        return os.path.join(self.path, "share", "jupyter", "kernels")
+
     def python_version(self):
         """
         The environment's Python version (e.g. ``"3.11.15"``) as recorded in
@@ -1612,6 +1620,12 @@ class VirtualEnvironment(object):
         to ``venv.interpreter`` at REPL start time anyway (see
         ``MuKernelManager`` in ``mu/modes/python3.py``), so pointing the spec at
         the venv python is also the more consistent choice.
+
+        The kernelspec goes inside the environment (``--prefix``, so into
+        :attr:`kernels_dir`), not the learner's own Jupyter folder
+        (``--user``): it goes away with the environment, each environment
+        has its own, and ``MU_DATA_DIR`` keeps a throwaway profile (and the
+        tests) from leaving one behind. ``MuKernelManager`` looks there first.
         """
         kernel_name = self.name.replace(" ", "-")
         display_name = '"Python/Nu ({})"'.format(kernel_name)
@@ -1622,7 +1636,8 @@ class VirtualEnvironment(object):
             "-m",
             "ipykernel",
             "install",
-            "--user",
+            "--prefix",
+            self.path,
             "--name",
             kernel_name,
             "--display-name",

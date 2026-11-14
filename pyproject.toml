@@ -232,12 +232,13 @@ sources = ["mu"]
 # [project.dependencies] above (the app's own `mu` package comes from `sources`,
 # not from here). `uv` MUST stay listed: its wheel ships the binary that
 # find_uv()/uv.find_uv_bin() resolves at runtime in the packaged app.
-# The bundled plugins are listed as local paths, relative to this file:
-# Briefcase pip-installs them from the checkout (so their entry points and
-# package data are in the app), not from PyPI.
+# The bundled plugins aren't listed: Briefcase adds [project.dependencies] to
+# this list itself, so `nu-circuitpython>=0.1` and `nu-pygamezero>=0.1` are
+# already asked for by name. (Listing them as local paths as well broke every
+# installer build: pip can't match a name it meets before the path.) pip finds
+# them as wheels built from the checkout, not on PyPI: see
+# `requirement_installer_args` below.
 requires = [
-    "./plugins/circuitpython",
-    "./plugins/pygamezero",
     "PyQt6>=6.6",
     "PyQt6-QScintilla>=2.14",
     "PyQt6-Charts>=6.6",
@@ -253,6 +254,12 @@ requires = [
     "uv>=0.5",
     "wheel",
 ]
+# Where pip finds the bundled plugins: wheels built from plugins/<name> into
+# this folder before `briefcase create` (make.py `_briefcase` and build.yml do
+# it), so the installers carry the plugins from the checkout, entry points,
+# package data and their own dependencies included. Briefcase makes the path
+# absolute.
+requirement_installer_args = ["--find-links", "./build/plugin-wheels"]
 
 [tool.briefcase.app.mu.macOS]
 universal_build = false
