@@ -95,7 +95,9 @@ Please report problems at https://github.com/kovirlabs/nu/issues.
   never shipped inside Nu; offline, Nu says which file to put where. Each step
   shows in the status bar. **REPL** and **Plotter** work as in CircuitPython
   mode, and autocomplete knows micro:bit MicroPython 2.x (sound, microphone,
-  logo, `log`, `power`, radio, music…). Until it has been tried on real
+  logo, `log`, `power`, radio, music…). The first time, Nu puts six starter
+  programs (a dice, a heartbeat, a score keeper…) in `microbit/examples` to
+  open and flash. Until it has been tried on real
   micro:bits it isn't in the installers: run Nu from source with
   `uv sync --extra microbit`. See
   [The BBC micro:bit](https://kovirlabs.github.io/nu/microbit/).

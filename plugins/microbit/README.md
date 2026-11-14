@@ -40,7 +40,7 @@ below has passed on real boards.
 | `firmware.py` | The pinned releases; a checked local copy, or a download. GUI-free. |
 | `flash.py` | The flash state machine (below). GUI-free; all I/O injected. |
 | `worker.py` | Runs a flash on a `QThread`, reporting back through signals. |
-| `mode.py` | `MicrobitMode`: buttons, board detection, wiring. |
+| `mode.py` | `MicrobitMode`: buttons, board detection, wiring; copies `examples/` (starter programs, V1 and V2) into the learner's `microbit/examples` folder the first time. |
 | `api/` | Autocomplete stubs for micro:bit MicroPython 2.x (and 1.x). |
 
 ```

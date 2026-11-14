@@ -34,6 +34,23 @@ one with a microphone, a speaker and a touch-sensitive logo).
 
 4. Click **Flash**. After a few seconds the micro:bit runs your program.
 
+The first time you use micro:bit mode, Nu puts some starter programs in an
+`examples` folder in your `microbit` folder. Click **Load** to open one, then
+**Flash** it and change it. Each one says at the top what it does and what to
+try:
+
+| Program | What it does |
+|---|---|
+| `hello.py` | Scrolls a message, then shows a smiley face. |
+| `buttons.py` | Shows a different face for button A, button B and both. |
+| `heartbeat.py` | A heart that beats forever. |
+| `dice.py` | Shake the micro:bit to roll a dice. |
+| `tilt_plot.py` | Prints how the micro:bit is tilted, for the **Plotter**. |
+| `score_keeper.py` | Keeps a score with the buttons, saved in a file on the micro:bit (see it with **Files**). |
+
+They work on both the V1 and the V2. Nu doesn't copy them again, so your
+changes stay, and if you delete the folder it stays deleted.
+
 As you type, Nu suggests what comes next: type `display.` and it lists what
 the display can do. The suggestions cover the V2's extras too (sound, the
 microphone, the logo, data logging); their descriptions end with

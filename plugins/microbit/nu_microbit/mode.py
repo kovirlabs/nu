@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
 import os
+import shutil
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QGuiApplication
@@ -31,6 +32,10 @@ from . import board, flash, worker
 from .api import MICROBIT_APIS
 
 logger = logging.getLogger(__name__)
+
+#: Starter programs, copied into the learner's micro:bit folder (see
+#: MicrobitMode.ensure_workspace_assets).
+EXAMPLES_DIR = os.path.join(os.path.dirname(__file__), "examples")
 
 #: The toolbar's Flash button (and its icon, images/microbit-flash.svg).
 FLASH_BUTTON = "microbit-flash"
@@ -203,6 +208,25 @@ class MicrobitMode(MicroPythonMode):
             self.short_name,
             board.board_name(serial_number, port.description()),
         )
+
+    def ensure_workspace_assets(self, workspace_dir):
+        """
+        The first time: put some starter programs in an `examples` folder in
+        the learner's micro:bit folder (`<workspace>/microbit/examples`), to
+        open, flash and change. An existing `examples` folder is left alone,
+        so the learner's changes (or its deletion) stick.
+        """
+        target = os.path.join(workspace_dir, "microbit", "examples")
+        if os.path.exists(target):
+            return
+        try:
+            shutil.copytree(
+                EXAMPLES_DIR, target, ignore=shutil.ignore_patterns("__pycache__")
+            )
+        except OSError:
+            logger.exception("Couldn't copy the micro:bit examples to %s", target)
+            return
+        logger.info("Copied the micro:bit examples to %s", target)
 
     def activate(self):
         self.active = True

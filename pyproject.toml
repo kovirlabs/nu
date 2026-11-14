@@ -293,6 +293,7 @@ builtins = ["_"]
 extend-exclude = [
     "mu/modes/api",   # generated API stubs
     "plugins/*/nu_*/api",  # plugins' generated API stubs
+    "plugins/microbit/nu_microbit/examples",  # MicroPython for the board
     "docs",
 ]
 
