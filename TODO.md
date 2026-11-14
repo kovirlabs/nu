@@ -213,8 +213,18 @@ part 2 ✅ (2026-11, `feature/env-advanced-multi`)
   above uv errors it can explain. NB: uv builds the script's env from the env's *base*
   Python, so packages added to the learner env aren't visible to a PEP 723 script
   (standard `uv run` semantics), and there's no `>>>` afterwards (`--script` can't take
-  `-i`). Plain files run exactly as before. **Not yet** for the debugger and Pygame Zero's
-  Play (they'd need `uv run … python -m pgzero` / the debug runner via `--with-requirements`).
+  `-i`). Plain files run exactly as before. **Debug and Pygame Zero's Play** (2026-11,
+  `feature/pep723-debug-and-play`): `uv run --python <env> --no-project --with-requirements
+  <file> python <debug runner | -m pgzero> <file>` (`Uv.with_requirements_command`), which
+  layers the block's packages *on top of* the env (checked: the env's packages and the
+  block's both import), so pgzero and the debugger's needs stay; any plugin's
+  `Host.run_program` does the same. The debugger waits up to 5 min (was 10 s) for the
+  runner while uv fetches, and Stop now ends a still-connecting listener. Found on the
+  way: on Windows, **Stop left uv's child running** (killing `uv.exe` orphans the
+  program: a Pygame Zero window stayed open; the same for Run's `--script`), so
+  `PythonProcessPane.stop_process` now ends the whole tree (`taskkill /T`). Open
+  question: Run could switch to `--with-requirements` too (env packages visible, `>>>`
+  after), at the cost of PEP 723's `requires-python` check and exact isolation.
 - [x] **Advanced multi-env create/switch, hidden by default** (4b part 2): a collapsed
   "Advanced: more environments" section at the bottom of the Environment tab lists the
   environments (name, Python, In use / From the next start), with **Use this one** and

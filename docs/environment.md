@@ -127,6 +127,20 @@ Some things to know:
 The same file works anywhere uv is installed: `uv run cow.py` in a terminal
 does the same thing.
 
+**Debug**, and Pygame Zero's **Play**, also use `uv run` for a program with
+the block, a little differently: uv adds the packages the block lists *on
+top of* your environment, so the debugger and Pygame Zero (and the packages
+you added) are still there. The first line in the output pane shows that
+command too:
+
+```text
+$ uv run --python /home/you/…/bin/python --no-project --with-requirements /home/you/mu_code/game.py python -m pgzero /home/you/mu_code/game.py
+```
+
+The debugger waits for uv to fetch the packages before it starts (up to five
+minutes). Such a game, or a program you're debugging, stops when you click
+**Stop**, as usual.
+
 ## Using it yourself from a terminal
 
 Copy the commands from the Environment tab. To **activate** the environment,

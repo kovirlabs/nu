@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import sys
 import os
 import re
+import subprocess
 import platform
 import logging
 import signal
@@ -49,7 +50,9 @@ from PyQt6.QtGui import (
     QStandardItem,
 )
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
+from ..debugger.utils import debug_runner
 from ..i18n import language_code
+from ..script_metadata import uv_run_hint
 from ..virtual_environment import venv
 from mu.interface.themes import Font, DEFAULT_FONT_SIZE
 from mu.interface.themes import DAY_STYLE, NIGHT_STYLE, CONTRAST_STYLE
@@ -658,11 +661,12 @@ class PythonProcessPane(QTextEdit):
         logger.info("Python path: {}".format(sys.path))
         if debugger:
             # Start the mu_debug runner for the script.
-            parent_dir = os.path.join(os.path.dirname(__file__), "..")
-            mu_dir = os.path.abspath(parent_dir)
+            mu_dir = os.path.dirname(debug_runner())
             logger.info("mu_dir: %s", mu_dir)
-            runner = os.path.join(mu_dir, "mu_debug.py")
-            args = [runner, self.script] + command_args
+            args = [debug_runner(), self.script] + command_args
+            if python_args:
+                # e.g. `uv run … python` for a program with inline metadata.
+                args = python_args + args
             #
             # The runtime virtualenvironment doesn't include Mu
             # itself (by design). But the debugger needs mu in
@@ -693,9 +697,32 @@ class PythonProcessPane(QTextEdit):
             self.process.terminate()
             terminated = self.process.waitForFinished(10)
             if not terminated:
+                if sys.platform == "win32":
+                    self._kill_process_tree()
                 self.process.kill()
                 self.process.waitForFinished()
             self.running = False
+
+    def _kill_process_tree(self):
+        """
+        On Windows, end the process and every process it started. Killing
+        just the process isn't enough when it's ``uv run`` (a program with
+        a ``# /// script`` block): uv's own child, the learner's program
+        (e.g. a Pygame Zero window), would be left running.
+        """
+        pid = self.process.processId()
+        if not pid:
+            return
+        try:
+            subprocess.run(
+                ["taskkill", "/T", "/F", "/PID", str(pid)],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                timeout=10,
+            )
+        except (OSError, subprocess.SubprocessError):
+            logger.exception("Unable to end the processes of %s", pid)
 
     def finished(self, code, status):
         """
@@ -905,6 +932,33 @@ class PythonProcessPane(QTextEdit):
             self.set_start_of_current_line()
         elif not self.isReadOnly() and msg:
             self.insert(msg)
+
+    def track_uv_command(self, record):
+        """
+        This pane runs the uv command `record` (see `Uv.script_command`):
+        when it ends, note its exit code in the command log (None if it was
+        stopped or crashed) and put a hint above any uv error the learner
+        can fix (see `uv_run_hint`).
+        """
+        self.process.finished.connect(
+            lambda code, status: self._uv_command_finished(record, code, status)
+        )
+
+    def _uv_command_finished(self, record, exit_code, exit_status, attempts=50):
+        """See `track_uv_command`; waits for the last of the output first."""
+        if exit_status != QProcess.ExitStatus.NormalExit:
+            exit_code = None
+        record.finish(exit_code)
+        self._show_uv_hint(attempts)
+
+    def _show_uv_hint(self, attempts):
+        """Add the hint once the output is all in (up to `attempts` waits)."""
+        if self.reading_stdout and attempts > 0:
+            QTimer.singleShot(20, lambda: self._show_uv_hint(attempts - 1))
+            return
+        hint = uv_run_hint(self.toPlainText())
+        if hint:
+            self.insert_hint(hint)
 
     def insert_hint(self, hint):
         """

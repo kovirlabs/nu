@@ -17,6 +17,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import os
+
+
+def debug_runner():
+    """
+    The script that runs a learner's program under Nu's debugger:
+    ``mu/mu_debug.py``.
+    """
+    mu_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(mu_dir, "mu_debug.py")
+
 
 def is_breakpoint_line(code):
     """

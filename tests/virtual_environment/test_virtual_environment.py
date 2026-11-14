@@ -1452,6 +1452,17 @@ def test_script_command(venv):
     assert record is MockUv.return_value.script_command.return_value
 
 
+def test_with_requirements_command(venv):
+    """The debugger's and Play's `uv run` targets the learner's environment."""
+    with mock.patch.object(mu.virtual_environment, "Uv") as MockUv:
+        record = venv.with_requirements_command("/w/g.py", ["/w/g.py"], "/w")
+    MockUv.assert_called_once_with(venv_path=venv.interpreter)
+    MockUv.return_value.with_requirements_command.assert_called_once_with(
+        "/w/g.py", ["/w/g.py"], cwd="/w"
+    )
+    assert record is MockUv.return_value.with_requirements_command.return_value
+
+
 def test_run_subprocess_includes_stderr(venv):
     """run_subprocess reports what the process wrote to stderr too."""
     ok, output = venv.run_subprocess(

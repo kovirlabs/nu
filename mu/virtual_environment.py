@@ -673,6 +673,33 @@ class Uv(object):
             argv, cwd=cwd, note=_("Its output is in the Run pane.")
         )
 
+    def with_requirements_command(self, script, run_args, cwd=None):
+        """
+        Record ``uv run --python <venv> --no-project --with-requirements
+        <script> python <run_args>`` and return its
+        :class:`~mu.command_log.CommandRecord`; like `script_command`, the
+        caller's pane starts it.
+
+        Python runs `run_args` (e.g. ``-m pgzero game.py``, or the debug
+        runner and the program) with the packages the `script`'s ``# ///
+        script`` block lists, which uv fetches and layers *on top of* the
+        environment: unlike ``--script``, the environment's own packages
+        (Pygame Zero, the debugger's needs, the learner's) are still there.
+        """
+        argv = [
+            self.executable,
+            "run",
+            *self._python_args(),
+            "--no-project",
+            "--with-requirements",
+            str(script),
+            "python",
+            *(str(arg) for arg in run_args),
+        ]
+        return command_log.start(
+            argv, cwd=cwd, note=_("Its output is in the Run pane.")
+        )
+
     def run(self, command, *args, slots=Process.Slots(), **envvars):
         """Run a uv subcommand asynchronously, streaming via `slots`.
 
@@ -1729,6 +1756,17 @@ class VirtualEnvironment(object):
         pane launches it. Raise :class:`UvNotFound` if there's no uv.
         """
         return self._uv().script_command(script, cwd=cwd)
+
+    def with_requirements_command(self, script, run_args, cwd):
+        """
+        Record, and return the :class:`~mu.command_log.CommandRecord` of, the
+        ``uv run … --with-requirements <script> python <run_args>`` command
+        the debugger and plugins' programs (Pygame Zero's Play) use for a
+        program with inline (PEP 723) dependencies, keeping this
+        environment's packages (see `Uv.with_requirements_command`). Raise
+        :class:`UvNotFound` if there's no uv.
+        """
+        return self._uv().with_requirements_command(script, run_args, cwd=cwd)
 
     def install_user_packages(self, packages, slots=Process.Slots()):
         """
